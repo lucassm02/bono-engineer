@@ -1,0 +1,113 @@
+import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { encodePacket, FakeConsole, generateLaps, RecordingWriter } from '@gt7/protocol';
+import type { LapCompletedEvent, LiveFrame, ServerStatus, Session } from '@gt7/shared';
+import { afterEach, describe, expect, it } from 'vitest';
+import { Gt7Runtime } from './runtime.ts';
+
+// Ports reserved for this test file (45xxx range).
+const CONSOLE_PORT = 45739;
+const CLIENT_PORT = 45740;
+/** Recording time compression: packets are 60 Hz data streamed 20× faster. */
+const SPEEDUP = 20;
+
+const cleanups: (() => Promise<void> | void)[] = [];
+afterEach(async () => {
+  for (const c of cleanups.splice(0).reverse()) await c();
+});
+
+function waitFor<T>(fn: () => T | undefined | null | false, timeoutMs = 20_000): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
+    const iv = setInterval(() => {
+      const v = fn();
+      if (v) {
+        clearInterval(iv);
+        resolve(v);
+      } else if (Date.now() - start > timeoutMs) {
+        clearInterval(iv);
+        reject(new Error('waitFor timed out'));
+      }
+    }, 25);
+  });
+}
+
+describe('Gt7Runtime over UDP (FakeConsole)', () => {
+  it('emits frames, sessionChanged and lapCompleted; records the session', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'gt7-runtime-'));
+    cleanups.push(() => rmSync(dir, { recursive: true, force: true }));
+    const gen = generateLaps({ profile: 'pro', seed: 41, laps: 2, format: 'B', outLapM: 300 });
+    const recFile = join(dir, 'fast.gt7rec');
+    const w = await RecordingWriter.open(recFile, {
+      format: 'B',
+      startTime: 0,
+      meta: { source: 'test' },
+    });
+    gen.packets.forEach((p, i) => {
+      w.write(encodePacket(p, 'B'), Math.round((i * 1000) / 60 / SPEEDUP));
+    });
+    await w.close();
+
+    const fake = new FakeConsole({
+      port: CONSOLE_PORT,
+      host: '127.0.0.1',
+      targetPort: CLIENT_PORT,
+      formatLockMs: 300,
+      heartbeatTimeoutMs: 2000,
+      source: { kind: 'recording', file: recFile, loop: false },
+    });
+    await fake.start();
+    cleanups.push(() => fake.stop());
+
+    const runtime = new Gt7Runtime({
+      dataDir: join(dir, 'data'),
+      consoleIp: '127.0.0.1',
+      liveFormat: 'B',
+      formatFallback: null,
+      ingestor: {
+        bindPort: CLIENT_PORT,
+        bindAddress: '127.0.0.1',
+        consolePort: CONSOLE_PORT,
+        heartbeatIntervalMs: 100,
+        timeoutMs: 1000,
+        statsIntervalMs: 250,
+      },
+    });
+    cleanups.push(() => runtime.close());
+    const frames: LiveFrame[] = [];
+    const laps: LapCompletedEvent[] = [];
+    const sessions: (Session | null)[] = [];
+    const statuses: ServerStatus[] = [];
+    runtime.on('frame', (f) => frames.push(f));
+    runtime.on('lapCompleted', (e) => laps.push(e));
+    runtime.on('sessionChanged', (s) => sessions.push(s));
+    runtime.on('status', (s) => statuses.push(s));
+
+    await runtime.start();
+    expect(runtime.getSettings().consoleIp).toBe('127.0.0.1');
+    await waitFor(() => laps.length >= 2, 25_000);
+
+    expect(frames.length).toBeGreaterThan(20);
+    expect(frames.some((f) => f.state === 'onTrack')).toBe(true);
+    expect(frames.at(-1)!.format).toBe('B');
+    expect(sessions.some((s) => s !== null)).toBe(true);
+    expect(statuses.some((s) => s.ingestor.state === 'connected')).toBe(true);
+    // localhost may drop a packet now and then at 20× speed: time must still be within a frame
+    laps.forEach((e, i) => {
+      expect(Math.abs(e.timeMs - gen.laps[i]!.timeMs)).toBeLessThanOrEqual(17);
+    });
+    expect(laps[0]!.trackId).toBeTruthy();
+    const lapRows = runtime.store.listLaps(laps[0]!.sessionId);
+    expect(lapRows).toHaveLength(2);
+
+    const sessionId = laps[0]!.sessionId;
+    await runtime.stop();
+    const s = runtime.store.getSession(sessionId)!;
+    expect(s.endedAt).not.toBeNull();
+    expect(s.recordingFile).toBe(`recordings/${sessionId}.gt7rec`);
+    expect(existsSync(join(dir, 'data', s.recordingFile!))).toBe(true);
+    expect(existsSync(join(dir, 'data', 'traces', `${laps[0]!.lapId}.bin.gz`))).toBe(true);
+    expect(runtime.getStatus().connection).toBe('disconnected');
+  });
+});

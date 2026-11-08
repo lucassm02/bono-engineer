@@ -71,6 +71,13 @@ export interface LiveLapTiming {
   /** Predicted lap time = reference lap time + current delta. */
   predictedLapMs: number | null;
   delta: LiveDelta;
+  /** Lap time of the delta reference lap, null if none. (core, additive) */
+  referenceLapMs?: number | null;
+  /**
+   * False once the current lap got an invalidating flag (pause, packet gaps, discontinuity) or
+   * when it is not a timed lap (out lap / joined mid-lap). (core, additive)
+   */
+  currentLapValid?: boolean;
 }
 
 export interface LiveTrackInfo {
@@ -203,4 +210,6 @@ export interface LapCompletedEvent {
   bestSectorIndex: number | null;
   fuelUsedL: number | null;
   completedAt: number;
+  /** Track the lap was identified on, null if unknown. (core, additive) */
+  trackId?: Id | null;
 }

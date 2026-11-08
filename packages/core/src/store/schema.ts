@@ -1,0 +1,112 @@
+/**
+ * SQLite schema migrations (PRAGMA user_version). Each migration runs once, inside a transaction;
+ * running `migrate` again is a no-op.
+ */
+
+import type { DatabaseSync } from 'node:sqlite';
+
+export const MIGRATIONS: readonly string[] = [
+  // v1 — initial schema
+  `
+  CREATE TABLE IF NOT EXISTS tracks (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    layout TEXT,
+    fingerprint TEXT NOT NULL,
+    length_m REAL NOT NULL,
+    centerline TEXT,
+    sector_gates TEXT NOT NULL DEFAULT '[]',
+    corners TEXT NOT NULL DEFAULT '[]',
+    source TEXT NOT NULL DEFAULT 'auto',
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS track_centerlines (
+    track_id TEXT PRIMARY KEY REFERENCES tracks(id) ON DELETE CASCADE,
+    source_lap_id TEXT,
+    step_m REAL NOT NULL,
+    length_m REAL NOT NULL,
+    points BLOB NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS sessions (
+    id TEXT PRIMARY KEY,
+    track_id TEXT,
+    car_code INTEGER NOT NULL,
+    started_at INTEGER NOT NULL,
+    ended_at INTEGER,
+    format TEXT NOT NULL,
+    mode TEXT NOT NULL,
+    recording_file TEXT,
+    notes TEXT
+  );
+  CREATE INDEX IF NOT EXISTS sessions_track ON sessions(track_id, started_at);
+  CREATE TABLE IF NOT EXISTS laps (
+    id TEXT PRIMARY KEY,
+    session_id TEXT NOT NULL,
+    number INTEGER NOT NULL,
+    time_ms INTEGER NOT NULL,
+    sector_times TEXT NOT NULL DEFAULT '[]',
+    valid INTEGER NOT NULL,
+    flags TEXT NOT NULL DEFAULT '[]',
+    is_reference INTEGER NOT NULL DEFAULT 0,
+    started_at INTEGER NOT NULL,
+    car_code INTEGER NOT NULL,
+    track_id TEXT,
+    fuel_used_l REAL,
+    sample_count INTEGER NOT NULL DEFAULT 0,
+    lost_packets INTEGER NOT NULL DEFAULT 0,
+    trace_file TEXT
+  );
+  CREATE INDEX IF NOT EXISTS laps_session ON laps(session_id, number);
+  CREATE INDEX IF NOT EXISTS laps_track ON laps(track_id, car_code, time_ms);
+  CREATE TABLE IF NOT EXISTS reference_meta (
+    lap_id TEXT PRIMARY KEY REFERENCES laps(id) ON DELETE CASCADE,
+    driver_name TEXT NOT NULL,
+    source TEXT NOT NULL,
+    ranking_time_ms INTEGER,
+    car_name TEXT,
+    notes TEXT,
+    captured_at INTEGER NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS device_profiles (
+    device_id TEXT PRIMARY KEY,
+    profile TEXT NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  );
+  `,
+];
+
+export const SCHEMA_VERSION = MIGRATIONS.length;
+
+export function getSchemaVersion(db: DatabaseSync): number {
+  const row = db.prepare('PRAGMA user_version').get() as { user_version: number } | undefined;
+  return row?.user_version ?? 0;
+}
+
+/** Applies pending migrations. Returns the number applied. */
+export function migrate(db: DatabaseSync): number {
+  let v = getSchemaVersion(db);
+  if (v > SCHEMA_VERSION) {
+    throw new Error(`database schema v${v} is newer than this app (v${SCHEMA_VERSION})`);
+  }
+  let applied = 0;
+  while (v < SCHEMA_VERSION) {
+    const sql = MIGRATIONS[v]!;
+    db.exec('BEGIN');
+    try {
+      db.exec(sql);
+      db.exec(`PRAGMA user_version = ${v + 1}`);
+      db.exec('COMMIT');
+    } catch (e) {
+      db.exec('ROLLBACK');
+      throw e;
+    }
+    v++;
+    applied++;
+  }
+  return applied;
+}

@@ -20,6 +20,7 @@
     "sim": "tsx packages/protocol/src/cli/sim.ts",
     "sniff": "tsx packages/protocol/src/cli/sniff.ts",
     "gen-recording": "tsx packages/protocol/src/cli/gen-recording.ts",
+    "live": "node --disable-warning=ExperimentalWarning --import tsx packages/core/src/cli/live.ts",
     "dev": "echo \"dev: to be implemented in a later wave (server + web)\"",
     "start": "echo \"start: to be implemented in a later wave (server)\""
   },

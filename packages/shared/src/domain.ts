@@ -214,3 +214,20 @@ export interface LapTrace {
   length: number;
   channels: { [K in LapSampleChannel]: Float64Array | number[] };
 }
+
+/**
+ * Track reference line (centerline) resampled at a fixed step along the path, world coordinates.
+ * Point i is at distance `i * stepM` from the start line; the polyline is closed (the last point
+ * connects back to the first). Built by @gt7/core from the first valid lap of the track.
+ */
+export interface TrackCenterline {
+  trackId: Id;
+  /** Lap whose X/Z trace defines the line. */
+  sourceLapId: Id | null;
+  stepM: number;
+  /** Closed-loop length in meters (2D, X/Z). */
+  lengthM: number;
+  x: number[];
+  y: number[];
+  z: number[];
+}
