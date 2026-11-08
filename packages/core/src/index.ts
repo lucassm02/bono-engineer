@@ -10,6 +10,23 @@
 export const CORE_PACKAGE = '@gt7/core';
 
 export {
+  AnalysisError,
+  type AnalysisErrorCode,
+  AnalysisService,
+  type AnalysisServiceOptions,
+  type ChartRequest,
+  CORNER_DETECTION_VERSION,
+  CORNER_SIGNATURE_KEY,
+  type ConsistencyTarget,
+  carryOverNames,
+  cornersSignature,
+  type EnsureCornersResult,
+  findCorner,
+  type ResampleRequest,
+} from './analysis-service/analysis-service.ts';
+export { AnalysisCornerHintProvider } from './analysis-service/corner-hints.ts';
+export { LruCache } from './analysis-service/lru.ts';
+export {
   ReferenceCapture,
   type ReferenceCaptureEvents,
   type ReferenceCaptureMeta,
@@ -17,6 +34,11 @@ export {
   type ReferenceCaptureStore,
   validateReferenceLap,
 } from './capture/reference-capture.ts';
+export {
+  type SeedResult,
+  type SeedSessionSpec,
+  seedSyntheticData,
+} from './dev/seed.ts';
 export {
   computeRecords,
   type IdentifyTrackInput,

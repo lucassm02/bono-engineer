@@ -25,6 +25,8 @@ import {
   type ServerStatus,
   type Session,
 } from '@gt7/shared';
+import { AnalysisService } from '../analysis-service/analysis-service.ts';
+import { AnalysisCornerHintProvider } from '../analysis-service/corner-hints.ts';
 import { ReferenceCapture, type ReferenceCaptureMeta } from '../capture/reference-capture.ts';
 import type { CornerHintProvider } from '../live/corner-hints.ts';
 import { type CompletedLap, LiveEngine, type LiveEngineOptions } from '../live/live-engine.ts';
@@ -66,7 +68,12 @@ export interface Gt7RuntimeOptions {
   /** Extra ingestor options (ports, intervals, discovery...). */
   ingestor?: Omit<Gt7IngestorOptions, 'consoleIp' | 'format'>;
   serverVersion?: string;
+  /** Next-corner hint provider (default: AnalysisCornerHintProvider over `analysis`). */
   cornerHints?: CornerHintProvider;
+  /** Shared analysis service (default: one created over the runtime store). */
+  analysis?: AnalysisService;
+  /** Detect corners of new tracks after each lap (default true). */
+  autoDetectCorners?: boolean;
   /** Extra engine options. */
   engine?: Omit<LiveEngineOptions, 'context' | 'frameRateHz' | 'cornerHints'>;
   /** Server-level status fields (LAN URLs, connected devices). */
@@ -95,6 +102,8 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
   readonly store: Gt7Store;
   readonly engine: LiveEngine;
   readonly capture: ReferenceCapture;
+  /** Analysis facade over the runtime store (corners, comparisons, AI summaries). */
+  readonly analysis: AnalysisService;
   readonly options: Gt7RuntimeOptions;
   readonly #ownsStore: boolean;
   #ingestor: Gt7Ingestor | null = null;
@@ -107,6 +116,7 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
   #recorderCloses = new Set<Promise<void>>();
   #fallbackTimer: NodeJS.Timeout | null = null;
   #lastWarningAt = 0;
+  #analysisJobs = new Set<Promise<void>>();
 
   constructor(opts: Gt7RuntimeOptions = {}) {
     super();
@@ -126,11 +136,12 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
       SETTINGS_KEYS.deltaReference,
     );
 
+    this.analysis = opts.analysis ?? new AnalysisService({ store: s });
     this.engine = new LiveEngine({
       ...opts.engine,
       context: new StoreEngineContext(s),
       frameRateHz: opts.frameRateHz ?? 30,
-      ...(opts.cornerHints ? { cornerHints: opts.cornerHints } : {}),
+      cornerHints: opts.cornerHints ?? new AnalysisCornerHintProvider(this.analysis),
       deltaReference: savedRef?.kind ?? opts.engine?.deltaReference ?? 'personalBest',
       deltaReferenceLapId: savedRef?.lapId ?? null,
     });
@@ -283,9 +294,15 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
     this.#emitStatus();
   }
 
+  /** Resolves when background analysis jobs (corner detection after a lap) are done. */
+  async whenAnalysisIdle(): Promise<void> {
+    while (this.#analysisJobs.size) await Promise.all([...this.#analysisJobs]);
+  }
+
   /** stop() + closes the store if the runtime created it. */
   async close(): Promise<void> {
     await this.stop();
+    await this.whenAnalysisIdle();
     if (this.#ownsStore) await this.store.close();
   }
 
@@ -391,7 +408,10 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
   #wireEngine(): void {
     const e = this.engine;
     e.on('frame', (f) => this.emit('frame', f));
-    e.on('lapCompleted', (c) => this.emit('lapCompleted', c.event, c));
+    e.on('lapCompleted', (c) => {
+      this.#analyzeLap(c);
+      this.emit('lapCompleted', c.event, c);
+    });
     e.on('sessionStarted', (s) => {
       this.#openRecorder(s);
       this.emit('sessionChanged', this.engine.session ?? s);
@@ -422,6 +442,25 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
         8000,
       );
     });
+  }
+
+  /** Background: corners of a new track (first centerline) + cache invalidation. */
+  #analyzeLap(c: CompletedLap): void {
+    if (this.options.autoDetectCorners === false) return;
+    const job = this.analysis
+      .onLapCompleted(c)
+      .then((changed) => {
+        if (changed && this.engine.trackInfo?.id === c.lap.trackId) this.engine.refreshTrack();
+      })
+      .catch((err: unknown) => {
+        this.#notice(
+          'warn',
+          'analysisFailed',
+          `Falha ao detectar as curvas da pista: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      })
+      .finally(() => this.#analysisJobs.delete(job));
+    this.#analysisJobs.add(job);
   }
 
   #openRecorder(s: Session): void {

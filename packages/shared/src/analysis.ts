@@ -13,7 +13,7 @@
  *   format A) are `null`, never 0.
  */
 
-import type { Id } from './domain.ts';
+import type { Id, Lap, Track } from './domain.ts';
 
 export type CornerDirection = 'left' | 'right';
 
@@ -415,4 +415,155 @@ export interface LapValidityReport {
   valid: boolean;
   flags: LapValidityFlag[];
   issues: { kind: LapIssueKind; atM: number | null; value: number; message: string }[];
+}
+
+// ---------------------------------------------------------------------------------------------
+// Wave 3 result types (AnalysisService in @gt7/core; consumed by MCP, server REST and web)
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * Symbolic reference for comparisons:
+ * - personalBest: best own valid lap (not replay/reference) on the same track + car;
+ * - sessionBest: best valid lap of the subject's session;
+ * - bestReference: fastest reference lap of the track (same car preferred);
+ * - auto: bestReference, else personalBest, else sessionBest (never the subject itself).
+ */
+export type ComparisonReferenceKind = 'personalBest' | 'sessionBest' | 'bestReference' | 'auto';
+
+export const COMPARISON_REFERENCE_KINDS: readonly ComparisonReferenceKind[] = [
+  'personalBest',
+  'sessionBest',
+  'bestReference',
+  'auto',
+] as const;
+
+/** Compact AI summary object (JSON-serializable, units in the keys). */
+export type AiSummary = Record<string, unknown>;
+
+export interface TrackSectorRange {
+  index: number;
+  fromM: number;
+  toM: number;
+}
+
+/** Corner plus its apex position on the map (world X/Z). */
+export interface MapCorner extends Corner {
+  apexX: number;
+  apexZ: number;
+}
+
+export interface TrackCarRecord {
+  carCode: number;
+  laps: number;
+  validLaps: number;
+  personalBestLapId: Id | null;
+  personalBestMs: number | null;
+}
+
+export interface TrackAnalysis {
+  track: Track;
+  /** Reference line downsampled for maps (world X/Z), closed loop. */
+  map: { stepM: number; lengthM: number; x: number[]; z: number[] } | null;
+  corners: MapCorner[];
+  sectors: TrackSectorRange[];
+  records: {
+    /** Fastest valid lap incl. references/replays. */
+    overallBestLapId: Id | null;
+    overallBestMs: number | null;
+    cars: TrackCarRecord[];
+    references: { lapId: Id; driverName: string | null; timeMs: number; carCode: number }[];
+  };
+  sessionCount: number;
+  lapCount: number;
+}
+
+export interface LapAnalysis {
+  lap: Lap;
+  track: Track;
+  lengthM: number;
+  corners: Corner[];
+  sectorStartsM: number[];
+  /** Same order as `corners`. */
+  metrics: CornerMetrics[];
+  validity: LapValidityReport;
+  summary: AiSummary;
+}
+
+export interface LapComparisonResult {
+  comparison: LapComparison;
+  lap: Lap;
+  referenceLap: Lap;
+  /** How the reference was chosen ('lap' = explicit id). */
+  referenceKind: ComparisonReferenceKind | 'lap';
+  /** pt-BR Markdown report. */
+  markdown: string;
+  summary: AiSummary;
+}
+
+export interface MicrosectorAnalysis {
+  report: MicrosectorReport;
+  referenceLapId: Id;
+  /** Map colors of every other lap vs the reference. */
+  colors: { lapId: Id; colors: MicrosectorColor[] }[];
+}
+
+/** Key metrics of one corner on one day's best lap (diffs = subject − baseline). */
+export interface EvolutionCornerPoint {
+  cornerId: string;
+  brakePointM: number | null;
+  minSpeedKmh: number | null;
+  exitSpeedKmh: number | null;
+  throttlePickupM: number | null;
+  /** Time lost (+) vs the baseline lap in the corner zone (ms), null without baseline. */
+  timeLostMs: number | null;
+  brakePointDiffM: number | null;
+  minSpeedDiffKmh: number | null;
+  exitSpeedDiffKmh: number | null;
+  throttlePickupDiffM: number | null;
+}
+
+export interface EvolutionDay {
+  /** Local date YYYY-MM-DD. */
+  date: string;
+  sessions: number;
+  laps: number;
+  validLaps: number;
+  bestLapId: Id | null;
+  bestLapMs: number | null;
+  /** Mean of the 3 fastest valid laps of the day (ms). */
+  top3MeanMs: number | null;
+  /** Standard deviation of the valid lap times of the day (ms). */
+  lapTimeStdDevMs: number | null;
+  /** bestLapMs − baseline lap time (ms). */
+  gapToBaselineMs: number | null;
+  corners: EvolutionCornerPoint[];
+}
+
+export interface EvolutionTrend {
+  cornerId: string | null;
+  metric:
+    | 'lapTimeMs'
+    | 'timeLostMs'
+    | 'brakePointDiffM'
+    | 'minSpeedDiffKmh'
+    | 'exitSpeedDiffKmh'
+    | 'throttlePickupDiffM';
+  first: number;
+  last: number;
+  /** last − first. */
+  change: number;
+  /** True when the change goes in the good direction (closer to the baseline / faster). */
+  improved: boolean;
+  /** pt-BR sentence. */
+  message: string;
+}
+
+export interface EvolutionReport {
+  trackId: Id;
+  carCode: number | null;
+  /** Lap the days are compared with: best reference lap, else the all-time personal best. */
+  baseline: { kind: 'reference' | 'personalBest'; lapId: Id; timeMs: number } | null;
+  days: EvolutionDay[];
+  /** Most relevant changes between the first and the last day, biggest first. */
+  trends: EvolutionTrend[];
 }

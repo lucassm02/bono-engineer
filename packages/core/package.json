@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@gt7/analysis": "*",
     "@gt7/shared": "*",
     "@gt7/protocol": "*"
   }

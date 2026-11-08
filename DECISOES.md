@@ -382,3 +382,94 @@
 - As telas Mapa, Tempos, Combustível, Forças G, Treino de curva e Personalizada mostram "Em breve".
 - O wrapper `rtk` cria `.vitest/json/output.json` na raiz ao rodar o vitest; o `biome check .` reclama
   do arquivo. Sugestão: pôr `.vitest/` no `.gitignore`.
+
+## Onda 3 — AnalysisService (`@gt7/core`)
+
+- **`AnalysisService`** (`core/src/analysis-service/`): fachada com estado sobre `Gt7Store` +
+  `@gt7/analysis`, usada pelo MCP agora e pelo REST/coach do app na próxima onda. `@gt7/core` passou a
+  depender de `@gt7/analysis` (só adicionado ao `package.json`, sem `npm install`: resolve pelo
+  symlink do workspace).
+- **Linha da análise** = `centerlineFromPolyline` da linha central gravada (passo 2 m). Fica em cache
+  por pista, validada por uma consulta barata (`source_lap_id`, tamanho do BLOB, comprimento).
+- **Caches LRU** de promessas (deduplicam chamadas simultâneas): voltas preparadas (48), análises de
+  volta e comparações (64 cada). A chave inclui ids das voltas + assinatura da linha + hash das
+  curvas (ids, distâncias, **nomes**) + portais de setor. Renomear/editar curvas invalida sozinho;
+  erros saem do cache.
+- **Curvas:** `ensureTrackCorners` detecta com a melhor volta da pista como referência de
+  velocidade/guinada (cai para a volta da linha central). A assinatura (`v` + chave da linha) fica em
+  `settings` (`analysis.corners.<trackId>`). Redetecta só se não houver curvas ou se a assinatura
+  mudou (linha nova ou `CORNER_DETECTION_VERSION`). Curvas sem assinatura (usuário/embutidas) são
+  respeitadas. **Não** redetecta quando aparece uma volta mais rápida (ids/limites estáveis). Ao
+  redetectar, nome e nota de marcador passam para a curva nova de mesma direção com ápice a ≤ 40 m.
+- **Referências simbólicas:** `personalBest` (própria, válida, sem replay, mesmo carro), `sessionBest`,
+  `bestReference` (mesmo carro preferido) e `auto` (top → melhor pessoal → melhor da sessão). Nunca a
+  própria volta. Pistas diferentes → erro; carros diferentes → aviso no topo dos `warnings`.
+- **Erros** com código (`AnalysisError`: `notFound`, `noTrack`, `noCenterline`, `noTrace`,
+  `trackMismatch`, `noReference`, `invalidArgument`) e mensagem pt-BR pronta para o usuário/IA.
+- **Consistência:** sessão → voltas válidas (todas, se houver menos de 2 válidas). O array `metrics`
+  por volta é omitido do resultado.
+- **Evolução:** só voltas próprias (sem replay/referência) de um carro (padrão: o mais usado na
+  pista), agrupadas por **dia local**. Base = melhor referência (mesmo carro preferido), senão o
+  melhor pessoal. Por dia: melhor volta, média das 3 melhores, desvio-padrão, gap para a base e, por
+  curva, tempo perdido e diffs (frenagem, V-mín, saída, acelerador) via `compareLaps`. Tendências =
+  primeiro × último dia, ranqueadas por mudança normalizada, com frase pt-BR.
+- **Tipos novos** (aditivos, em `shared/analysis.ts`): `ComparisonReferenceKind`, `TrackAnalysis`,
+  `LapAnalysis`, `LapComparisonResult`, `MicrosectorAnalysis`, `Evolution*`, `AiSummary`,
+  `MapCorner`.
+- **`AnalysisCornerHintProvider`**: dica da próxima curva a partir das métricas da análise (mesmas
+  definições da página de análise e do coach), calculadas uma vez por (volta de referência, curvas).
+  Cai para o `TraceCornerHintProvider` sem linha ou em erro.
+- **`Gt7Runtime`** (compatível): ganhou `analysis` (opção `analysis` para compartilhar),
+  `cornerHints` padrão = `AnalysisCornerHintProvider`, opção `autoDetectCorners` (padrão true) e
+  `whenAnalysisIdle()`. A cada volta fechada, `analysis.onLapCompleted` roda em segundo plano
+  (detecta curvas da pista nova e chama `engine.refreshTrack()`); falha vira `notice` `analysisFailed`.
+  `close()` espera esses jobs antes de fechar o banco.
+- **`seedSyntheticData(runtime, specs)`** (exportado): empurra sessões sintéticas direto no motor
+  (sem UDP), incluindo captura de referência de replay. Usado nos testes e no gráfico de exemplo.
+
+## Onda 3 — MCP (`@gt7/mcp`)
+
+- **`createGt7McpServer({ store, analysis?, runtime? })`** com `McpServer.registerTool` +
+  schemas zod 4 (SDK 1.32 aceita `zod/v4`). Ferramentas: `list_tracks`, `get_track` (extra: ids das
+  curvas para as outras tools), `list_sessions`, `list_laps`, `list_reference_laps`,
+  `get_lap_summary`, `compare_laps`, `get_corner_detail`, `get_consistency`, `get_microsectors`,
+  `get_trace`, `get_evolution`, `render_comparison_chart`, `get_live_state`, `rename_corner`,
+  `rename_track`. Recursos: `gt7://tracks` e `gt7://tracks/{trackId}`.
+- **Saídas:** JSON compacto (chaves com unidade, números arredondados, pares `[você, referência]`) +
+  Markdown só no `compare_laps`. Limites: passo ≥ 2 m e ≤ 500 pontos no `get_trace`; ≤ 160 pontos
+  por série e ≤ 6 voltas no `get_corner_detail`; ≤ 20 voltas nos microssetores; corte explícito em
+  24 KB por bloco. `compare_laps` do sintético fica abaixo de 12 KB (JSON + Markdown; limite verificado no teste). Erros viram
+  `isError: true` com a mensagem pt-BR.
+- **Sessão padrão** (sem `session_id`): a mais recente **ao vivo** com voltas (não a de captura).
+- **Gráfico** (`render_comparison_chart`): SVG gerado à mão → PNG com `@resvg/resvg-js` (fontes do
+  sistema, 1400 px, ~110–180 KB). Painéis: velocidade, acelerador, freio, marcha, volante e delta
+  (área vermelha = perdendo, azul = ganhando). Mapa: linha colorida pela taxa do delta (s/100 m,
+  divergente azul↔vermelho com cinza neutro). Com `corner`: zoom com os dois traçados (referência
+  tracejada) e pontos de frenagem; o delta do zoom começa em 0 na janela. Cores do tema escuro
+  validadas com o validador de paleta (você laranja `#d95926` × referência verde-água `#199e70`, que
+  passam em todos os pares). O eixo X do mapa é espelhado (−X) para que curva à esquerda pareça à
+  esquerda, seguindo a convenção de heading do sintético (não verificado no GT7 real).
+- **Prompts** pt-BR (`debrief_sessao`, `foco_curva`, `plano_treino`): persona de engenheiro de
+  pista/instrutor. Dizem quais tools chamar e em que ordem, exigem números das ferramentas, uma ação
+  por curva, separar técnica × consistência e a ressalva da precisão de replay. Preenchem ids padrão
+  (sessão/pista mais recente) consultando o banco.
+- **stdio** (`src/stdio.ts`): `--data <dir>` > `GT7_DATA_DIR` > `<repo>/data`. `console.log/info/debug`
+  redirecionados para o stderr; fecha o store no fim do stdin/SIGINT. Script raiz `npm run mcp` (use
+  `npm run -s` como comando MCP, para o npm não escrever no stdout). Para o Claude Desktop o
+  `--import` do tsx precisa ser URL `file:///` absoluta (testado como processo filho com `cwd`
+  diferente).
+- **HTTP** (`mountMcpHttp(fastify, deps, { path, allowedHosts?, allowedOrigins? })`): Streamable
+  HTTP **sem estado** (um `McpServer` + transporte por POST, `enableJsonResponse`), compartilhando um
+  `AnalysisService`; GET/DELETE → 405. Proteção contra DNS rebinding opcional (por padrão desligada,
+  porque o app atende a LAN). `fastify` é só import de tipo (resolve pela raiz; não declarado no
+  `package.json` do mcp).
+- `npm run mcp:sample-chart` gera `docs/exemplo-grafico.png` e `docs/exemplo-grafico-curva.png` com
+  dados sintéticos.
+
+### Pendências
+
+- `get_live_state` só via HTTP; a integração do `mountMcpHttp` no servidor fica para a próxima onda.
+- Processo stdio e app escrevem no mesmo SQLite (WAL + `busy_timeout`); só escritas pequenas
+  (curvas/nomes/assinatura). Os caches leem a pista a cada chamada (as chaves incluem nomes e limites
+  das curvas), então renomeações feitas pelo app aparecem na hora no processo stdio.
+- Evolução e tendências ainda não consideram mudança de acerto/pneu, nem condições.
