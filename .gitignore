@@ -4,3 +4,5 @@ data/
 *.log
 .env
 coverage/
+dev-dist/
+*.tsbuildinfo

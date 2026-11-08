@@ -1,0 +1,8 @@
+{
+  // Editor-only root config. Real typechecking is per package: `npm run typecheck`.
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["vitest.config.ts"]
+}

@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // shared is isomorphic (Node + browser): no Node or DOM globals allowed.
+    "types": [],
+    "lib": ["ES2023"]
+  },
+  "include": ["src"]
+}

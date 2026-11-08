@@ -323,14 +323,14 @@ gráficos. Assim você não precisa sair do app.
 |---|---|---|
 | Linguagem | **TypeScript** de ponta a ponta | Uma linguagem só para servidor, UI e MCP; tipos compartilhados para o formato do pacote |
 | Runtime | Node.js 24 LTS | `dgram` para UDP, maduro, LTS atual |
-| Monorepo | pnpm workspaces | Pacotes `protocol`/`core`/`server`/`mcp`/`web` compartilhando tipos |
+| Monorepo | npm workspaces (npm 11, já instalado) | Pacotes compartilhando tipos, sem ferramenta extra |
 | Salsa20 | `@noble/ciphers` | Puro JS, auditado, sem dependência nativa |
 | Servidor | Fastify + `ws` | Leve e rápido |
 | Frontend | **React + Vite + PWA** (`vite-plugin-pwa`) | Maior ecossistema e mais exemplos. Os valores de 60 Hz **não passam pelo estado do React** (ver abaixo) |
 | Estado da UI | Zustand (configuração, telas, preferências) + store externo com `requestAnimationFrame` para a telemetria ao vivo | A UI re-renderiza só quando a configuração muda; os números ao vivo são desenhados direto |
 | Carrossel / gestos | CSS scroll-snap + Pointer Events (sem biblioteca); Embla Carousel como plano B | Nativo e suave no iOS/Android |
 | Gráficos | **uPlot** (traces de alta frequência) + Canvas 2D (mapa, pneus, círculo G, shift lights) | Desenha dezenas de milhares de pontos a 60 fps |
-| Banco | SQLite (`better-sqlite3`) para metadados, arquivos binários compactados para os traces | Local, sem servidor, fácil de copiar |
+| Banco | SQLite nativo do Node (`node:sqlite`) para metadados, arquivos binários compactados (gzip) para os traces | Local, sem compilação nativa no Windows, fácil de copiar |
 | MCP | `@modelcontextprotocol/sdk` (oficial) + `zod` | stdio + Streamable HTTP; os schemas do zod validam a entrada das tools |
 | Testes | Vitest + sessões gravadas pelo simulador | Testes com dados reais sem console |
 | Qualidade | TypeScript `strict` + Biome (lint/format) | Uma ferramenta só, rápida |
