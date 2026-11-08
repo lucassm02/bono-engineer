@@ -8,7 +8,13 @@ import {
 } from '../lib/labels.ts';
 import { disabledViews } from '../lib/profile.ts';
 import { send } from '../net/transport.ts';
-import { closePicker, dispatchProfile, goToView, setLocked } from '../state/actions.ts';
+import {
+  closePicker,
+  dispatchProfile,
+  goToView,
+  openLayoutEditor,
+  setLocked,
+} from '../state/actions.ts';
 import { type KeepAwakeMode, useUi } from '../state/uiStore.ts';
 import { ViewIcon } from './ViewIcon.tsx';
 
@@ -204,6 +210,9 @@ export function ViewPicker() {
                 }}
               />
             </div>
+            <button type="button" className="btn btn-ghost" onClick={openLayoutEditor}>
+              Editar a tela Personalizada
+            </button>
             <dl className="picker-info">
               <dt>Dispositivo</dt>
               <dd>

@@ -48,6 +48,8 @@ export interface UiState {
   currentView: ViewId;
   overlayVisible: boolean;
   pickerOpen: boolean;
+  /** Editor of the "Personalizada" grid. */
+  layoutEditorOpen: boolean;
   lapPopup: LapCompletedEvent | null;
   notices: Notice[];
   keepAwake: KeepAwakeMode;
@@ -83,6 +85,7 @@ export const useUi = create<UiState>()(() => ({
   currentView: profile0.startView,
   overlayVisible: false,
   pickerOpen: false,
+  layoutEditorOpen: false,
   lapPopup: null,
   notices: [],
   keepAwake: 'pending',

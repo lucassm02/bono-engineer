@@ -7,6 +7,7 @@
 import type { LiveFrame } from '@gt7/shared';
 import { TIMINGS } from '../config.ts';
 import { useUi } from '../state/uiStore.ts';
+import { derived } from './derived.ts';
 import { RollingHistory } from './history.ts';
 
 class LiveStore {
@@ -35,6 +36,7 @@ class LiveStore {
       });
       this.lastHistoryT = ts;
     }
+    derived.push(frame);
     // Mirror low-frequency fields only when they change.
     if (!prev || prev.state !== frame.state || prev.format !== frame.format) {
       useUi.setState({ liveState: frame.state, frameFormat: frame.format });
@@ -45,6 +47,7 @@ class LiveStore {
     this.frame = null;
     this.version++;
     this.history.clear();
+    derived.clear();
     useUi.setState({ liveState: null, frameFormat: null });
   }
 }

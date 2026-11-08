@@ -9,35 +9,40 @@ import {
   SourceBadge,
 } from './components/Chrome.tsx';
 import { LapPopup } from './components/LapPopup.tsx';
+import { LayoutEditor } from './components/LayoutEditor.tsx';
 import { StatusLayer } from './components/StatusLayer.tsx';
 import { useGestures } from './components/useGestures.ts';
 import { ViewPicker } from './components/ViewPicker.tsx';
 import type { GestureOutput } from './lib/gestures.ts';
 import {
+  closeLayoutEditor,
   closePicker,
   cycleDeltaReference,
   openPicker,
   setLocked,
   showOverlay,
 } from './state/actions.ts';
+import { handleDoubleTapOverride } from './state/gestureOverride.ts';
 import { useUi } from './state/uiStore.ts';
 
 function onGesture(g: GestureOutput): void {
   const s = useUi.getState();
-  if (s.pickerOpen || s.profile.locked) return;
+  if (s.pickerOpen || s.layoutEditorOpen || s.profile.locked) return;
   if (g === 'tap') showOverlay();
-  else if (g === 'doubleTap') cycleDeltaReference();
-  else if (g === 'longPress') openPicker();
+  else if (g === 'doubleTap') {
+    if (!handleDoubleTapOverride()) cycleDeltaReference();
+  } else if (g === 'longPress') openPicker();
 }
 
 function onKey(e: KeyboardEvent): void {
   if (e.target instanceof HTMLElement && e.target.closest('input, textarea, select')) return;
   const s = useUi.getState();
   if (e.key === 'Escape') {
-    if (s.pickerOpen) closePicker();
+    if (s.layoutEditorOpen) closeLayoutEditor();
+    else if (s.pickerOpen) closePicker();
     return;
   }
-  if (s.pickerOpen) return;
+  if (s.pickerOpen || s.layoutEditorOpen) return;
   if (e.key.toLowerCase() === 'l') {
     setLocked(!s.profile.locked);
     return;
@@ -72,6 +77,7 @@ export function App() {
       <LapPopup />
       <Notices />
       <ViewPicker />
+      <LayoutEditor />
     </div>
   );
 }

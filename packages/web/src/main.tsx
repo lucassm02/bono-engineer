@@ -5,6 +5,7 @@ import { setupKeepAwake } from './lib/wakeLock.ts';
 import { startConnection } from './net/connection.ts';
 import { addNotice, useUi } from './state/uiStore.ts';
 import './styles/index.css';
+import './styles/views-extra.css';
 
 startConnection();
 setupKeepAwake((mode) => {

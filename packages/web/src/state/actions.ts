@@ -5,6 +5,7 @@ import { TIMINGS } from '../config.ts';
 import { stepIndex } from '../lib/carousel.ts';
 import { DELTA_REFERENCE_LABELS, VIEW_LABELS } from '../lib/labels.ts';
 import { nextDeltaReference, type ProfileAction, reduceProfile } from '../lib/profile.ts';
+import { derived } from '../live/derived.ts';
 import { send } from '../net/transport.ts';
 import { addNotice, setProfile, useUi } from './uiStore.ts';
 
@@ -63,9 +64,10 @@ export function dispatchProfile(action: ProfileAction): void {
 /** Double tap: next delta reference. */
 export function cycleDeltaReference(): void {
   const { profile } = useUi.getState();
-  // The WS contract does not say yet whether a captured top lap exists for the track, so the cycle
-  // always offers it; the views show "sem referência" when the server has none (delta = null).
-  const kind = nextDeltaReference(profile.deltaReference, true);
+  // The WS contract does not say whether a captured top lap exists for the track: it is inferred
+  // from frames (live/derived.ts). Unknown tracks still offer it once; once the server answered
+  // "no reference lap" for this track the cycle skips it.
+  const kind = nextDeltaReference(profile.deltaReference, derived.referenceAvailable());
   dispatchProfile({ type: 'setDeltaReference', kind });
   send({ type: 'setDeltaReference', kind });
   vibrate(20);
@@ -81,6 +83,15 @@ export function setLocked(locked: boolean): void {
     locked ? 'Gestos travados. Segure o cadeado para destravar.' : 'Gestos destravados.',
     2500,
   );
+}
+
+export function openLayoutEditor(): void {
+  if (useUi.getState().profile.locked) return;
+  useUi.setState({ layoutEditorOpen: true, pickerOpen: false, overlayVisible: false });
+}
+
+export function closeLayoutEditor(): void {
+  useUi.setState({ layoutEditorOpen: false });
 }
 
 export function openPicker(): void {

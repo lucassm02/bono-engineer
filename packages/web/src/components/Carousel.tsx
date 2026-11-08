@@ -35,7 +35,7 @@ export function Carousel() {
   const views = useUi((s) => s.profile.views);
   const current = useUi((s) => s.currentView);
   const locked = useUi((s) => s.profile.locked);
-  const pickerOpen = useUi((s) => s.pickerOpen);
+  const pickerOpen = useUi((s) => s.pickerOpen || s.layoutEditorOpen);
   const idx = Math.max(0, views.indexOf(current));
   const slots = carouselSlots(idx, views.length);
   const curSlot = slots.findIndex((s) => s.role === 'cur');

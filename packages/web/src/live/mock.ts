@@ -5,6 +5,7 @@
  */
 
 import type {
+  Corner,
   DeltaReferenceKind,
   LapCompletedEvent,
   LiveFrame,
@@ -12,6 +13,8 @@ import type {
   SectorStatus,
   Wheels,
 } from '@gt7/shared';
+import type { CornerHintExt } from '../lib/cornerPass.ts';
+import type { TrackGeometry } from '../lib/trackOutline.ts';
 
 const G = 9.81;
 const SECTORS = 3;
@@ -21,6 +24,16 @@ const GEAR_TOP_KMH = [72, 104, 136, 168, 202, 238, 286] as const;
 const FUEL_PER_LAP = 2.6;
 const FUEL_START = 32;
 const MENU_MS = 1500;
+/** Fraction of the arc where the reference lap picks up the throttle. */
+const REF_PICKUP_FRAC = 0.3;
+export const MOCK_TRACK_ID = 'mock-ring';
+
+interface MockCornerTargets {
+  brakeM: number | null;
+  vminKmh: number;
+  gear: number;
+  throttleOnM: number;
+}
 
 /** Mulberry32 PRNG. */
 export function rng(seed: number): () => number {
@@ -34,27 +47,33 @@ export function rng(seed: number): () => number {
   };
 }
 
-/** Circuit description: straights (radius 0) and arcs (signed radius, + = left). */
+/**
+ * Circuit description: straights (radius 0) and arcs (signed radius, + = left). Total turn = −360°
+ * and two straights were solved so the loop closes (< 1 m), so the map draws a closed outline.
+ */
 const LAYOUT: { len?: number; r?: number; deg?: number }[] = [
   { len: 560 },
   { r: -45, deg: 100 },
   { len: 180 },
-  { r: 120, deg: 60 },
-  { len: 300 },
+  { r: -120, deg: 60 },
+  { len: 792 },
   { r: 28, deg: 165 },
   { len: 260 },
   { r: -200, deg: 45 },
   { len: 140 },
   { r: -70, deg: 80 },
-  { r: 70, deg: 80 },
+  { r: -70, deg: 80 },
   { len: 380 },
   { r: -90, deg: 95 },
-  { len: 200 },
-  { r: 260, deg: 30 },
+  { len: 172 },
+  { r: 260, deg: 40 },
   { len: 220 },
   { r: -55, deg: 105 },
   { len: 120 },
 ];
+
+/** Display names of some mock corners (by 1-based corner number); the rest stay unnamed. */
+const CORNER_NAMES: Record<number, string> = { 3: 'Grampo', 5: 'Dupla 1', 6: 'Dupla 2' };
 
 export interface MockTrack {
   lengthM: number;
@@ -63,6 +82,34 @@ export interface MockTrack {
   x: Float32Array;
   z: Float32Array;
   heading: Float32Array;
+  /** One corner per arc of the layout (entry = arc start, apex = middle, exit = arc end). */
+  corners: Corner[];
+}
+
+function buildCorners(): Corner[] {
+  const corners: Corner[] = [];
+  let pos = 0;
+  for (const s of LAYOUT) {
+    if (s.len) {
+      pos += s.len;
+      continue;
+    }
+    if (!s.r || !s.deg) continue;
+    const len = Math.round(Math.abs(s.r) * ((s.deg * Math.PI) / 180));
+    const n = corners.length + 1;
+    corners.push({
+      id: `T${n}`,
+      index: n - 1,
+      name: CORNER_NAMES[n] ?? null,
+      entryM: pos,
+      apexM: pos + Math.round(len / 2),
+      exitM: pos + len,
+      direction: s.r > 0 ? 'left' : 'right',
+      minRadiusM: Math.abs(s.r),
+    });
+    pos += len;
+  }
+  return corners;
 }
 
 export function buildTrack(): MockTrack {
@@ -90,7 +137,7 @@ export function buildTrack(): MockTrack {
     px += Math.sin(h);
     pz += Math.cos(h);
   }
-  return { lengthM: n, kappa, x, z, heading };
+  return { lengthM: n, kappa, x, z, heading, corners: buildCorners() };
 }
 
 /** Max longitudinal acceleration (m/s²) at speed v: power-limited, traction-capped, minus drag. */
@@ -167,6 +214,8 @@ function rpmFor(kmh: number, gear: number): number {
 
 interface RefLap {
   id: string;
+  /** Speed profile (m/s per meter) of the lap (corner targets for the hints). */
+  profile: Float32Array;
   cum: Float64Array;
   sectors: number[];
   timeMs: number;
@@ -225,23 +274,38 @@ export class MockSession {
   private prevDelta: number | null = null;
   private deltaRate = 0;
   private lockEvent = 0;
+  private energy = 0;
+  private pickupFrac = REF_PICKUP_FRAC;
+  /** Corner index per lap meter (−1 on straights). */
+  private readonly cornerIndex: Int16Array;
+
+  // Corner hints: reference targets per (reference lap, corner) and the last pass delta.
+  private readonly targetCache = new Map<string, MockCornerTargets>();
+  private readonly lastPassDelta = new Map<string, number>();
 
   constructor(opts: MockOptions = {}) {
     this.rand = rng(opts.seed ?? 7);
     this.startAt = opts.startAt ?? 0;
     this.menuLeft = opts.skipMenu ? 0 : MENU_MS;
     const n = this.track.lengthM;
+    this.cornerIndex = new Int16Array(n).fill(-1);
+    this.track.corners.forEach((c, k) => {
+      for (let m = c.entryM; m < c.exitM && m < n; m++) this.cornerIndex[m] = k;
+    });
     const pbProfile = speedProfile(this.track, [0.995, 0.995, 0.995], null);
     const pbCum = cumulativeTime(pbProfile);
     this.personalBest = {
       id: 'mock-pb',
+      profile: pbProfile,
       cum: pbCum,
       sectors: sectorTimes(pbCum, n),
       timeMs: pbCum[n]!,
     };
-    const topCum = cumulativeTime(speedProfile(this.track, [1.025, 1.025, 1.025], null));
+    const topProfile = speedProfile(this.track, [1.025, 1.025, 1.025], null);
+    const topCum = cumulativeTime(topProfile);
     this.topRef = {
       id: 'mock-top',
+      profile: topProfile,
       cum: topCum,
       sectors: sectorTimes(topCum, n),
       timeMs: topCum[n]!,
@@ -266,7 +330,107 @@ export class MockSession {
     const mistakeAt = this.mistakeThisLap ? Math.floor(this.rand() * this.track.lengthM) : null;
     this.mistakeAt = mistakeAt ?? Number.POSITIVE_INFINITY;
     this.lockEvent = Math.floor(this.rand() * this.track.lengthM);
+    this.pickupFrac = 0.22 + this.rand() * 0.24;
     return speedProfile(this.track, grip, mistakeAt);
+  }
+
+  /** Corner containing lap meter `i` (null on straights). */
+  private cornerAtM(i: number): Corner | null {
+    const k = this.cornerIndex[i] ?? -1;
+    return k >= 0 ? (this.track.corners[k] ?? null) : null;
+  }
+
+  /** Reference targets of a corner from a reference lap's speed profile (cached). */
+  private targetsFor(ref: RefLap, c: Corner): MockCornerTargets {
+    const key = `${ref.id}|${ref.timeMs}|${c.id}`;
+    const hit = this.targetCache.get(key);
+    if (hit) return hit;
+    const p = ref.profile;
+    const n = p.length;
+    const at = (m: number) => p[((m % n) + n) % n]!;
+    const decel = (m: number) => (at(m + 1) ** 2 - at(m) ** 2) / 2 < -0.6;
+    let brakeM: number | null = null;
+    // Like the core provider, but not before the previous corner's exit (back-to-back corners).
+    const prev = this.track.corners[c.index - 1];
+    const from = Math.max(c.entryM - 300, prev ? prev.exitM : -Infinity);
+    for (let m = from; m <= c.apexM; m++) {
+      if (decel(m) && !decel(m - 1)) {
+        brakeM = ((m % n) + n) % n;
+        break;
+      }
+    }
+    let vmin = Number.POSITIVE_INFINITY;
+    let vminM = c.entryM;
+    for (let m = c.entryM; m <= c.exitM; m++) {
+      if (at(m) < vmin) {
+        vmin = at(m);
+        vminM = m;
+      }
+    }
+    const pickup = Math.max(vminM, c.entryM + Math.round((c.exitM - c.entryM) * REF_PICKUP_FRAC));
+    const t: MockCornerTargets = {
+      brakeM,
+      vminKmh: vmin * 3.6,
+      gear: gearFor(vmin * 3.6),
+      throttleOnM: pickup % n,
+    };
+    this.targetCache.set(key, t);
+    return t;
+  }
+
+  private nextCornerHint(): CornerHintExt | null {
+    const corners = this.track.corners;
+    if (corners.length === 0) return null;
+    const n = this.track.lengthM;
+    const d = this.dist;
+    let c = corners.find((x) => x.entryM >= d);
+    let distance: number;
+    if (c) distance = c.entryM - d;
+    else {
+      c = corners[0]!;
+      distance = c.entryM + n - d;
+    }
+    const ref = this.refLap();
+    const t = ref ? this.targetsFor(ref, c) : null;
+    return {
+      cornerId: c.id,
+      name: c.name,
+      direction: c.direction,
+      distanceToEntryM: distance,
+      referenceBrakePointM: t?.brakeM ?? null,
+      referenceMinSpeedKmh: t?.vminKmh ?? null,
+      referenceGearAtApex: t?.gear ?? null,
+      lastPassDeltaMs: this.lastPassDelta.get(c.id) ?? null,
+      referenceThrottleOnM: t?.throttleOnM ?? null,
+    };
+  }
+
+  /** Interpolated world position at a lap distance (smooth map dot between meters). */
+  private positionAt(dist: number): { x: number; y: number; z: number } {
+    const n = this.track.lengthM;
+    const i = Math.min(n - 1, Math.max(0, Math.floor(dist)));
+    const j = (i + 1) % n;
+    const f = Math.min(1, Math.max(0, dist - i));
+    const { x, z } = this.track;
+    return { x: x[i]! + (x[j]! - x[i]!) * f, y: 0, z: z[i]! + (z[j]! - z[i]!) * f };
+  }
+
+  /** Track polyline/corners for the map (the server would serve this over REST). */
+  geometry(): TrackGeometry {
+    const n = this.track.lengthM;
+    const d = new Float32Array(n);
+    for (let i = 0; i < n; i++) d[i] = i;
+    return {
+      trackId: MOCK_TRACK_ID,
+      x: this.track.x,
+      z: this.track.z,
+      d,
+      lengthM: n,
+      corners: this.track.corners,
+      sectorStartsM: [0, 1, 2].map((s) => Math.floor((s * n) / SECTORS)),
+      source: 'mock',
+      closed: true,
+    };
   }
 
   private refLap(): RefLap | null {
@@ -307,6 +471,16 @@ export class MockSession {
         this.closeSector(s, time);
       }
     }
+    // Corner passes (time through entry → exit vs the reference) for `lastPassDeltaMs`.
+    const ref = this.refLap();
+    for (const c of this.track.corners) {
+      if (prevDist < c.exitM && this.dist >= c.exitM && ref && c.exitM <= n) {
+        const mine = this.lapCum[c.exitM]! - this.lapCum[c.entryM]!;
+        const theirs = ref.cum[c.exitM]! - ref.cum[c.entryM]!;
+        if (this.lapCum[c.entryM]! > 0 || c.entryM === 0)
+          this.lastPassDelta.set(c.id, mine - theirs);
+      }
+    }
     if (this.dist >= n) {
       lapCompleted = this.closeLap();
     }
@@ -345,6 +519,7 @@ export class MockSession {
     const cum = this.lapCum.slice();
     const lap: RefLap = {
       id: `mock-lap-${this.lap}`,
+      profile: this.profile,
       cum,
       sectors: this.sectorSplits.map((s) => s ?? 0),
       timeMs,
@@ -356,6 +531,7 @@ export class MockSession {
     if (isSb) this.sessionBest = lap;
     if (isPb) {
       this.personalBest.cum = cum;
+      this.personalBest.profile = this.profile;
       this.personalBest.sectors = [...lap.sectors];
       this.personalBest.timeMs = timeMs;
       this.personalBest.id = lap.id;
@@ -420,7 +596,12 @@ export class MockSession {
     if (onTrack) {
       if (accel > 0.4) thrTarget = Math.min(1, 0.45 + accel / Math.max(accelAt(v), 0.5));
       else if (accel < -0.6) brkTarget = Math.min(1, -accel / BRAKE + 0.05);
-      else thrTarget = kappa !== 0 ? 0.38 : 0.95;
+      else if (kappa !== 0) {
+        // Corner: maintenance below 10 % until the pickup point, then partial throttle.
+        const c = this.cornerAtM(i);
+        const frac = c ? (i - c.entryM) / Math.max(1, c.exitM - c.entryM) : 1;
+        thrTarget = frac < this.pickupFrac ? 0.04 : 0.38;
+      } else thrTarget = 0.95;
     }
     this.throttle += (thrTarget - this.throttle) * k;
     this.brake += (brkTarget - this.brake) * k;
@@ -479,6 +660,9 @@ export class MockSession {
       onKerb && left ? 'C' : 'T',
       onKerb && !left ? 'C' : 'T',
     ];
+
+    // Energy recovery (hybrid-like regen under braking, smoothed).
+    if (dt > 0) this.energy += (this.brake * 60 * (v / 60) - this.energy) * Math.min(1, dt / 0.3);
 
     // Fuel.
     if (onTrack && dt > 0) {
@@ -545,10 +729,11 @@ export class MockSession {
         capacity: 100,
         perLapAvg: this.fuelPerLap,
         lapsRemaining: this.fuelPerLap ? this.fuel / this.fuelPerLap : null,
+        // Same semantics as the core: total needed from here to the flag (not what to add).
         neededToFinish: this.fuelPerLap
-          ? Math.max(0, (TOTAL_LAPS - this.lap + 1 - this.dist / n) * this.fuelPerLap - this.fuel)
+          ? Math.max(0, (TOTAL_LAPS - this.lap + 1 - this.dist / n) * this.fuelPerLap)
           : null,
-        energyRecovery: null,
+        energyRecovery: onTrack ? this.energy : null,
       },
       g: { lateral: latG, longitudinal: lonG, vertical: onTrack ? 1 + bump * 20 : 1 },
       flags: {
@@ -565,7 +750,7 @@ export class MockSession {
         asmActive: asm,
         tcsActive: tcs,
       },
-      position: { x: this.track.x[i]!, y: 0, z: this.track.z[i]! },
+      position: this.positionAt(this.dist),
       headingRad: this.track.heading[i]!,
       lap: {
         lap: this.lap,
@@ -587,12 +772,12 @@ export class MockSession {
       distanceM: onTrack ? this.dist : null,
       lapFraction: onTrack ? this.dist / n : null,
       track: {
-        id: 'mock-ring',
+        id: MOCK_TRACK_ID,
         name: 'Circuito de demonstração',
         lengthM: n,
         confidence: 'confirmed',
       },
-      nextCorner: null,
+      nextCorner: onTrack ? this.nextCornerHint() : null,
       link: { rateHz: 60, lossPct: 0, lost: 0, received: this.seq, lastPacketAt: t },
     };
   }

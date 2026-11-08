@@ -1,4 +1,10 @@
-import type { ConnectionState, DeltaReferenceKind, SurfaceChar, ViewId } from '@gt7/shared';
+import {
+  type ConnectionState,
+  type DeltaReferenceKind,
+  type SurfaceChar,
+  VIEW_IDS,
+  type ViewId,
+} from '@gt7/shared';
 
 export const VIEW_LABELS: Record<ViewId, string> = {
   corrida: 'Corrida',
@@ -29,13 +35,7 @@ export const VIEW_DESCRIPTIONS: Record<ViewId, string> = {
 };
 
 /** Views implemented in this build; the others show a placeholder. */
-export const IMPLEMENTED_VIEWS: ReadonlySet<ViewId> = new Set<ViewId>([
-  'corrida',
-  'deltaGrande',
-  'pneus',
-  'inputs',
-  'motor',
-]);
+export const IMPLEMENTED_VIEWS: ReadonlySet<ViewId> = new Set<ViewId>(VIEW_IDS);
 
 export const DELTA_REFERENCE_LABELS: Record<DeltaReferenceKind, string> = {
   personalBest: 'Melhor pessoal',

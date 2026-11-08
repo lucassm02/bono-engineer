@@ -8,6 +8,7 @@ import {
   normalizeDeviceProfile,
   VIEW_IDS,
   type ViewId,
+  type WidgetGridLayout,
 } from '@gt7/shared';
 
 export type ProfileAction =
@@ -17,6 +18,7 @@ export type ProfileAction =
   | { type: 'setPopups'; enabled: boolean }
   | { type: 'setLocked'; locked: boolean }
   | { type: 'setDeltaReference'; kind: DeltaReferenceKind }
+  | { type: 'setCustomLayout'; layout: WidgetGridLayout }
   | { type: 'reset' };
 
 /** Applies an action; returns the same object when nothing changed (cheap equality check). */
@@ -58,6 +60,10 @@ export function reduceProfile(p: DeviceProfile, a: ProfileAction, now: number): 
     case 'setDeltaReference':
       if (p.deltaReference === a.kind) return p;
       next = { ...p, deltaReference: a.kind };
+      break;
+    case 'setCustomLayout':
+      if (p.customLayout === a.layout) return p;
+      next = { ...p, customLayout: a.layout };
       break;
     case 'reset':
       next = createDefaultDeviceProfile(p.deviceId, p.name);

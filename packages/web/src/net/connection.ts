@@ -9,7 +9,9 @@ import { type ClientMessage, type ServerMessage, WS_PATH, WS_PROTOCOL_VERSION } 
 import { reconcileProfiles } from '../lib/profile.ts';
 import { live } from '../live/liveStore.ts';
 import { MockSession } from '../live/mock.ts';
+import { trackGeometry } from '../live/trackGeometry.ts';
 import { goToView, showLapPopup } from '../state/actions.ts';
+import { recordLap, resetSessionLaps, setSessionId } from '../state/sessionStore.ts';
 import { addNotice, loadLocalProfile, setProfile, useUi } from '../state/uiStore.ts';
 import { setSender } from './transport.ts';
 import { WsClient, wsUrlFor } from './wsClient.ts';
@@ -30,10 +32,14 @@ function handleServerMessage(msg: ServerMessage): void {
       if (useUi.getState().source === 'server') live.push(msg.frame);
       break;
     case 'lapCompleted':
+      recordLap(msg.event);
       showLapPopup(msg.event);
+      // The server may have just built the track centerline: retry the map geometry.
+      trackGeometry.retry();
       break;
     case 'sessionChanged':
       useUi.setState({ session: msg.session });
+      setSessionId(msg.session?.id ?? null, true);
       break;
     case 'status':
       useUi.setState({ serverStatus: msg.status });
@@ -75,6 +81,9 @@ export function startMock(auto: boolean): void {
   live.clear();
   mock = new MockSession({ seed: Date.now() % 100000, startAt: Date.now() });
   mock.setReference(useUi.getState().profile.deltaReference);
+  trackGeometry.setMock(mock.geometry());
+  resetSessionLaps();
+  setSessionId('mock', false);
   useUi.setState({ source: 'mock', mockAuto: auto });
   setSender(handleMockClientMessage);
   let last = performance.now();
@@ -89,7 +98,10 @@ export function startMock(auto: boolean): void {
       remaining -= step;
       const { frame, lapCompleted } = mock.step(step);
       if (remaining <= 0) live.push(frame);
-      if (lapCompleted) showLapPopup(lapCompleted);
+      if (lapCompleted) {
+        recordLap(lapCompleted);
+        showLapPopup(lapCompleted);
+      }
     }
   }, 1000 / 60);
 }
@@ -99,6 +111,8 @@ export function stopMock(): void {
   mockTimer = null;
   mock = null;
   live.clear();
+  trackGeometry.clear();
+  resetSessionLaps();
 }
 
 // ---------------------------------------------------------------------------------------------
