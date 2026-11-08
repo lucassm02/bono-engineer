@@ -473,3 +473,95 @@
   (curvas/nomes/assinatura). Os caches leem a pista a cada chamada (as chaves incluem nomes e limites
   das curvas), então renomeações feitas pelo app aparecem na hora no processo stdio.
 - Evolução e tendências ainda não consideram mudança de acerto/pneu, nem condições.
+
+## Onda 3 — servidor (`@gt7/server`)
+
+### Execução
+
+- Scripts na raiz (todos com `node --disable-warning=ExperimentalWarning --import tsx`):
+  - `npm start` = servidor + painel compilado (`packages/web/dist`) e abre o navegador;
+  - `npm run demo` = `--sim`: um `FakeConsole` **no mesmo processo** com voltas sintéticas
+    (perfil `amateur` por padrão) nas portas UDP **47739/47740**, para não brigar com um console
+    real em 33739/33740. Os dados da demo vão para `data/demo` (o runtime grava o IP do console
+    passado por opção, e as voltas sintéticas não devem poluir os recordes reais);
+  - `npm run dev` = `--dev`: servidor + Vite (`npm run dev -w @gt7/web`) como processo filho, sem
+    dependência extra. O npm é chamado pelo `npm-cli.js` (sem shell) e no Windows o filho é
+    encerrado com `taskkill /T` (mata o Vite neto);
+  - `npm run build` = build do web.
+- Configuração por flags e variáveis de ambiente (a flag vence): `--port/GT7_PORT`, `--host/GT7_HOST`,
+  `--data/GT7_DATA`, `--ps-ip/GT7_PS_IP`, `--format/GT7_FORMAT`, `--token/GT7_TOKEN`,
+  `--sim/GT7_SIM=1` (+ `--sim-profile`, `--sim-laps`, `--sim-seed`, `--sim-replay`), `--dev`,
+  `--no-open/GT7_NO_OPEN=1`, `--no-record`, `--verbose`.
+- O banner (pt-BR) mostra a URL local, as URLs da LAN, um QR no terminal (`qrcode`, `small`), o
+  console/formato, a pasta de dados e o aviso de firewall.
+- Encerramento (SIGINT/SIGTERM/SIGBREAK): fecha os WebSockets, o Fastify, o runtime (sessão, gravação,
+  UDP) e o banco; segundo Ctrl+C ou 8 s → saída forçada.
+
+### HTTP e WebSocket
+
+- `createApp()` é a fábrica usada pelo `main.ts` e pelos testes. Ela cria o `Gt7Runtime` (para ligar o
+  `statusExtras` com URLs da LAN e dispositivos conectados).
+- Handlers de erro/404 são registrados **antes** do plugin `/api`: no Fastify, contextos filhos
+  herdam esses handlers no momento do registro. Erros sempre em `{ error: { code, message } }`
+  com mensagem pt-BR; JSON malformado → 400 "JSON inválido".
+- Painel: `@fastify/static` com fallback de SPA (rotas sem extensão → `index.html`), `assets/` com cache
+  imutável, `index.html`/`sw.js` com `no-cache`. Sem `dist`, uma página pt-BR manda rodar
+  `npm run build` (a API continua respondendo).
+- **Hub WS:** o `frame` é serializado uma vez e enviado a todos. Cliente com `bufferedAmount` > 32 KiB
+  **perde frames** (nada fica enfileirado no hub). Outras mensagens sempre vão, mas cliente com mais
+  de 2 MiB pendentes é derrubado (memória limitada). Ping de protocolo a cada 30 s derruba conexões
+  mortas.
+- Nada é enviado antes do `hello`. No `hello`: `welcome`, aviso se a versão do protocolo diferir,
+  `deviceProfile`, `status`, `sessionChanged` (sessão ativa ou null) e o último frame.
+- Perfil novo é criado com `updatedAt = 1` (o core troca 0 por "agora"), para que uma cópia local
+  já editada no navegador vença o `reconcileProfiles` do web. `setDeviceProfile` é normalizado
+  (`normalizeDeviceProfile`) e o `deviceId` é sempre o da conexão.
+- `setTargetView` → `showView` para **todas** as conexões do dispositivo alvo; alvo offline → `notice`
+  `targetOffline` para quem pediu. `currentView`/nomes/último contato alimentam `status.devices`.
+- `captureStatus` do runtime vira um `status` imediato (o estado da captura está em `status.capture`);
+  os outros `status` são agrupados (no máximo 1 a cada 100 ms).
+- Comandos lentos (`setPacketFormat`, início/fim de captura esperam o cooldown de ~15 s do ingestor)
+  não bloqueiam: o WS e o REST respondem na hora (REST com 202) e o progresso vai por
+  `status`/`notice`.
+
+### REST (`/api`)
+
+- `status` (inclui `firewall`, `settings`, `running`, `httpPort`, `tokenRequired`, `simulator`),
+  `settings` GET/PATCH, `firewall` + `firewall/check`, `lan`, `sessions` (lista/detalhe/voltas/
+  apagar — 409 para a sessão em andamento), `laps` (por `sessionId` ou `trackId` com filtros; get;
+  delete; `PUT/DELETE /laps/:id/reference`), `references`, `tracks` (lista/get/`centerline`/voltas,
+  PATCH nome/layout, PATCH curva nome/`brakeMarkerNote`, PUT `sectors` com `{count}` ou `{gates}` →
+  `runtime.refreshTrack()`), `devices` (lista/get/put/delete + `POST /devices/:id/show-view`),
+  `capture` (status/start/stop), `recordings/:sessionId` (download `.gt7rec`).
+- Uma rota por área em `routes/*.ts` com o mesmo `RouteContext` (inclui o `runtime`, logo
+  `runtime.analysis`); `createApp({ extraRoutes })` ou `ROUTE_MODULES` recebem o futuro
+  `routes/analysis.ts`.
+- Portais de setor do usuário: ordenados, portal 0 forçado em 0 m, espaçamento ≥ 50 m, até 20 setores,
+  reindexados.
+- `captureFormat` não tem setter no runtime: o PATCH grava a configuração e o servidor a passa como
+  `format` em cada início de captura.
+- Tipos REST adicionados em `shared/ws.ts` (aditivo): `API_PREFIX`, `ApiErrorBody`, `ApiStatus`,
+  `ApiSettings(Patch)`, `FirewallStatus`, `LanInfo`, `DeviceInfo`, `SessionDetail`,
+  `StartCaptureRequest`; campos opcionais `ServerStatus.firewall` e `devices[].lastSeenAt`.
+
+### LAN, firewall e segurança
+
+- URLs da LAN: IPv4 não internos, sem 169.254; ordem 192.168 > 10 > 172.16–31, com interfaces
+  virtuais (vEthernet/WSL/VirtualBox/VMware/Docker/VPN) por último. QR em SVG (data URL) só para a
+  URL preferida.
+- Firewall do Windows: **só leitura** (`netsh advfirewall firewall show rule name=...`; código 0 =
+  existe, 1 = não existe). Regras esperadas "GT7 Race Engineer (TCP <porta>)" e "(UDP 33740)". Se
+  faltarem, o banner e o `/api/status` trazem os comandos `New-NetFirewallRule` / `netsh` com
+  `-Profile Private` para o usuário rodar como administrador. Uma liberação do `node.exe` feita
+  pelo prompt do Windows não é detectada (a mensagem avisa).
+- Sem autenticação por padrão (app de LAN). `--token`: exige token em `/api` e `/ws` (`?token=`,
+  `x-gt7-token`, `Authorization: Bearer` ou cookie `gt7_token`). Abrir qualquer página com `?token=`
+  válido grava o cookie, então o painel funciona sem saber de token; o QR já leva o `?token=`.
+
+### Pendências
+
+- Endpoints de análise (`/api/analysis/*`) e o MCP HTTP (`mountMcpHttp` em `/mcp`) ficam para a
+  próxima onda.
+- Sem download de trace de volta pela API (virá com a análise).
+- O limitador de frames do core (`receivedAt - último ≥ 33,3 ms`) entrega ~21 frames/s com pacotes a
+  60 Hz (salta 2 ou 3 pacotes). Um acumulador (`último += intervalo`) daria 30 Hz de verdade.

@@ -6,7 +6,7 @@
  * Bump {@link WS_PROTOCOL_VERSION} on breaking changes.
  */
 
-import type { DeltaReferenceKind, Id, Session } from './domain.ts';
+import type { DeltaReferenceKind, Id, Lap, Session } from './domain.ts';
 import type { ConnectionState, LapCompletedEvent, LiveFrame } from './live.ts';
 import type { IngestorStats, PacketFormat } from './telemetry.ts';
 import type { DeviceProfile, ViewId } from './ui.ts';
@@ -45,8 +45,16 @@ export interface ServerStatus {
   consoleIp: string | null;
   capture: ReferenceCaptureStatus;
   /** Currently connected dashboard devices. */
-  devices: { deviceId: string; name: string; currentView: ViewId | null }[];
+  devices: {
+    deviceId: string;
+    name: string;
+    currentView: ViewId | null;
+    /** Epoch ms of the last message from this device. (server, additive) */
+    lastSeenAt?: number;
+  }[];
   serverVersion: string;
+  /** Windows Firewall check for LAN access (filled by the server). (server, additive) */
+  firewall?: FirewallStatus;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -201,3 +209,108 @@ export type ClientMessage =
 
 export type ServerMessageType = ServerMessage['type'];
 export type ClientMessageType = ClientMessage['type'];
+
+// ---------------------------------------------------------------------------------------------
+// REST API (/api) payloads — owned by @gt7/server (additive)
+// ---------------------------------------------------------------------------------------------
+
+/** Prefix of the JSON REST API. */
+export const API_PREFIX = '/api';
+
+/** Error body of every non-2xx JSON response (`message` is pt-BR). */
+export interface ApiErrorBody {
+  error: { code: string; message: string };
+}
+
+export interface FirewallRuleStatus {
+  /** Rule display name (netsh "name"). */
+  name: string;
+  protocol: 'TCP' | 'UDP';
+  port: number;
+  /** null = unknown (not Windows / check failed). */
+  present: boolean | null;
+}
+
+/** Windows Firewall inbound rules needed for LAN access (TCP http port, UDP 33740). */
+export interface FirewallStatus {
+  /** 'ok' = all rules found; 'missing' = some absent; 'unknown' = not Windows or not checkable. */
+  state: 'ok' | 'missing' | 'unknown';
+  platform: string;
+  rules: FirewallRuleStatus[];
+  /** Commands for an elevated PowerShell (Run as Administrator) creating the missing rules. */
+  powershellCommands: string[];
+  /** Same, using netsh (elevated cmd/PowerShell). */
+  netshCommands: string[];
+  /** pt-BR explanation for the UI. */
+  message: string;
+  checkedAt: number | null;
+}
+
+/** Runtime settings as exposed by GET/PATCH /api/settings. */
+export interface ApiSettings {
+  consoleIp: string | null;
+  liveFormat: PacketFormat;
+  captureFormat: PacketFormat;
+  record: boolean;
+  deltaReference: { kind: DeltaReferenceKind; lapId: Id | null };
+}
+
+/** PATCH /api/settings body (every field optional). */
+export interface ApiSettingsPatch {
+  consoleIp?: string;
+  liveFormat?: PacketFormat;
+  captureFormat?: PacketFormat;
+  record?: boolean;
+  deltaReference?: { kind: DeltaReferenceKind; lapId?: Id | null };
+}
+
+/** GET /api/status. */
+export interface ApiStatus extends ServerStatus {
+  firewall: FirewallStatus;
+  settings: ApiSettings;
+  /** UDP ingestor running. */
+  running: boolean;
+  httpPort: number;
+  /** An access token is required for /api and /ws. */
+  tokenRequired: boolean;
+  /** In-process fake console (demo mode). */
+  simulator: boolean;
+}
+
+/** GET /api/lan: where the dashboard is reachable from the phone. */
+export interface LanInfo {
+  port: number;
+  /** http://<lan-ip>:<port>/ for every non-internal IPv4 interface, best first. */
+  urls: string[];
+  /** Best LAN URL (includes ?token= when a token is configured), null without network. */
+  preferredUrl: string | null;
+  localUrl: string;
+  /** QR code of `preferredUrl` as an SVG data URL. */
+  qrSvgDataUrl: string | null;
+}
+
+/** GET /api/devices entry: stored profile + live connection info. */
+export interface DeviceInfo {
+  deviceId: string;
+  name: string;
+  online: boolean;
+  /** Open WebSocket connections of this device (tabs). */
+  connections: number;
+  currentView: ViewId | null;
+  lastSeenAt: number | null;
+  profile: DeviceProfile | null;
+}
+
+/** GET /api/sessions/:id. */
+export interface SessionDetail {
+  session: Session;
+  laps: Lap[];
+  /** The session is the one in progress. */
+  active: boolean;
+}
+
+/** POST /api/capture/start body (same fields as the WS message). */
+export type StartCaptureRequest = Omit<StartReferenceCaptureMessage, 'type'> & {
+  /** If set, the captured lap must be driven with this car. */
+  expectedCarCode?: number;
+};
