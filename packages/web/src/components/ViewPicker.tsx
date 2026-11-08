@@ -82,6 +82,16 @@ export function ViewPicker() {
       <div className="picker" role="dialog" aria-modal="true" aria-label="Telas e ajustes">
         <header className="picker-head">
           <h2>Telas deste dispositivo</h2>
+          <button
+            type="button"
+            className="btn picker-analysis"
+            onClick={() => {
+              closePicker();
+              location.hash = '#/analise';
+            }}
+          >
+            Abrir análise
+          </button>
           <button type="button" className="btn btn-ghost" ref={closeRef} onClick={closePicker}>
             Fechar
           </button>

@@ -401,7 +401,7 @@ export class MockSession {
       referenceMinSpeedKmh: t?.vminKmh ?? null,
       referenceGearAtApex: t?.gear ?? null,
       lastPassDeltaMs: this.lastPassDelta.get(c.id) ?? null,
-      referenceThrottleOnM: t?.throttleOnM ?? null,
+      ...(t?.throttleOnM != null ? { referenceThrottleOnM: t.throttleOnM } : {}),
     };
   }
 

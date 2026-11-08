@@ -724,3 +724,123 @@
 - Relatórios guardam as imagens; não há limpeza automática de relatórios antigos.
 - O teste UDP do runtime (`runtime.test.ts`, 20× tempo real) pode estourar 30 s quando a suíte
   inteira roda em paralelo na máquina carregada; sozinho passa (~16 s).
+
+## Onda 4c — análise e configurações (`@gt7/web`)
+
+### Estrutura
+
+- **Segunda área do app** ("Análise & Configurações"), pensada para o navegador do PC e responsiva
+  até celular em retrato. O carrossel ao vivo continua sendo a experiência do celular.
+- **Roteador por hash, sem dependência** (`lib/route.ts`, testado): `#/analise` (sessões),
+  `#/analise/sessao/:id`, `#/analise/comparar?lap=&ref=&extra=a,b&corner=`,
+  `#/analise/pista/:id?session=`, `#/captura`, `#/config?s=<seção>`,
+  `#/coach[/:reportId]?session=&lap=&ref=&corner=`. Hash vazio, `#/` ou `#/painel` = painel ao vivo.
+  O hash funciona igual no Vite, no Fastify e no PWA instalado (sem rewrite no servidor nem no
+  service worker).
+- **Code-split:** `main.tsx` escolhe a área pelo hash e carrega `analysis/AnalysisApp.tsx` com
+  `React.lazy` (chunk de ~113 KB de JS + 20 KB de CSS); o bundle do painel ao vivo não mudou. A
+  conexão WS continua ligada na área de análise (status da captura, dispositivos, avisos).
+- Entrada pelo painel: botão **"Abrir análise"** no seletor de telas (pressão longa / Enter).
+- `html[data-area="analysis"]` libera rolagem, seleção de texto e toque normal (o painel trava tudo).
+- Mesma linguagem visual: preto puro, âmbar só na interface, fonte DIN do sistema, números tabulares.
+  Você = laranja `#ff7a2f`, referência = verde-água `#2fd3b0`, voltas extras azul/violeta tracejadas.
+  O til da Bahnschrift parece um traço: custos usam "≈".
+
+### Dados
+
+- Cliente REST próprio (`analysis/api.ts`) + hook `useFetch` (sem biblioteca). Erros viram
+  `ApiError` com a mensagem pt-BR do servidor; servidor fora do ar (erro de rede, 502/504 do proxy ou
+  HTML no lugar de JSON) mostra "Servidor fora do ar" com link para a demonstração do painel.
+- Comparação: `compare?lap&ref&topN=20` e, com o id real da referência, `traces` (um pedido só:
+  `speed,throttle,brake,gear,steering,delta,x,z`, passo 2 m, até 2500 pontos, `ref`=id para o delta
+  acumulado de cada volta), `analysis/tracks/:id` (contorno + ápices),
+  `microsectors?laps=<sua>&ref=<id>` (cores do mapa) e `microsectors` das voltas válidas da sessão
+  (volta ideal no cabeçalho).
+- Referência: `auto | bestReference | personalBest | sessionBest` ou qualquer volta da pista
+  (`/api/laps?trackId=&orderBy=time`). Até 2 voltas extras sobrepostas (`extra=`).
+- Downloads: CSV (`/api/laps/:id/export.csv`), trace JSON (`/api/laps/:id/trace?download=1`),
+  gravação `.gt7rec` (`/api/recordings/:sessionId`) e PNG (`/api/analysis/chart.png?lap&ref&corner`).
+- Contrato conferido com o `shared/api.ts` e o `shared/coach.ts` finais (typecheck) e com o
+  servidor rodando; nenhuma divergência encontrada.
+
+### Comparação (página principal)
+
+- **uPlot sincronizado**: um gráfico por canal (velocidade, acelerador, freio, marcha em degrau,
+  volante em graus, delta acumulado), cursor compartilhado (`cursor.sync`), zoom arrastando (o hook
+  `setScale` propaga o x para os outros; duplo clique volta à volta inteira), eixo Y de largura fixa
+  para alinhar, faixas das curvas em todos e rótulos T1… (com nome quando há zoom) no primeiro. A
+  leitura dos valores no cabeçalho de cada gráfico é escrita direto no DOM (sem re-render). Painel sem
+  dados no formato (ex.: volante no A) fica escondido, com aviso.
+- **Mapa em canvas**: contorno da pista, referência, sua linha colorida pelos microssetores
+  (ganha/perde; o tom "best" de um par é ganho, então também fica verde), marcadores de frenagem
+  (você/ref), rótulos das curvas clicáveis (zoom) e largada. Com zoom, enquadra o trecho. **Hover
+  sincronizado** pelo `CursorBus` (fora do React): gráfico → marcador no mapa; mapa (ponto mais
+  próximo a ≤ 28 px) → cursor nos gráficos.
+- O mapa redesenha de forma **síncrona** quando os dados mudam; só o marcador de hover usa rAF
+  (rAF não roda com a aba/painel em segundo plano — o mapa ficava vazio).
+- Clicar numa curva (tabela, mapa, "Ver no gráfico") dá zoom em [frenagem mais cedo − 25 m / zona,
+  saída + 60 m] nos gráficos e no mapa.
+- Tabela por curva: tempo perdido, frenagem, V-mín, retomada, roda livre, saída e trail braking
+  (você / ref / diferença colorida pela direção "melhor": frenagem mais tarde, V-mín maior, retomada
+  antes, menos roda livre…; zonas mortas 5 m, 2 km/h, 8 m, 0,1 s, 3 km/h, 0,1 s), desvio lateral
+  entrada/ápice/saída (amarelo ≥ 1,2 m) e marcha no ápice. Ordenável por perda.
+- "O que treinar" = `keyFindings` (ou `findings`) com custo, ação, confiança e a nota de precisão
+  de replay. Cabeçalho: tempos, delta total, retas, setores, volta ideal da sessão e `warnings`.
+
+### Outras páginas
+
+- **Sessões**: filtros de pista/carro (no hash) e modo. Na sessão: setores em roxo (melhor válido),
+  flags traduzidas (replay/tempo divergente só marcam), seleção de 1–3 voltas (1ª = sua, 2ª =
+  referência, 3ª = extra), marcar/desmarcar referência (piloto, tempo do ranking, notas), apagar
+  volta/sessão com confirmação em dois cliques (sem `window.confirm`; sessão ativa desabilitada).
+- **Pista**: mapa + edição de nome e marco de frenagem por curva (PATCH), renomear pista, setores
+  iguais (PUT `{count}`), "Redetectar curvas" (POST), recordes por carro e referências com "Comparar
+  meu melhor", consistência da sessão (estatísticas, destaques pt-BR, desvio por curva), volta ideal
+  (melhores setores e microssetores) e evolução por dia (melhor volta/top-3/base e uma métrica de
+  curva escolhida; eixo x = índice do dia) + tendências.
+- **Captura**: formulário (tempo do ranking `m:ss.mmm` validado por `parseLapTime`, salvo no
+  localStorage), instruções do PLANO §4, etapas ao vivo pelo `status.capture` do WS (polling REST de
+  reserva), problemas traduzidos (`paused`, `discontinuity`, `packetGaps`, `lengthMismatch`,
+  `timeMismatch`, `carMismatch`, `enterFailed`), Parar / Cancelar e descartar e, no fim, o link
+  "Comparar com o seu melhor" (melhor volta válida própria do mesmo carro na pista). Também mostra a
+  última captura salva quando a página é aberta depois.
+- **Configurações**: IP do console, formatos ao vivo e da captura com explicações, gravação,
+  referência padrão do delta, firewall (estado, regras, comandos PowerShell/netsh com copiar,
+  "Verificar de novo"), URLs da LAN + QR, dispositivos com "Mostrar tela" (POST show-view), MCP (URL
+  HTTP local/LAN, `claude mcp add --transport http`, JSON do Claude Desktop e comando stdio com a
+  pasta do repositório editável — a API não expõe o caminho) e coach (chave só de escrita; mostra
+  `keySource` e os 4 últimos caracteres, modelo e esforço). "Copiar" usa `execCommand` como reserva
+  (a Clipboard API exige contexto seguro, e na LAN é http).
+- **Coach IA**: `fetch` POST + `ReadableStream` + parser SSE próprio (`lib/sse.ts`, testado: CRLF
+  partido entre pedaços, comentários, `data:` multilinha, evento final sem linha em branco). `text`
+  acumula e re-renderiza por rAF; `tool` vira chip ("Comparando voltas…"); `done` troca a URL para
+  `#/coach/:id` sem recarregar; erros JSON antes do stream (`noKey`, `noData`) aparecem na conversa.
+  Chat de acompanhamento, histórico (abrir/apagar) e "Parar" (abort). Sem chave: cartão explicando,
+  com links para Configurações e para o MCP. Os botões "Debrief com IA" da sessão e da comparação
+  abrem o coach já preenchido (sessão, volta, referência, curva em foco).
+- **Markdown seguro** (`lib/markdown.ts` → AST → elementos React): títulos, negrito/itálico/código/
+  riscado, links só http(s)/mailto/`#/`, listas aninhadas, tabelas com alinhamento, citações e código
+  em bloco (uma cerca ainda aberta durante o streaming vira bloco). Nunca usa `innerHTML`; HTML no
+  texto aparece literal (testado com `renderToStaticMarkup`).
+
+### Verificação
+
+- 17 testes novos (`analysis/lib/analysis.test.ts`): roteador, `parseLapTime`, SSE, markdown
+  (incl. escape), dados dos gráficos, zoom por curva, cores das diferenças e ordenação.
+- Conferido no navegador embutido com `npm run demo` + Vite na 5175 (`.claude/launch.json`,
+  `web-dev-5175`): sessões, sessão, comparação (gráficos, zoom, mapa, tabela, achados), pista
+  (renomear curva salvou), captura completa no simulador (troca de formato → gravando → salva →
+  comparação com referência de replay), configurações, coach sem chave e com stream simulado no
+  próprio navegador (fetch substituído), celular 375×812 sem rolagem horizontal e servidor desligado.
+- Os dados da demo ficaram em `data/demo` (ignorado pelo git), incluindo a curva T1 "Grampo" e uma
+  referência "Piloto Teste" criadas no teste.
+- `live/mock.ts`: `referenceThrottleOnM` é omitido quando não existe (o tipo é opcional, não `null`).
+
+### Pendências
+
+- Sem fixture de demonstração para a comparação offline (a área de análise precisa do servidor).
+- Sem nomes de carro (só `Carro #código`, ou o nome da referência); falta um catálogo de carros.
+- A pasta do repositório no snippet MCP stdio é digitada pelo usuário (a API poderia expor
+  `repoRoot`/`dataDir`).
+- Sem zoom por gesto nos gráficos no celular (o uPlot só arrasta com mouse); a rolagem funciona.
+- O coach real (com chave) não foi exercitado de ponta a ponta nesta onda, só com stream simulado.
