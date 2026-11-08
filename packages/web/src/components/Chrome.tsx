@@ -1,0 +1,182 @@
+/** Small always-mounted UI pieces: overlay header, dots, lock, notices, demo badge, arrows. */
+
+import { useRef, useState } from 'react';
+import { TIMINGS } from '../config.ts';
+import { CONNECTION_STATE_LABELS, DELTA_REFERENCE_LABELS, VIEW_LABELS } from '../lib/labels.ts';
+import { goToView, setLocked } from '../state/actions.ts';
+import { addNotice, dismissNotice, useUi } from '../state/uiStore.ts';
+import { animateStep } from './Carousel.tsx';
+
+export function OverlayHeader() {
+  const visible = useUi((s) => s.overlayVisible);
+  const views = useUi((s) => s.profile.views);
+  const current = useUi((s) => s.currentView);
+  const reference = useUi((s) => s.profile.deltaReference);
+  const source = useUi((s) => s.source);
+  const latency = useUi((s) => s.latencyMs);
+  const format = useUi((s) => s.frameFormat);
+  const liveState = useUi((s) => s.liveState);
+  const idx = views.indexOf(current);
+  return (
+    <div className="overlay-header" data-visible={visible ? '1' : '0'} aria-live="polite">
+      <div className="overlay-title">
+        <span className="overlay-name">{VIEW_LABELS[current]}</span>
+        <span className="overlay-pos num">
+          {idx + 1}/{views.length}
+        </span>
+      </div>
+      <div className="overlay-ref">
+        Delta contra <strong>{DELTA_REFERENCE_LABELS[reference]}</strong>
+        <span className="dim"> (toque duplo troca)</span>
+      </div>
+      <div className="overlay-link dim">
+        <span>{source === 'mock' ? 'Demonstração' : 'Servidor'}</span>
+        {liveState && <span>{CONNECTION_STATE_LABELS[liveState]}</span>}
+        {format && <span>Pacote {format}</span>}
+        {latency !== null && <span>Latência {latency} ms</span>}
+      </div>
+    </div>
+  );
+}
+
+export function Dots() {
+  const views = useUi((s) => s.profile.views);
+  const current = useUi((s) => s.currentView);
+  const locked = useUi((s) => s.profile.locked);
+  if (views.length <= 1) return null;
+  return (
+    <nav className="dots" data-no-gesture aria-label="Telas">
+      {views.map((v) => (
+        <button
+          key={v}
+          type="button"
+          className="dot"
+          aria-label={VIEW_LABELS[v]}
+          aria-current={v === current ? 'page' : undefined}
+          disabled={locked}
+          onClick={() => goToView(v, 'picker')}
+        />
+      ))}
+    </nav>
+  );
+}
+
+export function EdgeArrows() {
+  const locked = useUi((s) => s.profile.locked);
+  const count = useUi((s) => s.profile.views.length);
+  if (locked || count <= 1) return null;
+  return (
+    <>
+      <button
+        type="button"
+        className="edge-arrow edge-prev"
+        data-no-gesture
+        aria-label="Tela anterior"
+        onClick={() => animateStep(-1)}
+      >
+        ‹
+      </button>
+      <button
+        type="button"
+        className="edge-arrow edge-next"
+        data-no-gesture
+        aria-label="Próxima tela"
+        onClick={() => animateStep(1)}
+      >
+        ›
+      </button>
+    </>
+  );
+}
+
+function LockGlyph({ locked }: { locked: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="lock-glyph">
+      <rect x="5" y="10.5" width="14" height="10" rx="2" />
+      <path d={locked ? 'M8 10.5 V7.5 a4 4 0 0 1 8 0 V10.5' : 'M8 10.5 V7.5 a4 4 0 0 1 7.6 -1.6'} />
+    </svg>
+  );
+}
+
+/** Tap = lock. While locked only a long press on the padlock unlocks. */
+export function LockButton() {
+  const locked = useUi((s) => s.profile.locked);
+  const [holding, setHolding] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fired = useRef(false);
+
+  const clear = () => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
+    setHolding(false);
+  };
+
+  return (
+    <button
+      type="button"
+      className="lock-btn"
+      data-no-gesture
+      data-locked={locked ? '1' : '0'}
+      data-holding={holding ? '1' : '0'}
+      aria-label={locked ? 'Destravar gestos (segure)' : 'Travar gestos'}
+      aria-pressed={locked}
+      style={{ ['--hold-ms' as string]: `${TIMINGS.longPressMs}ms` }}
+      onContextMenu={(e) => e.preventDefault()}
+      onPointerDown={() => {
+        fired.current = false;
+        if (!locked) return;
+        setHolding(true);
+        timer.current = setTimeout(() => {
+          fired.current = true;
+          clear();
+          setLocked(false);
+        }, TIMINGS.longPressMs);
+      }}
+      onPointerUp={clear}
+      onPointerLeave={clear}
+      onPointerCancel={clear}
+      onClick={() => {
+        if (fired.current) return;
+        if (!locked) setLocked(true);
+        else addNotice('info', 'Segure o cadeado para destravar.', 2000);
+      }}
+    >
+      <LockGlyph locked={locked} />
+    </button>
+  );
+}
+
+export function Notices() {
+  const notices = useUi((s) => s.notices);
+  return (
+    <div className="notices" data-no-gesture aria-live="polite">
+      {notices.map((n) => (
+        <button
+          key={n.id}
+          type="button"
+          className="notice"
+          data-level={n.level}
+          onClick={() => dismissNotice(n.id)}
+        >
+          {n.message}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export function SourceBadge() {
+  const source = useUi((s) => s.source);
+  const auto = useUi((s) => s.mockAuto);
+  const state = useUi((s) => s.liveState);
+  return (
+    <div className="badges" aria-live="polite">
+      {source === 'mock' && (
+        <span className="badge badge-demo">
+          {auto ? 'Demonstração (sem servidor)' : 'Demonstração'}
+        </span>
+      )}
+      {state === 'replay' && <span className="badge badge-replay">Replay</span>}
+    </div>
+  );
+}

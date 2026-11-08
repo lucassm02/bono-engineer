@@ -147,7 +147,7 @@ export function createDefaultDeviceProfile(deviceId: string, name = 'Dispositivo
   return {
     deviceId,
     name,
-    views: ['corrida', 'deltaGrande', 'pneus', 'inputs', 'motor'],
+    views: [...DEFAULT_ENABLED_VIEWS],
     startView: 'corrida',
     locked: false,
     popupsEnabled: true,
@@ -157,5 +157,57 @@ export function createDefaultDeviceProfile(deviceId: string, name = 'Dispositivo
       items: DEFAULT_CUSTOM_LAYOUT.items.map((i) => ({ ...i })),
     },
     updatedAt: 0,
+  };
+}
+
+/** Views enabled in a fresh profile (F1 views), in carousel order. */
+export const DEFAULT_ENABLED_VIEWS: readonly ViewId[] = [
+  'corrida',
+  'deltaGrande',
+  'pneus',
+  'inputs',
+  'motor',
+] as const;
+
+/**
+ * Sanitizes an untrusted profile (from the wire or localStorage): drops unknown/duplicate views,
+ * guarantees at least one enabled view and a `startView` that is enabled. Missing fields fall back
+ * to {@link createDefaultDeviceProfile}. Never throws. Usable by the server to validate
+ * `setDeviceProfile`.
+ */
+export function normalizeDeviceProfile(input: unknown, deviceId: string): DeviceProfile {
+  const base = createDefaultDeviceProfile(deviceId);
+  if (typeof input !== 'object' || input === null) return base;
+  const p = input as Partial<Record<keyof DeviceProfile, unknown>>;
+  const views: ViewId[] = [];
+  if (Array.isArray(p.views)) {
+    for (const v of p.views) if (isViewId(v) && !views.includes(v)) views.push(v);
+  }
+  if (views.length === 0) views.push(...base.views);
+  const startView = isViewId(p.startView) && views.includes(p.startView) ? p.startView : views[0]!;
+  const ref = p.deltaReference;
+  const deltaReference: DeltaReferenceKind =
+    ref === 'personalBest' || ref === 'sessionBest' || ref === 'reference'
+      ? ref
+      : base.deltaReference;
+  const layout = p.customLayout as WidgetGridLayout | undefined;
+  const customLayout =
+    layout &&
+    typeof layout === 'object' &&
+    typeof layout.columns === 'number' &&
+    typeof layout.rows === 'number' &&
+    Array.isArray(layout.items)
+      ? layout
+      : base.customLayout;
+  return {
+    deviceId: typeof p.deviceId === 'string' && p.deviceId ? p.deviceId : deviceId,
+    name: typeof p.name === 'string' && p.name.trim() ? p.name.trim().slice(0, 40) : base.name,
+    views,
+    startView,
+    locked: typeof p.locked === 'boolean' ? p.locked : base.locked,
+    popupsEnabled: typeof p.popupsEnabled === 'boolean' ? p.popupsEnabled : base.popupsEnabled,
+    deltaReference,
+    customLayout,
+    updatedAt: typeof p.updatedAt === 'number' && Number.isFinite(p.updatedAt) ? p.updatedAt : 0,
   };
 }

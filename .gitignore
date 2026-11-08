@@ -6,3 +6,4 @@ data/
 coverage/
 dev-dist/
 *.tsbuildinfo
+.vitest/

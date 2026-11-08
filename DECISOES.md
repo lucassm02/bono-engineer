@@ -301,3 +301,84 @@
 - Mudar os portais de setor deixa os tempos de setor antigos inconsistentes (não recalculamos).
 - Brake point do `TraceCornerHintProvider` não procura antes da linha de chegada (curvas logo após a
   largada).
+
+## Onda 2 — web (`@gt7/web`)
+
+### Arquitetura
+
+- **Telemetria fora do React.** `live/liveStore.ts` guarda o último `LiveFrame` num objeto mutável
+  (com `version`) e um histórico rolante sem alocação (`RollingHistory`, "anel duplo" de ~20 s para o
+  gráfico). Um único loop `requestAnimationFrame` (`live/raf.ts`) chama os renderizadores registrados com
+  `useLiveRender`, que escrevem direto no DOM (`setText`/`setAttr`/`setStyle` só gravam se mudou) ou no
+  uPlot. Só mudanças raras (estado da conexão, formato do pacote) vão para o zustand.
+- **zustand** (`state/uiStore.ts`) guarda perfil, tela atual, status do WS/servidor, cartão de volta,
+  avisos e o modo de tela ligada. Ações em `state/actions.ts`; envio de mensagens via `net/transport.ts`
+  (WS ou mock).
+- **WS** (`net/wsClient.ts`): `ws(s)://<host>/ws`, `hello` com `deviceId` persistente (localStorage com
+  try/catch; fallback em memória; `getRandomValues`, porque `randomUUID` não existe em http na LAN),
+  backoff 0,5 s → 10 s com ±20%, `ping` a cada 5 s, socket considerado morto após 15 s sem mensagens.
+  Mensagens usadas: recebe `welcome`, `frame`, `lapCompleted`, `sessionChanged`, `status`,
+  `deviceProfile`, `showView`, `notice`, `pong`; envia `hello`, `ping`, `currentView`,
+  `setDeviceProfile`, `setDeltaReference`.
+- **Perfil:** salvo sempre no localStorage e enviado ao servidor; ao receber `deviceProfile`, vence o de
+  `updatedAt` maior (se o local for mais novo, ele é reenviado). `DeviceProfile.views` = telas ligadas em
+  ordem; as desligadas aparecem depois, na ordem do catálogo.
+
+### Modo demonstração (mock)
+
+- `?mock=1` liga só o mock. Sem o parâmetro, o app tenta o servidor; **em dev** (Vite), após 2 falhas
+  sem nunca ter conectado, o mock liga sozinho (selo "Demonstração (sem servidor)") e sai quando o
+  servidor aparece. Em produção mostra "Sem conexão com o servidor" com botão "Ver demonstração".
+- `live/mock.ts` é puro e determinístico por seed: circuito de ~3,9 km (retas + arcos), perfil de
+  velocidade por passadas para frente/para trás (potência, arrasto, frenagem 13 m/s², 1,6 g lateral),
+  variação de aderência por setor a cada volta e 15% de voltas com erro (inválidas). Gera delta real
+  (tempo por metro contra melhor pessoal / melhor da sessão / "top" 2,5% mais rápido), setores com
+  roxo/verde/amarelo, temperaturas por carga, patinagem/travamento, TCS/ASM, zebra (pacote C),
+  combustível e `LapCompletedEvent`. `?mockSpeed=N` acelera o tempo (testes).
+
+### Navegação e gestos
+
+- Carrossel com **3 slots montados** (anterior, atual, próxima) num scroller CSS scroll-snap; ao assentar
+  num vizinho, a tela atual muda e o scroll é recentralizado antes do paint, o que dá o efeito circular.
+  Só a tela visível desenha a cada frame; as vizinhas atualizam a 2 Hz (para não aparecerem velhas ao
+  deslizar).
+- Reconhecedor de gestos puro (`lib/gestures.ts`, testado): toque (emitido só após a janela de 280 ms do
+  toque duplo), toque duplo, pressão longa (600 ms); movimento > 12 px ou `pointercancel` (o navegador
+  assumiu o scroll) cancela. Toque = cabeçalho por 3 s; toque duplo = próxima referência do delta;
+  pressão longa = seletor de telas. Teclado no PC: ←/→, Enter, D, espaço, L (cadeado), Esc.
+- **Cadeado:** toque trava (sem deslizar, toque, toque duplo nem seletor); destrava só segurando o
+  cadeado 600 ms. O estado fica no perfil.
+- `showView` (controle remoto) só troca se a tela estiver ligada no dispositivo; senão mostra aviso.
+  Nenhuma troca automática de tela; o cartão de volta (5 s) é uma sobreposição.
+- **Referência do delta:** o contrato WS ainda não informa se existe volta "top" capturada para a pista,
+  então o ciclo do toque duplo sempre passa pelas 3; sem referência a tela mostra "sem referência".
+
+### Visual e PWA
+
+- Fundo preto puro (OLED), âmbar de "placa de box" como única cor de interface; verde/vermelho/roxo/
+  amarelo reservados para delta, setores, pneus e shift lights. Fonte do sistema estilo DIN
+  (Bahnschrift → DIN Alternate → Roboto Condensed), números tabulares, sem fontes externas (funciona
+  offline na LAN). Layouts por `@container (orientation)`, tamanhos em `cqw/cqh`.
+- Escala de temperatura dos pneus em `src/config.ts` (50 frio / 70–95 ideal / 115 quente), assim como
+  limites de patinagem, faixa da suspensão, escala da barra de delta e tempos dos gestos.
+- PWA "GT7 Engenheiro": `display: fullscreen`, paisagem, tema preto, ícones gerados (SVG desenhado à mão
+  + PNG via `@resvg/resvg-js`, em `public/`). O service worker só faz precache dos estáticos;
+  `/ws`, `/api` e `/mcp` ficam fora do fallback de navegação e não há cache em runtime.
+- **Tela ligada:** Wake Lock API quando há contexto seguro; senão (http na LAN) um `<video>` mudo,
+  inline e em loop tocando um `canvas.captureStream` (variante do NoSleep, sem arquivo de vídeo, pois
+  não há ffmpeg aqui), iniciado no primeiro toque. Sempre mostramos a dica de desligar o bloqueio
+  automático quando o Wake Lock não está ativo. **Não testado em celular real.**
+- Vite: `host: true`, porta 5173 (`strictPort`), proxy de `/ws` e `/api` para `http://localhost:8770`,
+  build em `packages/web/dist`.
+- `normalizeDeviceProfile` e `DEFAULT_ENABLED_VIEWS` foram adicionados a `shared/ui.ts` (aditivo); o
+  servidor pode usar a função para validar `setDeviceProfile`.
+
+### Pendências
+
+- Validar em celular real: scroll-snap + recentralização no iOS Safari, `scrollend` (há fallback por
+  debounce), vibração (só Android) e o truque do vídeo para manter a tela ligada.
+- Contrato: falta um campo dizendo se há volta de referência "top" para a pista atual (ex.: em
+  `ServerStatus` ou `LiveDelta`), para o toque duplo pular a opção quando não existir.
+- As telas Mapa, Tempos, Combustível, Forças G, Treino de curva e Personalizada mostram "Em breve".
+- O wrapper `rtk` cria `.vitest/json/output.json` na raiz ao rodar o vitest; o `biome check .` reclama
+  do arquivo. Sugestão: pôr `.vitest/` no `.gitignore`.
