@@ -7,9 +7,10 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import fastifyStatic from '@fastify/static';
+import { AnalysisError } from '@gt7/core';
 import { API_PREFIX, WS_PATH } from '@gt7/shared';
 import type { FastifyError, FastifyInstance } from 'fastify';
-import { HttpError, sendError } from './http.ts';
+import { analysisErrorStatus, HttpError, sendError } from './http.ts';
 
 export function webDistAvailable(dir: string | null): dir is string {
   return !!dir && existsSync(join(dir, 'index.html'));
@@ -76,8 +77,11 @@ export async function registerWeb(app: FastifyInstance, webDist: string | null):
     return reply.type('text/html; charset=utf-8').sendFile('index.html');
   });
 
-  app.setErrorHandler((err: FastifyError | HttpError, req, reply) => {
+  app.setErrorHandler((err: FastifyError | HttpError | AnalysisError, req, reply) => {
     if (err instanceof HttpError) return sendError(reply, err.status, err.code, err.message);
+    if (err instanceof AnalysisError) {
+      return sendError(reply, analysisErrorStatus(err.code), err.code, err.message);
+    }
     const status = (err as FastifyError).statusCode ?? 500;
     const code = (err as FastifyError).code ?? 'serverError';
     if (code === 'FST_ERR_CTP_INVALID_JSON_BODY' || code === 'FST_ERR_CTP_EMPTY_JSON_BODY') {

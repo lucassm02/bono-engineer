@@ -565,3 +565,162 @@
 - Sem download de trace de volta pela API (virá com a análise).
 - O limitador de frames do core (`receivedAt - último ≥ 33,3 ms`) entrega ~21 frames/s com pacotes a
   60 Hz (salta 2 ou 3 pacotes). Um acumulador (`último += intervalo`) daria 30 Hz de verdade.
+
+## Onda 4a — telas extras (`@gt7/web`)
+
+### Telas e dados
+
+- As 6 telas restantes saíram do "Em breve": Mapa, Tempos, Combustível, Forças G, Treino de curva e
+  Personalizada. **Padrão continua com as 5 telas F1 ligadas**; as novas aparecem no seletor em
+  "Desligadas" (11 telas no carrossel é demais para um celular no suporte). O seletor ganhou o botão
+  "Editar a tela Personalizada".
+- **Estado derivado ao vivo** (`live/derived.ts`), alimentado por `live.push` em todo frame (O(1),
+  independente da tela visível): rastro/picos de G, microssetores, contorno da pista, rastro do carro,
+  passagens por curva e disponibilidade da referência. As telas só desenham (rAF, só a visível a
+  taxa cheia, como antes).
+- **Mapa:** `GET /api/analysis/tracks/:trackId` (`{track, polyline:{x,z,stepM,lengthM?}, corners,
+  sectorStartsM}`; ponto i = distância i·stepM). Em 404/erro, o contorno é montado com as posições ao
+  vivo (ponto a cada 2 m com a distância da volta; guarda o laço mais bem fechado, gap < 40 m e
+  comprimento ±8%); antes do 1º laço mostra o caminho parcial. Nova tentativa do endpoint a cada volta
+  fechada (mín. 30 s). No mock, a pista vem do próprio gerador. Plano do mapa: `x` à direita, `−z`
+  para cima, norte fixo (a quiralidade real do GT7 não foi verificada).
+- **Microssetores ao vivo:** 25 trechos; ao cruzar k→k+1 guarda a variação do delta no trecho
+  (±10 ms neutro, verde ganha, vermelho perde). Trechos ainda não percorridos mostram a volta anterior
+  esmaecida; trocar de referência zera tudo.
+- **Gestos no mapa:** pinça com dois dedos (touch events não passivos) faz zoom; um dedo só arrasta
+  com zoom (`touch-action: none` só nesse caso); sem zoom o dedo continua trocando de tela. Roda do
+  mouse (vertical ou pinça do trackpad) dá zoom; roda horizontal segue rolando o carrossel. **Com zoom,
+  o toque duplo volta à pista inteira** em vez de trocar a referência (`state/gestureOverride.ts`).
+  Com zoom o mapa segue o carro; arrastar desliga o "seguir" (botão ◎ religa, ⤢ volta ao todo).
+- **Tempos:** voltas por `lapCompleted` (WS e mock) num store zustand (`state/sessionStore.ts`) +
+  `GET /api/sessions/:id/laps` (`Lap[]`; alternativa `/api/laps?sessionId=`; aceita também
+  `{laps}`) ao trocar de sessão; 404 é tolerado. Setores: cor do evento (roxo/verde/amarelo); linhas
+  vindas só da REST pintam verde o melhor setor da sessão; contorno branco = melhor setor da sessão.
+  Ideal teórica = soma dos melhores setores de voltas válidas. Consistência = desvio-padrão amostral
+  das voltas válidas até 107% da melhor. Tendência = inclinação das 3 últimas válidas (±100 ms/volta =
+  estável). Melhor pessoal = tempo da referência quando o delta é contra o melhor pessoal (ou volta
+  com `isPersonalBest`).
+- **Combustível:** `neededToFinish` segue a semântica do core (total até o fim, não o que falta); o
+  mock foi corrigido para o mesmo significado. Falta/sobra, economia por volta e avisos em pt-BR são
+  calculados no cliente. `energyRecovery` aparece como barra relativa ao máximo da sessão (unidade
+  não verificada). Histórico = `fuelUsedL` das últimas 10 voltas.
+- **Forças G:** o ponto é o vetor de aceleração do carro (curva à esquerda → esquerda, acelerar →
+  cima, frear → baixo); escala de 2 g que cresce em passos de 0,5 g; picos da volta em roxo; amostras
+  > 6 g ignoradas nos picos.
+- **Treino de curva:** rastreador no cliente (`lib/cornerPass.ts`): aproximação = curva da dica;
+  frenagem = início do último episódio de freio (> 5%, pausa > 0,4 s separa) até 350 m antes da
+  entrada (freio já em curso ao abrir a curva é da anterior); V-mín e retomada (acelerador ≥ 10% após
+  a V-mín) seguem depois da entrada até acelerar (+25 km/h ou 150 m), começar outra frenagem ou a
+  dica mudar de novo. Tolerâncias: frenagem ±5 m, V-mín −2 km/h, retomada +8 m. Frear cedo, V-mín
+  baixa e retomada tarde = vermelho; frear tarde é só informativo. Sem referência, compara com a
+  passagem anterior (cinza). Contagem regressiva até a frenagem da ref.; depois dela, até a entrada.
+  Opção "Fixar esta curva". **Áudio** (Web Speech, pt-BR) desligado por padrão, salvo no
+  localStorage, no máximo 1 frase por passagem (e 2,5 s entre frases), só com a tela de Treino
+  visível; ligar fala "Áudio do treino ligado" no toque (desbloqueia o iOS).
+- **Meta de retomada:** o contrato `NextCornerHint` não tem alvo de retomada; o cliente lê um campo
+  opcional `referenceThrottleOnM` (distância da volta) se o core passar a enviá-lo (o mock já envia).
+  Proposta para o core: adicioná-lo a `NextCornerHint`.
+- **Personalizada:** grade CSS com os 24 `WidgetId` existentes (sem mudar `ui.ts`). Itens em ordem de
+  leitura; posições sempre recalculadas por auto-posicionamento esparso (como o CSS grid), então a
+  edição é só com botões (antes/depois, largura/altura ±, remover, colunas 2–8, até 16 widgets).
+  O layout é sanitizado ao ler (widgets desconhecidos fora, tamanhos limitados) e salvo via
+  `setDeviceProfile` (nova ação `setCustomLayout` no redutor do perfil). Cada célula é um container
+  (`cqw/cqh`) para o texto escalar com o tamanho.
+- **Referência "top" no toque duplo:** inferida dos frames: se o servidor aplicou `reference` e
+  respondeu `referenceLapId = null` naquela pista, o ciclo pula a opção; pista nunca testada ainda a
+  oferece uma vez.
+- **Mock:** o circuito agora fecha (giro total −360°, duas retas resolvidas, 3895 m), tem 9 curvas
+  com nomes ("Grampo", "Dupla 1/2"), dicas de próxima curva com metas da referência (frenagem, V-mín,
+  marcha, retomada), `lastPassDeltaMs`, recuperação de energia, posição interpolada e retomada
+  variável por volta (acelerador < 10% até 22–46% do arco).
+- Estilos novos em `styles/views-extra.css` (carregado depois do `index.css`). Corrigido o destaque
+  do botão segmentado do seletor (usa `aria-pressed`; o CSS só tratava `aria-checked`).
+- `.claude/launch.json` ganhou a configuração `web-dev-5174` (Vite na 5174, para não colidir).
+
+### Pendências
+
+- Validar no console real: quiralidade do mapa, pinça no iOS com o scroll-snap do carrossel, voz
+  pt-BR disponível no aparelho e unidade de `energyRecovery`.
+- Microssetores de sessão/melhor de sempre (roxo) e cores vindas da análise do servidor ainda não
+  entram no mapa ao vivo (só ganho/perda contra a referência atual).
+
+## Onda 4b — backend (servidor, core, MCP, coach)
+
+### Correções no core
+
+- **Limitador de frames por acumulador:** o próximo quadro vence em `próximo += intervalo` (tolerância
+  de 1 ms); atrasado mais de um intervalo (lacuna, pausa) ou relógio voltando → ressincroniza. Com
+  pacotes a 60 Hz e jitter de ms inteiro entrega 30 fps (teste ±1 fps; medido 30,3 fps no
+  `npm run demo`). Mudança de estado continua emitindo quadro na hora, sem mexer no acumulador.
+- `Gt7Runtime.setCaptureFormat(fmt)` (persistido; vale para a próxima captura). O servidor deixou
+  de passar `format` em cada início de captura; o `format` do corpo de `POST /api/capture/start`
+  ficou como sobrescrita pontual.
+- Opção `persistConsoleIp` (padrão true): `false` no `--sim` e nos testes; nem a opção, nem a
+  descoberta, nem `setConsoleIp` gravam o IP.
+- `NextCornerHint.referenceThrottleOnM?` (opcional): ponto de retomada do acelerador da referência
+  na curva, preenchido pelo `AnalysisCornerHintProvider` a partir de `throttlePickupM`.
+- Migração **v2** do SQLite: tabela `coach_reports` (metadados, Markdown, transcrição, conversa
+  crua em JSON, uso de tokens). `Gt7Store.saveCoachReport/getCoachReport/listCoachReports/
+  deleteCoachReport`.
+
+### REST de análise
+
+- `routes/analysis.ts` sobre `runtime.analysis`. Contratos em `shared/api.ts` (`ApiTrackAnalysis`,
+  `ApiTraces`, `ApiLapTrace`, `ApiRedetectCornersResult`, aliases de canais, colunas do CSV); o
+  resto reaproveita os tipos da Onda 3 (`LapAnalysis`, `LapComparisonResult`, `DistanceDelta`…).
+- `GET /api/analysis/tracks/:id` devolve `polyline {x, z, stepM, lengthM}` (padrão 1000 pontos,
+  ~6 m na pista sintética) + `sectorStartsM`; sem linha → 404 `noCenterline` (o mapa do web cai
+  no contorno ao vivo).
+- `AnalysisError` → HTTP no handler global: `notFound/noCenterline/noTrace/noReference` 404,
+  `invalidArgument/trackMismatch` 400, `noTrack` 409; mensagem pt-BR repassada.
+- `traces`: todas as voltas na mesma grade (comprimento da linha da pista), até 6 voltas e 12
+  canais, `maxPoints` ≤ 5000, NaN → null. CSV: grade de 1 m pela análise; sem linha, amostras
+  cruas pela distância do trace. `chart.png` reutiliza o `buildComparisonChart` do MCP.
+- `@gt7/server` passou a declarar `@gt7/mcp` e `@modelcontextprotocol/sdk` (só `package.json`;
+  resolvem pelo workspace/hoisting, sem `npm install`).
+
+### MCP por HTTP
+
+- `createApp` monta `mountMcpHttp` em `/mcp` (opção `mcp: false` desliga) com o mesmo store,
+  análise e runtime: `get_live_state` funciona. `--token` agora protege também `/mcp`.
+
+### Coach com IA ("Debrief com IA")
+
+- **Uma fonte de verdade para as ferramentas:** cliente MCP em memória (`InMemoryTransport`) ligado
+  ao `createGt7McpServer`; a lista de tools vira tools do Claude (JSON Schema do MCP). Só as
+  ferramentas somente leitura são expostas (`rename_*` ficam com o usuário; chamada a uma delas
+  volta como erro). Imagem do `render_comparison_chart` vai como bloco `image` no `tool_result`.
+- **Prompts alinhados ao MCP:** `prompts.ts` do MCP exporta `COACH_PERSONA` e os textos das
+  tarefas (`debriefTask`, `cornerFocusTask`, `trainingPlanTask`); o system prompt do app = persona +
+  regras do relatório (3 maiores perdas, uma ação por curva, ressalva de replay, plano do próximo
+  stint, limite de ferramentas). O system prompt é fixo (prefixo cacheável); ids resolvidos e a
+  pergunta vão na primeira mensagem do usuário.
+- **API:** `@anthropic-ai/sdk` 1.6, `client.beta.messages.stream` + `finalMessage()` num laço manual.
+  Modelo padrão `claude-opus-5-5` (opções `claude-sonnet-5-5` e `claude-haiku-5-5`), pensamento
+  adaptativo, `output_config.effort` (padrão `high`, configurável low/medium/high), cache de prompt
+  automático (`cache_control` no topo), `eager_input_streaming` nas tools (a validação fica com o
+  zod do servidor MCP) e fallback de recusa do servidor (`fallbacks: "default"`, beta
+  `server-side-fallback-2026-07-01`) para Opus/Sonnet 5.5.
+- **Limites:** 12 rodadas com ferramentas; depois (ou ao passar de 800 mil tokens de entrada /
+  64 mil de saída acumulados) a última chamada vai com `tool_choice: none` e um aviso para
+  responder com o que já tem. `max_tokens` 32 mil por chamada. Tool input que o SDK não consegue
+  parsear → até 2 novas tentativas.
+- **Conversa só por acréscimo:** o conteúdo do assistente (inclusive blocos de pensamento) é
+  guardado e reenviado sem edição; o follow-up (`/api/coach/chat`) usa o mesmo modelo do relatório.
+  Turno interrompido com `tool_use` pendente recebe `tool_result` de erro ("interrompido") para a
+  conversa continuar válida. Imagens dos gráficos ficam na conversa salva (relatórios de ~0,5–1 MB).
+- **Chave:** `ANTHROPIC_API_KEY` vence a salva em `settings` (`coach.apiKey`); a API só mostra
+  `hasKey`, origem e 4 últimos caracteres. Sem chave → 400 pt-BR antes de abrir o SSE.
+- **SSE:** `start`, `text`, `tool` (running → done/error), `done` (uso de tokens), `error` com código
+  (`invalidKey` 401/403, `rateLimited` 429, `overloaded` 529/503, `refused`, `limitReached`,
+  `apiError`, `aborted`). Comentário `: ping` a cada 15 s; fechar a conexão aborta a chamada.
+- **Testes:** cliente Claude falso injetado (`createApp({ coach: { clientFactory } })`), sem
+  chamadas reais; verificam laço com tools MCP reais, imagem no resultado, teto de rodadas,
+  persistência, follow-up e mapeamento de erros.
+
+### Pendências
+
+- O coach não tem orçamento em dinheiro nem fila: dois debriefs simultâneos rodam em paralelo.
+- Relatórios guardam as imagens; não há limpeza automática de relatórios antigos.
+- O teste UDP do runtime (`runtime.test.ts`, 20× tempo real) pode estourar 30 s quando a suíte
+  inteira roda em paralelo na máquina carregada; sozinho passa (~16 s).

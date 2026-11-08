@@ -57,6 +57,8 @@ import { GForceEstimator, headingOf } from './gforce.ts';
 export const NOMINAL_MS_PER_PACKET = 1000 / 60;
 /** packetId gaps larger than this are a stream reset (matches the ingestor). */
 const RESET_GAP = 600;
+/** A packet up to this early (ms) still counts as due for the next throttled frame (jitter). */
+const FRAME_DUE_TOLERANCE_MS = 1;
 /** Flags that make a lap invalid. */
 const INVALIDATING: readonly LapFlag[] = ['paused', 'incompleteData', 'discontinuity', 'offTrack'];
 
@@ -212,7 +214,8 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   readonly #hints: CornerHintProvider;
 
   #seq = 0;
-  #lastFrameT = Number.NEGATIVE_INFINITY;
+  /** Due time (receivedAt ms) of the next throttled frame (accumulator: += interval). */
+  #nextFrameT = Number.NEGATIVE_INFINITY;
   #lastFrame: LiveFrame | null = null;
   #lastPacket: TelemetryPacket | null = null;
   #lastPacketId: number | null = null;
@@ -472,8 +475,20 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     const changed = this.#composeState() !== stateBefore;
     if (changed) this.emit('stateChanged', this.#composeState(), stateBefore);
     const interval = 1000 / this.options.frameRateHz;
-    if (changed || receivedAtMs - this.#lastFrameT >= interval - 0.5) {
-      this.#lastFrameT = receivedAtMs;
+    // Accumulator throttle: the due time advances by exactly one interval per emitted frame, so
+    // 60 Hz packets with integer-ms jitter yield 30 fps on average (a "now - last >= interval"
+    // test skips 2 or 3 packets and averages ~21 fps). Far behind (gap, pause) → resync.
+    const due =
+      receivedAtMs >= this.#nextFrameT - FRAME_DUE_TOLERANCE_MS ||
+      this.#nextFrameT - receivedAtMs > 4 * interval; // clock went backwards
+    if (changed || due) {
+      if (due) {
+        this.#nextFrameT += interval;
+        const lag = receivedAtMs - this.#nextFrameT;
+        if (!Number.isFinite(lag) || lag >= interval || lag < -2 * interval) {
+          this.#nextFrameT = receivedAtMs + interval;
+        }
+      }
       const frame = this.#buildFrame(p, receivedAtMs);
       this.#lastFrame = frame;
       this.emit('frame', frame);
@@ -1157,6 +1172,9 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       referenceBrakePointM: targets?.referenceBrakePointM ?? null,
       referenceMinSpeedKmh: targets?.referenceMinSpeedKmh ?? null,
       referenceGearAtApex: targets?.referenceGearAtApex ?? null,
+      ...(targets?.referenceThrottleOnM != null && Number.isFinite(targets.referenceThrottleOnM)
+        ? { referenceThrottleOnM: targets.referenceThrottleOnM }
+        : {}),
       lastPassDeltaMs: this.#cornerPass.get(corner.id)?.lastPassDeltaMs ?? null,
     };
   }

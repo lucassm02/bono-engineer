@@ -1,6 +1,6 @@
 /**
  * CornerHintProvider backed by @gt7/analysis: projects the delta reference lap on the track line
- * and takes brake point / minimum speed / gear at apex from the per-corner metrics (same
+ * and takes brake point / minimum speed / gear at apex / throttle pickup from the per-corner metrics (same
  * definitions as the analysis page and the AI coach). Falls back to the simple trace scan of
  * {@link TraceCornerHintProvider} when the track has no line yet or the analysis fails.
  *
@@ -49,6 +49,10 @@ export class AnalysisCornerHintProvider implements CornerHintProvider {
               referenceBrakePointM: m.brakePointM,
               referenceMinSpeedKmh: Number.isFinite(m.minSpeedKmh) ? m.minSpeedKmh : null,
               referenceGearAtApex: Number.isFinite(m.gearAtApex) ? m.gearAtApex : null,
+              referenceThrottleOnM:
+                m.throttlePickupM !== null && Number.isFinite(m.throttlePickupM)
+                  ? m.throttlePickupM
+                  : null,
             },
           ]),
         );

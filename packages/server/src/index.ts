@@ -6,6 +6,14 @@
 export const SERVER_PACKAGE = '@gt7/server';
 
 export { type CreateAppOptions, createApp, type Gt7Server, SERVER_VERSION } from './app.ts';
+export {
+  type CoachClientFactory,
+  CoachError,
+  type CoachModelClient,
+  CoachService,
+  type CoachServiceOptions,
+  type CoachStreamLike,
+} from './coach/service.ts';
 export { parseConfig, type ServerConfig, SIM_CLIENT_PORT, SIM_CONSOLE_PORT } from './config.ts';
 export { FirewallChecker, firewallRules } from './firewall.ts';
 export { HttpError } from './http.ts';

@@ -138,3 +138,22 @@ export function isIPv4(s: string): boolean {
 export function isSafeId(s: string): boolean {
   return /^[A-Za-z0-9_.:-]{1,128}$/.test(s) && !s.includes('..');
 }
+
+// ---------------------------------------------------------------------------------------------
+// AnalysisError (core) → HTTP
+// ---------------------------------------------------------------------------------------------
+
+const ANALYSIS_STATUS: Record<string, number> = {
+  notFound: 404,
+  noCenterline: 404,
+  noTrace: 404,
+  noReference: 404,
+  noTrack: 409,
+  trackMismatch: 400,
+  invalidArgument: 400,
+};
+
+/** HTTP status for an AnalysisError code (pt-BR message is passed through). */
+export function analysisErrorStatus(code: string): number {
+  return ANALYSIS_STATUS[code] ?? 400;
+}

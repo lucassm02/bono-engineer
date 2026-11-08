@@ -1,11 +1,12 @@
 /**
- * Optional access token (LAN-only app: off by default). When set, /api/* and the WebSocket require
- * it via `?token=`, `x-gt7-token`, `Authorization: Bearer` or the `gt7_token` cookie. Opening any
+ * Optional access token (LAN-only app: off by default). When set, /api/*, /mcp and the WebSocket
+ * require it via `?token=`, `x-gt7-token`, `Authorization: Bearer` or the `gt7_token` cookie. Opening any
  * page with a valid `?token=` sets the cookie, so the dashboard (which knows nothing about tokens)
  * keeps working on that browser.
  */
 
 import { timingSafeEqual } from 'node:crypto';
+import { MCP_HTTP_PATH } from '@gt7/mcp';
 import { API_PREFIX, WS_PATH } from '@gt7/shared';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { sendError } from './http.ts';
@@ -51,7 +52,12 @@ export function tokensEqual(a: string, b: string): boolean {
 }
 
 function isProtected(path: string): boolean {
-  return path === API_PREFIX || path.startsWith(`${API_PREFIX}/`) || path === WS_PATH;
+  return (
+    path === API_PREFIX ||
+    path.startsWith(`${API_PREFIX}/`) ||
+    path === WS_PATH ||
+    path === MCP_HTTP_PATH
+  );
 }
 
 export function registerAuth(app: FastifyInstance, token: string | null): void {

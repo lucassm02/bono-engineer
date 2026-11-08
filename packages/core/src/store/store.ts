@@ -19,6 +19,11 @@ import { promisify } from 'node:util';
 import { gzip } from 'node:zlib';
 import { RECORDING_EXTENSION } from '@gt7/protocol';
 import type {
+  CoachReport,
+  CoachReportStatus,
+  CoachReportSummary,
+  CoachTranscriptEntry,
+  CoachUsage,
   Corner,
   DeviceProfile,
   Id,
@@ -67,6 +72,28 @@ function numOrNull(v: unknown): number | null {
 
 function strOrNull(v: unknown): string | null {
   return v === null || v === undefined ? null : String(v);
+}
+
+/** A coach report plus the raw model conversation (provider message JSON, opaque to the store). */
+export interface StoredCoachReport extends CoachReport {
+  messages: unknown[];
+}
+
+export const EMPTY_COACH_USAGE: CoachUsage = {
+  inputTokens: 0,
+  outputTokens: 0,
+  cacheReadTokens: 0,
+  cacheWriteTokens: 0,
+  requests: 0,
+};
+
+/** Plain-text preview (first ~160 chars) of a Markdown report. */
+export function coachPreview(markdown: string): string {
+  const t = markdown
+    .replace(/[#*_`>|]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return t.length > 160 ? `${t.slice(0, 157)}…` : t;
 }
 
 export interface ListSessionsOptions {
@@ -729,6 +756,105 @@ export class Gt7Store {
       out[String(r.key)] = json<unknown>(r.value, null);
     }
     return out;
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // Coach reports (in-app AI debrief)
+  // ---------------------------------------------------------------------------------------------
+
+  #coachReport(r: Row): CoachReport {
+    const markdown = String(r.markdown ?? '');
+    return {
+      id: String(r.id),
+      createdAt: num(r.created_at),
+      updatedAt: num(r.updated_at),
+      kind: r.kind === 'corner' ? 'corner' : 'debrief',
+      title: String(r.title),
+      trackId: strOrNull(r.track_id),
+      sessionId: strOrNull(r.session_id),
+      lapId: strOrNull(r.lap_id),
+      reference: strOrNull(r.reference),
+      focusCorner: strOrNull(r.focus_corner),
+      model: String(r.model),
+      status: (['running', 'done', 'error'] as const).includes(r.status as CoachReportStatus)
+        ? (r.status as CoachReportStatus)
+        : 'error',
+      preview: coachPreview(markdown),
+      usage: { ...EMPTY_COACH_USAGE, ...json<Partial<CoachUsage>>(r.usage, {}) },
+      markdown,
+      transcript: json<CoachTranscriptEntry[]>(r.transcript, []),
+      error: strOrNull(r.error),
+    };
+  }
+
+  /** Inserts or replaces a coach report (with its raw model conversation). */
+  saveCoachReport(report: StoredCoachReport): void {
+    this.db
+      .prepare(
+        `INSERT INTO coach_reports (id, created_at, updated_at, kind, title, track_id, session_id,
+          lap_id, reference, focus_corner, model, status, markdown, transcript, messages, usage, error)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, kind = excluded.kind,
+          title = excluded.title, track_id = excluded.track_id, session_id = excluded.session_id,
+          lap_id = excluded.lap_id, reference = excluded.reference,
+          focus_corner = excluded.focus_corner, model = excluded.model, status = excluded.status,
+          markdown = excluded.markdown, transcript = excluded.transcript,
+          messages = excluded.messages, usage = excluded.usage, error = excluded.error`,
+      )
+      .run(
+        report.id,
+        report.createdAt,
+        report.updatedAt,
+        report.kind,
+        report.title,
+        report.trackId,
+        report.sessionId,
+        report.lapId,
+        report.reference,
+        report.focusCorner,
+        report.model,
+        report.status,
+        report.markdown,
+        JSON.stringify(report.transcript),
+        JSON.stringify(report.messages),
+        JSON.stringify(report.usage),
+        report.error,
+      );
+  }
+
+  /** A coach report with its raw conversation, or null. */
+  getCoachReport(id: Id): StoredCoachReport | null {
+    const r = this.db.prepare('SELECT * FROM coach_reports WHERE id = ?').get(id) as
+      | Row
+      | undefined;
+    return r ? { ...this.#coachReport(r), messages: json<unknown[]>(r.messages, []) } : null;
+  }
+
+  /** Reports, newest first (no conversation). */
+  listCoachReports(opts: { trackId?: Id; limit?: number } = {}): CoachReportSummary[] {
+    const cols =
+      'id, created_at, updated_at, kind, title, track_id, session_id, lap_id, reference, ' +
+      'focus_corner, model, status, substr(markdown, 1, 400) AS markdown, usage';
+    const limit = Math.max(1, Math.min(opts.limit ?? 50, 500));
+    const rows = (
+      opts.trackId
+        ? this.db
+            .prepare(
+              `SELECT ${cols} FROM coach_reports WHERE track_id = ? ORDER BY created_at DESC LIMIT ?`,
+            )
+            .all(opts.trackId, limit)
+        : this.db
+            .prepare(`SELECT ${cols} FROM coach_reports ORDER BY created_at DESC LIMIT ?`)
+            .all(limit)
+    ) as Row[];
+    return rows.map((r) => {
+      const { markdown: _m, transcript: _t, error: _e, ...summary } = this.#coachReport(r);
+      return summary;
+    });
+  }
+
+  deleteCoachReport(id: Id): boolean {
+    return Number(this.db.prepare('DELETE FROM coach_reports WHERE id = ?').run(id).changes) > 0;
   }
 
   // ---------------------------------------------------------------------------------------------

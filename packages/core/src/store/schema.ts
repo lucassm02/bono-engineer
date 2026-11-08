@@ -78,6 +78,31 @@ export const MIGRATIONS: readonly string[] = [
     value TEXT NOT NULL
   );
   `,
+  // v2 — in-app AI coach reports (Debrief com IA): metadata, Markdown, transcript and the raw
+  // model conversation (JSON) replayed for follow-up questions.
+  `
+  CREATE TABLE IF NOT EXISTS coach_reports (
+    id TEXT PRIMARY KEY,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    kind TEXT NOT NULL DEFAULT 'debrief',
+    title TEXT NOT NULL,
+    track_id TEXT,
+    session_id TEXT,
+    lap_id TEXT,
+    reference TEXT,
+    focus_corner TEXT,
+    model TEXT NOT NULL,
+    status TEXT NOT NULL,
+    markdown TEXT NOT NULL DEFAULT '',
+    transcript TEXT NOT NULL DEFAULT '[]',
+    messages TEXT NOT NULL DEFAULT '[]',
+    usage TEXT NOT NULL DEFAULT '{}',
+    error TEXT
+  );
+  CREATE INDEX IF NOT EXISTS coach_reports_track ON coach_reports(track_id, created_at);
+  CREATE INDEX IF NOT EXISTS coach_reports_created ON coach_reports(created_at);
+  `,
 ];
 
 export const SCHEMA_VERSION = MIGRATIONS.length;

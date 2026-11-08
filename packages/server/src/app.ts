@@ -5,9 +5,11 @@
 
 import fastifyWebsocket from '@fastify/websocket';
 import { Gt7Runtime, type Gt7RuntimeOptions } from '@gt7/core';
+import { MCP_HTTP_PATH, mountMcpHttp } from '@gt7/mcp';
 import { DEFAULT_HTTP_PORT, WS_PATH } from '@gt7/shared';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { registerAuth } from './auth.ts';
+import { CoachService, type CoachServiceOptions } from './coach/service.ts';
 import { FirewallChecker, type FirewallCheckerOptions } from './firewall.ts';
 import { type HubOptions, type HubSocket, WsHub } from './hub.ts';
 import { type InterfacesFn, LanResolver } from './lan.ts';
@@ -41,6 +43,10 @@ export interface CreateAppOptions {
   logger?: boolean;
   /** Extra REST route modules mounted under /api (later waves). */
   extraRoutes?: RouteModule[];
+  /** Mount the MCP server (Streamable HTTP) at /mcp (default true). */
+  mcp?: boolean;
+  /** In-app AI coach options (tests inject a fake Claude client factory). */
+  coach?: CoachServiceOptions;
 }
 
 export interface Gt7Server {
@@ -49,6 +55,7 @@ export interface Gt7Server {
   hub: WsHub;
   lan: LanResolver;
   firewall: FirewallChecker;
+  coach: CoachService;
   /** Stops accepting connections, closes sockets, the runtime (UDP) and the store. */
   close(): Promise<void>;
 }
@@ -75,6 +82,7 @@ export async function createApp(opts: CreateAppOptions = {}): Promise<Gt7Server>
   });
   hub = new WsHub(runtime, { ...opts.hub, serverVersion, firewall: () => firewall.status });
   const wsHub = hub;
+  const coach = new CoachService(runtime, opts.coach);
 
   const app = Fastify({
     logger: opts.logger ?? false,
@@ -100,13 +108,23 @@ export async function createApp(opts: CreateAppOptions = {}): Promise<Gt7Server>
       httpPort: port,
       tokenRequired: !!token,
       simulator: !!opts.simulator,
+      coach,
     };
     // Error/not-found handlers first: the /api child context inherits them at registration.
     await registerWeb(app, opts.webDist ?? null);
     await registerApi(app, ctx, opts.extraRoutes);
+    if (opts.mcp !== false) {
+      // Same store/analysis/runtime as the app: get_live_state works; --token protects it (auth.ts).
+      mountMcpHttp(
+        app,
+        { store: runtime.store, analysis: runtime.analysis, runtime },
+        { path: MCP_HTTP_PATH },
+      );
+    }
     await app.ready();
   } catch (e) {
     wsHub.closeAll();
+    await coach.close().catch(() => {});
     await runtime.close().catch(() => {});
     throw e;
   }
@@ -116,10 +134,11 @@ export async function createApp(opts: CreateAppOptions = {}): Promise<Gt7Server>
     closing ??= (async () => {
       wsHub.closeAll();
       await app.close().catch(() => {});
+      await coach.close().catch(() => {});
       await runtime.close();
     })();
     return closing;
   };
 
-  return { app, runtime, hub: wsHub, lan, firewall, close };
+  return { app, runtime, hub: wsHub, lan, firewall, coach, close };
 }

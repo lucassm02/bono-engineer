@@ -236,3 +236,39 @@ describe('LiveEngine robustness', () => {
     expect(r.laps[1]!.lap.valid).toBe(false);
   });
 });
+
+describe('LiveEngine frame throttle', () => {
+  const gen = generateLaps({ profile: 'pro', seed: 5, laps: 1, format: 'A', outLapM: 200 });
+
+  /** Frames emitted between 2 s and 12 s of 60 Hz packets with integer-ms receive times. */
+  function fps(jitter: (i: number) => number): number {
+    const engine = newEngine();
+    const t0 = 1_700_000_000_000;
+    let frames = 0;
+    engine.on('frame', () => frames++);
+    let counted = 0;
+    gen.packets.slice(0, 60 * 14).forEach((p, i) => {
+      const t = Math.round(t0 + i * FRAME_MS + jitter(i));
+      const before = frames;
+      engine.push(p, t);
+      if (t - t0 >= 2000 && t - t0 < 12000) counted += frames - before;
+    });
+    return counted / 10;
+  }
+
+  it('delivers ~30 fps from 60 Hz packets (integer-ms timestamps)', () => {
+    expect(fps(() => 0)).toBeGreaterThanOrEqual(29);
+    expect(fps(() => 0)).toBeLessThanOrEqual(31);
+  });
+
+  it('delivers ~30 fps with ±3 ms receive jitter', () => {
+    let s = 7;
+    const rnd = () => {
+      s = (s * 1103515245 + 12345) % 2147483648;
+      return s / 2147483648;
+    };
+    const v = fps(() => (rnd() - 0.5) * 6);
+    expect(v).toBeGreaterThanOrEqual(29);
+    expect(v).toBeLessThanOrEqual(31);
+  });
+});

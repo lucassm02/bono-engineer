@@ -11,6 +11,8 @@ export interface CornerHintTargets {
   referenceBrakePointM: number | null;
   referenceMinSpeedKmh: number | null;
   referenceGearAtApex: number | null;
+  /** Throttle pickup distance of the reference in this corner (m), when known. */
+  referenceThrottleOnM?: number | null;
 }
 
 export interface CornerHintInput {

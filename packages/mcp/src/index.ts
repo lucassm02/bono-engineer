@@ -14,8 +14,15 @@ export {
   renderComparisonSvg,
   svgToPng,
 } from './chart.ts';
+export { latestDrivingSession } from './format.ts';
 export { MCP_HTTP_PATH, type MountMcpHttpOptions, mountMcpHttp } from './http.ts';
-export { registerPrompts } from './prompts.ts';
+export {
+  COACH_PERSONA,
+  cornerFocusTask,
+  debriefTask,
+  registerPrompts,
+  trainingPlanTask,
+} from './prompts.ts';
 export {
   createGt7McpServer,
   MCP_SERVER_NAME,

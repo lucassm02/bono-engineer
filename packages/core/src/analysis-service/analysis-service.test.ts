@@ -207,6 +207,7 @@ describe('AnalysisService', () => {
     expect(t.referenceBrakePointM).toBeCloseTo(la.metrics[0]!.brakePointM!, 3);
     expect(t.referenceMinSpeedKmh).toBeCloseTo(la.metrics[0]!.minSpeedKmh, 3);
     expect(t.referenceGearAtApex).toBe(la.metrics[0]!.gearAtApex);
+    expect(t.referenceThrottleOnM).toBeCloseTo(la.metrics[0]!.throttlePickupM!, 3);
     expect(provider.targetsFor({ track, corner: track.corners[0]!, reference: null })).toBeNull();
   });
 });

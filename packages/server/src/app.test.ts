@@ -157,6 +157,7 @@ describe('server app (Fastify + WS hub + REST) over a FakeConsole', () => {
       runtime: {
         dataDir: join(dir, 'data'),
         consoleIp: '127.0.0.1',
+        persistConsoleIp: false,
         liveFormat: 'B',
         formatFallback: null,
         ingestor: {

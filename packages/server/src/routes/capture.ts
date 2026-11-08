@@ -1,6 +1,5 @@
 /** /api/capture: reference (replay) capture start/stop/status. */
 
-import { SETTINGS_KEYS } from '@gt7/core';
 import { isPacketFormat, type ReferenceCaptureStatus } from '@gt7/shared';
 import type { FastifyInstance } from 'fastify';
 import { badRequest, bodyObject, optBoolean, optNumber, optString, reqString } from '../http.ts';
@@ -30,8 +29,9 @@ export function captureRoutes(app: FastifyInstance, ctx: RouteContext): void {
     if (b.format !== undefined && !isPacketFormat(b.format)) {
       throw badRequest('O campo "format" deve ser A, B, ~ ou C.');
     }
-    const saved = runtime.store.getSetting<string>(SETTINGS_KEYS.captureFormat);
-    const format = isPacketFormat(b.format) ? b.format : isPacketFormat(saved) ? saved : undefined;
+    // Explicit body format = one-off override; otherwise the runtime uses its persisted
+    // capture format (runtime.setCaptureFormat / PATCH /api/settings).
+    const format = isPacketFormat(b.format) ? b.format : undefined;
     runtime
       .startReferenceCapture({
         driverName,

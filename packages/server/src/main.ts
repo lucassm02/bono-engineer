@@ -82,6 +82,7 @@ function runtimeOptions(cfg: ServerConfig): Omit<Gt7RuntimeOptions, 'statusExtra
   const opts: Omit<Gt7RuntimeOptions, 'statusExtras'> = { dataDir: cfg.dataDir };
   if (cfg.sim) {
     opts.consoleIp = '127.0.0.1';
+    opts.persistConsoleIp = false; // the fake console's 127.0.0.1 never becomes a saved setting
     opts.ingestor = {
       bindAddress: '127.0.0.1',
       bindPort: cfg.sim.clientPort,

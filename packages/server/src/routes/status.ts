@@ -1,6 +1,5 @@
 /** /api/status, /api/settings, /api/firewall, /api/lan. */
 
-import { SETTINGS_KEYS } from '@gt7/core';
 import {
   type ApiSettings,
   type ApiStatus,
@@ -25,12 +24,11 @@ import type { RouteContext } from './context.ts';
 export function currentSettings(ctx: RouteContext): ApiSettings {
   const { runtime } = ctx;
   const s = runtime.getSettings();
-  const cap = runtime.store.getSetting<string>(SETTINGS_KEYS.captureFormat);
   const ref = runtime.engine.deltaReference;
   return {
     consoleIp: s.consoleIp,
     liveFormat: s.liveFormat,
-    captureFormat: isPacketFormat(cap) ? cap : s.captureFormat,
+    captureFormat: s.captureFormat,
     record: s.record,
     deltaReference: { kind: ref.kind, lapId: ref.lapId },
   };
@@ -92,9 +90,7 @@ export function statusRoutes(app: FastifyInstance, ctx: RouteContext): void {
     }
 
     if (consoleIp !== undefined) runtime.setConsoleIp(consoleIp);
-    if (captureFormat !== undefined) {
-      runtime.store.setSetting(SETTINGS_KEYS.captureFormat, captureFormat);
-    }
+    if (captureFormat !== undefined) runtime.setCaptureFormat(captureFormat);
     if (record !== undefined) runtime.setRecording(record);
     if (ref) runtime.setDeltaReference(ref.kind, ref.lapId);
     if (liveFormat !== undefined) {

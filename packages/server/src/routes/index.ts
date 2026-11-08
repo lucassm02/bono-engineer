@@ -1,11 +1,13 @@
 /**
- * REST API under /api. Each area lives in its own file and receives the same RouteContext; a later
- * wave adds `analysis.ts` (`/api/analysis/*`, AnalysisService) here.
+ * REST API under /api. Each area lives in its own file and receives the same RouteContext
+ * (analysis.ts = `/api/analysis/*` over AnalysisService, coach.ts = in-app AI debrief).
  */
 
 import { API_PREFIX } from '@gt7/shared';
 import type { FastifyInstance } from 'fastify';
+import { analysisRoutes } from './analysis.ts';
 import { captureRoutes } from './capture.ts';
+import { coachRoutes } from './coach.ts';
 import type { RouteContext } from './context.ts';
 import { deviceRoutes } from './devices.ts';
 import { sessionRoutes } from './sessions.ts';
@@ -22,6 +24,8 @@ export const ROUTE_MODULES: RouteModule[] = [
   trackRoutes,
   deviceRoutes,
   captureRoutes,
+  analysisRoutes,
+  coachRoutes,
 ];
 
 export async function registerApi(

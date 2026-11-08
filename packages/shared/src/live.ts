@@ -98,6 +98,8 @@ export interface NextCornerHint {
   referenceBrakePointM: number | null;
   referenceMinSpeedKmh: number | null;
   referenceGearAtApex: number | null;
+  /** Lap distance (m) where the reference picks up the throttle in this corner (optional). */
+  referenceThrottleOnM?: number;
   /** Result of the user's last pass through this corner, vs reference (+ = slower), ms. */
   lastPassDeltaMs: number | null;
 }

@@ -64,12 +64,19 @@ claude mcp add --transport http gt7-live http://localhost:8770/mcp
 ```
 
 No Claude Desktop, use um conector remoto/HTTP apontando para a mesma URL (ou o stdio acima para
-os dados gravados). Para o servidor, a integração é:
+os dados gravados). O servidor do app já monta o endpoint (`createApp` em `@gt7/server`):
 
 ```ts
 import { mountMcpHttp } from '@gt7/mcp';
 mountMcpHttp(fastify, { store: runtime.store, analysis: runtime.analysis, runtime });
 ```
+
+Se o servidor rodar com `--token <segredo>`, o `/mcp` também exige o token. Com o Claude Code:
+`claude mcp add --transport http gt7-live http://localhost:8770/mcp --header "Authorization: Bearer <segredo>"`.
+
+O coach do próprio app ("Debrief com IA", `POST /api/coach/debrief`) usa **estas mesmas
+ferramentas** (cliente MCP em memória) e os mesmos textos dos prompts (`COACH_PERSONA`,
+`debriefTask`, `cornerFocusTask`, `trainingPlanTask`, exportados pelo pacote).
 
 ## Ferramentas
 

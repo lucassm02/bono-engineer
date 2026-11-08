@@ -53,6 +53,11 @@ export interface Gt7RuntimeOptions {
   store?: Gt7Store;
   /** Console IP (overrides and updates the persisted setting). Null/absent + none saved → discovery. */
   consoleIp?: string | null;
+  /**
+   * Persist the console IP (option, discovery, setConsoleIp) in the settings table (default true).
+   * False for the in-process demo console and tests, so 127.0.0.1 never lands in real settings.
+   */
+  persistConsoleIp?: boolean;
   /** Live packet format (overrides the persisted setting; default '~'). */
   liveFormat?: PacketFormat;
   /** Capture packet format (default 'B'). */
@@ -124,7 +129,9 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
     this.#ownsStore = !opts.store;
     this.store = opts.store ?? Gt7Store.open(opts.dataDir ?? 'data');
     const s = this.store;
-    if (opts.consoleIp) s.setSetting(SETTINGS_KEYS.consoleIp, opts.consoleIp);
+    if (opts.consoleIp && opts.persistConsoleIp !== false) {
+      s.setSetting(SETTINGS_KEYS.consoleIp, opts.consoleIp);
+    }
     this.#consoleIp = opts.consoleIp ?? s.getSetting<string | null>(SETTINGS_KEYS.consoleIp, null);
     const savedLive = s.getSetting<string>(SETTINGS_KEYS.liveFormat);
     this.#liveFormat = opts.liveFormat ?? (isPacketFormat(savedLive) ? savedLive : '~');
@@ -257,7 +264,7 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
     });
     ing.on('discovered', (addr) => {
       this.#consoleIp = addr;
-      this.store.setSetting(SETTINGS_KEYS.consoleIp, addr);
+      this.#persistConsoleIp(addr);
       this.#notice('info', 'consoleDiscovered', `Console encontrado em ${addr}`);
       this.#emitStatus();
     });
@@ -308,7 +315,7 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
 
   setConsoleIp(ip: string): void {
     this.#consoleIp = ip;
-    this.store.setSetting(SETTINGS_KEYS.consoleIp, ip);
+    this.#persistConsoleIp(ip);
     this.#ingestor?.setConsoleIp(ip);
     this.#emitStatus();
   }
@@ -319,6 +326,16 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
     this.store.setSetting(SETTINGS_KEYS.liveFormat, format);
     if (this.capture.active) return; // applied when the capture ends
     await this.#switchFormat(format);
+  }
+
+  /**
+   * Changes (and persists) the packet format used by reference captures. A capture in progress
+   * keeps its format; the new one applies to the next capture.
+   */
+  setCaptureFormat(format: PacketFormat): void {
+    this.#captureFormat = format;
+    this.store.setSetting(SETTINGS_KEYS.captureFormat, format);
+    if (!this.capture.active) this.#activeCaptureFormat = format;
   }
 
   /** Enables/disables raw session recording (persisted; applies to the next session). */
@@ -335,7 +352,10 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
     });
   }
 
-  /** Starts a reference capture (switches to the capture format and replay mode). */
+  /**
+   * Starts a reference capture (switches to the capture format and replay mode). `format`
+   * overrides the configured capture format for this capture only (prefer setCaptureFormat).
+   */
   async startReferenceCapture(
     meta: ReferenceCaptureMeta & { format?: PacketFormat },
   ): Promise<ReferenceCaptureStatus> {
@@ -356,6 +376,10 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
   // ---------------------------------------------------------------------------------------------
   // Internals
   // ---------------------------------------------------------------------------------------------
+
+  #persistConsoleIp(ip: string): void {
+    if (this.options.persistConsoleIp !== false) this.store.setSetting(SETTINGS_KEYS.consoleIp, ip);
+  }
 
   #notice(level: RuntimeNotice['level'], code: string, message: string, ttlMs?: number): void {
     this.emit('notice', { level, code, message, ...(ttlMs ? { ttlMs } : {}) });

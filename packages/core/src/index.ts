@@ -75,11 +75,14 @@ export {
 } from './runtime/runtime.ts';
 export { MIGRATIONS, SCHEMA_VERSION } from './store/schema.ts';
 export {
+  coachPreview,
   DB_FILE,
+  EMPTY_COACH_USAGE,
   Gt7Store,
   type ListLapsOptions,
   type ListSessionsOptions,
   RECORDINGS_DIR,
+  type StoredCoachReport,
   TRACES_DIR,
 } from './store/store.ts';
 export { StoreEngineContext } from './store/store-context.ts';

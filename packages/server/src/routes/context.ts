@@ -1,9 +1,9 @@
 /**
- * What every REST route module receives. New route files (e.g. a later `/api/analysis/*` wave
- * using AnalysisService) take the same context and are added to `routes/index.ts`.
+ * What every REST route module receives (route files are listed in `routes/index.ts`).
  */
 
 import type { Gt7Runtime } from '@gt7/core';
+import type { CoachService } from '../coach/service.ts';
 import type { FirewallChecker } from '../firewall.ts';
 import type { WsHub } from '../hub.ts';
 import type { LanResolver } from '../lan.ts';
@@ -17,4 +17,6 @@ export interface RouteContext {
   tokenRequired: boolean;
   /** Demo mode (in-process fake console). */
   simulator: boolean;
+  /** In-app AI coach (Debrief com IA). */
+  coach: CoachService;
 }

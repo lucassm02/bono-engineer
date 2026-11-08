@@ -4,12 +4,14 @@
  * grounded strictly on tool outputs, with the replay-precision caveat.
  */
 
+import type { Gt7Store } from '@gt7/core';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { latestDrivingSession } from './format.ts';
 import type { McpDeps } from './server.ts';
 
-const PERSONA = `Você é um engenheiro de pista e instrutor de pilotagem experiente (GT3/endurance), \
+/** Coaching persona (pt-BR) shared by the MCP prompts and the in-app coach. */
+export const COACH_PERSONA = `Você é um engenheiro de pista e instrutor de pilotagem experiente (GT3/endurance), \
 analisando telemetria do Gran Turismo 7 através das ferramentas do servidor MCP "gt7".
 
 Princípios de coaching que você segue:
@@ -55,36 +57,7 @@ export function registerPrompts(server: McpServer, deps: McpDeps): void {
           ),
       },
     },
-    ({ session_id, referencia }) => {
-      const session = session_id ? store.getSession(session_id) : latestDrivingSession(store);
-      const ctx = session
-        ? `Sessão alvo: ${session.id} (pista ${session.trackId ?? 'não identificada'}, carro ${session.carCode}, ${session.lapCount} voltas).`
-        : 'Nenhuma sessão encontrada ainda: use list_sessions para conferir e avise o piloto se não houver dados.';
-      const ref = referencia ?? 'auto';
-      return text(`${PERSONA}
-
-TAREFA: debrief da sessão. ${ctx}
-Referência pedida: ${ref} (auto = volta do top capturada de replay se existir, senão o melhor pessoal).
-
-Passos (use as ferramentas, nesta ordem):
-1. list_laps(session_id) → identifique a melhor volta VÁLIDA (ignore inválidas; se só houver inválidas, avise).
-2. compare_laps(lap_id = melhor volta, reference = "${ref}") → é a base do debrief. Note o delta total, \
-os setores e se a referência é replay (refReplay) e se o carro é o mesmo (sameCar).
-3. Para as 3 curvas de topLosses, chame get_corner_detail(corner, [melhor volta, referência]) se precisar \
-confirmar a causa (perfil de freio, retomada, V-mín, traçado). Opcional: render_comparison_chart com a \
-curva para "ver" o traçado e os pedais.
-4. get_consistency(session_id) → separe o que é técnica (erro sempre igual) do que é inconsistência.
-
-Formato da resposta:
-- **Resumo** (2 linhas): tempo × referência, delta, onde está o grosso da perda (setor/curvas × retas).
-- **As 3 curvas que mais custam** — para cada uma: tempo perdido; diagnóstico com os números \
-(você × referência: frenagem m, V-mín km/h, acelerador m, saída km/h, roda livre s, trail s); \
-**UMA ação concreta** e mensurável para a próxima saída. Indique a confiança (replay/precisão).
-- **Consistência**: 1–2 destaques (ex.: "frenagem da T6 varia 15 m: escolha uma referência visual").
-- **Plano para o próximo stint**: no máximo 3 itens, em ordem de prioridade, cada um verificável \
-("T1: frear no ponto X; meta V-mín ≥ 62 km/h").
-Não liste todas as curvas; foque no que dá mais tempo.`);
-    },
+    (args) => text(`${COACH_PERSONA}\n\n${debriefTask(store, args)}`),
   );
 
   server.registerPrompt(
@@ -108,35 +81,7 @@ Não liste todas as curvas; foque no que dá mais tempo.`);
           .describe('Sessão de onde tirar as voltas (padrão: a mais recente).'),
       },
     },
-    ({ curva, voltas, session_id }) => {
-      const laps = (voltas ?? '')
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean);
-      const session = session_id ? store.getSession(session_id) : latestDrivingSession(store);
-      const lapsCtx = laps.length
-        ? `Voltas: ${laps.join(', ')} (a primeira é a base de comparação).`
-        : `Voltas: use list_laps(${session ? `session_id="${session.id}"` : 'session_id'}) e escolha a melhor volta válida, \
-2–3 voltas típicas e a referência (list_reference_laps / compare_laps reference="auto").`;
-      return text(`${PERSONA}
-
-TAREFA: foco na curva ${curva}. ${lapsCtx}
-
-Passos:
-1. get_track(track_id) se precisar confirmar o id/nome e o tipo da curva (hairpin, lenta, rápida, chicane).
-2. get_corner_detail(corner="${curva}", lap_ids=[...]) → métricas por volta e traces a cada 5 m.
-3. compare_laps(melhor volta, referência) e leia a linha desta curva (perda por fase: frenagem, meio, \
-saída, reta seguinte) e os findings dela.
-4. render_comparison_chart(lap_id, reference, corner="${curva}") para ver pedais, velocidade e traçado.
-5. Se houver várias voltas suas, get_consistency(lap_ids) para ver a variação nesta curva.
-
-Responda com:
-- **O que acontece na curva** (fase a fase: frenagem → entrada/rotação → ápice → saída), com números.
-- **Onde está o tempo** (qual fase custa mais, em segundos).
-- **Causa provável** (técnica × consistência) — seja honesto sobre a precisão de replay.
-- **UMA ação principal** + **um exercício** de treino para 5 voltas (ex.: "frear 10 m mais tarde a cada \
-volta até a V-mín cair; pare quando passar do ápice") com critério de sucesso medível pelo app.`);
-    },
+    (args) => text(`${COACH_PERSONA}\n\n${cornerFocusTask(store, args)}`),
   );
 
   server.registerPrompt(
@@ -154,15 +99,90 @@ volta até a V-mín cair; pare quando passar do ápice") com critério de sucess
           .describe('Código do carro (padrão: o mais usado na pista).'),
       },
     },
-    ({ track_id, car_code }) => {
-      const trackId = track_id ?? latestDrivingSession(store)?.trackId ?? null;
-      const track = trackId ? store.getTrack(trackId) : null;
-      const ctx = track
-        ? `Pista: ${track.name} (${track.id}).`
-        : 'Pista: descubra com list_tracks (escolha a mais treinada).';
-      return text(`${PERSONA}
+    (args) => text(`${COACH_PERSONA}\n\n${trainingPlanTask(store, args)}`),
+  );
+}
 
-TAREFA: montar um plano de treino. ${ctx}${car_code ? ` Carro: ${car_code}.` : ''}
+/** Task text (without the persona) of the `debrief_sessao` prompt; also used by the in-app coach. */
+export function debriefTask(
+  store: Gt7Store,
+  { session_id, referencia }: { session_id?: string | undefined; referencia?: string | undefined },
+): string {
+  const session = session_id ? store.getSession(session_id) : latestDrivingSession(store);
+  const ctx = session
+    ? `Sessão alvo: ${session.id} (pista ${session.trackId ?? 'não identificada'}, carro ${session.carCode}, ${session.lapCount} voltas).`
+    : 'Nenhuma sessão encontrada ainda: use list_sessions para conferir e avise o piloto se não houver dados.';
+  const ref = referencia ?? 'auto';
+  return `TAREFA: debrief da sessão. ${ctx}
+Referência pedida: ${ref} (auto = volta do top capturada de replay se existir, senão o melhor pessoal).
+
+Passos (use as ferramentas, nesta ordem):
+1. list_laps(session_id) → identifique a melhor volta VÁLIDA (ignore inválidas; se só houver inválidas, avise).
+2. compare_laps(lap_id = melhor volta, reference = "${ref}") → é a base do debrief. Note o delta total, \
+os setores e se a referência é replay (refReplay) e se o carro é o mesmo (sameCar).
+3. Para as 3 curvas de topLosses, chame get_corner_detail(corner, [melhor volta, referência]) se precisar \
+confirmar a causa (perfil de freio, retomada, V-mín, traçado). Opcional: render_comparison_chart com a \
+curva para "ver" o traçado e os pedais.
+4. get_consistency(session_id) → separe o que é técnica (erro sempre igual) do que é inconsistência.
+
+Formato da resposta:
+- **Resumo** (2 linhas): tempo × referência, delta, onde está o grosso da perda (setor/curvas × retas).
+- **As 3 curvas que mais custam** — para cada uma: tempo perdido; diagnóstico com os números \
+(você × referência: frenagem m, V-mín km/h, acelerador m, saída km/h, roda livre s, trail s); \
+**UMA ação concreta** e mensurável para a próxima saída. Indique a confiança (replay/precisão).
+- **Consistência**: 1–2 destaques (ex.: "frenagem da T6 varia 15 m: escolha uma referência visual").
+- **Plano para o próximo stint**: no máximo 3 itens, em ordem de prioridade, cada um verificável \
+("T1: frear no ponto X; meta V-mín ≥ 62 km/h").
+Não liste todas as curvas; foque no que dá mais tempo.`;
+}
+
+/** Task text (without the persona) of the `foco_curva` prompt; also used by the in-app coach. */
+export function cornerFocusTask(
+  store: Gt7Store,
+  {
+    curva,
+    voltas,
+    session_id,
+  }: { curva: string; voltas?: string | undefined; session_id?: string | undefined },
+): string {
+  const laps = (voltas ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const session = session_id ? store.getSession(session_id) : latestDrivingSession(store);
+  const lapsCtx = laps.length
+    ? `Voltas: ${laps.join(', ')} (a primeira é a base de comparação).`
+    : `Voltas: use list_laps(${session ? `session_id="${session.id}"` : 'session_id'}) e escolha a melhor volta válida, \
+2–3 voltas típicas e a referência (list_reference_laps / compare_laps reference="auto").`;
+  return `TAREFA: foco na curva ${curva}. ${lapsCtx}
+
+Passos:
+1. get_track(track_id) se precisar confirmar o id/nome e o tipo da curva (hairpin, lenta, rápida, chicane).
+2. get_corner_detail(corner="${curva}", lap_ids=[...]) → métricas por volta e traces a cada 5 m.
+3. compare_laps(melhor volta, referência) e leia a linha desta curva (perda por fase: frenagem, meio, \
+saída, reta seguinte) e os findings dela.
+4. render_comparison_chart(lap_id, reference, corner="${curva}") para ver pedais, velocidade e traçado.
+5. Se houver várias voltas suas, get_consistency(lap_ids) para ver a variação nesta curva.
+
+Responda com:
+- **O que acontece na curva** (fase a fase: frenagem → entrada/rotação → ápice → saída), com números.
+- **Onde está o tempo** (qual fase custa mais, em segundos).
+- **Causa provável** (técnica × consistência) — seja honesto sobre a precisão de replay.
+- **UMA ação principal** + **um exercício** de treino para 5 voltas (ex.: "frear 10 m mais tarde a cada \
+volta até a V-mín cair; pare quando passar do ápice") com critério de sucesso medível pelo app.`;
+}
+
+/** Task text (without the persona) of the `plano_treino` prompt; also used by the in-app coach. */
+export function trainingPlanTask(
+  store: Gt7Store,
+  { track_id, car_code }: { track_id?: string | undefined; car_code?: string | undefined },
+): string {
+  const trackId = track_id ?? latestDrivingSession(store)?.trackId ?? null;
+  const track = trackId ? store.getTrack(trackId) : null;
+  const ctx = track
+    ? `Pista: ${track.name} (${track.id}).`
+    : 'Pista: descubra com list_tracks (escolha a mais treinada).';
+  return `TAREFA: montar um plano de treino. ${ctx}${car_code ? ` Carro: ${car_code}.` : ''}
 
 Passos:
 1. get_evolution(track_id${car_code ? `, car_code=${car_code}` : ''}) → melhor volta por dia, gap para a \
@@ -179,7 +199,5 @@ Responda com:
 - **Plano para as próximas 3 sessões**: cada sessão com 1 foco principal (no máximo 2 curvas), \
 um exercício e uma meta numérica verificável no app (ex.: "T1: V-mín ≥ 62 km/h em 4 de 5 voltas"; \
 "desvio-padrão do ponto de frenagem da T6 < 5 m").
-- **Assistências** (TCS/ASM) se os dados sugerirem (patinagem/TCS ativo), sugerindo reduzir aos poucos.`);
-    },
-  );
+- **Assistências** (TCS/ASM) se os dados sugerirem (patinagem/TCS ativo), sugerindo reduzir aos poucos.`;
 }

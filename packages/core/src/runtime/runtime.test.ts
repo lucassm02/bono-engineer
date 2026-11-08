@@ -111,3 +111,24 @@ describe('Gt7Runtime over UDP (FakeConsole)', () => {
     expect(runtime.getStatus().connection).toBe('disconnected');
   });
 });
+
+describe('Gt7Runtime settings', () => {
+  it('setCaptureFormat persists; persistConsoleIp=false keeps the IP out of the settings', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'gt7-runtime-set-'));
+    cleanups.push(() => rmSync(dir, { recursive: true, force: true }));
+    const rt = new Gt7Runtime({ dataDir: dir, consoleIp: '127.0.0.1', persistConsoleIp: false });
+    expect(rt.consoleIp).toBe('127.0.0.1');
+    expect(rt.store.getSetting('consoleIp')).toBeUndefined();
+    rt.setConsoleIp('127.0.0.2');
+    expect(rt.store.getSetting('consoleIp')).toBeUndefined();
+    expect(rt.getSettings().captureFormat).toBe('B');
+    rt.setCaptureFormat('C');
+    expect(rt.getSettings().captureFormat).toBe('C');
+    await rt.close();
+
+    const rt2 = new Gt7Runtime({ dataDir: dir, consoleIp: '10.0.0.5' });
+    expect(rt2.getSettings().captureFormat).toBe('C');
+    expect(rt2.store.getSetting('consoleIp')).toBe('10.0.0.5');
+    await rt2.close();
+  });
+});

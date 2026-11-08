@@ -212,3 +212,47 @@ describe('Gt7Store', () => {
     await store.close();
   });
 });
+
+describe('Gt7Store coach reports', () => {
+  it('saves, lists (no conversation), gets with messages and deletes', async () => {
+    const store = Gt7Store.open(tempDir());
+    const base = {
+      kind: 'debrief' as const,
+      title: 'Debrief',
+      trackId: 'trk1',
+      sessionId: 's1',
+      lapId: 'l1',
+      reference: 'auto',
+      focusCorner: null,
+      model: 'claude-opus-5-5',
+      status: 'done' as const,
+      preview: '',
+      usage: {
+        inputTokens: 10,
+        outputTokens: 5,
+        cacheReadTokens: 0,
+        cacheWriteTokens: 0,
+        requests: 1,
+      },
+      markdown: '## Resumo\n**T1** perde 0,3 s',
+      transcript: [{ role: 'assistant' as const, text: 'oi', at: 1 }],
+      error: null,
+      messages: [{ role: 'user', content: 'x' }],
+    };
+    store.saveCoachReport({ ...base, id: 'r1', createdAt: 1, updatedAt: 1 });
+    store.saveCoachReport({ ...base, id: 'r2', createdAt: 2, updatedAt: 2, trackId: 'trk2' });
+    const all = store.listCoachReports();
+    expect(all.map((r) => r.id)).toEqual(['r2', 'r1']);
+    expect(all[0]).not.toHaveProperty('markdown');
+    expect(all[1]!.preview).toBe('Resumo T1 perde 0,3 s');
+    expect(store.listCoachReports({ trackId: 'trk1' }).map((r) => r.id)).toEqual(['r1']);
+    const got = store.getCoachReport('r1');
+    expect(got?.messages).toEqual([{ role: 'user', content: 'x' }]);
+    expect(got?.transcript[0]?.text).toBe('oi');
+    store.saveCoachReport({ ...got!, status: 'error', error: 'falhou', updatedAt: 3 });
+    expect(store.getCoachReport('r1')?.error).toBe('falhou');
+    expect(store.deleteCoachReport('r1')).toBe(true);
+    expect(store.getCoachReport('r1')).toBeNull();
+    await store.close();
+  });
+});
