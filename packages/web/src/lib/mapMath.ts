@@ -1,10 +1,12 @@
 /**
  * Track map projection and zoom/pan math (pure).
  *
- * Map plane: `mx = x`, `my = −z` (GT7 world X to the right, Z "up" on screen, north-up, fixed
- * orientation). With the shared heading convention (θ = 0 → +Z, direction (sin θ, cos θ)) a left
- * turn (θ decreasing) is drawn counter-clockwise. The real game's handedness is still unverified:
- * if the map shows mirrored in the console, flip `mx`.
+ * Map plane: `mx = −x`, `my = −z` (north-up, fixed orientation: GT7 +Z is "up" on screen and +X is
+ * to the LEFT). This is the same view as the MCP comparison PNG (chart.ts) and follows the shared
+ * heading convention (θ = 0 → +Z, direction (sin θ, cos θ), + curvature = LEFT turn): with X
+ * mirrored, a left turn is drawn counter-clockwise, i.e. it looks like a left turn.
+ * The real game's handedness is still unverified (first PS5 test): if the maps look mirrored on
+ * the console, flip `mapX` here and `vx` in chart.ts together.
  */
 
 export interface Bounds {
@@ -42,11 +44,15 @@ export const MAP_ZOOM_MAX = 12;
 /** Zoom level above which the map "owns" one-finger drags and double tap. */
 export const MAP_ZOOMED_EPS = 1.02;
 
+export function mapX(x: number): number {
+  return -x;
+}
+
 export function mapY(z: number): number {
   return -z;
 }
 
-/** Bounds of a polyline in the map plane (x, −z); null when empty. */
+/** Bounds of a polyline in the map plane (−x, −z); null when empty. */
 export function boundsOf(xs: ArrayLike<number>, zs: ArrayLike<number>): Bounds | null {
   const n = Math.min(xs.length, zs.length);
   if (n === 0) return null;
@@ -55,7 +61,7 @@ export function boundsOf(xs: ArrayLike<number>, zs: ArrayLike<number>): Bounds |
   let minY = Number.POSITIVE_INFINITY;
   let maxY = Number.NEGATIVE_INFINITY;
   for (let i = 0; i < n; i++) {
-    const x = xs[i]!;
+    const x = mapX(xs[i]!);
     const y = mapY(zs[i]!);
     if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
     if (x < minX) minX = x;

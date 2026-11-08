@@ -82,6 +82,12 @@ export interface LiveEngineOptions {
   maxLateralM?: number;
   /** Laps used for the fuel-per-lap average (default 3). */
   fuelAvgLaps?: number;
+  /**
+   * Max samples kept for a single lap (default 108 000 = 30 min at 60 Hz). A car left idling on
+   * the track never closes its lap: past the cap the lap stops recording and is flagged
+   * `incompleteData`, so memory stays bounded.
+   */
+  maxLapSamples?: number;
 }
 
 /** Everything about a closed lap (what the store persists and the UI pop-up shows). */
@@ -272,6 +278,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       lapCloseWaitPackets: opts.lapCloseWaitPackets ?? 60,
       maxLateralM: opts.maxLateralM ?? 25,
       fuelAvgLaps: opts.fuelAvgLaps ?? 3,
+      maxLapSamples: opts.maxLapSamples ?? 108_000,
     };
     this.#newId = opts.idFactory ?? (() => newId());
     this.#hints = opts.cornerHints ?? new TraceCornerHintProvider();
@@ -787,6 +794,10 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     }
 
     // ---- trace sample ----
+    if (lap.builder.length >= this.options.maxLapSamples) {
+      lap.flags.add('incompleteData');
+      return;
+    }
     const slip = wheelSlipRatios(p);
     const g = this.#g;
     lap.builder.push({

@@ -166,6 +166,10 @@ export class CoachService {
     this.runtime = runtime;
     this.settings = new CoachSettings(runtime.store, opts.env ?? process.env);
     this.tools = new McpToolBridge(runtime);
+    // A report left 'running' by a process that died can never finish (chat would answer "busy").
+    runtime.store.failStaleCoachReports(
+      'Interrompido: o servidor foi reiniciado durante a análise.',
+    );
     this.#factory = opts.clientFactory ?? defaultCoachClientFactory;
     this.#opts = {
       maxToolIterations: opts.maxToolIterations ?? MAX_TOOL_ITERATIONS,
@@ -364,6 +368,7 @@ export class CoachService {
     report.updatedAt = now;
     try {
       this.runtime.store.saveCoachReport(report);
+      this.runtime.store.pruneCoachReports(this.settings.maxReports());
     } catch {
       // store closed during shutdown
     }

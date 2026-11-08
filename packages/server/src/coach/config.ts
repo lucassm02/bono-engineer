@@ -10,7 +10,12 @@ export const COACH_SETTINGS = {
   apiKey: 'coach.apiKey',
   model: 'coach.model',
   effort: 'coach.effort',
+  maxReports: 'coach.maxReports',
 } as const;
+
+export const DEFAULT_MAX_REPORTS = 50;
+export const MIN_MAX_REPORTS = 5;
+export const MAX_MAX_REPORTS = 500;
 
 /** Most capable current model (default) + cheaper/faster options. */
 export const DEFAULT_COACH_MODEL = 'claude-opus-5-5';
@@ -76,6 +81,16 @@ export class CoachSettings {
       : DEFAULT_COACH_EFFORT;
   }
 
+  maxReports(): number {
+    const n = this.store.getSetting<number>(COACH_SETTINGS.maxReports);
+    return typeof n === 'number' &&
+      Number.isInteger(n) &&
+      n >= MIN_MAX_REPORTS &&
+      n <= MAX_MAX_REPORTS
+      ? n
+      : DEFAULT_MAX_REPORTS;
+  }
+
   config(): CoachConfig {
     const k = this.key();
     return {
@@ -87,6 +102,7 @@ export class CoachSettings {
       models: COACH_MODELS,
       effort: this.effort(),
       maxToolIterations: MAX_TOOL_ITERATIONS,
+      maxReports: this.maxReports(),
     };
   }
 
@@ -113,6 +129,15 @@ export class CoachSettings {
         throw new Error('Esforço inválido: use low, medium ou high.');
       }
       this.store.setSetting(COACH_SETTINGS.effort, patch.effort);
+    }
+    if (patch.maxReports !== undefined) {
+      const n = patch.maxReports;
+      if (!Number.isInteger(n) || n < MIN_MAX_REPORTS || n > MAX_MAX_REPORTS) {
+        throw new Error(
+          `Quantidade de relatórios inválida: use de ${MIN_MAX_REPORTS} a ${MAX_MAX_REPORTS}.`,
+        );
+      }
+      this.store.setSetting(COACH_SETTINGS.maxReports, n);
     }
     return this.config();
   }

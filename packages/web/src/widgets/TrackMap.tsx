@@ -20,6 +20,7 @@ import {
   isZoomed,
   lowerIndex,
   type MapViewState,
+  mapX,
   mapY,
   panBy,
   pinchView,
@@ -97,7 +98,7 @@ export function TrackMap({ interactive = false, details = true, className = '' }
     const b = boundsRef.current.b;
     if (!b) return;
     let view = viewRef.current ?? initialView(b);
-    if (f) view = followPoint(view, b, f.position.x, mapY(f.position.z));
+    if (f) view = followPoint(view, b, mapX(f.position.x), mapY(f.position.z));
     viewRef.current = view;
     const port = vp();
     const p = projection(view, b, port);
@@ -106,7 +107,7 @@ export function TrackMap({ interactive = false, details = true, className = '' }
     const lw =
       Math.max(3, minSide * (details ? 0.022 : 0.03)) * Math.min(2.2, Math.sqrt(view.zoom));
     const stride = Math.max(1, Math.floor(n / (1600 * view.zoom)));
-    const px = (i: number) => p.ox + g.x[i]! * p.k;
+    const px = (i: number) => p.ox + mapX(g.x[i]!) * p.k;
     const py = (i: number) => p.oy + mapY(g.z[i]!) * p.k;
 
     ctx.lineJoin = 'round';
@@ -236,7 +237,7 @@ export function TrackMap({ interactive = false, details = true, className = '' }
         ctx.beginPath();
         for (let j = a; j <= z; j++) {
           const k = tr.at(j);
-          const [sx, sy] = toScreen(p, tr.x[k]!, mapY(tr.z[k]!));
+          const [sx, sy] = toScreen(p, mapX(tr.x[k]!), mapY(tr.z[k]!));
           if (j === a) ctx.moveTo(sx, sy);
           else ctx.lineTo(sx, sy);
         }
@@ -248,7 +249,7 @@ export function TrackMap({ interactive = false, details = true, className = '' }
 
     // Car.
     if (f && (f.state === 'onTrack' || f.state === 'replay' || f.state === 'paused')) {
-      const [cx, cy] = toScreen(p, f.position.x, mapY(f.position.z));
+      const [cx, cy] = toScreen(p, mapX(f.position.x), mapY(f.position.z));
       const r = Math.max(5, lw * 0.85);
       const hx = Math.sin(f.headingRad);
       const hy = -Math.cos(f.headingRad);

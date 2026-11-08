@@ -37,6 +37,8 @@ export interface CoachConfig {
   effort: CoachEffort;
   /** Tool-loop cap per request. */
   maxToolIterations: number;
+  /** Reports kept in the history; older finished ones are deleted (default 50). */
+  maxReports: number;
 }
 
 /** PUT /api/coach/config body. `apiKey: null` (or '') removes the saved key. */
@@ -44,6 +46,8 @@ export interface CoachConfigPatch {
   apiKey?: string | null;
   model?: string;
   effort?: CoachEffort;
+  /** 5–500; applied after each finished report. */
+  maxReports?: number;
 }
 
 /** POST /api/coach/debrief body (all optional: default = latest live session, best lap). */

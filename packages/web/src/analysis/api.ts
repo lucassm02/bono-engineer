@@ -10,6 +10,7 @@ import type {
   ApiErrorBody,
   ApiEvolution,
   ApiLapAnalysis,
+  ApiMcpInfo,
   ApiMicrosectors,
   ApiRedetectCornersResult,
   ApiSettings,
@@ -206,6 +207,7 @@ export const api = {
   stopCapture: (save: boolean) =>
     request<ReferenceCaptureStatus>('POST', '/api/capture/stop', { save }),
 
+  mcpInfo: () => get<ApiMcpInfo>('/api/mcp/info'),
   coachConfig: () => get<CoachConfig>('/api/coach/config'),
   putCoachConfig: (p: CoachConfigPatch) => request<CoachConfig>('PUT', '/api/coach/config', p),
   coachReports: (limit = 50) => get<CoachReportSummary[]>(`/api/coach/reports${qs({ limit })}`),

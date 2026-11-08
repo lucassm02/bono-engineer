@@ -21,7 +21,9 @@ function dataDirFromArgs(argv: string[]): string {
   if (i >= 0 && argv[i + 1]) return resolve(argv[i + 1]!);
   const eq = argv.find((a) => a.startsWith('--data='));
   if (eq) return resolve(eq.slice('--data='.length));
-  if (process.env.GT7_DATA_DIR) return resolve(process.env.GT7_DATA_DIR);
+  if (process.env.GT7_DATA_DIR || process.env.GT7_DATA) {
+    return resolve((process.env.GT7_DATA_DIR || process.env.GT7_DATA)!);
+  }
   return fileURLToPath(new URL('../../../data', import.meta.url));
 }
 

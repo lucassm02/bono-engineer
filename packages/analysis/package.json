@@ -11,5 +11,8 @@
   },
   "dependencies": {
     "@gt7/shared": "*"
+  },
+  "devDependencies": {
+    "@gt7/protocol": "*"
   }
 }

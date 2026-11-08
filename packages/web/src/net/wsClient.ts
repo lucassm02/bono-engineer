@@ -121,7 +121,20 @@ export class WsClient {
   private keepAlive(): void {
     if (!this.ws) return;
     if (Date.now() - this.lastMessageAt > STALE_AFTER_MS) {
-      this.ws.close(); // onclose schedules the reconnect
+      // A dead TCP link (phone left the Wi-Fi) may take minutes to fire onclose: drop the socket
+      // now and reconnect, ignoring whatever the old one still reports.
+      const dead = this.ws;
+      this.ws = null;
+      dead.onclose = null;
+      dead.onmessage = null;
+      dead.onerror = null;
+      try {
+        dead.close();
+      } catch {
+        // already closed
+      }
+      this.clearTimers();
+      if (!this.stopped) this.scheduleRetry();
       return;
     }
     this.send({ type: 'ping', t: Date.now() });

@@ -1,7 +1,7 @@
 /** /api/sessions, /api/laps, /api/references, /api/recordings. */
 
 import { createReadStream, existsSync, statSync } from 'node:fs';
-import { relative, resolve } from 'node:path';
+import { isAbsolute, relative, resolve } from 'node:path';
 import type { ListLapsOptions } from '@gt7/core';
 import type { Lap, ReferenceMeta, Session, SessionDetail } from '@gt7/shared';
 import type { FastifyInstance } from 'fastify';
@@ -179,7 +179,12 @@ export function sessionRoutes(app: FastifyInstance, ctx: RouteContext): void {
     if (!s.recordingFile) throw notFound('Esta sessão não tem gravação.', 'noRecording');
     const abs = resolve(store.dataDir, s.recordingFile);
     const rel = relative(store.dataDir, abs);
-    if (rel.startsWith('..') || resolve(store.dataDir, rel) !== abs) {
+    if (
+      rel === '' ||
+      rel.startsWith('..') ||
+      isAbsolute(rel) ||
+      resolve(store.dataDir, rel) !== abs
+    ) {
       throw badRequest('Caminho de gravação inválido.');
     }
     if (!existsSync(abs)) throw notFound('Arquivo de gravação não encontrado.', 'noRecording');

@@ -56,7 +56,7 @@ function npmCliPath(): string | null {
   return existsSync(bundled) ? bundled : null;
 }
 
-function spawnVite(): ChildProcess {
+function spawnVite(isStopping: () => boolean): ChildProcess {
   const npmCli = npmCliPath();
   const opts = { cwd: REPO_ROOT, stdio: 'inherit' as const };
   const child = npmCli
@@ -64,7 +64,8 @@ function spawnVite(): ChildProcess {
     : spawn('npm run dev -w @gt7/web', { ...opts, shell: true });
   child.on('error', (e) => console.error(`  [dev] falha ao iniciar o Vite: ${e.message}`));
   child.on('exit', (code) => {
-    if (code) console.error(`  [dev] o Vite terminou com código ${code} (porta 5173 em uso?)`);
+    if (code && !isStopping())
+      console.error(`  [dev] o Vite terminou com código ${code} (porta 5173 em uso?)`);
   });
   return child;
 }
@@ -184,7 +185,7 @@ async function main(): Promise<void> {
   }
 
   await server.firewall.check().catch(() => null);
-  if (cfg.dev) vite = spawnVite();
+  if (cfg.dev) vite = spawnVite(() => stopping);
 
   const { lan, runtime } = server;
   console.log(
@@ -223,6 +224,15 @@ async function main(): Promise<void> {
     setTimeout(() => openBrowser(url), cfg.dev ? 2500 : 300).unref();
   }
 }
+
+// A stray rejection or exception (a bad UDP packet, a closed socket) must not end a session
+// in the middle of a race: report it and keep serving.
+process.on('unhandledRejection', (reason) => {
+  console.error('  [erro] promessa rejeitada sem tratamento:', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('  [erro] exceção não tratada:', err);
+});
 
 main().catch((e) => {
   console.error(`Erro fatal: ${(e as Error).stack ?? e}`);

@@ -12,6 +12,7 @@ import 'uplot/dist/uPlot.min.css';
 import { formatFixed } from '../../lib/format.ts';
 import { COMPARE_PANELS, isAllNull, type PanelDef, panelData } from '../lib/chartData.ts';
 import type { CursorBus } from '../lib/cursorBus.ts';
+import { DOUBLE_TAP_MS, pinchRange } from '../lib/touchZoom.ts';
 
 export interface ChartLap {
   id: string;
@@ -293,6 +294,73 @@ export function SyncCharts({
     };
   }, [panels, lapsKey, refId, syncKey, bus, full]);
 
+  // Touch: two fingers pinch/pan the shared x range, a double tap resets it (uPlot only drags with
+  // a mouse). One finger keeps scrolling the page.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: listeners follow the data
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+    let start: {
+      range: [number, number];
+      d0: number;
+      frac0: number;
+    } | null = null;
+    let lastTap = 0;
+    const geometry = (t: TouchList) => {
+      const a = t[0]!;
+      const b = t[1]!;
+      const over = plotsRef.current[0]?.over.getBoundingClientRect();
+      if (!over || over.width < 10) return null;
+      const mid = (a.clientX + b.clientX) / 2;
+      return {
+        d: Math.max(1, Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY)),
+        frac: Math.min(1, Math.max(0, (mid - over.left) / over.width)),
+      };
+    };
+    const currentRange = (): [number, number] => {
+      const sx = plotsRef.current[0]?.scales.x;
+      return [sx?.min ?? full[0], sx?.max ?? full[1]];
+    };
+    const onStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        const g = geometry(e.touches);
+        if (g) start = { range: currentRange(), d0: g.d, frac0: g.frac };
+        e.preventDefault();
+      } else if (e.touches.length === 1) {
+        start = null;
+      }
+    };
+    const onMove = (e: TouchEvent) => {
+      if (!start || e.touches.length !== 2) return;
+      const g = geometry(e.touches);
+      const first = plotsRef.current[0];
+      if (!g || !first) return;
+      e.preventDefault();
+      const [min, max] = pinchRange(start.range, start.frac0, g.d / start.d0, g.frac, full);
+      first.setScale('x', { min, max });
+    };
+    const onEnd = (e: TouchEvent) => {
+      if (e.touches.length < 2) start = null;
+      if (e.touches.length === 0 && e.changedTouches.length === 1) {
+        const now = Date.now();
+        if (now - lastTap < DOUBLE_TAP_MS) {
+          lastTap = 0;
+          plotsRef.current[0]?.setScale('x', { min: full[0], max: full[1] });
+        } else lastTap = now;
+      }
+    };
+    host.addEventListener('touchstart', onStart, { passive: false });
+    host.addEventListener('touchmove', onMove, { passive: false });
+    host.addEventListener('touchend', onEnd);
+    host.addEventListener('touchcancel', onEnd);
+    return () => {
+      host.removeEventListener('touchstart', onStart);
+      host.removeEventListener('touchmove', onMove);
+      host.removeEventListener('touchend', onEnd);
+      host.removeEventListener('touchcancel', onEnd);
+    };
+  }, [full]);
+
   // External range changes (corner click, reset button).
   useEffect(() => {
     if (same(range, lastRangeRef.current)) return;
@@ -323,7 +391,7 @@ export function SyncCharts({
           ref={(el) => void (el && readoutRefs.current.set('distance', el))}
         />
         <span className="dim a-small a-legend-hint">
-          Arraste para dar zoom · duplo clique volta
+          Arraste (ou pince com dois dedos) para dar zoom · duplo clique/toque volta
         </span>
       </div>
       {panels.map((p) => (

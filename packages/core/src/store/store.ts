@@ -135,7 +135,7 @@ export class Gt7Store {
     mkdirSync(this.recordingsDir, { recursive: true });
     this.db = new DatabaseSync(this.dbPath);
     this.db.exec(
-      'PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 3000;',
+      'PRAGMA busy_timeout = 5000; PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA synchronous = NORMAL;',
     );
     migrate(this.db);
   }
@@ -855,6 +855,31 @@ export class Gt7Store {
 
   deleteCoachReport(id: Id): boolean {
     return Number(this.db.prepare('DELETE FROM coach_reports WHERE id = ?').run(id).changes) > 0;
+  }
+
+  /** Keeps the newest `keep` finished reports (running ones are never pruned); returns removed. */
+  pruneCoachReports(keep: number): number {
+    const n = Math.max(0, Math.floor(keep));
+    return Number(
+      this.db
+        .prepare(
+          `DELETE FROM coach_reports WHERE status <> 'running' AND id NOT IN (
+             SELECT id FROM coach_reports WHERE status <> 'running'
+             ORDER BY created_at DESC, id DESC LIMIT ?)`,
+        )
+        .run(n).changes,
+    );
+  }
+
+  /** Marks reports left 'running' by a previous process as failed (they can never finish). */
+  failStaleCoachReports(message: string): number {
+    return Number(
+      this.db
+        .prepare(
+          `UPDATE coach_reports SET status = 'error', error = ?, updated_at = ? WHERE status = 'running'`,
+        )
+        .run(message, Date.now()).changes,
+    );
   }
 
   // ---------------------------------------------------------------------------------------------

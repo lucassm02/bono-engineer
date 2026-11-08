@@ -10,7 +10,7 @@ import fastifyStatic from '@fastify/static';
 import { AnalysisError } from '@gt7/core';
 import { API_PREFIX, WS_PATH } from '@gt7/shared';
 import type { FastifyError, FastifyInstance } from 'fastify';
-import { analysisErrorStatus, HttpError, sendError } from './http.ts';
+import { analysisErrorStatus, HttpError, requestPath, sendError } from './http.ts';
 
 export function webDistAvailable(dir: string | null): dir is string {
   return !!dir && existsSync(join(dir, 'index.html'));
@@ -58,7 +58,7 @@ export async function registerWeb(app: FastifyInstance, webDist: string | null):
   const hasDist = webDistAvailable(webDist);
 
   app.setNotFoundHandler((req, reply) => {
-    const path = req.url.split('?')[0] ?? '/';
+    const path = requestPath(req.url) ?? '/';
     if (isApi(path)) {
       return sendError(reply, 404, 'notFound', `Rota não encontrada: ${req.method} ${path}`);
     }
@@ -99,8 +99,14 @@ export async function registerWeb(app: FastifyInstance, webDist: string | null):
     if (status >= 400 && status < 500) {
       return sendError(reply, status, code, `Requisição inválida: ${err.message}`);
     }
-    req.log.error(err);
-    return sendError(reply, 500, 'serverError', `Erro interno do servidor: ${err.message}`);
+    // Never echo internal messages (file paths, SQL) to the client; they go to the log only.
+    console.error(`[gt7] erro interno em ${req.method} ${req.url.split('?')[0]}:`, err);
+    return sendError(
+      reply,
+      500,
+      'serverError',
+      'Erro interno do servidor. Veja o terminal onde o app está rodando.',
+    );
   });
 
   if (hasDist) {

@@ -138,3 +138,33 @@ export interface ApiRedetectCornersResult {
   /** True when corners were detected and saved (names carried over by apex proximity). */
   detected: boolean;
 }
+
+/**
+ * GET /api/mcp/info: ready-to-copy MCP connection data with the real paths of this installation
+ * (so the settings page needs no placeholder).
+ */
+export interface ApiMcpInfo {
+  /** Absolute path of the repository (where `npm run mcp` works). */
+  repoRoot: string;
+  /** Absolute data directory of the running app (`sessions.db` + `traces/`). */
+  dataDir: string;
+  /** Absolute path of the Node executable running the server. */
+  nodePath: string;
+  stdio: {
+    command: string;
+    args: string[];
+    /** `command` + `args`, quoted for PowerShell / Git Bash. */
+    commandLine: string;
+    /** Alternative from the repo folder: `npm run -s mcp -- --data "<dir>"`. */
+    npmCommandLine: string;
+  };
+  http: {
+    path: string;
+    localUrl: string;
+    lanUrls: string[];
+    tokenRequired: boolean;
+  };
+  /** Content for `%APPDATA%\Claude\claude_desktop_config.json` (stdio). */
+  claudeDesktopConfig: { mcpServers: { gt7: { command: string; args: string[] } } };
+  claudeCode: { stdio: string; http: string };
+}

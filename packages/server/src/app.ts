@@ -8,7 +8,7 @@ import { Gt7Runtime, type Gt7RuntimeOptions } from '@gt7/core';
 import { MCP_HTTP_PATH, mountMcpHttp } from '@gt7/mcp';
 import { DEFAULT_HTTP_PORT, WS_PATH } from '@gt7/shared';
 import Fastify, { type FastifyInstance } from 'fastify';
-import { registerAuth } from './auth.ts';
+import { registerAuth, registerOriginGuard } from './auth.ts';
 import { CoachService, type CoachServiceOptions } from './coach/service.ts';
 import { FirewallChecker, type FirewallCheckerOptions } from './firewall.ts';
 import { type HubOptions, type HubSocket, WsHub } from './hub.ts';
@@ -91,6 +91,7 @@ export async function createApp(opts: CreateAppOptions = {}): Promise<Gt7Server>
   });
 
   try {
+    registerOriginGuard(app);
     registerAuth(app, token);
     await app.register(fastifyWebsocket, { options: { maxPayload: WS_MAX_PAYLOAD } });
     app.get(WS_PATH, { websocket: true }, (socket, req) => {

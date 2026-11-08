@@ -5,6 +5,20 @@
 import type { ApiErrorBody } from '@gt7/shared';
 import type { FastifyReply } from 'fastify';
 
+/**
+ * Path of a request URL as the router sees it: query/fragment removed and percent-escapes decoded
+ * (find-my-way matches `/%61pi/status` against `/api/status`, so any prefix check on the raw URL
+ * is bypassable). `null` when the escapes are malformed.
+ */
+export function requestPath(url: string): string | null {
+  const raw = url.split('?')[0]?.split('#')[0] ?? '/';
+  try {
+    return decodeURI(raw);
+  } catch {
+    return null;
+  }
+}
+
 /** Error thrown by route handlers; mapped to `{ error: { code, message } }` with `status`. */
 export class HttpError extends Error {
   constructor(

@@ -18,6 +18,7 @@ import {
   isSafeId,
   notFound,
   type Obj,
+  optNumber,
   optString,
   queryInt,
   queryString,
@@ -87,7 +88,7 @@ export function coachRoutes(app: FastifyInstance, ctx: RouteContext): void {
 
   app.put('/coach/config', async (req) => {
     const b = bodyObject(req.body);
-    const known = ['apiKey', 'model', 'effort'];
+    const known = ['apiKey', 'model', 'effort', 'maxReports'];
     const unknown = Object.keys(b).filter((k) => !known.includes(k));
     if (unknown.length) throw badRequest(`Campo(s) desconhecido(s): ${unknown.join(', ')}.`);
     if (b.apiKey !== undefined && b.apiKey !== null && typeof b.apiKey !== 'string') {
@@ -95,11 +96,13 @@ export function coachRoutes(app: FastifyInstance, ctx: RouteContext): void {
     }
     const model = optString(b, 'model', 'model', 64);
     const effort = optString(b, 'effort', 'effort', 10);
+    const maxReports = optNumber(b, 'maxReports', 'maxReports', { integer: true });
     try {
       return coach.updateConfig({
         ...(b.apiKey !== undefined ? { apiKey: b.apiKey as string | null } : {}),
         ...(model !== undefined ? { model } : {}),
         ...(effort !== undefined ? { effort: effort as 'low' | 'medium' | 'high' } : {}),
+        ...(maxReports !== undefined ? { maxReports } : {}),
       });
     } catch (e) {
       if (e instanceof CoachError) throw new HttpError(e.status, e.code, e.message);

@@ -65,7 +65,7 @@ Uso: npm start -- [opções]     (npm run demo = --sim, npm run dev = --dev)
 
   --port N          porta HTTP/WebSocket (padrão 8770; env GT7_PORT)
   --host ADDR       endereço de escuta (padrão 0.0.0.0 = toda a rede; env GT7_HOST)
-  --data DIR        pasta de dados (padrão <repo>/data; com --sim, <repo>/data/demo; env GT7_DATA)
+  --data DIR        pasta de dados (padrão <repo>/data; com --sim, <repo>/data/demo; env GT7_DATA ou GT7_DATA_DIR)
   --ps-ip IP        IP do PlayStation (padrão: o salvo, senão busca na rede; env GT7_PS_IP)
   --format F        formato do pacote ao vivo: A | B | ~ | C (env GT7_FORMAT)
   --token T         exige este token na API e no WebSocket (env GT7_TOKEN)
@@ -158,7 +158,7 @@ export function parseConfig(
     };
   }
 
-  const dataArg = str('data') ?? env.GT7_DATA;
+  const dataArg = str('data') ?? (env.GT7_DATA || env.GT7_DATA_DIR || undefined);
   const dataDir = dataArg
     ? resolve(dataArg)
     : simOn

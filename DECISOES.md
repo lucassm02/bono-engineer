@@ -844,3 +844,107 @@
   `repoRoot`/`dataDir`).
 - Sem zoom por gesto nos gráficos no celular (o uPlot só arrasta com mouse); a rolagem funciona.
 - O coach real (com chave) não foi exercitado de ponta a ponta nesta onda, só com stream simulado.
+
+## Onda 5 — QA e endurecimento
+
+### Dependências e ferramentas
+
+- `package.json` agora declara o que cada pacote importa: `@gt7/analysis` (devDependency
+  `@gt7/protocol`, usado só nos testes) e `@gt7/mcp` (devDependency `fastify`, só tipos e testes).
+  Um `npm install` sincronizou o `package-lock.json`; `npm ci --dry-run` e `npm ls --all` sem erros.
+  (`core → analysis` e `server → mcp/sdk` já estavam certos.)
+- **Vitest em dois projetos** (`vitest.config.ts`): `unit` (paralelo) e `network` (UDP/TCP real:
+  `runtime.test.ts`, `integration.test.ts`, `app.test.ts`), que roda **depois** do `unit`, um arquivo
+  por vez e com timeout de 60 s. O teste do runtime era instável porque o replay a 20× disputava
+  CPU com a suíte inteira; agora roda com a máquina ociosa e usa 1 volta (antes 2) com
+  `timeout: 60_000`.
+- `npm run lint` sai com 0; restam 23 *warnings* de CSS (`!important`, especificidade) em
+  `styles/*.css`, sem correção automática segura.
+- **PowerShell 5.1 + `npm.ps1` engole o primeiro `--`**: `npm run demo -- --no-open` abre o
+  navegador e `npm run -s mcp -- --data X` ignora o `--data`. Funciona com `npm.cmd run … -- …`,
+  com `-- --` ou pelas variáveis de ambiente (`GT7_NO_OPEN=1`, `GT7_DATA`/`GT7_DATA_DIR`). O
+  `/api/mcp/info` já devolve `npm.cmd` no Windows. Git Bash e cmd não têm o problema.
+
+### Bugs encontrados e corrigidos
+
+- **Bypass do token** (`server/src/auth.ts`): o hook comparava o prefixo `/api` na URL crua, mas o
+  roteador decodifica `%61`; `GET /%61pi/status` (e `/%6dcp`, `/%77s`) passava **sem token**.
+  Agora o caminho é decodificado como o roteador faz (`requestPath` em `http.ts`) e URL com escape
+  inválido nunca passa. Teste em `hardening.test.ts` (falha no código antigo).
+- **Requisições entre sites** (`auth.ts: registerOriginGuard`): uma página de outro site podia abrir
+  `ws://<pc>:8770/ws` ou disparar um POST sem corpo (`/api/capture/stop`) — nenhum dos dois passa por
+  CORS. Requisições que mudam estado e o upgrade do WS com `Origin` de **outro hostname** que o
+  `Host` agora recebem 403. Mesma origem, proxy do Vite (mesmo hostname, outra porta), curl e
+  clientes MCP (sem `Origin`) não são afetados. Leituras continuam abertas (sem cabeçalhos CORS o
+  navegador não deixa a página alheia ler a resposta).
+- **Erro 500 vazava a mensagem interna** (caminhos de arquivo, SQL): agora é genérico para o cliente
+  e vai inteiro para o terminal (`web.ts`).
+- **Gravação**: o caminho vindo do banco também é recusado se for absoluto/vazio (`sessions.ts`).
+- **Memória do `LiveEngine`**: uma volta que nunca fecha (carro parado na pista) crescia sem limite
+  (~15 KB/s). Novo `maxLapSamples` (108 000 = 30 min): depois disso a volta para de gravar e é
+  marcada `incompleteData`. Teste em `live-engine.test.ts`.
+- **Hub**: o registro de dispositivos em memória aceitava `deviceId`s inventados sem limite; agora
+  guarda no máximo 100 dispositivos offline (`hub.ts`).
+- **Relatórios do coach**: um relatório `running` de um processo que morreu ficava preso (o chat
+  respondia 409 "busy" para sempre); ao iniciar, são marcados como erro. **Retenção**: guarda os
+  últimos N=50 relatórios concluídos (configurável de 5 a 500 em `PUT /api/coach/config`
+  `{maxReports}` e na página de configurações; relatório em andamento nunca é podado).
+- **SQLite**: `busy_timeout` passou para 5 s e vem antes do `journal_mode=WAL`; `synchronous=NORMAL`
+  (seguro em WAL). Testado com o MCP stdio lendo e escrevendo enquanto o app rodava.
+- **`main.ts`**: `unhandledRejection`/`uncaughtException` agora só registram (uma rejeição solta não
+  derruba o app no meio da corrida); a mensagem falsa "o Vite terminou com código 1" ao encerrar o
+  `npm run dev` deixou de aparecer.
+- **WebSocket do painel** (`wsClient.ts`): um link TCP morto (celular saiu do Wi-Fi) só disparava
+  `onclose` depois de minutos; agora, ao passar de 15 s sem mensagens, o socket é descartado e a
+  reconexão começa na hora.
+- **Mapa**: o mapa ao vivo/análise (`mapMath.ts`) desenhava com X à direita; o PNG do MCP espelha o
+  X. Convenção única agora: **mapa = (−x, −z)**, norte para cima, que com o heading do sintético
+  (θ=0 → +Z, curvatura + = esquerda) faz a curva à esquerda parecer à esquerda. O comentário antigo
+  do `mapMath.ts` estava errado. **A lateralidade real do GT7 continua sem verificação**: se no
+  primeiro teste o mapa aparecer espelhado, inverta `mapX` (`mapMath.ts`) e `vx` (`mcp/src/chart.ts`)
+  juntos. Verificado no navegador: Comparação, Pista e PNG têm a mesma orientação.
+- **`GT7_DATA` × `GT7_DATA_DIR`**: servidor e MCP stdio aceitam os dois nomes.
+- **Docs**: `PLANO-APP.md` dizia `pnpm start`; `server/README.md` dizia `topN=3` (o servidor usa 3
+  por padrão, 1–20; o painel pede 20 de propósito).
+
+### Pequenas lacunas fechadas
+
+- `GET /api/mcp/info` (`ApiMcpInfo`): `repoRoot`, `dataDir`, caminho do `node`, linha de comando
+  stdio exata (URL `file:///` do loader do tsx, aspas em caminhos com espaço), JSON do Claude
+  Desktop, comandos do Claude Code e URLs HTTP. A página de configurações usa isso (sem campo para
+  digitar a pasta). Testado com caminho com espaço e dados em pasta com espaço.
+- **Zoom por toque** nos gráficos da comparação: pinça com dois dedos (e arrastar com dois dedos) e
+  toque duplo para voltar; um dedo continua rolando a página (`SyncCharts.tsx`, matemática pura em
+  `analysis/lib/touchZoom.ts`, testada). Não testado em aparelho real.
+- `formatGear` (`web/src/lib/format.ts`): ré e neutro aparecem ambos como "N"; ficou um TODO ligado
+  ao primeiro teste com o PS5 (codificação não verificada). Sem mudança de comportamento.
+- `ReferenceCapture`: conferido, **não há bug**: a tolerância de comprimento é recalculada a cada
+  volta contra a pista da volta fechada. Limite conhecido: se o replay for de outra pista, o motor
+  cria uma pista nova e o teste de comprimento passa trivialmente (o `carMismatch` e o tempo do
+  ranking são as proteções).
+
+### Verificação ponta a ponta
+
+- `npm run demo -- --no-open --data "<pasta com espaço>"` + navegador embutido: painel ao vivo
+  (paisagem 640×295: delta, setores, seletor de telas com liga/desliga, Mapa com contorno do
+  servidor, delta e próxima curva), análise (sessões → sessão → comparar com gráficos e mapa →
+  pista), captura (troca de formato → gravando → `timeMismatch` → cancelar volta ao ao vivo),
+  configurações (QR, firewall, MCP com caminhos reais, coach) e coach sem chave (400 `noKey`).
+- MCP stdio (`list_tools` = 16, `compare_laps`, `render_comparison_chart` → PNG, de outro `cwd` e
+  com o app escrevendo no mesmo SQLite) e HTTP (`initialize`, `tools/list`, `get_live_state` com
+  estado real) funcionam.
+- Windows: Ctrl+C real (GenerateConsoleCtrlEvent) no `--dev --sim` imprimiu "Encerrando…" e não
+  deixou `node`/`vite` órfãos; `npm start` (modo real) e `npm run mcp` via PowerShell/Git Bash OK.
+
+### Pendências conhecidas
+
+- O estático (`/`, `/assets`) não exige o token (não tem dados; o cookie é gravado ao abrir com
+  `?token=`); só `/api`, `/ws` e `/mcp`.
+- O `/mcp` por HTTP não valida `Origin` em GET (não existe: 405); DNS rebinding continua opcional em
+  `mountMcpHttp`. Um inspetor MCP rodando num navegador (com `Origin` de outro host) é barrado.
+- Se o IP do console mudar (DHCP) com o IP descoberto por broadcast, é preciso informá-lo em
+  Configurações; não há redescoberta automática.
+- O mapa ao vivo sem contorno do servidor copia o caminho parcial a cada ponto novo (O(n) por quadro
+  na 1ª volta); aceitável (≤ 20 000 pontos).
+- Não testado: celular real (scroll-snap/iOS, Wake Lock, vibração, zoom por toque), coach com chave
+  real, console real (sinais de volante/mapa, ré × neutro).

@@ -174,7 +174,7 @@ export function CoachPage({ route }: { route: Route }) {
     pending.current = '';
     setEntries((es) => {
       const last = es[es.length - 1];
-      if (!last || last.role !== 'assistant') return es;
+      if (last?.role !== 'assistant') return es;
       return [...es.slice(0, -1), { ...last, text: last.text + add }];
     });
   }, []);

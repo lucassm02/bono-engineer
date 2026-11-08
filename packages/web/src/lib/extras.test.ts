@@ -30,6 +30,7 @@ import {
   isZoomed,
   lapDiff,
   lowerIndex,
+  mapX,
   panBy,
   pinchView,
   projection,
@@ -62,7 +63,9 @@ describe('map projection and zoom', () => {
   });
 
   it('builds bounds in the map plane (y = −z)', () => {
-    expect(boundsOf([0, 10], [5, -5])).toEqual({ minX: 0, maxX: 10, minY: -5, maxY: 5 });
+    // map plane = (−x, −z): same view as the MCP PNG, so a left turn (+curvature) looks left
+    expect(boundsOf([1, 10], [5, -5])).toEqual({ minX: -10, maxX: -1, minY: -5, maxY: 5 });
+    expect(mapX(3)).toBe(-3);
     expect(boundsOf([], [])).toBeNull();
   });
 

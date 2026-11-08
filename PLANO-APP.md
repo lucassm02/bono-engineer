@@ -334,7 +334,7 @@ gráficos. Assim você não precisa sair do app.
 | MCP | `@modelcontextprotocol/sdk` (oficial) + `zod` | stdio + Streamable HTTP; os schemas do zod validam a entrada das tools |
 | Testes | Vitest + sessões gravadas pelo simulador | Testes com dados reais sem console |
 | Qualidade | TypeScript `strict` + Biome (lint/format) | Uma ferramenta só, rápida |
-| Distribuição | Começa com `pnpm start` + navegador; depois um executável único com ícone na bandeja do Windows | Sem Electron: o PC usa o navegador, igual ao celular |
+| Distribuição | Começa com `npm start` + navegador; depois um executável único com ícone na bandeja do Windows | Sem Electron: o PC usa o navegador, igual ao celular |
 
 **Alternativa: Python** (FastAPI + numpy/pandas + MCP Python SDK). É melhor para análise numérica, mas
 deixa o projeto com duas linguagens (Python no backend, JS na UI). A análise aqui é simples o suficiente

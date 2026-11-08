@@ -6,7 +6,7 @@
 
 import type { MapCorner, MicrosectorColor } from '@gt7/shared';
 import { type PointerEvent as ReactPointerEvent, useCallback, useEffect, useRef } from 'react';
-import { type Bounds, boundsOf, fitScale, mapY } from '../../lib/mapMath.ts';
+import { type Bounds, boundsOf, fitScale, mapX, mapY } from '../../lib/mapMath.ts';
 import { CANVAS_COLORS as C, useCanvasSize } from '../../widgets/useCanvas.ts';
 import { colorAt, gridIndex, type Series, valueAt } from '../lib/chartData.ts';
 import type { CursorBus } from '../lib/cursorBus.ts';
@@ -134,7 +134,7 @@ export function CompareMap({
     const ox = s.w / 2 - ((b.minX + b.maxX) / 2) * k;
     const oy = s.h / 2 - ((b.minY + b.maxY) / 2) * k;
     projRef.current = { k, ox, oy };
-    const toX = (x: number) => ox + x * k;
+    const toX = (x: number) => ox + mapX(x) * k;
     const toY = (z: number) => oy + mapY(z) * k;
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
@@ -160,7 +160,7 @@ export function CompareMap({
       const w = ln.width ?? (li === 0 ? 3.2 : 2);
       ctx.lineWidth = w;
       ctx.setLineDash(ln.dash ?? []);
-      if (ln.colors && ln.colors.length) {
+      if (ln.colors?.length) {
         // Per-segment colour from the microsector the segment starts in.
         let prev: [number, number] | null = null;
         for (let i = 0; i < p.distanceM.length; i++) {
@@ -338,7 +338,7 @@ export function CompareMap({
       const x = subject.x[i];
       const z = subject.z[i];
       if (x === null || x === undefined || z === null || z === undefined) continue;
-      const dx = pr.ox + x * pr.k - sx;
+      const dx = pr.ox + mapX(x) * pr.k - sx;
       const dy = pr.oy + mapY(z) * pr.k - sy;
       const dd = dx * dx + dy * dy;
       if (dd < bestD) {

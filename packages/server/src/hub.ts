@@ -86,6 +86,8 @@ export interface HubStats {
 }
 
 const DEVICE_ID_RE = /^[A-Za-z0-9_.:-]{1,100}$/;
+/** Offline entries kept in the in-memory device registry (any client may invent deviceIds). */
+const MAX_OFFLINE_DEVICES = 100;
 
 export class WsHub {
   readonly runtime: Gt7Runtime;
@@ -371,6 +373,18 @@ export class WsHub {
     }
   }
 
+  /** Drops the oldest offline entries beyond MAX_OFFLINE_DEVICES (memory stays bounded). */
+  #pruneDevices(): void {
+    if (this.#devices.size <= MAX_OFFLINE_DEVICES) return;
+    const offline = [...this.#devices.values()]
+      .filter((d) => this.#connectionsOf(d.deviceId) === 0)
+      .sort((a, b) => a.lastSeenAt - b.lastSeenAt);
+    for (const d of offline) {
+      if (this.#devices.size <= MAX_OFFLINE_DEVICES) break;
+      this.#devices.delete(d.deviceId);
+    }
+  }
+
   #connectionsOf(deviceId: string): number {
     let n = 0;
     for (const c of this.#clients) if (c.deviceId === deviceId) n++;
@@ -566,6 +580,7 @@ export class WsHub {
       lastSeenAt: Date.now(),
       currentView: prev?.currentView ?? null,
     });
+    this.#pruneDevices();
 
     this.#send(c, {
       type: 'welcome',

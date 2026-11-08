@@ -49,7 +49,10 @@ export function deltaTone(
   return ms < 0 ? 'gain' : 'loss';
 }
 
-/** Gear label: 0 → N (neutral/reverse are not distinguishable yet), otherwise the number. */
+/**
+ * Gear label: 0 → N. TODO(primeiro teste com o PS5): the game's encoding of reverse vs neutral is
+ * unverified (both may arrive as gear <= 0); until then reverse also shows as N. No behaviour change.
+ */
 export function formatGear(gear: number | null | undefined): string {
   if (gear === null || gear === undefined || !Number.isFinite(gear)) return DASH;
   return gear <= 0 ? 'N' : String(gear);

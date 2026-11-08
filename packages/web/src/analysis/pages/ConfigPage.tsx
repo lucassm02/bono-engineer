@@ -408,44 +408,19 @@ function DevicesSection() {
 
 // ---------------------------------------------------------------------------------------------
 
-/** MCP snippets; the repo path is not exposed by the API, so it is a placeholder to edit. */
-export function mcpSnippets(httpUrl: string, repo = 'C:\\caminho\\para\\gt7') {
-  const fwd = repo.replace(/\\/g, '/');
-  const desktop = JSON.stringify(
-    {
-      mcpServers: {
-        gt7: {
-          command: 'node',
-          args: [
-            '--disable-warning=ExperimentalWarning',
-            '--import',
-            `file:///${fwd}/node_modules/tsx/dist/loader.mjs`,
-            `${repo}\\packages\\mcp\\src\\stdio.ts`,
-            '--data',
-            `${repo}\\data`,
-          ],
-        },
-      },
-    },
-    null,
-    2,
-  );
-  const code = `claude mcp add gt7 -- node --disable-warning=ExperimentalWarning --import file:///${fwd}/node_modules/tsx/dist/loader.mjs ${repo}\\packages\\mcp\\src\\stdio.ts --data ${repo}\\data`;
-  const http = `claude mcp add --transport http gt7-live ${httpUrl}`;
-  return { desktop, code, http };
-}
+const DESKTOP_CONFIG_PATH = '%APPDATA%\\Claude\\claude_desktop_config.json';
 
 function McpSection({ status }: { status: ApiStatus }) {
-  const lanHost = status.lanUrls[0] ? new URL(status.lanUrls[0]).hostname : null;
-  const localUrl = `http://localhost:${status.httpPort}/mcp`;
-  const lanUrl = lanHost ? `http://${lanHost}:${status.httpPort}/mcp` : null;
-  const [repo, setRepo] = useState('C:\\caminho\\para\\gt7');
-  const s = mcpSnippets(localUrl, repo);
+  const info = useFetch('mcpinfo', () => api.mcpInfo());
+  const i = info.data;
+  const lanUrl = i?.http.lanUrls[0] ?? null;
+  const localUrl = i?.http.localUrl ?? `http://localhost:${status.httpPort}/mcp`;
   return (
     <Card title="IA no Claude Desktop / Claude Code (MCP)" id="mcp">
       <p>
         As mesmas ferramentas do coach (comparar voltas, curvas, consistência, evolução, gráficos)
-        ficam disponíveis para o Claude pelo protocolo MCP.
+        ficam disponíveis para o Claude pelo protocolo MCP. Os comandos abaixo já usam os caminhos
+        reais desta instalação.
       </p>
       <h3 className="a-h3">HTTP (com o app rodando — inclui o estado ao vivo)</h3>
       <ul className="a-url-list">
@@ -460,19 +435,26 @@ function McpSection({ status }: { status: ApiStatus }) {
           </li>
         )}
       </ul>
-      <CodeBlock label="Claude Code" code={s.http} />
+      {i && <CodeBlock label="Claude Code" code={i.claudeCode.http} />}
       <h3 className="a-h3">stdio (Claude Desktop lê os dados gravados, mesmo com o app fechado)</h3>
-      <label className="a-inline-label">
-        Pasta do repositório
-        <input
-          className="a-input"
-          value={repo}
-          onChange={(e) => setRepo(e.target.value)}
-          spellCheck={false}
-        />
-      </label>
-      <CodeBlock label="%APPDATA%\Claude\claude_desktop_config.json" code={s.desktop} />
-      <CodeBlock label="Claude Code (stdio)" code={s.code} />
+      {info.error && !i && <ErrorBox error={info.error} compact onRetry={info.reload} />}
+      {!i && !info.error && <Loading />}
+      {i && (
+        <>
+          <p className="dim a-small">
+            Pasta do repositório: <span className="num">{i.repoRoot}</span>
+            <br />
+            Pasta de dados: <span className="num">{i.dataDir}</span>
+          </p>
+          <CodeBlock
+            label={DESKTOP_CONFIG_PATH}
+            code={JSON.stringify(i.claudeDesktopConfig, null, 2)}
+          />
+          <CodeBlock label="Claude Code (stdio)" code={i.claudeCode.stdio} />
+          <CodeBlock label="Linha de comando (stdio)" code={i.stdio.commandLine} />
+          <CodeBlock label="Dentro da pasta do repositório" code={i.stdio.npmCommandLine} />
+        </>
+      )}
       <p className="dim a-small">
         O <code>--import</code> precisa ser uma URL <code>file:///</code> absoluta. Detalhes em{' '}
         <code>packages/mcp/README.md</code>.
@@ -602,6 +584,27 @@ function CoachSection() {
               </select>
               <span className="a-help">
                 Até {c.maxToolIterations} rodadas de ferramentas por pedido.
+              </span>
+            </label>
+            <label>
+              Relatórios guardados
+              <select
+                value={c.maxReports}
+                disabled={busy}
+                onChange={(e) =>
+                  apply({ maxReports: Number(e.target.value) }, 'Limite de relatórios salvo.')
+                }
+              >
+                {[...new Set([10, 25, 50, 100, 200, c.maxReports])]
+                  .sort((x, y) => x - y)
+                  .map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+              </select>
+              <span className="a-help">
+                Os mais antigos são apagados ao terminar um novo (cada um guarda os gráficos).
               </span>
             </label>
           </div>

@@ -272,3 +272,22 @@ describe('LiveEngine frame throttle', () => {
     expect(v).toBeLessThanOrEqual(31);
   });
 });
+
+describe('LiveEngine memory bounds', () => {
+  it('stops recording a lap past maxLapSamples and flags it incompleteData', () => {
+    const gen = generateLaps({ profile: 'pro', seed: 11, laps: 2, format: 'A' });
+    const ctx = new MemoryEngineContext({ idFactory: sequentialIds('t') });
+    const engine = new LiveEngine({
+      context: ctx,
+      idFactory: sequentialIds('x'),
+      maxLapSamples: 300,
+    });
+    const r = run(gen.packets, engine);
+    expect(r.laps.length).toBeGreaterThan(0);
+    for (const l of r.laps) {
+      expect(l.trace.length).toBe(300);
+      expect(l.lap.flags).toContain('incompleteData');
+      expect(l.lap.valid).toBe(false);
+    }
+  });
+});

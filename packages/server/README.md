@@ -58,7 +58,7 @@ Erros da análise viram 404 (`notFound`, `noCenterline`, `noTrace`, `noReference
 |---|---|
 | `GET /api/analysis/tracks/:trackId?maxPoints=1000` | `ApiTrackAnalysis`: `track`, `polyline {x, z, stepM, lengthM}`, `corners` (com `apexX/apexZ`), `sectorStartsM`, `sectors`, `records`, `references` (404 `noCenterline` sem linha) |
 | `GET /api/analysis/laps/:lapId` | `ApiLapAnalysis` (= `LapAnalysis`: métricas por curva, validade, resumo) |
-| `GET /api/analysis/compare?lap=&ref=&topN=3` | `ApiComparison` (= `LapComparisonResult`: `comparison.rows/findings/keyFindings/sectorDeltasMs/warnings`, `markdown`) |
+| `GET /api/analysis/compare?lap=&ref=&topN=` (topN 1–20, padrão 3 no servidor; o painel pede 20) | `ApiComparison` (= `LapComparisonResult`: `comparison.rows/findings/keyFindings/sectorDeltasMs/warnings`, `markdown`) |
 | `GET /api/analysis/delta?lap=&ref=&stepM=2` | `ApiDistanceDelta` (delta acumulado + taxa s/100 m) |
 | `GET /api/analysis/traces?laps=a,b&channels=speed,throttle,brake,gear,steering&stepM=2&from=&to=&maxPoints=2000&ref=` | `ApiTraces`: todas as voltas na **mesma grade** de distância (até 6 voltas, 12 canais; apelidos em `API_TRACE_CHANNEL_ALIASES` ou nomes `TraceChannel`) |
 | `GET /api/analysis/microsectors?laps=a,b,c&ref=&count=` | `ApiMicrosectors` (microssetores, cores, volta teórica) |
