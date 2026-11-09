@@ -1,0 +1,112 @@
+.engineer-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.engineer-controls header,
+.engineer-controls-audio {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.engineer-controls header {
+  justify-content: space-between;
+}
+.engineer-controls h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+.engineer-controls p {
+  margin: 0;
+  color: var(--dim);
+  font-size: 0.85rem;
+}
+.engineer-controls label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  font-size: 0.85rem;
+}
+.engineer-controls select {
+  width: 100%;
+  min-width: 0;
+  min-height: 36px;
+  padding: 4px 8px;
+  color: inherit;
+  background: #0b1014;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.engineer-voice-options {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 145px), 1fr));
+}
+
+.engineer-hud {
+  --radio-color: var(--accent);
+  position: absolute;
+  z-index: 18;
+  inset: auto auto calc(var(--safe-b) + 42px) 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - var(--safe-l) - var(--safe-r));
+  padding: 7px 12px 8px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--radio-color);
+  border-radius: 8px;
+  background: rgba(10, 14, 18, 0.96);
+  color: var(--text);
+  pointer-events: none;
+}
+
+.engineer-hud[data-action^="brake"] {
+  --radio-color: #ff7979;
+}
+.engineer-hud[data-action^="throttle"] {
+  --radio-color: #64e8a0;
+}
+.engineer-hud-mode,
+.engineer-hud small {
+  color: var(--dim);
+  font-size: 0.74rem;
+}
+.engineer-hud-mode {
+  display: block;
+}
+.engineer-hud-call {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.engineer-hud-call strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.engineer-hud[data-action] strong {
+  text-transform: uppercase;
+  font-size: clamp(0.94rem, 3.2vw, 1.3rem);
+}
+.engineer-hud-distance {
+  flex: none;
+  color: var(--radio-color);
+  font-size: 1.25rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .engineer-hud {
+    bottom: calc(var(--safe-b) + 68px);
+  }
+  .app:has(.engineer-hud) {
+    --live-portrait-footer-space: 136px;
+  }
+}

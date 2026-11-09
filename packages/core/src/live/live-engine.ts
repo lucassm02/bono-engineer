@@ -36,6 +36,7 @@ import {
   type ConnectionState,
   type DeltaReferenceKind,
   decodeFlags,
+  type EngineerCue,
   type Id,
   type IngestorState,
   type IngestorStats,
@@ -43,6 +44,7 @@ import {
   type LapCompletedEvent,
   type LapFlag,
   type LapTrace,
+  type LiveEngineerFrame,
   type LiveFrame,
   type LiveGForce,
   type LiveTrackInfo,
@@ -70,6 +72,7 @@ import {
 import {
   type CornerHintProvider,
   type CornerHintTargets,
+  type EngineerMark,
   TraceCornerHintProvider,
 } from './corner-hints.ts';
 import { DeltaReference, type StoredLap } from './delta-reference.ts';
@@ -240,6 +243,7 @@ interface LapState {
   useGameClock: boolean;
   dist: number;
   misses: number;
+  projectionOffsetM?: number;
   reacquire: boolean;
   builder: TraceBuilder;
   flags: Set<LapFlag>;
@@ -393,6 +397,13 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   #refLine: Polyline | null = null;
   #records: TrackRecords | null = null;
   #hintCache = new Map<string, CornerHintTargets | null>();
+  #engineerLapStart: number | null = null;
+  #engineerTrackId: Id | null = null;
+  #engineerPlan: {
+    id: Id;
+    timeMs: number;
+    marks: Pick<EngineerMark, 'kind' | 'atM' | 'untilM'>[];
+  } | null = null;
   #cornerPass = new Map<string, CornerPass>();
 
   // delta
@@ -1105,6 +1116,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     const expected = lap.dist + p.speedMps * dt;
     const line = this.#line ?? this.#refLine;
     let dist = expected;
+    lap.projectionOffsetM = undefined;
     if (line) {
       const L = line.length;
       let proj = lap.reacquire
@@ -1129,6 +1141,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
           lap.flags.add('discontinuity');
         }
         dist = s;
+        lap.projectionOffsetM = proj.dist;
         lap.misses = 0;
         lap.reacquire = false;
       } else {
@@ -1571,6 +1584,108 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   // Internals: frame
   // ---------------------------------------------------------------------------------------------
 
+  #engineerFrame(p: TelemetryPacket, state: ConnectionState): LiveEngineerFrame {
+    const track = this.#track;
+    const lap = this.#lap;
+    const line = this.#line;
+    const lapStart = lap?.startedAt ?? null;
+    const trackId = track?.id ?? null;
+    if (lapStart !== this.#engineerLapStart || trackId !== this.#engineerTrackId) {
+      this.#engineerLapStart = lapStart;
+      this.#engineerTrackId = trackId;
+      this.#engineerPlan = null;
+    }
+    if (state !== 'onTrack') return { status: 'suspended' };
+    if (!track || !line || this.#needTrackCheck || this.#trackConfidence !== 'confirmed') {
+      return { status: 'waitingTrack' };
+    }
+    if (
+      !lap?.timed ||
+      lap.carCode !== p.carCode ||
+      lap.flags.has('discontinuity') ||
+      lap.offTrackRun > 0 ||
+      (lap.projectionOffsetM ?? Infinity) > 12 ||
+      p.speedMps < 8 ||
+      p.gear <= 0
+    )
+      return { status: 'suspended' };
+
+    const ref = this.#deltaRef;
+    if (!this.#engineerPlan) {
+      if (!ref) return { status: 'waitingReference' };
+      if (!ref.lap.valid || ref.lap.trackId !== track.id || ref.lap.carCode !== p.carCode) {
+        return { status: 'incompatible' };
+      }
+      const marks = new Map<string, Pick<EngineerMark, 'kind' | 'atM' | 'untilM'>>();
+      const stored = { lap: ref.lap, trace: ref.trace };
+      for (const corner of track.corners) {
+        for (const mark of this.#cornerTargets(track, corner, stored)?.engineerMarks ?? []) {
+          // The analysis line is smoothed. Reproject each pedal sample onto the live line so the
+          // countdown and the action point use the same distance coordinate.
+          const point = line.project(
+            mark.position.x,
+            mark.position.z,
+            mark.atM - 60,
+            mark.atM + 60,
+          );
+          if (!point || point.dist > 18) continue;
+          const end =
+            mark.endPosition && mark.untilM !== undefined
+              ? line.project(
+                  mark.endPosition.x,
+                  mark.endPosition.z,
+                  mark.untilM - 60,
+                  mark.untilM + 60,
+                )
+              : null;
+          if (mark.kind === 'coast' && (!end || end.dist > 18)) continue;
+          const span = end ? line.wrap(end.s - point.s) : 0;
+          if (span > line.length / 2) continue;
+          marks.set(`${mark.kind}|${Math.round(point.s)}`, {
+            kind: mark.kind,
+            atM: point.s,
+            untilM: end ? point.s + span : undefined,
+          });
+        }
+      }
+      this.#engineerPlan = { id: ref.lapId, timeMs: ref.timeMs, marks: [...marks.values()] };
+    }
+
+    const plan = this.#engineerPlan;
+    if (plan.marks.length === 0) return { status: 'noCues' };
+    const length = line.length;
+    const cues: EngineerCue[] = [];
+    for (const [i, mark] of plan.marks.entries()) {
+      const offset = mark.atM - lap.dist;
+      const aheadM = offset - Math.round(offset / length) * length;
+      const span = mark.untilM === undefined ? 0 : mark.untilM - mark.atM;
+      if (aheadM > 310 || aheadM + span < -18) continue;
+      cues.push({
+        id: `${plan.id}|${i}`,
+        kind: mark.kind,
+        aheadM,
+        ...(span > 0 ? { endAheadM: aheadM + span } : {}),
+      });
+    }
+    return {
+      status: 'ready',
+      referenceLapId: plan.id,
+      referenceLapMs: plan.timeMs,
+      pendingReference: plan.id !== ref?.lapId,
+      cues,
+    };
+  }
+
+  #cornerTargets(track: Track, corner: Track['corners'][number], reference: StoredLap | null) {
+    const key = `${corner.id}|${reference?.lap.id ?? ''}`;
+    let targets = this.#hintCache.get(key);
+    if (targets === undefined) {
+      targets = this.#hints.targetsFor({ track, corner, reference });
+      this.#hintCache.set(key, targets);
+    }
+    return targets;
+  }
+
   #nextCorner(dist: number | null): NextCornerHint | null {
     const track = this.#track;
     if (!track || dist === null || track.corners.length === 0) return null;
@@ -1585,16 +1700,11 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       distance = corner.entryM + L - d;
     }
     const ref = this.#deltaRef;
-    const key = `${corner.id}|${ref?.lapId ?? ''}`;
-    let targets = this.#hintCache.get(key);
-    if (targets === undefined) {
-      targets = this.#hints.targetsFor({
-        track,
-        corner,
-        reference: ref ? { lap: ref.lap, trace: ref.trace } : null,
-      });
-      this.#hintCache.set(key, targets);
-    }
+    const targets = this.#cornerTargets(
+      track,
+      corner,
+      ref ? { lap: ref.lap, trace: ref.trace } : null,
+    );
     return {
       cornerId: corner.id,
       name: corner.name,
@@ -1639,13 +1749,14 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     }
     const delta = timed ? this.#deltaMs : null;
     const flagsInvalid = lap ? INVALIDATING.some((f) => lap.flags.has(f)) : true;
+    const state = this.#composeState();
     const slip = wheelSlipRatios(p);
     return {
       seq: ++this.#seq,
       t: now,
       packetId: p.packetId,
       format: p.format,
-      state: this.#composeState(),
+      state,
       car: {
         speedKmh: p.speedMps * 3.6,
         rpm: p.engineRpm,
@@ -1702,6 +1813,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       lapFraction: fraction,
       track: this.trackInfo,
       nextCorner: this.#nextCorner(dist),
+      engineer: this.#engineerFrame(p, state),
       link: this.#link ?? {
         rateHz: 0,
         lossPct: 0,

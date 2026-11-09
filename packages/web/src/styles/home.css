@@ -89,6 +89,20 @@
     backdrop-filter: blur(6px);
     border-bottom: 1px solid var(--line);
   }
+  .a-mtop .cs-row,
+  .a-mtop .cx-chip,
+  .a-mtop .cs-chip {
+    min-width: 0;
+  }
+  .a-mtop .cx-chip-text,
+  .a-mtop .cs-text {
+    max-width: none;
+    overflow: visible;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: left;
+    line-height: 1.2;
+  }
   .a-side .a-nav {
     position: fixed;
     left: 0;
@@ -96,8 +110,9 @@
     bottom: 0;
     z-index: 30;
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 0;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(min-content, 1fr);
+    gap: 2px;
     padding: 4px max(4px, env(safe-area-inset-right)) calc(4px + env(safe-area-inset-bottom))
       max(4px, env(safe-area-inset-left));
     background: rgba(5, 8, 10, 0.97);
@@ -109,11 +124,11 @@
     flex-direction: column;
     justify-content: center;
     gap: 2px;
-    padding: 6px 2px;
+    padding: 6px 0;
     margin: 0;
     border: 0;
     border-radius: 8px;
-    font-size: 11px;
+    font-size: clamp(9px, 2.75vw, 11px);
     font-weight: 600;
     text-align: center;
     min-height: 52px;

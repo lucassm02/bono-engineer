@@ -134,7 +134,7 @@ button {
 .view {
   position: absolute;
   inset: 0;
-  padding: var(--safe-t) var(--safe-r) calc(var(--safe-b) + 22px) var(--safe-l);
+  padding: var(--safe-t) var(--safe-r) calc(var(--safe-b) + 34px) var(--safe-l);
   display: grid;
   gap: min(1.6cqh, 1.2cqw);
   min-height: 0;
@@ -344,6 +344,7 @@ button {
   pointer-events: none;
 }
 .notice {
+  overflow-wrap: anywhere;
   pointer-events: auto;
   border: 1px solid var(--line);
   background: rgba(20, 27, 33, 0.96);
@@ -384,6 +385,30 @@ button {
 .badge-replay {
   color: var(--blue);
   border-color: rgba(61, 139, 255, 0.5);
+}
+
+@media (max-width: 480px) {
+  .app {
+    --live-portrait-footer-space: 68px;
+  }
+  .view {
+    padding-bottom: calc(var(--safe-b) + var(--live-portrait-footer-space));
+  }
+  .dots {
+    left: var(--safe-l);
+    right: calc(var(--safe-r) + 88px);
+    justify-content: center;
+    transform: none;
+  }
+  .dot {
+    min-width: 0;
+    flex: 0 1 22px;
+  }
+  .badges {
+    bottom: calc(var(--safe-b) + 32px);
+    right: var(--safe-r);
+    align-items: center;
+  }
 }
 
 /* Buttons & switches */
@@ -1815,7 +1840,7 @@ div.view-row-main {
 /* Portrait: dots + padlock get their own row under the content. */
 @container (orientation: portrait) {
   .view {
-    padding-bottom: calc(var(--safe-b) + 44px);
+    padding-bottom: calc(var(--safe-b) + var(--live-portrait-footer-space, 44px));
   }
 }
 

@@ -41,7 +41,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}', 'radio/*.wav'],
         navigateFallback: '/index.html',
         // Live data must never come from the cache.
         navigateFallbackDenylist: [/^\/ws/, /^\/api/, /^\/mcp/],

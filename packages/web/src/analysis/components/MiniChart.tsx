@@ -35,7 +35,7 @@ export function MiniChart({ xs, series, height = 200, xLabel, yLabel, zeroLine =
     if (!el) return;
     el.innerHTML = '';
     const opts: uPlot.Options = {
-      width: Math.max(280, el.clientWidth),
+      width: el.clientWidth || 240,
       height,
       legend: { show: true, live: false },
       cursor: { drag: { x: false, y: false }, points: { size: 7 } },
@@ -89,7 +89,8 @@ export function MiniChart({ xs, series, height = 200, xLabel, yLabel, zeroLine =
     };
     const plot = new uPlot(opts, [xs, ...series.map((s) => s.values)] as uPlot.AlignedData, el);
     const ro = new ResizeObserver(() => {
-      const w = Math.max(280, el.clientWidth);
+      const w = el.clientWidth;
+      if (!w) return;
       if (Math.abs(plot.width - w) > 1) plot.setSize({ width: w, height });
     });
     ro.observe(el);

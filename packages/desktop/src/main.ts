@@ -365,13 +365,13 @@ function buildTrayMenu(): Menu {
     { label: `Abrir ${APP_NAME}`, click: showWindow },
     phoneUrl
       ? {
-          label: 'Copiar endereço do celular',
+          label: 'Copiar endereço para acesso remoto',
           click: () => {
             clipboard.writeText(phoneUrl as string);
             balloon(`Endereço copiado: ${phoneUrl}`);
           },
         }
-      : { label: 'Endereço do celular indisponível (sem rede)', enabled: false },
+      : { label: 'Endereço para acesso remoto indisponível', enabled: false },
     { type: 'separator' },
     {
       label: 'Iniciar com o Windows',
@@ -389,7 +389,7 @@ function buildTrayMenu(): Menu {
 
 function refreshTrayTooltip(): void {
   if (!tray) return;
-  tray.setToolTip(phoneUrl ? `${APP_NAME}\nCelular: ${phoneUrl}` : APP_NAME);
+  tray.setToolTip(phoneUrl ? `${APP_NAME}\nAcesso remoto: ${phoneUrl}` : APP_NAME);
 }
 
 function createTray(): void {

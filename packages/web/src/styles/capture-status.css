@@ -161,6 +161,10 @@ html[data-area="analysis"] .cs-toast {
   text-decoration: none;
   padding: 4px 6px;
 }
+.cs-toast > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 .cs-toast-link:hover {
   text-decoration: underline;
 }

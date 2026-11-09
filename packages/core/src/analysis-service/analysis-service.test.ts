@@ -1,6 +1,8 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { generateLaps } from '@gt7/protocol';
+import { type EngineerCueKind, type LiveFrame, SimulatorFlags } from '@gt7/shared';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { type SeedResult, seedSyntheticData } from '../dev/seed.ts';
 import { Gt7Runtime } from '../runtime/runtime.ts';
@@ -209,5 +211,45 @@ describe('AnalysisService', () => {
     expect(t.referenceGearAtApex).toBe(la.metrics[0]!.gearAtApex);
     expect(t.referenceThrottleOnM).toBeCloseTo(la.metrics[0]!.throttlePickupM!, 3);
     expect(provider.targetsFor({ track, corner: track.corners[0]!, reference: null })).toBeNull();
+  });
+
+  it('sends live radio cues and holds the chosen reference through the current lap', () => {
+    const { engine } = rt;
+    const referenceId = seed.referenceLapId!;
+    const secondId = amateurDay1[0]!;
+    const kinds = new Set<EngineerCueKind>();
+    const referenceByLap = new Map<number, string>();
+    let pending = false;
+    const onFrame = (frame: LiveFrame) => {
+      if (frame.engineer?.status !== 'ready') return;
+      referenceByLap.set(frame.lap.lap, frame.engineer.referenceLapId);
+      for (const cue of frame.engineer.cues) kinds.add(cue.kind);
+      pending ||= frame.engineer.pendingReference;
+      if (frame.lap.lap === 2 && engine.deltaReference.lapId === referenceId) {
+        engine.setDeltaReference('reference', secondId);
+      }
+    };
+    engine.setDeltaReference('reference', referenceId);
+    engine.on('frame', onFrame);
+    const { packets } = generateLaps({ profile: 'amateur', laps: 3, seed: 10, format: 'B' });
+    const clock = BASE + 5 * DAY;
+    try {
+      for (const [i, packet] of packets.entries()) engine.push(packet, clock + i * (1000 / 60));
+      const last = packets.at(-1)!;
+      engine.push(
+        { ...last, flags: last.flags | SimulatorFlags.Paused, packetId: last.packetId + 1 },
+        clock + packets.length * (1000 / 60),
+      );
+      expect(engine.snapshot()?.engineer?.status).toBe('suspended');
+      expect(referenceByLap.has(1)).toBe(false); // Track is still probable on the first flying lap.
+      expect(referenceByLap.get(2)).toBe(referenceId);
+      expect(referenceByLap.get(3)).toBe(secondId);
+      expect(pending).toBe(true);
+      expect([...kinds].some((kind) => kind.startsWith('brake'))).toBe(true);
+      expect([...kinds].some((kind) => kind.startsWith('throttle'))).toBe(true);
+    } finally {
+      engine.off('frame', onFrame);
+      engine.endSession();
+    }
   });
 });

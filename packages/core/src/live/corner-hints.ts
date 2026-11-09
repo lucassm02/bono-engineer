@@ -4,8 +4,22 @@
  * smarter provider later. {@link TraceCornerHintProvider} derives them from the reference trace.
  */
 
-import { BRAKE_ON_THRESHOLD, type Corner, type Track } from '@gt7/shared';
+import {
+  BRAKE_ON_THRESHOLD,
+  type Corner,
+  type EngineerCueKind,
+  type Track,
+  type Vec2,
+} from '@gt7/shared';
 import type { StoredLap } from './delta-reference.ts';
+
+export interface EngineerMark {
+  kind: EngineerCueKind;
+  atM: number;
+  position: Vec2;
+  untilM?: number;
+  endPosition?: Vec2;
+}
 
 export interface CornerHintTargets {
   referenceBrakePointM: number | null;
@@ -13,6 +27,7 @@ export interface CornerHintTargets {
   referenceGearAtApex: number | null;
   /** Throttle pickup distance of the reference in this corner (m), when known. */
   referenceThrottleOnM?: number | null;
+  engineerMarks?: readonly EngineerMark[];
 }
 
 export interface CornerHintInput {

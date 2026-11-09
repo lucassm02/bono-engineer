@@ -8,7 +8,7 @@
  * the input and the line is built from the stored centerline (cached by the AnalysisService).
  */
 
-import { computeLapMetrics, prepareLap } from '@gt7/analysis';
+import { computeCornerMetrics, computeLapMetrics, cornerWindows, prepareLap } from '@gt7/analysis';
 import {
   type CornerHintInput,
   type CornerHintProvider,
@@ -17,6 +17,7 @@ import {
 } from '../live/corner-hints.ts';
 import type { AnalysisService } from './analysis-service.ts';
 import { cornersSignature } from './analysis-service.ts';
+import { engineerMarks, wrapEngineerLap } from './engineer-marks.ts';
 import { LruCache } from './lru.ts';
 
 export class AnalysisCornerHintProvider implements CornerHintProvider {
@@ -42,8 +43,10 @@ export class AnalysisCornerHintProvider implements CornerHintProvider {
           lapTimeMs: reference.lap.timeMs,
           isReplay: reference.lap.flags.includes('replay'),
         });
+        const windows = cornerWindows(corners, lap.lengthM);
+        const radioLap = wrapEngineerLap(lap);
         byCorner = new Map(
-          computeLapMetrics(lap, corners).map((m) => [
+          computeLapMetrics(lap, corners).map((m, i) => [
             m.cornerId,
             {
               referenceBrakePointM: m.brakePointM,
@@ -53,6 +56,14 @@ export class AnalysisCornerHintProvider implements CornerHintProvider {
                 m.throttlePickupM !== null && Number.isFinite(m.throttlePickupM)
                   ? m.throttlePickupM
                   : null,
+              engineerMarks: engineerMarks(
+                radioLap,
+                radioLap !== lap &&
+                  (windows[i]!.brakeFromM < 0 || corners[i]!.exitM + 150 > lap.lengthM)
+                  ? computeCornerMetrics(radioLap, windows[i]!)
+                  : m,
+                corners[i]!.exitM,
+              ),
             },
           ]),
         );

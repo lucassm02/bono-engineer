@@ -11,6 +11,7 @@ import {
 import { ConsolePanelHost } from './components/ConsoleLink.tsx';
 import { LapPopup } from './components/LapPopup.tsx';
 import { LayoutEditor } from './components/LayoutEditor.tsx';
+import { LiveEngineer } from './components/LiveEngineer.tsx';
 import { LiveMenuSheet, MenuButton } from './components/LiveMenu.tsx';
 import { StatusLayer } from './components/StatusLayer.tsx';
 import { useGestures } from './components/useGestures.ts';
@@ -84,6 +85,7 @@ export function App() {
       <OverlayHeader />
       <EdgeArrows />
       <Dots />
+      <LiveEngineer />
       <MenuButton />
       <LockButton />
       <LapPopup />

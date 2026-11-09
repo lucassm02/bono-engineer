@@ -93,7 +93,7 @@ export function SyncCharts({
     const host = hostRef.current;
     if (!host) return;
     const visible = panels.filter((p) => !p.empty);
-    const width = Math.max(320, host.clientWidth);
+    const width = host.clientWidth || 240;
     const plots: uPlot[] = [];
     const xs = traces.distanceM;
 
@@ -269,7 +269,8 @@ export function SyncCharts({
     }
 
     const ro = new ResizeObserver(() => {
-      const w = Math.max(320, host.clientWidth);
+      const w = host.clientWidth;
+      if (!w) return;
       for (const [k, o] of plots.entries()) {
         const p = visible[k]!;
         if (Math.abs(o.width - w) > 1)

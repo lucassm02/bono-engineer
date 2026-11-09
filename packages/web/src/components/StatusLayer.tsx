@@ -70,7 +70,7 @@ export function StatusLayer() {
           </p>
           <ul>
             <li>Confira se o servidor está rodando no PC.</li>
-            <li>Celular e PC precisam estar na mesma rede Wi-Fi.</li>
+            <li>O PC e o dispositivo remoto precisam estar na mesma rede local.</li>
             <li>Use o endereço ou o QR code mostrado na tela do PC.</li>
           </ul>
           <p className="dim">

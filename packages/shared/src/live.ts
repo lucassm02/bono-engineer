@@ -105,6 +105,35 @@ export interface NextCornerHint {
   lastPassDeltaMs: number | null;
 }
 
+export type EngineerCueKind =
+  | 'brake'
+  | 'brakeHard'
+  | 'brakeLight'
+  | 'release'
+  | 'releaseSmooth'
+  | 'coast'
+  | 'throttle'
+  | 'throttleSmooth';
+
+export interface EngineerCue {
+  id: string;
+  kind: EngineerCueKind;
+  /** Signed distance from the car to the action point. */
+  aheadM: number;
+  /** Remaining distance to the end of an instruction that spans a zone. */
+  endAheadM?: number;
+}
+
+export type LiveEngineerFrame =
+  | { status: 'waitingTrack' | 'waitingReference' | 'incompatible' | 'noCues' | 'suspended' }
+  | {
+      status: 'ready';
+      referenceLapId: Id;
+      referenceLapMs: number;
+      pendingReference: boolean;
+      cues: EngineerCue[];
+    };
+
 /** Car channels of the live frame. */
 export interface LiveCar {
   speedKmh: number;
@@ -189,6 +218,7 @@ export interface LiveFrame {
   lapFraction: number | null;
   track: LiveTrackInfo | null;
   nextCorner: NextCornerHint | null;
+  engineer?: LiveEngineerFrame;
   /** UDP link quality. */
   link: Pick<IngestorStats, 'rateHz' | 'lossPct' | 'lost' | 'received' | 'lastPacketAt'>;
 }

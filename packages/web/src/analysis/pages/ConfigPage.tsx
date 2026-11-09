@@ -19,7 +19,7 @@ import { useEffect, useState } from 'react';
 import { ConnectionDetails } from '../../components/ConsoleLink.tsx';
 import { DELTA_REFERENCE_LABELS, VIEW_LABELS } from '../../lib/labels.ts';
 import { ONBOARDING_KEY } from '../../lib/onboarding.ts';
-import type { Route } from '../../lib/route.ts';
+import { type Route, routes } from '../../lib/route.ts';
 import { saveString } from '../../lib/storage.ts';
 import { addNotice, useUi } from '../../state/uiStore.ts';
 import { api } from '../api.ts';
@@ -250,7 +250,7 @@ function LanSection({ status, onChange }: { status: ApiStatus; onChange: () => v
   const { busy, run } = useSave();
   const fw = status.firewall;
   return (
-    <Card title="Celular" id="celular">
+    <Card title="Dispositivo remoto" id="acesso-remoto">
       <div className="a-lan">
         <div className="a-lan-urls">
           {lan.error ? (
@@ -259,13 +259,14 @@ function LanSection({ status, onChange }: { status: ApiStatus; onChange: () => v
             <Loading />
           ) : lan.data.urls.length === 0 ? (
             <p className="dim">
-              Nenhuma rede local encontrada. Conecte o PC ao Wi-Fi/cabo da mesma rede do celular.
+              Nenhum endereço de rede disponível. Conecte o PC e o dispositivo remoto à mesma rede
+              local.
             </p>
           ) : (
             <>
               <p>
-                Para pilotar olhando o celular, aponte a câmera para o QR code ou abra este endereço
-                no navegador dele (mesmo Wi-Fi do PC):
+                Escaneie o QR Code com a câmera do dispositivo remoto ou abra um dos endereços
+                abaixo no navegador. Os dois dispositivos precisam estar na mesma rede local.
               </p>
               <ul className="a-url-list">
                 {lan.data.urls.map((u) => (
@@ -281,8 +282,8 @@ function LanSection({ status, onChange }: { status: ApiStatus; onChange: () => v
                 ))}
               </ul>
               <p className="dim a-small">
-                No celular use “Adicionar à tela inicial” para abrir em tela cheia. Neste PC:{' '}
-                <span className="num">{lan.data.localUrl}</span>
+                Se o navegador oferecer “Adicionar à tela inicial”, use essa opção para abrir o
+                painel em tela cheia. Neste PC: <span className="num">{lan.data.localUrl}</span>
               </p>
             </>
           )}
@@ -291,7 +292,7 @@ function LanSection({ status, onChange }: { status: ApiStatus; onChange: () => v
           <img
             className="a-qr"
             src={lan.data.qrSvgDataUrl}
-            alt={`QR code de ${lan.data.preferredUrl ?? ''}`}
+            alt="QR Code para abrir o painel em outro dispositivo"
           />
         )}
       </div>
@@ -373,10 +374,10 @@ function DevicesSection() {
         <Loading />
       ) : list.length === 0 ? (
         <p className="dim">
-          Nenhum painel conectado ainda. Abra o endereço da seção “Celular” no celular.
+          Nenhum painel conectado ainda. Use o QR Code ou o endereço da seção “Dispositivo remoto”.
         </p>
       ) : (
-        <div className="a-table-wrap">
+        <div className="a-table-wrap a-devices-table">
           <table className="a-table">
             <thead>
               <tr>
@@ -406,7 +407,12 @@ function DevicesSection() {
                         <span className="dim">offline · {formatAgo(d.lastSeenAt)}</span>
                       )}
                     </td>
-                    <td>{d.currentView ? VIEW_LABELS[d.currentView] : '–'}</td>
+                    <td>
+                      <span className="a-device-mobile-label" aria-hidden="true">
+                        Tela atual
+                      </span>
+                      {d.currentView ? VIEW_LABELS[d.currentView] : '–'}
+                    </td>
                     <td>
                       <div className="a-row-actions">
                         <select
@@ -720,7 +726,7 @@ function AboutSection({ status }: { status: ApiStatus }) {
         <div>
           <strong>Assistente de boas-vindas</strong>
           <div className="dim a-small">
-            Mostra de novo os primeiros passos (achar o PS5, celular).
+            Mostra de novo como encontrar o PS5 e abrir o painel em outro dispositivo.
           </div>
         </div>
         <button
@@ -745,7 +751,11 @@ function AboutSection({ status }: { status: ApiStatus }) {
 // ---------------------------------------------------------------------------------------------
 
 /** Old section anchors (links in the README / other pages) → current ids. */
-const SECTION_ALIASES: Record<string, string> = { console: 'conexao', lan: 'celular' };
+const SECTION_ALIASES: Record<string, string> = {
+  console: 'conexao',
+  lan: 'acesso-remoto',
+  celular: 'acesso-remoto',
+};
 
 export function ConfigPage({ route }: { route: Route }) {
   useTitle('Configurações');
@@ -764,7 +774,7 @@ export function ConfigPage({ route }: { route: Route }) {
       <nav className="a-toc" aria-label="Seções">
         <a href="#/config?s=conexao">Conexão</a>
         <a href="#/config?s=captura">Captura</a>
-        <a href="#/config?s=celular">Celular</a>
+        <a href={routes.config('acesso-remoto')}>Dispositivo remoto</a>
         <a href="#/config?s=dispositivos">Aparelhos</a>
         <a href="#/config?s=coach">Coach IA</a>
         <a href="#/config?s=dados">Dados</a>

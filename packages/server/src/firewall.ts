@@ -126,7 +126,7 @@ export class FirewallChecker {
     } else {
       state = 'missing';
       message =
-        'Para o celular acessar o painel pela rede, crie as regras de entrada no Firewall do ' +
+        'Para abrir o painel em outro dispositivo, crie as regras de entrada no Firewall do ' +
         'Windows: abra o PowerShell como Administrador e rode os comandos abaixo. A rede Wi-Fi ' +
         'precisa estar como "Privada". (Se você já liberou o Node.js no firewall, pode ignorar.)';
     }

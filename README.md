@@ -157,11 +157,11 @@ experimentar sem empacotar: `npm run desktop` (compila o necessário e abre o ap
   Uma segunda abertura só traz a janela existente para a frente.
 - **Fechar a janela (X) não encerra o app**: ele vai para a **bandeja** (ícone perto do relógio) e o servidor
   continua, então o celular segue conectado. Clique no ícone para reabrir.
-- **Menu da bandeja** (botão direito): *Abrir*, *Copiar endereço do celular*, *Iniciar com o Windows*
+- **Menu da bandeja** (botão direito): *Abrir*, *Copiar endereço para acesso remoto*, *Iniciar com o Windows*
   (desligado por padrão; abre o app escondido na bandeja ao ligar o PC) e *Sair* (encerra de verdade).
 - **Atalhos:** `F11` tela cheia, `F5`/`Ctrl+R` recarrega, `Ctrl` + `+`/`-`/`0` zoom. A janela lembra tamanho e posição.
 - O app escuta na rede como o `npm start` (porta 8770 ou a próxima livre), então o **celular** abre o endereço
-  que *Copiar endereço do celular* entrega, com as mesmas regras de firewall da seção abaixo.
+  que *Copiar endereço para acesso remoto* entrega, com as mesmas regras de firewall da seção abaixo.
 
 ### O que muda em relação ao `npm start`
 
@@ -254,7 +254,7 @@ netsh advfirewall firewall add rule name="GT7 Race Engineer (UDP 33740)" dir=in 
 - As regras valem para a rede **Privada**. Confira que o Wi-Fi do PC está marcado como "Privada".
 - Se você já liberou o `node.exe` quando o Windows perguntou, o app não consegue detectar isso e pode ainda
   avisar que faltam regras; pode ignorar.
-- Em **Configurações › Celular** há o botão "Verificar de novo".
+- Em **Configurações › Dispositivo remoto** há o botão "Verificar de novo".
 
 ### Rede
 
@@ -269,7 +269,7 @@ netsh advfirewall firewall add rule name="GT7 Race Engineer (UDP 33740)" dir=in 
 
 1. Com o app rodando, abra no celular a **URL da rede** impressa no terminal (ex.:
    `http://192.168.0.10:8770`) ou aponte a câmera para o **QR code**. Também aparece em
-   **Configurações › Celular**.
+   **Configurações › Dispositivo remoto** ou no atalho **Dispositivo remoto** do menu ao vivo.
 2. **Adicionar à tela inicial** para abrir em tela cheia:
    - **Android (Chrome):** menu ⋮ › *Adicionar à tela inicial* (ou *Instalar app*).
    - **iPhone (Safari):** botão Compartilhar › *Adicionar à Tela de Início*.
@@ -593,7 +593,7 @@ mantida). Dentro da pasta:
 | **"Procurando o PlayStation…" / "Aguardando o jogo"** | Normal enquanto o GT7 não está aberto: o PS5 só responde **dentro de uma pista**. PC e PS5 na mesma sub-rede (a busca varre o /24 de cada placa), sem isolamento de clientes. Firewall com UDP 33740. Nenhum outro app de telemetria aberto. Se não achar, fixe o IP em Configurações (ou `--ps-ip`). Teste isolado: `npm run sniff -- --ps-ip <IP> --format B` (feche o app antes: ambos usam a porta 33740) |
 | **Aviso "porta UDP já em uso"** | Outro programa (SimHub, outra cópia do app, `sniff`) está com a 33740. O painel abre, mas sem dados ao vivo |
 | **IP mudou** | O app redescobre sozinho (se o IP não foi fixado por você, ou se o fixado ficou mudo por 10 s). Para forçar, use a busca nas Configurações |
-| **Celular não abre a URL** | Mesma rede Wi-Fi? Regra TCP 8770 criada e rede do PC como "Privada"? Roteador com isolamento de clientes / rede convidado? Use o IP mostrado em "No celular:" (há PCs com várias placas: tente as URLs alternativas) |
+| **Dispositivo remoto não abre a URL** | Mesma rede local? Regra TCP 8770 criada e rede do PC como "Privada"? Roteador com isolamento de clientes / rede convidado? Use o IP mostrado em "Acesso remoto". Se o PC tiver várias placas, tente as URLs alternativas. |
 | **Painel diz "Sem conexão com o servidor"** | O servidor caiu ou o celular está em outra rede. Ele tenta reconectar sozinho (botão "Tentar agora") |
 | **iPhone apaga a tela** | Ajustes › Tela e Brilho › Bloqueio automático › Nunca. O truque do vídeo pode não funcionar no iOS; veja o roteiro de testes |
 | **Formato `~` sem dados** | No modo automático o app cai sozinho para `B` e depois `A` (leva ~20 s por tentativa) e avisa. Se você fixou um formato, escolha outro em Configurações › Formato ao vivo. Em `B`/`A` perde-se o acelerador/freio "crus" |

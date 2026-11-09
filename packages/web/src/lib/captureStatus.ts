@@ -56,7 +56,7 @@ export function describeCapture(c: SessionCaptureStatus | null | undefined): Cap
     case 'replay':
       return {
         tone: 'info',
-        label: 'Replay detectado — não conta como sessão',
+        label: 'Replay detectado',
         title,
         pulse: false,
         sessionId: null,

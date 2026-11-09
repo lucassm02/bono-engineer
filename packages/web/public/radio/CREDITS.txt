@@ -1,0 +1,10 @@
+Clipes de rádio em português do Brasil gerados para o GT7 Engenheiro.
+
+Modelo: Kokoro-82M v1.0, de hexgrad, Apache-2.0
+https://huggingface.co/hexgrad/Kokoro-82M
+
+Vozes: pf_dora (Dora) e pm_alex (Alex)
+https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md
+
+Geração offline com sherpa-onnx e o modelo kokoro-multi-lang-v1_0.
+https://k2-fsa.github.io/sherpa/onnx/tts/all/Chinese-English/kokoro-multi-lang-v1_0.html

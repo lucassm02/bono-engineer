@@ -19,7 +19,7 @@ import { type KeepAwakeMode, useUi } from '../state/uiStore.ts';
 import { ViewIcon } from './ViewIcon.tsx';
 
 const KEEP_AWAKE_TEXT: Record<KeepAwakeMode, string> = {
-  pending: 'Toque na tela para manter o celular acordado',
+  pending: 'Toque na tela para impedir que ela apague',
   wakeLock: 'Tela sempre ligada (Wake Lock)',
   video: 'Tela ligada pelo vídeo invisível; se apagar, desative o bloqueio automático',
   none: 'Não foi possível manter a tela ligada: desative o bloqueio automático',

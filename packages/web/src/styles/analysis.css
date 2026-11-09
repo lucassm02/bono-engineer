@@ -175,7 +175,10 @@ textarea.a-input {
   font: inherit;
   font-weight: 600;
   cursor: pointer;
-  white-space: nowrap;
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+  overflow-wrap: anywhere;
   text-decoration: none !important;
 }
 .a-btn:hover {
@@ -485,6 +488,8 @@ textarea.a-input {
 .a-format-grid label,
 .a-inline-label {
   display: flex;
+  min-width: 0;
+  max-width: 100%;
   flex-direction: column;
   gap: 4px;
   font-size: 12px;
@@ -604,7 +609,7 @@ textarea.a-input {
 }
 .a-format-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
   gap: 14px;
 }
 .a-setting-row {
@@ -1116,6 +1121,7 @@ textarea.a-input {
 /* Config */
 .a-config {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
 }
 .a-config > .a-card {
@@ -1135,12 +1141,13 @@ textarea.a-input {
   flex-wrap: wrap;
 }
 .a-lan-urls {
-  flex: 1;
-  min-width: 260px;
+  flex: 1 1 260px;
+  min-width: 0;
 }
 .a-qr {
   width: 180px;
-  height: 180px;
+  max-width: 100%;
+  height: auto;
   background: #fff;
   border-radius: 8px;
   padding: 8px;
@@ -1158,6 +1165,10 @@ textarea.a-input {
   margin: 6px 0;
   font-size: 16px;
 }
+.a-url-list .num {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 .a-rules {
   list-style: none;
   padding: 0;
@@ -1173,6 +1184,7 @@ textarea.a-input {
 }
 .a-code-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
@@ -1180,6 +1192,10 @@ textarea.a-input {
   border-bottom: 1px solid var(--line);
   font-size: 12px;
   color: var(--dim);
+}
+.a-code-head > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .a-code pre {
   margin: 0;
@@ -1190,8 +1206,40 @@ textarea.a-input {
   line-height: 1.5;
   color: #d9e1e8;
 }
+.a-device-mobile-label {
+  display: none;
+}
+@media (max-width: 560px) {
+  .a-devices-table .a-table thead {
+    position: absolute;
+    clip-path: inset(50%);
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+  .a-devices-table .a-table tbody {
+    display: block;
+  }
+  .a-devices-table .a-table tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .a-devices-table .a-table td {
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .a-devices-table .a-table td:nth-child(n + 3) {
+    grid-column: 1 / -1;
+  }
+  .a-device-mobile-label {
+    display: block;
+    color: var(--dim);
+    font-size: 0.8rem;
+  }
+}
 .a-inline-label {
-  max-width: 520px;
+  max-width: min(100%, 520px);
 }
 
 /* Coach */
@@ -1425,6 +1473,7 @@ textarea.a-input {
   padding: 10px 14px;
   font: inherit;
   cursor: pointer;
+  overflow-wrap: anywhere;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
 }
 .a-toast[data-level="warn"] {
@@ -1442,14 +1491,14 @@ textarea.a-input {
   .a-cmp-side {
     position: static;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
     align-items: start;
   }
   .a-findings-card {
     max-height: none;
   }
   .a-capture-grid {
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   }
   .a-coach {
     grid-template-columns: minmax(0, 1fr);
@@ -1461,6 +1510,12 @@ textarea.a-input {
   }
 }
 @media (max-width: 640px) {
+  .a-config > .a-card {
+    scroll-margin-top: 105px;
+  }
+  .a-qr {
+    order: -1;
+  }
   .a-top {
     flex-wrap: wrap;
     gap: 8px 12px;

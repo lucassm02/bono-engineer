@@ -32,12 +32,12 @@ export async function renderBanner(b: BannerInput): Promise<string> {
   lines.push(`  Neste PC:     ${b.localUrl}`);
   if (b.devUrl) lines.push(`  Vite (dev):   ${b.devUrl}`);
   if (b.lanUrls.length) {
-    lines.push(`  No celular:   ${b.preferredUrl ?? b.lanUrls[0]}   (mesma rede Wi-Fi)`);
+    lines.push(`  Acesso remoto: ${b.preferredUrl ?? b.lanUrls[0]}   (mesma rede local)`);
     for (const u of b.lanUrls.slice(1)) lines.push(`                ${u}`);
   } else if (b.host === '127.0.0.1' || b.host === 'localhost') {
-    lines.push('  No celular:   indisponível (escutando só em 127.0.0.1; use --host 0.0.0.0)');
+    lines.push('  Acesso remoto: indisponível (escutando só em 127.0.0.1; use --host 0.0.0.0)');
   } else {
-    lines.push('  No celular:   nenhuma rede local encontrada');
+    lines.push('  Acesso remoto: nenhuma rede local encontrada');
   }
   if (b.portNote) lines.push(`  Porta:        ${b.portNote}`);
   if (b.tokenRequired)
@@ -66,7 +66,7 @@ export async function renderBanner(b: BannerInput): Promise<string> {
       const qr = await qrTerminal(qrTarget);
       lines.push(
         '',
-        '  Aponte a câmera do celular:',
+        '  Escaneie com a câmera do dispositivo remoto:',
         ...qr
           .trimEnd()
           .split('\n')
@@ -89,7 +89,7 @@ export function renderFirewall(fw: FirewallStatus): string | null {
   }
   const missing = fw.rules.filter((r) => r.present === false).map((r) => `${r.protocol} ${r.port}`);
   return [
-    `  Firewall:     faltam regras de entrada (${missing.join(', ')}) — o celular pode não conectar.`,
+    `  Firewall:     faltam regras de entrada (${missing.join(', ')}) — o acesso remoto pode falhar.`,
     '                Abra o PowerShell como Administrador e rode:',
     ...fw.powershellCommands.map((c) => `                  ${c}`),
     '                (A rede Wi-Fi precisa estar como "Privada". Se já liberou o Node.js, ignore.)',

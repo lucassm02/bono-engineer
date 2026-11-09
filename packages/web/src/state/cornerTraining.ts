@@ -8,8 +8,12 @@
 
 import { create } from 'zustand';
 import type { CornerPass, PassAssessment } from '../lib/cornerPass.ts';
+import { speakPtBr, stopSpeech } from '../lib/speech.ts';
 import { loadJson, saveJson } from '../lib/storage.ts';
+import { useEngineer } from './engineer.ts';
 import { useUi } from './uiStore.ts';
+
+export { speechSupported } from '../lib/speech.ts';
 
 interface CornerTrainingState {
   audio: boolean;
@@ -34,44 +38,12 @@ function persist(): void {
   saveJson(KEY, { audio, pinnedCornerId });
 }
 
-export function speechSupported(): boolean {
-  return typeof window !== 'undefined' && 'speechSynthesis' in window;
-}
-
-let voice: SpeechSynthesisVoice | null = null;
-
-function pickVoice(): SpeechSynthesisVoice | null {
-  if (!speechSupported()) return null;
-  const voices = window.speechSynthesis.getVoices();
-  return (
-    voices.find((v) => v.lang === 'pt-BR') ??
-    voices.find((v) => v.lang.toLowerCase().startsWith('pt')) ??
-    null
-  );
-}
-
-function speak(text: string): void {
-  if (!speechSupported() || !text) return;
-  try {
-    const synth = window.speechSynthesis;
-    voice ??= pickVoice();
-    synth.cancel(); // never queue stale phrases
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'pt-BR';
-    if (voice) u.voice = voice;
-    u.rate = 1.1;
-    synth.speak(u);
-  } catch {
-    // speech unavailable
-  }
-}
-
 export function setCornerAudio(on: boolean): void {
   useCornerTraining.setState({ audio: on });
   persist();
   // Speaking inside the tap unlocks audio on iOS.
-  if (on) speak('Áudio do treino ligado');
-  else if (speechSupported()) window.speechSynthesis.cancel();
+  if (on && !useEngineer.getState().enabled) speakPtBr('training', 'Áudio do treino ligado');
+  else if (!on) stopSpeech('training');
 }
 
 export function setPinnedCorner(id: string | null): void {
@@ -88,11 +60,12 @@ const MIN_GAP_MS = 2500;
 export function announceCornerPass(pass: CornerPass, a: PassAssessment): void {
   const { audio, pinnedCornerId } = useCornerTraining.getState();
   if (!audio || !a.phrase) return;
+  if (useEngineer.getState().enabled) return;
   if (useUi.getState().currentView !== 'treinoCurva') return;
   if (pinnedCornerId && pass.cornerId !== pinnedCornerId) return;
   const now = Date.now();
   if (pass.seq === lastSpokenSeq || now - lastSpokenAt < MIN_GAP_MS) return;
   lastSpokenSeq = pass.seq;
   lastSpokenAt = now;
-  speak(a.phrase);
+  speakPtBr('training', a.phrase);
 }

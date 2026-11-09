@@ -60,7 +60,7 @@ describe('describeCapture', () => {
   it('replay and switched-off are explicit and never link', () => {
     expect(describeCapture({ ...base, state: 'replay' })).toMatchObject({
       tone: 'info',
-      label: 'Replay detectado — não conta como sessão',
+      label: 'Replay detectado',
       sessionId: null,
     });
     const off = describeCapture({ ...base, state: 'idle', enabled: false, sessionId: 'x' });

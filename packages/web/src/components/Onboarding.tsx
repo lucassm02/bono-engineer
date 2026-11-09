@@ -239,12 +239,16 @@ function FoundStep({ onNext }: { onNext: () => void }) {
       </div>
       {lan?.qr && (
         <div className="ob-phone">
-          <img className="ob-qr" src={lan.qr} alt="QR code do endereço do painel para o celular" />
+          <img
+            className="ob-qr"
+            src={lan.qr}
+            alt="QR Code para abrir o painel em outro dispositivo"
+          />
           <div>
-            <h3>Quer pilotar olhando o celular?</h3>
+            <h3>Quer abrir o painel em outro dispositivo?</h3>
             <p>
-              Aponte a câmera do celular para o QR code. Ele abre o mesmo painel (celular e PC no
-              mesmo Wi-Fi).
+              Escaneie o QR Code com a câmera do dispositivo. Ele abre o mesmo painel (dispositivo
+              remoto e PC no mesmo Wi-Fi).
             </p>
             {lan.url && (
               <p className="ob-url">

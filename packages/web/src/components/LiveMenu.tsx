@@ -8,6 +8,7 @@ import { useEffect, useRef } from 'react';
 import { routes } from '../lib/route.ts';
 import { closeMenu, openPicker } from '../state/actions.ts';
 import { useUi } from '../state/uiStore.ts';
+import { EngineerControls } from './EngineerControls.tsx';
 
 interface Entry {
   label: string;
@@ -30,7 +31,7 @@ const ENTRIES: readonly Entry[] = [
   },
   { label: 'Coach de IA', hint: 'Análise e dicas da sua sessão', go: goTo(routes.coach()) },
   { label: 'Guia de pilotagem', hint: 'Técnicas por classe de carro', go: goTo(routes.guide()) },
-  { label: 'Configurações', hint: 'Console, celular, dados e IA', go: goTo(routes.config()) },
+  { label: 'Configurações', hint: 'Console, dispositivos, dados e IA', go: goTo(routes.config()) },
 ];
 
 function MenuGlyph() {
@@ -81,6 +82,15 @@ export function LiveMenuSheet() {
             Voltar ao painel
           </button>
         </header>
+        <a
+          className="live-menu-item live-menu-remote"
+          href={routes.config('acesso-remoto')}
+          onClick={closeMenu}
+        >
+          <span className="live-menu-label">Dispositivo remoto</span>
+          <span className="live-menu-hint">Abrir QR Code e endereço do painel</span>
+        </a>
+        <EngineerControls />
         <ul className="live-menu-list">
           {ENTRIES.map((e) => (
             <li key={e.label}>

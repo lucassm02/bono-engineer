@@ -13,6 +13,7 @@ import { addNotice, useUi } from './state/uiStore.ts';
 import './styles/connection.css';
 import './styles/index.css';
 import './styles/live-menu.css';
+import './styles/engineer.css';
 import './styles/views-extra.css';
 
 /** Analysis & settings area: separate chunk, so the live dashboard bundle stays light. */
