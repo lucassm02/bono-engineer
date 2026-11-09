@@ -5,6 +5,7 @@
  */
 
 import type { Gt7Store } from '@gt7/core';
+import { carLabel } from '@gt7/shared';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { latestDrivingSession } from './format.ts';
@@ -110,7 +111,7 @@ export function debriefTask(
 ): string {
   const session = session_id ? store.getSession(session_id) : latestDrivingSession(store);
   const ctx = session
-    ? `Sessão alvo: ${session.id} (pista ${session.trackId ?? 'não identificada'}, carro ${session.carCode}, ${session.lapCount} voltas).`
+    ? `Sessão alvo: ${session.id} (pista ${session.trackId ?? 'não identificada'}, carro ${carLabel(session.carCode)} [carCode ${session.carCode}], ${session.lapCount} voltas).`
     : 'Nenhuma sessão encontrada ainda: use list_sessions para conferir e avise o piloto se não houver dados.';
   const ref = referencia ?? 'auto';
   return `TAREFA: debrief da sessão. ${ctx}

@@ -103,6 +103,10 @@ export const MIGRATIONS: readonly string[] = [
   CREATE INDEX IF NOT EXISTS coach_reports_track ON coach_reports(track_id, created_at);
   CREATE INDEX IF NOT EXISTS coach_reports_created ON coach_reports(created_at);
   `,
+  // v3 — time actually driven in a session (pauses and time out of the track excluded)
+  `
+  ALTER TABLE sessions ADD COLUMN track_time_ms INTEGER;
+  `,
 ];
 
 export const SCHEMA_VERSION = MIGRATIONS.length;

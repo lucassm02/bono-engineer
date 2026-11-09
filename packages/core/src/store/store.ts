@@ -359,6 +359,7 @@ export class Gt7Store {
       bestLapMs: numOrNull(r.best_lap_ms),
       recordingFile: strOrNull(r.recording_file),
       notes: strOrNull(r.notes),
+      trackTimeMs: numOrNull(r.track_time_ms),
     };
   }
 
@@ -366,11 +367,12 @@ export class Gt7Store {
   saveSession(s: Session): void {
     this.db
       .prepare(
-        `INSERT INTO sessions (id, track_id, car_code, started_at, ended_at, format, mode, recording_file, notes)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `INSERT INTO sessions (id, track_id, car_code, started_at, ended_at, format, mode, recording_file, notes,
+          track_time_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(id) DO UPDATE SET track_id = excluded.track_id, car_code = excluded.car_code,
           started_at = excluded.started_at, ended_at = excluded.ended_at, format = excluded.format,
-          mode = excluded.mode, recording_file = excluded.recording_file, notes = excluded.notes`,
+          mode = excluded.mode, recording_file = excluded.recording_file, notes = excluded.notes,
+          track_time_ms = excluded.track_time_ms`,
       )
       .run(
         s.id,
@@ -382,6 +384,7 @@ export class Gt7Store {
         s.mode,
         s.recordingFile,
         s.notes ?? null,
+        s.trackTimeMs ?? null,
       );
   }
 
@@ -422,6 +425,32 @@ export class Gt7Store {
     this.db.prepare('DELETE FROM sessions WHERE id = ?').run(id);
     if (s.recordingFile) await rm(join(this.dataDir, s.recordingFile), { force: true });
     return true;
+  }
+
+  /**
+   * Closes sessions a previous process left open (crash, power loss, killed app): a session that
+   * has laps is closed at the end of its last lap; one with no lap at all is deleted (with its
+   * recording). `exceptId` is a session being written right now. Returns what was done.
+   */
+  async recoverOpenSessions(exceptId?: Id): Promise<{ closed: Id[]; removed: Id[] }> {
+    const rows = this.db.prepare('SELECT id FROM sessions WHERE ended_at IS NULL').all() as Row[];
+    const out = { closed: [] as Id[], removed: [] as Id[] };
+    for (const r of rows) {
+      const id = String(r.id);
+      if (id === exceptId) continue;
+      const s = this.getSession(id);
+      if (!s) continue;
+      const laps = this.listLaps(id);
+      if (laps.length === 0) {
+        await this.deleteSession(id);
+        out.removed.push(id);
+        continue;
+      }
+      const last = laps.reduce((m, l) => Math.max(m, l.startedAt + l.timeMs), s.startedAt);
+      this.saveSession({ ...s, endedAt: last });
+      out.closed.push(id);
+    }
+    return out;
   }
 
   // ---------------------------------------------------------------------------------------------

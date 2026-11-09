@@ -1,8 +1,9 @@
-import type { Session } from '@gt7/shared';
+import { makerOfCar, type Session } from '@gt7/shared';
 import { describe, expect, it } from 'vitest';
 import { GT7_TRACKS, trackDisplayName } from '../../data/gt7Tracks.ts';
 import { bootTarget, openedWithoutRoute } from '../../lib/boot.ts';
 import { parseRoute, routes } from '../../lib/route.ts';
+import { UNKNOWN_MAKER_ID } from './carFilter.ts';
 import {
   carsOf,
   dayHeading,
@@ -67,6 +68,27 @@ describe('history: text and filters', () => {
     expect(filterTracks(all, { ...f, carCode: 7 }, false).map((t) => t.id)).toEqual(['t']);
     expect(filterTracks(all, { ...f, hideDemo: true }, true)).toEqual([]);
     expect(filterTracks(all, { ...f, hideDemo: true }, false)).toHaveLength(2);
+  });
+
+  it('filters tracks by maker (catalogue) and by cars outside the catalogue', () => {
+    const car = (carCode: number, laps: number) => ({
+      carCode,
+      laps,
+      sessions: 1,
+      bestMs: 1,
+      bestLapId: null,
+      lastAt: 1,
+    });
+    const a = overview({ id: 'a', name: 'A', cars: [car(3337, 2)] }); // Alpine A110 '17
+    const b = overview({ id: 'b', name: 'B', cars: [car(987654, 1)] }); // not in the catalogue
+    const alpine = makerOfCar(3337)!.id;
+    const f = { query: '', carCode: null, hideDemo: false };
+    expect(filterTracks([a, b], { ...f, makerId: alpine }, false).map((t) => t.id)).toEqual(['a']);
+    expect(
+      filterTracks([a, b], { ...f, makerId: UNKNOWN_MAKER_ID }, false).map((t) => t.id),
+    ).toEqual(['b']);
+    expect(filterTracks([a, b], { ...f, carCode: 3337, makerId: alpine }, false)).toHaveLength(1);
+    expect(filterTracks([a, b], { ...f, makerId: null }, false)).toHaveLength(2);
   });
 
   it('lists cars by number of laps', () => {

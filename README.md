@@ -315,6 +315,44 @@ navegador).
 Em **Configurações › Aparelhos conectados** há a lista dos painéis conectados; o botão **Mostrar tela** escolhe no PC
 qual tela aparece no celular (só funciona se a tela estiver ligada naquele dispositivo).
 
+## Captura automática de sessões
+
+Não existe botão de "iniciar sessão": deixe o app aberto (janela ou bandeja) e jogue. O app abre e fecha as sessões
+sozinho, olhando só os dados que o jogo envia.
+
+**Quando grava**
+- A sessão abre sozinha no primeiro instante em que o carro está **numa pista** (não no menu, não carregando, não
+  pausado). Abrir o app antes do jogo, no meio de uma volta ou de uma corrida funciona igual.
+- A volta em andamento quando a sessão abre (você abriu o app no meio dela) **não é gravada**: só contam voltas
+  cronometradas desde a linha de largada. Ela não entra em melhor volta, médias nem consistência.
+- **Mesma sessão:** reiniciar a corrida/prova de tempo, voltar aos boxes, ir ao menu, pausar ou perder o Wi-Fi por
+  **menos de 10 minutos**, com o mesmo carro e a mesma pista.
+- **Sessão nova:** trocar de **carro** (na hora); trocar de **pista** (o app reconhece pelo desenho da volta, então a
+  mudança é vista na linha de largada ou ao fechar a primeira volta); ficar fora da pista, pausado ou sem sinal do PS5
+  por **mais de 10 minutos** (PS5 em repouso, jogo fechado, Wi-Fi caído).
+- **Pausa** não encerra a sessão, mas o "tempo de pista" (guardado em cada sessão) não conta o tempo pausado nem fora
+  da pista.
+
+**O que não vira histórico**
+- Sessão que termina **sem nenhuma volta completa** é descartada (com a gravação bruta): não polui a lista.
+- **Replay** não cria sessão de piloto: só a captura de referência (explícita) grava replays, marcados como tal e fora
+  dos recordes. O app não consegue detectar um replay sozinho; ele só sabe que é replay durante uma captura de referência.
+- Interruptor **Configurações › Captura › Gravar sessões automaticamente** (padrão ligado). Desligado, o painel segue
+  mostrando tudo ao vivo (delta, setores, voltas), mas **nada é salvo**: nenhuma sessão, volta ou pista nova.
+
+**O que você vê:** um chip discreto ao lado do indicador do PS5 (no painel ao vivo e na análise): *Aguardando pista*,
+*Gravando · 4 voltas* (ponto verde pulsando; na análise vira link para a sessão), *Pausado*, *Fora da pista*, *Sem
+sinal*, *Replay · não grava* ou *Gravação desligada*. Ao encerrar uma sessão com voltas aparece um aviso sem exigir
+clique: "Sessão salva: Pista X, 5 voltas, melhor 1:23,456 — ver". O mesmo estado está em `/api/status`
+(`sessionCapture`) e na mensagem WebSocket `status`.
+
+**Se o app fechar à força** (queda de energia, travamento), a sessão que ficou aberta é fechada na próxima abertura
+(na hora da última volta salva); as voltas já completas ficam. Se não tinha volta, é removida.
+
+**Disco e memória em sessões longas:** voltas sem tempo (entrada/saída) não guardam amostras; uma volta que nunca fecha
+para de gravar após 30 min; a gravação bruta (`.gt7rec`) guarda poucos pacotes durante a pausa e para ao passar de
+~300 MB (~4 h) por sessão, sem afetar as voltas.
+
 ## Fluxos principais
 
 ### (a) Treino ao vivo com delta
@@ -553,6 +591,10 @@ mantida). Dentro da pasta:
 - Sem zoom por gesto nos gráficos de análise no celular (rolagem funciona); a área de análise é pensada para
   o navegador do PC.
 - O coach não tem orçamento em dinheiro nem fila: dois debriefs simultâneos rodam em paralelo.
+- Captura automática: um **replay assistido sem captura de referência** não é detectado (o jogo não marca replays) e
+  vira uma sessão comum; trocar de pista entre duas voltas **sem passar por menu** não é possível no jogo, mas se o
+  traçado novo for quase idêntico ao antigo o app pode juntá-los. Com o jogo **parado na pista** por horas (sem pausar),
+  a sessão segue aberta (só a gravação bruta é limitada).
 - Sem autenticação por padrão (app de LAN). Use `--token` se a rede não for de confiança.
 - A "tela sempre ligada" em `http` não foi testada em celular real.
 
@@ -572,6 +614,25 @@ gt7/
   docs/         guias e gráficos de exemplo
   (seus dados ficam na pasta do usuário, fora do projeto)
 ```
+
+## Carros, marcas e logos
+
+O console só envia o código interno do carro (`carCode`). O app traz embutida a lista de **todos os carros do
+Gran Turismo 7** (590 carros, 77 marcas): no histórico, o filtro **Carro** abre uma grade de marcas com logo (as do
+seu histórico em destaque, com a contagem de voltas) e, ao escolher a marca, a lista dos carros dela com busca sem
+acento. O filtro vale para as pistas da Início, as sessões e as melhores voltas, e o último filtro fica guardado.
+Carros que não estão na lista (DLC novo) aparecem como "Carro #1234" e funcionam normalmente.
+
+- **Fonte dos dados:** [ddm999/gt7info](https://github.com/ddm999/gt7info) (`_data/db/*.csv`, extraídos do jogo),
+  licença **MIT-0** (sem exigência de atribuição; citamos mesmo assim). Coletado em 09/11/2026, commit
+  `2648c847f1021be69b67430e65e2246098383e66`. Entram só fatos: id, nome oficial em inglês, marca, país, grupo e ano.
+  Fica em `packages/shared/src/cars/data.ts` (gerado; o app **nunca** baixa nada em tempo de execução). Para
+  atualizar: `node packages/shared/scripts/gen-cars.mjs` (opções `--ref`, `--from <pasta>`) e depois
+  `npx biome format --write packages/shared/src/cars/data.ts`.
+- **Logos:** 36 marcas usam o logo do pacote [`simple-icons`](https://simpleicons.org) (arquivos CC0), copiado para
+  `packages/web/src/brands/brandIcons.ts` por `node packages/web/scripts/gen-brand-icons.mjs` (o pacote é só
+  `devDependency`). As demais marcas ganham um monograma (iniciais num círculo colorido).
+  Os logos são marcas registradas de seus donos e são usados apenas para identificar a marca do carro.
 
 Documentos:
 

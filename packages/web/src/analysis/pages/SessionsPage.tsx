@@ -5,9 +5,13 @@ import { useMemo, useState } from 'react';
 import { formatLapTime } from '../../lib/format.ts';
 import { navigate, type Route, routes } from '../../lib/route.ts';
 import { api } from '../api.ts';
+import { CarName } from '../components/CarName.tsx';
+import { CarFilterChips, CarFilterField } from '../components/CarPicker.tsx';
 import { Empty, ErrorBox, Loading, PageHead, Tag, useTitle } from '../components/ui.tsx';
+import { carMatchesFilter, isCarFiltering, lapsPerCar, pickCar } from '../lib/carFilter.ts';
 import { fullTrackName } from '../lib/history.ts';
-import { carLabel, formatDateTime, SESSION_MODE_LABELS } from '../lib/labels.ts';
+import { formatDateTime, SESSION_MODE_LABELS } from '../lib/labels.ts';
+import { useCarFilter } from '../lib/useCarFilter.ts';
 import { useFetch } from '../useFetch.ts';
 
 export function trackName(tracks: Track[] | null, id: string | null): string {
@@ -21,15 +25,18 @@ export function SessionsPage({ route }: { route: Route }) {
   const tracks = useFetch('tracks', () => api.tracks());
   const [mode, setMode] = useState<'' | 'live' | 'replayCapture'>('');
   const trackFilter = route.query.track ?? '';
-  const carFilter = route.query.car ?? '';
+  // A link with ?car=<carCode> wins; otherwise the last filter chosen is restored.
+  const urlCar = Number(route.query.car);
+  const [carFilter, setCarFilter] = useCarFilter(
+    route.query.car && Number.isInteger(urlCar) ? pickCar(urlCar) : undefined,
+  );
 
-  const setFilter = (k: 'track' | 'car', v: string) => {
-    const q = { track: trackFilter, car: carFilter, [k]: v };
-    navigate(routes.sessions({ track: q.track || undefined, car: q.car || undefined }), true);
+  const setTrack = (v: string) => {
+    navigate(routes.sessions({ track: v || undefined }), true);
   };
 
-  const cars = useMemo(
-    () => [...new Set((sessions.data ?? []).map((s) => s.carCode))].sort((a, b) => a - b),
+  const usage = useMemo(
+    () => lapsPerCar((sessions.data ?? []).map((s) => ({ carCode: s.carCode, laps: s.lapCount }))),
     [sessions.data],
   );
   const list = useMemo(
@@ -37,7 +44,7 @@ export function SessionsPage({ route }: { route: Route }) {
       (sessions.data ?? []).filter(
         (s: Session) =>
           (!trackFilter || s.trackId === trackFilter) &&
-          (!carFilter || String(s.carCode) === carFilter) &&
+          carMatchesFilter(carFilter, s.carCode) &&
           (!mode || s.mode === mode),
       ),
     [sessions.data, trackFilter, carFilter, mode],
@@ -65,7 +72,7 @@ export function SessionsPage({ route }: { route: Route }) {
       <div className="a-filters">
         <label>
           Pista
-          <select value={trackFilter} onChange={(e) => setFilter('track', e.target.value)}>
+          <select value={trackFilter} onChange={(e) => setTrack(e.target.value)}>
             <option value="">Todas</option>
             {(tracks.data ?? []).map((t) => (
               <option key={t.id} value={t.id}>
@@ -74,17 +81,7 @@ export function SessionsPage({ route }: { route: Route }) {
             ))}
           </select>
         </label>
-        <label>
-          Carro
-          <select value={carFilter} onChange={(e) => setFilter('car', e.target.value)}>
-            <option value="">Todos</option>
-            {cars.map((c) => (
-              <option key={c} value={String(c)}>
-                {carLabel(c)}
-              </option>
-            ))}
-          </select>
-        </label>
+        <CarFilterField usage={usage} value={carFilter} onChange={setCarFilter} />
         <label>
           Modo
           <select value={mode} onChange={(e) => setMode(e.target.value as typeof mode)}>
@@ -94,6 +91,11 @@ export function SessionsPage({ route }: { route: Route }) {
           </select>
         </label>
       </div>
+      {isCarFiltering(carFilter) && (
+        <div className="cf-chips">
+          <CarFilterChips value={carFilter} onChange={setCarFilter} />
+        </div>
+      )}
 
       {sessions.error && !sessions.data ? (
         <ErrorBox error={sessions.error} onRetry={sessions.reload} />
@@ -143,7 +145,9 @@ export function SessionsPage({ route }: { route: Route }) {
                       <span className="dim">{trackName(tracks.data, null)}</span>
                     )}
                   </td>
-                  <td>{carLabel(s.carCode)}</td>
+                  <td>
+                    <CarName carCode={s.carCode} />
+                  </td>
                   <td>
                     {s.mode === 'replayCapture' ? (
                       <Tag tone="ref">{SESSION_MODE_LABELS[s.mode]}</Tag>

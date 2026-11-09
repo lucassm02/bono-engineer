@@ -4,6 +4,7 @@
  */
 
 import { Component, type ReactNode, useEffect } from 'react';
+import { CaptureStatus, SessionSavedToast } from '../components/CaptureStatus.tsx';
 import { ConsoleChip, ConsolePanelHost } from '../components/ConsoleLink.tsx';
 import type { Route } from '../lib/route.ts';
 import { routes } from '../lib/route.ts';
@@ -18,6 +19,7 @@ import { SessionsPage } from './pages/SessionsPage.tsx';
 import { TrackPage } from './pages/TrackPage.tsx';
 import '../styles/analysis.css';
 import '../styles/home.css';
+import '../styles/cars.css';
 
 type IconName = 'live' | 'home' | 'compare' | 'capture' | 'coach' | 'config';
 
@@ -155,7 +157,12 @@ function ConnectionPill() {
       </span>
     );
   }
-  return <ConsoleChip variant="bar" />;
+  return (
+    <div className="cs-row">
+      <ConsoleChip variant="bar" />
+      <CaptureStatus variant="bar" />
+    </div>
+  );
 }
 
 function Toasts() {
@@ -265,6 +272,7 @@ export default function AnalysisApp({ route }: { route: Route }) {
         </PageBoundary>
       </main>
       <Toasts />
+      <SessionSavedToast />
       <ConsolePanelHost />
     </div>
   );

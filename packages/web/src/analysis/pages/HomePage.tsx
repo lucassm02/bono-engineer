@@ -8,9 +8,18 @@ import { formatLapTime } from '../../lib/format.ts';
 import { routes } from '../../lib/route.ts';
 import { loadJson, saveJson } from '../../lib/storage.ts';
 import { api } from '../api.ts';
+import { CarName } from '../components/CarName.tsx';
+import { CarFilterChips, CarFilterField, FilterChip } from '../components/CarPicker.tsx';
 import { NewTrackPrompt } from '../components/TrackNaming.tsx';
 import { TrackThumb } from '../components/TrackThumb.tsx';
 import { ErrorBox, Loading, PageHead, Tag, useTitle } from '../components/ui.tsx';
+import {
+  type CarFilter,
+  carMatchesFilter,
+  isCarFiltering,
+  lapsPerCar,
+  NO_CAR_FILTER,
+} from '../lib/carFilter.ts';
 import {
   carsOf,
   filterTracks,
@@ -21,7 +30,8 @@ import {
   trendLabel,
   whenLabel,
 } from '../lib/history.ts';
-import { carLabel, formatAgo } from '../lib/labels.ts';
+import { formatAgo } from '../lib/labels.ts';
+import { useCarFilter } from '../lib/useCarFilter.ts';
 import { useFetch } from '../useFetch.ts';
 
 const DISMISSED_KEY = 'gt7.nameDismissed';
@@ -32,9 +42,31 @@ function loadDismissed(): string[] {
   return Array.isArray(v) ? v : [];
 }
 
-export function TrackCard({ t, demo }: { t: TrackOverview; demo: boolean }) {
+export function TrackCard({
+  t,
+  demo,
+  carFilter = NO_CAR_FILTER,
+}: {
+  t: TrackOverview;
+  demo: boolean;
+  carFilter?: CarFilter;
+}) {
   const trend = trendLabel(t.trend);
   const cars = t.cars.slice(0, 3);
+  // With a car/maker filter the card talks about those cars only.
+  const carFiltering = isCarFiltering(carFilter);
+  const fcars = carFiltering
+    ? t.cars.filter((c) => carMatchesFilter(carFilter, c.carCode))
+    : t.cars;
+  const fbest = carFiltering
+    ? fcars.reduce<{ ms: number; carCode: number } | null>(
+        (b, c) =>
+          c.bestMs !== null && (!b || c.bestMs < b.ms) ? { ms: c.bestMs, carCode: c.carCode } : b,
+        null,
+      )
+    : null;
+  const lapCount = carFiltering ? fcars.reduce((n, c) => n + c.laps, 0) : t.lapCount;
+  const sessionCount = carFiltering ? fcars.reduce((n, c) => n + c.sessions, 0) : t.sessionCount;
   return (
     <a className="a-trackcard" href={routes.track(t.id)}>
       <TrackThumb line={t.thumb} className="a-trackcard-thumb" label={`Traçado de ${t.name}`} />
@@ -53,16 +85,34 @@ export function TrackCard({ t, demo }: { t: TrackOverview; demo: boolean }) {
           )}
         </h3>
         <p className="a-trackcard-meta dim">
-          {formatKm(t.lengthM)} · {plural(t.sessionCount, 'sessão', 'sessões')} ·{' '}
-          {plural(t.lapCount, 'volta', 'voltas')}
+          {formatKm(t.lengthM)} · {plural(sessionCount, 'sessão', 'sessões')} ·{' '}
+          {plural(lapCount, 'volta', 'voltas')}
+          {carFiltering ? ' com o filtro' : ''}
         </p>
-        {t.best ? (
+        {carFiltering ? (
+          fbest ? (
+            <p className="a-trackcard-best">
+              <span className="a-sum-k">Melhor volta</span>
+              <span className="a-trackcard-time num">{formatLapTime(fbest.ms)}</span>
+              <span className="dim a-small">
+                <CarName carCode={fbest.carCode} logoSize={16} />
+              </span>
+            </p>
+          ) : (
+            <p className="dim a-small">Sem volta válida com esse filtro.</p>
+          )
+        ) : t.best ? (
           <p className="a-trackcard-best">
             <span className="a-sum-k">Melhor volta</span>
             <span className="a-trackcard-time num">{formatLapTime(t.best.timeMs)}</span>
             <span className="dim a-small">
               {whenLabel(t.best.at)}
-              {t.cars.length > 1 ? ` · ${carLabel(t.best.carCode)}` : ''}
+              {t.cars.length > 1 && (
+                <>
+                  {' · '}
+                  <CarName carCode={t.best.carCode} logoSize={16} />
+                </>
+              )}
             </span>
           </p>
         ) : (
@@ -83,7 +133,9 @@ export function TrackCard({ t, demo }: { t: TrackOverview; demo: boolean }) {
           )}
           {cars.length > 0 && (
             <span className="a-trackcard-cars dim a-small">
-              {cars.map((c) => carLabel(c.carCode)).join(' · ')}
+              {cars.map((c) => (
+                <CarName key={c.carCode} carCode={c.carCode} logoSize={16} />
+              ))}
               {t.cars.length > cars.length ? ` +${t.cars.length - cars.length}` : ''}
             </span>
           )}
@@ -159,7 +211,7 @@ function EmptyHome({ hiddenDemo, onShowDemo }: { hiddenDemo: boolean; onShowDemo
 export function HomePage() {
   const overview = useFetch('overview', () => api.tracksOverview(), 15000);
   const [query, setQuery] = useState('');
-  const [carCode, setCarCode] = useState<number | null>(null);
+  const [carFilter, setCarFilter] = useCarFilter();
   const [hideDemo, setHideDemo] = useState(() => loadJson<boolean>(HIDE_DEMO_KEY) === true);
   const [dismissed, setDismissed] = useState<string[]>(loadDismissed);
   useTitle('Início');
@@ -169,14 +221,19 @@ export function HomePage() {
   const tracks = data?.tracks ?? [];
   // A track with no own laps (only references) is still a track: it keeps its card.
   const shown = useMemo(
-    () => filterTracks(tracks, { query, carCode, hideDemo }, isDemo),
-    [tracks, query, carCode, hideDemo, isDemo],
+    () =>
+      filterTracks(
+        tracks,
+        { query, carCode: carFilter.carCode, makerId: carFilter.makerId, hideDemo },
+        isDemo,
+      ),
+    [tracks, query, carFilter, hideDemo, isDemo],
   );
-  const cars = useMemo(() => carsOf(tracks), [tracks]);
+  const usage = useMemo(() => lapsPerCar(carsOf(tracks)), [tracks]);
   const unnamed = !isDemo
     ? tracks.filter((t) => t.needsName && t.lapCount > 0 && !dismissed.includes(t.id))
     : [];
-  const filtering = query.trim() !== '' || carCode !== null;
+  const filtering = query.trim() !== '' || isCarFiltering(carFilter);
 
   const setHide = (v: boolean) => {
     setHideDemo(v);
@@ -239,24 +296,7 @@ export function HomePage() {
                   onChange={(e) => setQuery(e.target.value)}
                 />
               </label>
-              {cars.length > 1 && (
-                <label>
-                  Carro
-                  <select
-                    value={carCode ?? ''}
-                    onChange={(e) =>
-                      setCarCode(e.target.value === '' ? null : Number(e.target.value))
-                    }
-                  >
-                    <option value="">Todos</option>
-                    {cars.map((c) => (
-                      <option key={c.carCode} value={c.carCode}>
-                        {carLabel(c.carCode)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
+              <CarFilterField usage={usage} value={carFilter} onChange={setCarFilter} />
               {isDemo && (
                 <label className="a-check-inline">
                   <input
@@ -270,6 +310,29 @@ export function HomePage() {
             </div>
           )}
 
+          {tracks.length > 0 && filtering && (
+            <div className="cf-chips">
+              {query.trim() !== '' && (
+                <FilterChip
+                  label={`Pista: ${query.trim()}`}
+                  title="Busca por pista"
+                  onRemove={() => setQuery('')}
+                />
+              )}
+              <CarFilterChips value={carFilter} onChange={setCarFilter} />
+              <button
+                type="button"
+                className="a-btn a-btn-ghost a-btn-sm cf-chip-clear"
+                onClick={() => {
+                  setQuery('');
+                  setCarFilter(NO_CAR_FILTER);
+                }}
+              >
+                Limpar filtros
+              </button>
+            </div>
+          )}
+
           {isDemo && !hideDemo && tracks.length > 0 && (
             <p className="a-note">
               <Tag tone="warn">Demo</Tag> Você está no modo demonstração: estas voltas vêm de um
@@ -280,13 +343,17 @@ export function HomePage() {
           {shown.length === 0 ? (
             filtering ? (
               <div className="a-empty">
-                <p>Nenhuma pista encontrada com esse filtro.</p>
+                <p>
+                  Nenhuma pista encontrada com esse filtro.
+                  {isCarFiltering(carFilter) &&
+                    ' Talvez você ainda não tenha voltas com esse carro.'}
+                </p>
                 <button
                   type="button"
                   className="a-btn a-btn-ghost"
                   onClick={() => {
                     setQuery('');
-                    setCarCode(null);
+                    setCarFilter(NO_CAR_FILTER);
                   }}
                 >
                   Limpar filtros
@@ -301,7 +368,7 @@ export function HomePage() {
           ) : (
             <div className="a-trackgrid">
               {shown.map((t) => (
-                <TrackCard key={t.id} t={t} demo={isDemo} />
+                <TrackCard key={t.id} t={t} demo={isDemo} carFilter={carFilter} />
               ))}
             </div>
           )}

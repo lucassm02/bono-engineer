@@ -16,6 +16,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { formatDelta, formatLapTime } from '../../lib/format.ts';
 import { navigate, type Route, routes } from '../../lib/route.ts';
 import { api, urls } from '../api.ts';
+import { CarName } from '../components/CarName.tsx';
 import { type BrakeMarker, CompareMap, type MapLine } from '../components/CompareMap.tsx';
 import { CornerTable } from '../components/CornerTable.tsx';
 import { FindingsPanel } from '../components/FindingsPanel.tsx';
@@ -29,7 +30,7 @@ import {
   timeTone,
 } from '../lib/chartData.ts';
 import { CursorBus } from '../lib/cursorBus.ts';
-import { carLabel, formatDateTime, REFERENCE_KIND_LABELS } from '../lib/labels.ts';
+import { formatDateTime, REFERENCE_KIND_LABELS } from '../lib/labels.ts';
 import { useFetch } from '../useFetch.ts';
 
 type RefKind = (typeof COMPARISON_REFERENCE_KINDS)[number];
@@ -323,9 +324,16 @@ export function CompareView({
         }
         sub={
           <>
-            {carLabel(lap.carCode)}
+            <CarName carCode={lap.carCode} logoSize={20} />
             {lap.carCode !== refLap.carCode && (
-              <> × {carLabel(refLap.carCode, refLap.referenceMeta?.carName)}</>
+              <>
+                {' × '}
+                <CarName
+                  carCode={refLap.carCode}
+                  name={refLap.referenceMeta?.carName}
+                  logoSize={20}
+                />
+              </>
             )}{' '}
             · referência: {REFERENCE_KIND_LABELS[cmp.referenceKind]}
             {demo && (

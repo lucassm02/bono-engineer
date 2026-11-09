@@ -9,6 +9,7 @@ import { formatLapTime, formatSectorTime } from '../../lib/format.ts';
 import { navigate, routes } from '../../lib/route.ts';
 import { addNotice } from '../../state/uiStore.ts';
 import { api, urls } from '../api.ts';
+import { CarName } from '../components/CarName.tsx';
 import { LapQuickActions } from '../components/LapActions.tsx';
 import {
   ConfirmButton,
@@ -27,7 +28,7 @@ import {
   fullTrackName,
   plural,
 } from '../lib/history.ts';
-import { carLabel, formatDateTime, INFO_FLAGS, LAP_FLAG_LABELS } from '../lib/labels.ts';
+import { formatDateTime, INFO_FLAGS, LAP_FLAG_LABELS } from '../lib/labels.ts';
 import { formatLapTimeInput, parseLapTime } from '../lib/lapTime.ts';
 import { useFetch } from '../useFetch.ts';
 
@@ -196,7 +197,7 @@ export function SessionPage({ id }: { id: string }) {
         sub={
           <>
             {dayHeading(dayKey(session.startedAt))}, {formatClock(session.startedAt)} ·{' '}
-            {carLabel(session.carCode)}
+            <CarName carCode={session.carCode} logoSize={22} />
             {session.mode === 'replayCapture' && <Tag tone="ref">captura de replay</Tag>}
             {active && <Tag tone="info">em andamento</Tag>}
           </>

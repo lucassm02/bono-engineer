@@ -68,6 +68,45 @@ export interface ConsoleConnection {
   hint: string | null;
 }
 
+/**
+ * Automatic session capture (Onda 8a).
+ * - waiting: capture is on and no session is open (game closed, in a menu, console not found):
+ *   the app starts a session by itself as soon as the car is on a track.
+ * - recording: a session is open and the car is driving.
+ * - paused: a session is open but the game is paused, the car is out of the track (menu, garage,
+ *   restart) or the console went quiet; it ends by itself after a few minutes of that.
+ * - replay: a reference capture (replay mode) is running; it never counts as a driving session.
+ * - idle: telemetry stopped, or "Gravar sessões automaticamente" is off (live view only, nothing saved).
+ */
+export type SessionCaptureState = 'waiting' | 'recording' | 'paused' | 'replay' | 'idle';
+
+/** Why an open session is "paused": the game's pause menu, out of the track, or no signal. */
+export type SessionCaptureDetail = 'paused' | 'offTrack' | 'noSignal';
+
+/** What the automatic session capture is doing right now (`ServerStatus.sessionCapture`). */
+export interface SessionCaptureStatus {
+  state: SessionCaptureState;
+  /** The "Gravar sessões automaticamente" switch. False = live view only, nothing is saved. */
+  enabled: boolean;
+  /** Open session (null while waiting/idle). Only a saved session has a page to link to. */
+  sessionId: string | null;
+  /** Epoch ms when the open session started. */
+  since: number | null;
+  /** Completed laps stored in the open session. */
+  lapsDone: number;
+  carCode: number | null;
+  /** Name of the identified track (null while unknown). */
+  trackName: string | null;
+  /** Best valid lap of the open session. */
+  bestLapMs: number | null;
+  /** Time actually driven in the open session: out of the track and paused time do not count. */
+  trackTimeMs: number;
+  /** Only with `state: 'paused'`: why. */
+  detail?: SessionCaptureDetail;
+  /** pt-BR sentence for the UI. */
+  hint: string;
+}
+
 /** Server/link status snapshot. */
 export interface ServerStatus {
   /**
@@ -94,6 +133,10 @@ export interface ServerStatus {
   firewall?: FirewallStatus;
   /** Console link and automatic discovery state. (core, additive) */
   consoleConnection?: ConsoleConnection;
+  /**
+   * Automatic session capture state. (core, additive) Named `sessionCapture` because `capture` is the reference (replay) capture.
+   */
+  sessionCapture?: SessionCaptureStatus;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -142,6 +185,19 @@ export interface ShowViewMessage {
   from: string;
 }
 
+/** A session that had laps was closed and saved (the UI shows a short toast). */
+export interface SessionSavedMessage {
+  type: 'sessionSaved';
+  sessionId: string;
+  trackId: string | null;
+  trackName: string | null;
+  carCode: number;
+  lapCount: number;
+  bestLapMs: number | null;
+  startedAt: number;
+  endedAt: number;
+}
+
 export interface NoticeMessage {
   type: 'notice';
   level: 'info' | 'warn' | 'error';
@@ -165,6 +221,7 @@ export type ServerMessage =
   | FrameMessage
   | LapCompletedMessage
   | SessionChangedMessage
+  | SessionSavedMessage
   | StatusMessage
   | DeviceProfileMessage
   | ShowViewMessage
@@ -299,6 +356,8 @@ export interface ApiSettings {
   liveFormatAuto: boolean;
   captureFormat: PacketFormat;
   record: boolean;
+  /** "Gravar sessões automaticamente" (default true). False = live view only, nothing is saved. */
+  autoCapture: boolean;
   deltaReference: { kind: DeltaReferenceKind; lapId: Id | null };
 }
 
@@ -312,6 +371,7 @@ export interface ApiSettingsPatch {
   liveFormatAuto?: boolean;
   captureFormat?: PacketFormat;
   record?: boolean;
+  autoCapture?: boolean;
   deltaReference?: { kind: DeltaReferenceKind; lapId?: Id | null };
 }
 
@@ -326,6 +386,7 @@ export interface ApiDiscoveryScanResult {
 export interface ApiStatus extends ServerStatus {
   /** Always present in the REST status. */
   consoleConnection: ConsoleConnection;
+  sessionCapture: SessionCaptureStatus;
   firewall: FirewallStatus;
   settings: ApiSettings;
   /** UDP ingestor running. */

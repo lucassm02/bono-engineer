@@ -20,6 +20,7 @@ import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 import { buildComparisonChart } from './chart.ts';
 import {
+  carFields,
   compactLap,
   compactSession,
   compactStats,
@@ -214,7 +215,7 @@ export function createGt7McpServer(deps: McpDeps): McpServer {
               overallBest: lapTime(ta.records.overallBestMs),
               overallBestLapId: ta.records.overallBestLapId,
               cars: ta.records.cars.map((c) => ({
-                car: c.carCode,
+                ...carFields(c.carCode),
                 laps: c.laps,
                 valid: c.validLaps,
                 pb: lapTime(c.personalBestMs),
@@ -224,7 +225,7 @@ export function createGt7McpServer(deps: McpDeps): McpServer {
                 lapId: x.lapId,
                 driver: x.driverName,
                 time: lapTime(x.timeMs),
-                car: x.carCode,
+                ...carFields(x.carCode),
               })),
             },
           }),
@@ -337,7 +338,7 @@ export function createGt7McpServer(deps: McpDeps): McpServer {
               track: { id: l.trackId, name: trackName(l.trackId) },
               driver: l.referenceMeta?.driverName ?? null,
               carName: l.referenceMeta?.carName ?? null,
-              car: l.carCode,
+              ...carFields(l.carCode),
               time: lapTime(l.timeMs),
               rankingTime: lapTime(l.referenceMeta?.rankingTimeMs),
               source: l.referenceMeta?.source ?? null,
@@ -398,9 +399,9 @@ export function createGt7McpServer(deps: McpDeps): McpServer {
             id: res.referenceLap.id,
             time: lapTime(res.referenceLap.timeMs),
             driver: res.referenceLap.referenceMeta?.driverName ?? null,
-            car: res.referenceLap.carCode,
+            ...carFields(res.referenceLap.carCode),
           },
-          you: { id: res.lap.id, time: lapTime(res.lap.timeMs), car: res.lap.carCode },
+          you: { id: res.lap.id, time: lapTime(res.lap.timeMs), ...carFields(res.lap.carCode) },
           ...res.summary,
           phases: c.topLosses.map((row) => ({
             c: row.corner.id,
@@ -713,7 +714,7 @@ export function createGt7McpServer(deps: McpDeps): McpServer {
         return ok(
           jsonText({
             trackId: ev.trackId,
-            car: ev.carCode,
+            ...(ev.carCode === null ? { car: null } : carFields(ev.carCode)),
             baseline: ev.baseline
               ? {
                   kind: ev.baseline.kind,
@@ -816,7 +817,12 @@ export function createGt7McpServer(deps: McpDeps): McpServer {
             },
             capture: st.capture.state,
             session: s
-              ? { id: s.id, laps: s.lapCount, best: lapTime(s.bestLapMs), car: s.carCode }
+              ? {
+                  id: s.id,
+                  laps: s.lapCount,
+                  best: lapTime(s.bestLapMs),
+                  ...carFields(s.carCode),
+                }
               : null,
             frame: f
               ? {

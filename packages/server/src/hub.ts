@@ -8,7 +8,12 @@
  * considered stuck and terminated, so memory per client is bounded.
  */
 
-import { type Gt7Runtime, type RuntimeNotice, SETTINGS_KEYS } from '@gt7/core';
+import {
+  type Gt7Runtime,
+  type RuntimeNotice,
+  SETTINGS_KEYS,
+  type SessionSavedInfo,
+} from '@gt7/core';
 import {
   type ClientMessage,
   createDefaultDeviceProfile,
@@ -282,6 +287,9 @@ export class WsHub {
     on('frame', (frame) => this.#broadcastFrame(JSON.stringify({ type: 'frame', frame })));
     on('lapCompleted', (event) => this.#broadcast({ type: 'lapCompleted', event }));
     on('sessionChanged', (session) => this.#broadcast({ type: 'sessionChanged', session }));
+    on('sessionSaved', (saved: SessionSavedInfo) =>
+      this.#broadcast({ type: 'sessionSaved', ...saved }),
+    );
     on('status', () => this.scheduleStatus());
     on('notice', (n: RuntimeNotice) => this.notice(n));
     // Capture state travels inside ServerStatus.capture: push it right away.

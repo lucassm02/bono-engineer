@@ -10,8 +10,9 @@ import { CONNECTION_STATE_LABELS } from '../../lib/labels.ts';
 import { routes } from '../../lib/route.ts';
 import { useUi } from '../../state/uiStore.ts';
 import { api } from '../api.ts';
+import { CarName } from '../components/CarName.tsx';
 import { Card, ErrorBox, PageHead, Tag, useTitle } from '../components/ui.tsx';
-import { CAPTURE_STATE_LABELS, captureIssueLabel, carLabel } from '../lib/labels.ts';
+import { CAPTURE_STATE_LABELS, captureIssueLabel } from '../lib/labels.ts';
 import { parseLapTime } from '../lib/lapTime.ts';
 
 const FORM_KEY = 'gt7.captureForm';
@@ -372,7 +373,11 @@ export function CapturePage() {
                       <>
                         {' '}
                         em <span className="num">{formatLapTime(savedLap.timeMs)}</span> ·{' '}
-                        {carLabel(savedLap.carCode, savedLap.referenceMeta?.carName)}
+                        <CarName
+                          carCode={savedLap.carCode}
+                          name={savedLap.referenceMeta?.carName}
+                          logoSize={20}
+                        />
                       </>
                     )}
                   </p>

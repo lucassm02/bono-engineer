@@ -41,6 +41,7 @@ export {
 } from './dev/seed.ts';
 export {
   computeRecords,
+  EphemeralContext,
   type IdentifyTrackInput,
   isPersonalLap,
   type LiveEngineContext,
@@ -58,12 +59,15 @@ export { forwardFromRotation, G0, GForceEstimator, headingOf } from './live/gfor
 export {
   type CompletedLap,
   computeSectorTimes,
+  type EngineCaptureInfo,
   type LapDiscardedInfo,
   type LapStartedInfo,
   LiveEngine,
   type LiveEngineEvents,
   type LiveEngineOptions,
   NOMINAL_MS_PER_PACKET,
+  type SessionEndInfo,
+  type SessionEndReason,
 } from './live/live-engine.ts';
 export {
   CORE_VERSION,
@@ -72,6 +76,7 @@ export {
   type Gt7RuntimeOptions,
   type RuntimeNotice,
   SETTINGS_KEYS,
+  type SessionSavedInfo,
 } from './runtime/runtime.ts';
 export { MIGRATIONS, SCHEMA_VERSION } from './store/schema.ts';
 export {

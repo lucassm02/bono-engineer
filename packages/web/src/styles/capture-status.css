@@ -1,0 +1,197 @@
+/*
+ * Automatic session capture: discreet chip (prefix cs-) next to the PS5 connection chip, and the
+ * "session saved" toast. Shared by the live panel and the analysis area. Dark only.
+ */
+
+.cs-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 28px;
+  padding: 4px 10px 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(12, 17, 21, 0.78);
+  color: var(--dim);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  pointer-events: auto;
+}
+a.cs-chip {
+  cursor: pointer;
+}
+a.cs-chip:hover,
+a.cs-chip:focus-visible {
+  color: var(--text);
+  border-color: var(--dim);
+}
+.cs-chip[data-variant="live"] {
+  opacity: 0.8;
+  font-size: 12px;
+}
+.cs-chip[data-variant="bar"] {
+  background: transparent;
+  border-color: transparent;
+  padding: 4px 6px;
+}
+a.cs-chip[data-variant="bar"]:hover {
+  background: var(--panel);
+}
+.cs-chip[data-tone="ok"] {
+  color: var(--text);
+}
+.cs-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 46vw;
+}
+
+.cs-dot {
+  --c: var(--faint);
+  position: relative;
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--c);
+}
+.cs-dot[data-tone="ok"] {
+  --c: var(--gain);
+}
+.cs-dot[data-tone="warn"] {
+  --c: var(--yellow);
+}
+.cs-dot[data-tone="info"] {
+  --c: var(--blue);
+}
+.cs-dot[data-tone="idle"] {
+  --c: var(--dim);
+}
+.cs-dot[data-tone="off"] {
+  --c: var(--faint);
+}
+.cs-dot[data-pulse="1"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--c);
+  animation: cs-pulse 1.8s ease-out infinite;
+}
+@keyframes cs-pulse {
+  from {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cs-dot[data-pulse="1"]::after {
+    animation: none;
+    opacity: 0.5;
+    transform: scale(1.8);
+  }
+}
+
+/* Chips of the analysis header / sidebar foot: connection + capture side by side. */
+.cs-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.a-side-foot .cs-row {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* ------------------------------------------------------------------------------------------- */
+/* "Sessão salva" toast: top in the live panel (clear of the badges), corner in the analysis    */
+/* ------------------------------------------------------------------------------------------- */
+
+.cs-toast {
+  position: fixed;
+  z-index: 45;
+  top: calc(var(--safe-t, 8px) + 52px);
+  left: 16px;
+  right: 16px;
+  margin: 0 auto;
+  width: fit-content;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(520px, calc(100vw - 32px));
+  padding: 9px 12px 9px 14px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--gain);
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--text);
+  font-size: 14px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+  animation: cs-in 0.25s ease-out;
+}
+html[data-area="analysis"] .cs-toast {
+  top: auto;
+  left: auto;
+  margin: 0;
+  right: 16px;
+  bottom: 16px;
+  animation-name: cs-in-corner;
+}
+@media (max-width: 900px) {
+  html[data-area="analysis"] .cs-toast {
+    right: 16px;
+    left: 16px;
+    width: auto;
+    max-width: none;
+    bottom: calc(84px + env(safe-area-inset-bottom));
+  }
+}
+.cs-toast-link {
+  flex: none;
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+  padding: 4px 6px;
+}
+.cs-toast-link:hover {
+  text-decoration: underline;
+}
+.cs-toast-x {
+  flex: none;
+  border: 0;
+  background: transparent;
+  color: var(--dim);
+  font: inherit;
+  font-size: 18px;
+  line-height: 1;
+  padding: 4px 6px;
+  cursor: pointer;
+}
+.cs-toast-x:hover {
+  color: var(--text);
+}
+@keyframes cs-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+@keyframes cs-in-corner {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cs-toast {
+    animation: none !important;
+  }
+}

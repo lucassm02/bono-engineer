@@ -94,6 +94,11 @@ export interface Session {
   /** Path of the raw recording (.gt7rec) relative to the data dir, if recorded. */
   recordingFile: string | null;
   notes?: string | null;
+  /**
+   * Time actually driven in ms (out of the track and paused time excluded). Null/absent for
+   * sessions saved before this field existed. (core, additive)
+   */
+  trackTimeMs?: number | null;
 }
 
 /** Quality flags attached to a lap. */

@@ -7,7 +7,7 @@
  * captures are reported separately.
  */
 
-import type { Lap, Session, Track, TrackCenterline } from '@gt7/shared';
+import { describeCar, type Lap, type Session, type Track, type TrackCenterline } from '@gt7/shared';
 
 /** Name given by the engine to tracks it could not identify (see core/track/fingerprint.ts). */
 export const UNKNOWN_TRACK_PREFIX = 'Pista desconhecida';
@@ -18,7 +18,18 @@ export const THUMB_POINTS = 96;
 /** Differences below this are reported as "same" in the trend (ms). */
 export const TREND_EPSILON_MS = 50;
 
-export interface OverviewBest {
+/** Car name/maker from the catalogue (null when the car is not in it). */
+export interface CarNames {
+  carName: string | null;
+  makerName: string | null;
+}
+
+function carNames(carCode: number): CarNames {
+  const d = describeCar(carCode);
+  return { carName: d.carName, makerName: d.makerName };
+}
+
+export interface OverviewBest extends CarNames {
   timeMs: number;
   lapId: string;
   sessionId: string;
@@ -27,7 +38,7 @@ export interface OverviewBest {
   at: number;
 }
 
-export interface OverviewCar {
+export interface OverviewCar extends CarNames {
   carCode: number;
   laps: number;
   sessions: number;
@@ -43,6 +54,7 @@ export interface OverviewTrend {
   /** last session best − previous session best (ms, negative = faster). Null when kind = none. */
   deltaMs: number | null;
   carCode: number | null;
+  carName: string | null;
 }
 
 export interface TrackOverview {
@@ -113,13 +125,20 @@ export function computeTrend(sessions: readonly Session[]): OverviewTrend {
     .filter((s) => s.mode === 'live' && s.bestLapMs !== null)
     .sort((a, b) => b.startedAt - a.startedAt);
   const last = own[0];
-  if (!last) return { kind: 'none', deltaMs: null, carCode: null };
+  if (!last) return { kind: 'none', deltaMs: null, carCode: null, carName: null };
   const prev = own.slice(1).find((s) => s.carCode === last.carCode);
-  if (!prev) return { kind: 'none', deltaMs: null, carCode: last.carCode };
+  if (!prev) {
+    return {
+      kind: 'none',
+      deltaMs: null,
+      carCode: last.carCode,
+      carName: carNames(last.carCode).carName,
+    };
+  }
   const deltaMs = last.bestLapMs! - prev.bestLapMs!;
   const kind: TrendKind =
     Math.abs(deltaMs) < TREND_EPSILON_MS ? 'same' : deltaMs < 0 ? 'improved' : 'worsened';
-  return { kind, deltaMs, carCode: last.carCode };
+  return { kind, deltaMs, carCode: last.carCode, carName: carNames(last.carCode).carName };
 }
 
 export function buildTrackOverview(
@@ -140,6 +159,7 @@ export function buildTrackOverview(
     if (!c) {
       c = {
         carCode: l.carCode,
+        ...carNames(l.carCode),
         laps: 0,
         sessions: 0,
         bestMs: null,
@@ -187,6 +207,7 @@ export function buildTrackOverview(
           lapId: best.id,
           sessionId: best.sessionId,
           carCode: best.carCode,
+          ...carNames(best.carCode),
           at: best.startedAt,
         }
       : null,

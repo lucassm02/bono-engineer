@@ -227,6 +227,44 @@ function ConnectionSection({ status, onChange }: { status: ApiStatus; onChange: 
 
 // ---------------------------------------------------------------------------------------------
 
+/** Automatic session capture: one switch. Sessions open and close by themselves. */
+function CaptureSection({ status, onChange }: { status: ApiStatus; onChange: () => void }) {
+  const on = status.settings.autoCapture;
+  const { busy, run } = useSave();
+  const toggle = async () => {
+    const next = !on;
+    const ok = next ? 'Gravação automática ligada.' : 'Gravação automática desligada.';
+    if (await run(() => api.patchSettings({ autoCapture: next }), ok)) onChange();
+  };
+  return (
+    <Card title="Captura" id="captura">
+      <div className="a-setting-row">
+        <div>
+          <strong>Gravar sessões automaticamente</strong>
+          <div className="dim a-small">
+            {on
+              ? 'Quando você entra numa pista no jogo, o app abre a sessão sozinho e a salva quando você sai. Não há botão de iniciar.'
+              : 'Desligado: o painel mostra tudo ao vivo, mas nenhuma sessão, volta ou pista nova é salva.'}
+          </div>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={on}
+          aria-label="Gravar sessões automaticamente"
+          className="switch"
+          disabled={busy}
+          onClick={toggle}
+        >
+          <span className="switch-knob" />
+        </button>
+      </div>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------
+
 function LanSection({ status, onChange }: { status: ApiStatus; onChange: () => void }) {
   const lan = useFetch('lan', () => api.lan());
   const { busy, run } = useSave();
@@ -745,6 +783,7 @@ export function ConfigPage({ route }: { route: Route }) {
       <PageHead title="Configurações" sub="Tudo se ajusta aqui: nada de arquivo de configuração." />
       <nav className="a-toc" aria-label="Seções">
         <a href="#/config?s=conexao">Conexão</a>
+        <a href="#/config?s=captura">Captura</a>
         <a href="#/config?s=celular">Celular</a>
         <a href="#/config?s=dispositivos">Aparelhos</a>
         <a href="#/config?s=coach">Coach IA</a>
@@ -759,6 +798,7 @@ export function ConfigPage({ route }: { route: Route }) {
       ) : (
         <div className="a-config">
           <ConnectionSection status={status.data} onChange={status.reload} />
+          <CaptureSection status={status.data} onChange={status.reload} />
           <LanSection status={status.data} onChange={status.reload} />
           <DevicesSection />
           <CoachSection />

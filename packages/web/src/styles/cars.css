@@ -1,0 +1,507 @@
+/*
+ * Car catalogue UI (Onda 8b): maker logos, car names, the two-step "Carro" picker and filter chips.
+ * Dark theme only; monograms are tinted from the maker name with a fixed lightness so the
+ * contrast stays high. Touch targets are >= 44 px.
+ */
+
+/* ---------------------------------------------------------------- Logo */
+.brand-logo {
+  --bl: 28px;
+  --h: 215;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--bl);
+  height: var(--bl);
+  border-radius: calc(var(--bl) * 0.26);
+  box-sizing: border-box;
+  line-height: 1;
+  user-select: none;
+}
+.brand-logo[data-kind="icon"] {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  color: var(--text);
+}
+.brand-logo[data-kind="icon"] svg {
+  width: 64%;
+  height: 64%;
+  display: block;
+}
+.brand-logo[data-kind="monogram"] {
+  border-radius: 50%;
+  background: hsl(var(--h) 38% 20%);
+  border: 1px solid hsl(var(--h) 40% 36%);
+  color: hsl(var(--h) 85% 82%);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  font-size: calc(var(--bl) * 0.4);
+}
+.brand-logo[data-kind="monogram"][data-len="3"] {
+  font-size: calc(var(--bl) * 0.32);
+}
+.brand-logo[data-kind="monogram"][data-len="1"] {
+  color: var(--dim);
+  background: var(--panel-2);
+  border-color: var(--line);
+}
+
+/* ---------------------------------------------------------------- Car name */
+.carname {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  max-width: 100%;
+  vertical-align: middle;
+}
+.carname-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.carname-wrap .carname-text {
+  white-space: normal;
+}
+
+/* ---------------------------------------------------------------- Filter field + chips */
+.cf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.cf-label {
+  font-size: 12px;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.cf-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  max-width: min(100%, 360px);
+  padding: 6px 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--text);
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+  text-align: left;
+}
+.cf-trigger:hover,
+.cf-trigger:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+}
+.cf-caret {
+  margin-left: auto;
+  color: var(--dim);
+}
+.cf-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: -4px 0 14px;
+}
+.cf-chips:empty {
+  display: none;
+}
+.cf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-height: 36px;
+  padding: 2px 2px 2px 8px;
+  background: rgba(255, 178, 30, 0.1);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  font-size: 14px;
+}
+.cf-chip-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cf-chip-x {
+  flex: none;
+  width: 44px;
+  height: 32px;
+  margin: -2px 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 999px;
+}
+.cf-chip-x:hover,
+.cf-chip-x:focus-visible {
+  background: rgba(255, 178, 30, 0.2);
+  outline: none;
+}
+.cf-chip-clear {
+  min-height: 36px;
+}
+
+/* ---------------------------------------------------------------- Picker (sheet) */
+.cp-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.72);
+}
+.cp-sheet {
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+  width: min(760px, 100%);
+  max-height: min(760px, 100%);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  outline: none;
+}
+.cp-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 10px 8px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.cp-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cp-title-text {
+  min-width: 0;
+}
+.cp-title h2 {
+  margin: 0;
+  font-size: 18px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cp-title p {
+  margin: 0;
+}
+.cp-iconbtn {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 20px;
+  cursor: pointer;
+}
+.cp-iconbtn:hover,
+.cp-iconbtn:focus-visible {
+  background: var(--panel-2);
+  border-color: var(--line);
+  outline: none;
+}
+.cp-search {
+  padding: 10px 14px 8px;
+}
+.cp-sheet input {
+  font-family: inherit;
+  color: var(--text);
+}
+.cp-search .a-input {
+  min-height: 44px;
+  font-size: 16px; /* >= 16px: iOS does not zoom on focus */
+}
+.cp-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 14px 16px;
+}
+.cp-tabs {
+  display: flex;
+  gap: 6px;
+  margin: 4px 0 12px;
+}
+.cp-tabs button {
+  flex: 1 1 0;
+  min-height: 44px;
+  padding: 6px 10px;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--dim);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.cp-tabs button[aria-pressed="true"] {
+  color: var(--text);
+  border-color: var(--accent);
+  background: rgba(255, 178, 30, 0.1);
+}
+.cp-hint {
+  margin: 6px 0 10px;
+}
+.cp-sec {
+  margin: 14px 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.cp-all {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  margin: 2px 0 10px;
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px dashed var(--accent);
+  border-radius: 10px;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.cp-all:hover,
+.cp-all:focus-visible {
+  background: rgba(255, 178, 30, 0.1);
+  outline: none;
+}
+.cp-all-sub {
+  color: var(--dim);
+  font-weight: 400;
+}
+.cp-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin-bottom: 4px;
+  color: var(--dim);
+  font-size: 14px;
+}
+.cp-check input {
+  width: 20px;
+  height: 20px;
+}
+
+/* Maker grid */
+.cp-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 8px;
+}
+.cp-grid > li {
+  display: flex;
+  min-width: 0;
+}
+.cp-brand {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  min-height: 112px;
+  padding: 10px 6px 8px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--text);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.cp-brand:hover,
+.cp-brand:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+}
+.cp-brand[data-used="1"] {
+  background: var(--panel-2);
+  border-color: rgba(255, 178, 30, 0.55);
+}
+.cp-brand[data-active="1"] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.cp-brand-name {
+  max-width: 100%;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+.cp-brand-sub {
+  font-size: 11px;
+  color: var(--dim);
+}
+.cp-brand[data-used="1"] .cp-brand-sub {
+  color: var(--accent);
+}
+
+/* Car list */
+.cp-cars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.cp-car {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  padding: 6px 10px;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.cp-car:hover,
+.cp-car:focus-visible {
+  border-color: var(--accent);
+  background: var(--panel-2);
+  outline: none;
+}
+.cp-car[data-active="1"] {
+  border-color: var(--accent);
+  background: rgba(255, 178, 30, 0.1);
+}
+.cp-car-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.cp-car-name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.cp-car-meta {
+  font-size: 12px;
+}
+.cp-badge {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* Empty state */
+.cp-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 28px 12px;
+  text-align: center;
+  color: var(--dim);
+}
+.cp-empty p {
+  margin: 0;
+  max-width: 34ch;
+}
+.cp-empty-icon {
+  font-size: 34px;
+  color: var(--faint);
+}
+
+/* ---------------------------------------------------------------- Track card + lists */
+.a-trackcard-cars {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  min-width: 0;
+}
+.a-trackcard-cars .carname-text {
+  max-width: 22ch;
+}
+
+/* ---------------------------------------------------------------- Phone */
+@media (max-width: 600px) {
+  .cp-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+  .cp-sheet {
+    width: 100%;
+    max-height: 92dvh;
+    height: 92dvh;
+    border-radius: 16px 16px 0 0;
+    border-bottom: 0;
+  }
+  .cp-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .cf-trigger {
+    max-width: 100%;
+  }
+  .cf-field {
+    flex: 1 1 100%;
+  }
+  .cf-trigger {
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .cp-sheet {
+    animation: cp-in 0.16s ease-out;
+  }
+  @keyframes cp-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}

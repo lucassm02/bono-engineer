@@ -87,6 +87,30 @@ describe('REST: console connection, discovery and format settings (no UDP)', () 
     expect(bad.status).toBe(400);
   });
 
+  it('GET /api/status carries sessionCapture; autoCapture is a persisted switch (default on)', async () => {
+    const r = await call<ApiStatus>('GET', '/api/status');
+    expect(r.body.settings.autoCapture).toBe(true);
+    expect(r.body.sessionCapture).toMatchObject({
+      state: 'idle', // telemetry is not running in this test
+      enabled: true,
+      sessionId: null,
+      lapsDone: 0,
+    });
+    expect(r.body.sessionCapture.hint).toBe('A telemetria está parada.');
+
+    const off = await call<ApiSettings>('PATCH', '/api/settings', { autoCapture: false });
+    expect(off.body.autoCapture).toBe(false);
+    const st = await call<ApiStatus>('GET', '/api/status');
+    expect(st.body.sessionCapture).toMatchObject({ state: 'idle', enabled: false });
+    expect(st.body.sessionCapture.hint).toMatch(/desligada/);
+    expect((await call<ApiSettings>('GET', '/api/settings')).body.autoCapture).toBe(false);
+
+    const bad = await call('PATCH', '/api/settings', { autoCapture: 'sim' });
+    expect(bad.status).toBe(400);
+    const on = await call<ApiSettings>('PATCH', '/api/settings', { autoCapture: true });
+    expect(on.body.autoCapture).toBe(true);
+  });
+
   it('POST /api/discovery/scan answers started=false while telemetry is stopped', async () => {
     const r = await call<ApiDiscoveryScanResult>('POST', '/api/discovery/scan');
     expect(r.status).toBe(200);

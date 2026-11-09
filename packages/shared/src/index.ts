@@ -7,6 +7,7 @@
 
 export * from './analysis.ts';
 export * from './api.ts';
+export * from './cars/index.ts';
 export * from './coach.ts';
 export * from './domain.ts';
 export * from './live.ts';

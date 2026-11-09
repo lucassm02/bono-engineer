@@ -35,6 +35,10 @@ export class StoreEngineContext implements LiveEngineContext {
     return this.store.getTrack(trackId);
   }
 
+  listTracks(): Track[] {
+    return this.store.listTracks();
+  }
+
   getCenterline(trackId: Id): TrackCenterline | null {
     return this.store.getCenterline(trackId);
   }

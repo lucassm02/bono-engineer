@@ -15,6 +15,13 @@
  * format it goes back to '~'. A format pinned by the user (`setPacketFormat`, option
  * `liveFormat`) is never changed automatically. Reference capture switches to `captureFormat`
  * ('B': '~' does not work in replays) and restores the live format afterwards.
+ *
+ * Automatic session capture: sessions open and close by themselves (see LiveEngine). The runtime
+ * adds what needs IO: the raw recording per session (size-capped; paused packets throttled), the
+ * "Gravar sessões automaticamente" switch (`autoCapture`, default on; off = live view only), a
+ * timer that closes a session when the console goes quiet, the clean-up of sessions a crash left
+ * open, the removal of sessions that ended with no completed lap, the `sessionSaved` event and
+ * `getStatus().sessionCapture` (what the capture is doing, in pt-BR).
  */
 
 import { EventEmitter } from 'node:events';
@@ -23,6 +30,7 @@ import {
   type ConsoleConnection,
   type ConsoleIpSource,
   type DeltaReferenceKind,
+  decodeFlags,
   type Id,
   isPacketFormat,
   type LapCompletedEvent,
@@ -32,12 +40,19 @@ import {
   type ReferenceCaptureStatus,
   type ServerStatus,
   type Session,
+  type SessionCaptureStatus,
+  type SessionSavedMessage,
 } from '@gt7/shared';
 import { AnalysisService } from '../analysis-service/analysis-service.ts';
 import { AnalysisCornerHintProvider } from '../analysis-service/corner-hints.ts';
 import { ReferenceCapture, type ReferenceCaptureMeta } from '../capture/reference-capture.ts';
 import type { CornerHintProvider } from '../live/corner-hints.ts';
-import { type CompletedLap, LiveEngine, type LiveEngineOptions } from '../live/live-engine.ts';
+import {
+  type CompletedLap,
+  LiveEngine,
+  type LiveEngineOptions,
+  type SessionEndInfo,
+} from '../live/live-engine.ts';
 import { Gt7Store } from '../store/store.ts';
 import { StoreEngineContext } from '../store/store-context.ts';
 
@@ -51,10 +66,21 @@ export const SETTINGS_KEYS = {
   liveFormatAuto: 'liveFormatAuto',
   captureFormat: 'captureFormat',
   record: 'recordSessions',
+  autoCapture: 'autoCapture',
   deltaReference: 'deltaReference',
 } as const;
 
 export type RuntimeNotice = Omit<NoticeMessage, 'type'>;
+
+/** A session with laps was closed and saved. */
+export type SessionSavedInfo = Omit<SessionSavedMessage, 'type'>;
+
+/** How often the runtime lets the engine check for a silent console / a car out of the track. */
+const ENGINE_TICK_MS = 5000;
+/** Raw recording stops growing past this many (uncompressed) bytes: ~4 h of 60 Hz packets. */
+const DEFAULT_MAX_RECORDING_BYTES = 300 * 1024 * 1024;
+/** While the game is paused its packets are identical: keep only a couple per second. */
+const PAUSED_RECORD_INTERVAL_MS = 500;
 
 export interface Gt7RuntimeOptions {
   /** Data dir for the store (default 'data'); ignored when `store` is given. */
@@ -87,6 +113,10 @@ export interface Gt7RuntimeOptions {
   formatFallback?: PacketFormat | null;
   /** Record raw sessions to data/recordings (overrides the persisted setting; default true). */
   record?: boolean;
+  /** Save sessions automatically (overrides the persisted `autoCapture` setting; default true). */
+  autoCapture?: boolean;
+  /** Stop growing a session's raw recording past this many uncompressed bytes (default 300 MB). */
+  maxRecordingBytes?: number;
   /** Frame emission rate (default 30 Hz). */
   frameRateHz?: number;
   /** Extra ingestor options (ports, intervals, discovery...). Discovery is on unless `simulator`. */
@@ -112,6 +142,7 @@ export interface Gt7RuntimeEvents {
   lapCompleted: [LapCompletedEvent, CompletedLap];
   sessionChanged: [Session | null];
   status: [ServerStatus];
+  sessionSaved: [SessionSavedInfo];
   notice: [RuntimeNotice];
   captureStatus: [ReferenceCaptureStatus];
 }
@@ -122,6 +153,8 @@ interface RecorderState {
   writer: RecordingWriter | null;
   buffer: { data: Uint8Array; tMs: number }[] | null;
   failed: boolean;
+  /** Stopped writing (size cap reached). */
+  capped: boolean;
   opening: Promise<void> | null;
 }
 
@@ -150,6 +183,11 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
   #captureFormat: PacketFormat;
   #activeCaptureFormat: PacketFormat;
   #record: boolean;
+  #autoCapture: boolean;
+  #tickTimer: NodeJS.Timeout | null = null;
+  #lastPausedWriteAt = 0;
+  /** Session clean-ups (recording close, empty session removal) still running. */
+  #endJobs = new Set<Promise<void>>();
   #recorder: RecorderState | null = null;
   #recorderCloses = new Set<Promise<void>>();
   #lastWarningAt = 0;
@@ -189,6 +227,7 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
     this.#captureFormat = opts.captureFormat ?? (isPacketFormat(savedCapture) ? savedCapture : 'B');
     this.#activeCaptureFormat = this.#captureFormat;
     this.#record = opts.record ?? s.getSetting<boolean>(SETTINGS_KEYS.record, true);
+    this.#autoCapture = opts.autoCapture ?? s.getSetting<boolean>(SETTINGS_KEYS.autoCapture, true);
     const savedRef = s.getSetting<{ kind: DeltaReferenceKind; lapId?: Id | null }>(
       SETTINGS_KEYS.deltaReference,
     );
@@ -208,6 +247,7 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
       enter: () => this.#enterCapture(),
       exit: () => this.#exitCapture(),
     });
+    this.engine.setPersistence(this.#autoCapture);
     this.#wireEngine();
   }
 
@@ -312,6 +352,7 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
       lanUrls: extras.lanUrls ?? [],
       consoleIp: this.consoleIp,
       capture: this.capture.status,
+      sessionCapture: this.getSessionCapture(),
       devices: extras.devices ?? [],
       serverVersion: this.options.serverVersion ?? CORE_VERSION,
     };
@@ -325,6 +366,7 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
     liveFormatAuto: boolean;
     captureFormat: PacketFormat;
     record: boolean;
+    autoCapture: boolean;
   } {
     const ip = this.consoleIp;
     return {
@@ -334,6 +376,90 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
       liveFormatAuto: this.#liveFormatAuto,
       captureFormat: this.#captureFormat,
       record: this.#record,
+      autoCapture: this.#autoCapture,
+    };
+  }
+
+  /** What the automatic session capture is doing, with a pt-BR sentence for the UI. */
+  getSessionCapture(): SessionCaptureStatus {
+    const info = this.engine.captureInfo;
+    const s = info.session;
+    const enabled = this.#autoCapture;
+    const link = this.getConnection().state;
+    const base: SessionCaptureStatus = {
+      state: 'waiting',
+      enabled,
+      sessionId: null,
+      since: null,
+      lapsDone: 0,
+      carCode: null,
+      trackName: null,
+      bestLapMs: null,
+      trackTimeMs: 0,
+      hint: '',
+    };
+    if (info.replay) {
+      return {
+        ...base,
+        state: 'replay',
+        hint: 'Replay (captura de referência) — não conta como sessão.',
+      };
+    }
+    if (!enabled) {
+      return {
+        ...base,
+        state: 'idle',
+        hint: 'Gravação automática desligada — só ao vivo, nada é salvo.',
+      };
+    }
+    if (!s) {
+      if (!this.#ingestor) return { ...base, state: 'idle', hint: 'A telemetria está parada.' };
+      const hint =
+        link === 'receiving'
+          ? 'Aguardando você entrar numa pista…'
+          : link === 'searching'
+            ? 'Procurando o PS5 na rede — a gravação começa sozinha quando você entrar numa pista.'
+            : link === 'lost'
+              ? 'Sem sinal do PS5 — aguardando o jogo.'
+              : 'Aguardando o jogo — abra o Gran Turismo 7 e entre numa pista.';
+      return { ...base, hint };
+    }
+    const open = {
+      ...base,
+      sessionId: s.id,
+      since: s.startedAt,
+      lapsDone: s.lapCount,
+      carCode: s.carCode,
+      trackName: this.engine.trackInfo?.name ?? null,
+      bestLapMs: s.bestLapMs,
+      trackTimeMs: info.trackTimeMs,
+    };
+    const silent = this.#ingestor !== null && link !== 'receiving';
+    if (silent) {
+      return {
+        ...open,
+        state: 'paused',
+        detail: 'noSignal',
+        hint: 'Sem sinal do PS5 — a sessão continua aberta por alguns minutos.',
+      };
+    }
+    if (!info.onTrack) {
+      return {
+        ...open,
+        state: 'paused',
+        detail: 'offTrack',
+        hint: 'Fora da pista — a sessão continua se você voltar em alguns minutos.',
+      };
+    }
+    if (info.paused) return { ...open, state: 'paused', detail: 'paused', hint: 'Pausado' };
+    const n = s.lapCount;
+    return {
+      ...open,
+      state: 'recording',
+      hint:
+        n === 0
+          ? 'Gravando sessão — ainda sem volta completa'
+          : `Gravando sessão — ${n} ${n === 1 ? 'volta' : 'voltas'} até agora`,
     };
   }
 
@@ -344,6 +470,7 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
   /** Binds the UDP socket and starts heartbeats. */
   async start(): Promise<void> {
     if (this.#ingestor) return;
+    await this.#recoverOrphans();
     const ip = this.#consoleIp;
     this.#startError = null;
     this.#packetCount = 0;
@@ -357,7 +484,7 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
     ing.on('packet', (ip2) => {
       this.#onPacketFormat(ing);
       this.engine.push(ip2.packet, ip2.receivedAt);
-      this.#recordPacket(ip2.raw, ip2.receivedAt);
+      this.#recordPacket(ip2.raw, ip2.receivedAt, decodeFlags(ip2.packet.flags).paused);
     });
     ing.on('state', (s, prev) => {
       this.engine.setIngestorState(s);
@@ -402,12 +529,16 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
     }
     this.engine.setIngestorState(ing.state);
     this.#armAttempt();
+    this.#tickTimer = setInterval(() => this.engine.tick(Date.now()), ENGINE_TICK_MS);
+    this.#tickTimer.unref?.();
     this.#emitStatus();
   }
 
   /** Ends the session, closes the recording and the socket. */
   async stop(): Promise<void> {
     this.#clearFormatTimers();
+    if (this.#tickTimer) clearInterval(this.#tickTimer);
+    this.#tickTimer = null;
     if (this.capture.active) await this.capture.stop(true);
     this.engine.endSession();
     const ing = this.#ingestor;
@@ -415,13 +546,19 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
     if (ing) await ing.stop();
     this.engine.setIngestorState('stopped');
     await this.#closeRecorder();
+    while (this.#endJobs.size) await Promise.all([...this.#endJobs]);
     await this.store.flush();
     this.#emitStatus();
   }
 
-  /** Resolves when background analysis jobs (corner detection after a lap) are done. */
+  /**
+   * Resolves when background jobs are done: corner detection after a lap, and what follows the end
+   * of a session (closing its recording, removing it when empty, the `sessionSaved` event).
+   */
   async whenAnalysisIdle(): Promise<void> {
-    while (this.#analysisJobs.size) await Promise.all([...this.#analysisJobs]);
+    while (this.#analysisJobs.size || this.#endJobs.size) {
+      await Promise.all([...this.#analysisJobs, ...this.#endJobs]);
+    }
   }
 
   /** stop() + closes the store if the runtime created it. */
@@ -514,6 +651,17 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
   setRecording(on: boolean): void {
     this.#record = on;
     this.store.setSetting(SETTINGS_KEYS.record, on);
+  }
+
+  /**
+   * "Gravar sessões automaticamente" (persisted, default on). Off = live view only: nothing new is
+   * saved. Changing it closes the open session (saved if it was being saved).
+   */
+  setAutoCapture(on: boolean): void {
+    this.#autoCapture = on;
+    this.store.setSetting(SETTINGS_KEYS.autoCapture, on);
+    this.engine.setPersistence(on);
+    this.#emitStatus();
   }
 
   setDeltaReference(kind: DeltaReferenceKind, lapId?: Id | null): void {
@@ -705,17 +853,22 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
     const e = this.engine;
     e.on('frame', (f) => this.emit('frame', f));
     e.on('lapCompleted', (c) => {
-      this.#analyzeLap(c);
+      if (e.persisting) this.#analyzeLap(c);
       this.emit('lapCompleted', c.event, c);
+      this.#emitStatus();
     });
     e.on('sessionStarted', (s) => {
-      this.#openRecorder(s);
+      if (e.persisting) this.#openRecorder(s);
       this.emit('sessionChanged', this.engine.session ?? s);
+      this.#emitStatus();
     });
     e.on('sessionUpdated', (s) => this.emit('sessionChanged', s));
-    e.on('sessionEnded', () => {
-      void this.#closeRecorder();
+    e.on('sessionEnded', (s, info) => {
+      // the recorder must be taken synchronously: a new session may open right after this
+      const closing = this.#closeRecorder();
+      this.#trackEndJob(this.#afterSessionEnded(s, info, closing));
       this.emit('sessionChanged', null);
+      this.#emitStatus();
     });
     e.on('stateChanged', () => this.#emitStatus());
     this.capture.on('status', (st) => {
@@ -759,6 +912,61 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
     this.#analysisJobs.add(job);
   }
 
+  #trackEndJob(job: Promise<void>): void {
+    const tracked: Promise<void> = job.finally(() => this.#endJobs.delete(tracked));
+    this.#endJobs.add(tracked);
+  }
+
+  /**
+   * After a session closed: one with no completed lap is removed (it would only clutter the
+   * history; the raw recording goes with it), one with laps is announced as saved.
+   */
+  async #afterSessionEnded(
+    s: Session,
+    info: SessionEndInfo,
+    recorderClosed: Promise<void>,
+  ): Promise<void> {
+    try {
+      await recorderClosed;
+      if (!info.persisted) return;
+      if (s.lapCount === 0) {
+        await this.store.deleteSession(s.id);
+        return;
+      }
+      if (s.mode !== 'live') return;
+      const track = s.trackId ? this.store.getTrack(s.trackId) : null;
+      this.emit('sessionSaved', {
+        sessionId: s.id,
+        trackId: s.trackId,
+        trackName: track?.name ?? null,
+        carCode: s.carCode,
+        lapCount: s.lapCount,
+        bestLapMs: s.bestLapMs,
+        startedAt: s.startedAt,
+        endedAt: s.endedAt ?? Date.now(),
+      });
+    } catch (err) {
+      this.#notice(
+        'warn',
+        'sessionCleanupFailed',
+        `Não foi possível finalizar a sessão: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  }
+
+  /** Closes sessions a crash or a forced shutdown left open (see Gt7Store.recoverOpenSessions). */
+  async #recoverOrphans(): Promise<void> {
+    try {
+      await this.store.recoverOpenSessions(this.engine.session?.id);
+    } catch (err) {
+      this.#notice(
+        'warn',
+        'sessionRecoveryFailed',
+        `Não foi possível recuperar sessões abertas: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  }
+
   #openRecorder(s: Session): void {
     if (!this.#record) return;
     if (this.#recorder) void this.#closeRecorder();
@@ -769,6 +977,7 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
       writer: null,
       buffer: [],
       failed: false,
+      capped: false,
       opening: null,
     };
     this.#recorder = state;
@@ -797,12 +1006,29 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
       });
   }
 
-  #recordPacket(raw: Uint8Array, receivedAt: number): void {
+  #recordPacket(raw: Uint8Array, receivedAt: number, paused = false): void {
     const r = this.#recorder;
-    if (!r || r.failed) return;
+    if (!r || r.failed || r.capped) return;
+    if (paused) {
+      if (receivedAt - this.#lastPausedWriteAt < PAUSED_RECORD_INTERVAL_MS) return;
+      this.#lastPausedWriteAt = receivedAt;
+    }
     const tMs = Math.max(0, receivedAt - r.startTime);
-    if (r.writer) r.writer.write(raw, tMs);
-    else r.buffer?.push({ data: raw.slice(), tMs });
+    if (!r.writer) {
+      r.buffer?.push({ data: raw.slice(), tMs });
+      return;
+    }
+    if (r.writer.bytes >= (this.options.maxRecordingBytes ?? DEFAULT_MAX_RECORDING_BYTES)) {
+      r.capped = true;
+      this.#notice(
+        'info',
+        'recordingCapped',
+        'A gravação bruta desta sessão atingiu o limite de tamanho e parou. As voltas continuam sendo salvas.',
+        10_000,
+      );
+      return;
+    }
+    r.writer.write(raw, tMs);
   }
 
   async #closeRecorder(): Promise<void> {

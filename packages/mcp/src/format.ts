@@ -2,7 +2,7 @@
 
 import { formatLapTime } from '@gt7/analysis';
 import type { Gt7Store } from '@gt7/core';
-import type { Lap, MetricStats, Session, Track } from '@gt7/shared';
+import { describeCar, type Lap, type MetricStats, type Session, type Track } from '@gt7/shared';
 
 /** Most recent session with laps, preferring live driving over replay captures. */
 export function latestDrivingSession(store: Gt7Store): Session | null {
@@ -29,6 +29,19 @@ export function dateTime(ms: number): string {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
+/**
+ * `car` (the game's carCode) plus, when the catalogue knows the car, `car_name` (official name) and
+ * `car_maker`. Spread into any object that reports a car.
+ */
+export function carFields(carCode: number): { car: number; car_name?: string; car_maker?: string } {
+  const d = describeCar(carCode);
+  return {
+    car: carCode,
+    ...(d.carName ? { car_name: d.carName } : {}),
+    ...(d.makerName ? { car_maker: d.makerName } : {}),
+  };
+}
+
 export function compactLap(l: Lap, opts: { session?: boolean } = {}) {
   return {
     id: l.id,
@@ -39,7 +52,7 @@ export function compactLap(l: Lap, opts: { session?: boolean } = {}) {
     valid: l.valid,
     ...(l.flags.length ? { flags: l.flags } : {}),
     ...(l.isReference ? { reference: true, driver: l.referenceMeta?.driverName ?? null } : {}),
-    car: l.carCode,
+    ...carFields(l.carCode),
     ...(opts.session ? { session: l.sessionId } : {}),
     date: dateTime(l.startedAt),
   };
@@ -50,7 +63,7 @@ export function compactSession(s: Session, track: Track | null) {
     id: s.id,
     date: dateTime(s.startedAt),
     track: track ? { id: track.id, name: track.name } : s.trackId,
-    car: s.carCode,
+    ...carFields(s.carCode),
     mode: s.mode,
     laps: s.lapCount,
     best: lapTime(s.bestLapMs),

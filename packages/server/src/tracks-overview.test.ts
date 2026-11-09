@@ -111,6 +111,21 @@ describe('tracks overview (pure)', () => {
     expect(o.sessionCount).toBe(1);
   });
 
+  it('resolves carName/makerName from the catalogue and keeps carCode (unknown cars: null)', () => {
+    const laps = [
+      lap('l1', 's1', 90500, { carCode: 3337, startedAt: 200 }),
+      lap('l2', 's1', 91000, { carCode: 999999, startedAt: 100 }),
+    ];
+    const o = buildTrackOverview(track(), [session('s1', 100, 90500)], laps, null);
+    expect(o.best).toMatchObject({ carCode: 3337, carName: "A110 '17", makerName: 'Alpine' });
+    const known = o.cars.find((c) => c.carCode === 3337);
+    expect(known).toMatchObject({ carName: "A110 '17", makerName: 'Alpine' });
+    const unknown = o.cars.find((c) => c.carCode === 999999);
+    expect(unknown).toMatchObject({ carName: null, makerName: null });
+    const t = computeTrend([session('a', 1000, 80000, { carCode: 3337 })]);
+    expect(t).toMatchObject({ carCode: 3337, carName: "A110 '17" });
+  });
+
   it('sorts tracks by most recent activity', () => {
     const t1 = track({ id: 'a', name: 'A' });
     const t2 = track({ id: 'b', name: 'B' });

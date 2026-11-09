@@ -1181,6 +1181,15 @@ button {
   justify-content: space-between;
   align-items: baseline;
 }
+.motor-carname {
+  flex: 1;
+  min-width: 0;
+  margin: 0 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
 .motor-rpm-value {
   font-size: clamp(22px, min(6cqw, 11cqh), 64px);
   font-weight: 700;

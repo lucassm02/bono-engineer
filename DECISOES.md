@@ -1365,3 +1365,179 @@ com o mesmo código do `npm start`. O custo é o tamanho (~110 MB por instalador
 - **Pendência/risco:** o servidor roda no processo principal do Electron (que também cuida das janelas); sob carga
   extrema do servidor, mover para `utilityProcess` isolaria a interface (a API `startServer` permite). Atualização
   automática não existe (reinstalar por cima).
+
+
+## Onda 8a — captura automática
+
+Pedido: o app fica aberto (PC/bandeja) e **ninguém volta ao PC para "iniciar uma sessão"**. O início automático já
+existia (o motor abre a sessão quando `carOnTrack && !paused`); esta onda **auditou e endureceu** esse comportamento
+para uso sem supervisão e o tornou **visível**. Sem botão de iniciar. Código: `core/src/live/live-engine.ts`,
+`core/src/runtime/runtime.ts`, `core/src/store/store.ts`; testes novos em `core/src/live/session-lifecycle.test.ts`,
+`core/src/runtime/capture.test.ts` e o bloco "automatic session capture" de `core/src/runtime/runtime.test.ts` (UDP,
+FakeConsole).
+
+### Regras de sessão (decididas e testadas)
+
+- **Abre** no 1º pacote com o carro na pista e sem pausa. **Fecha** (motivo no evento `sessionEnded`, 2º argumento
+  `{ reason, persisted }`): `silence` (sem pacotes), `offTrack` (fora da pista/pausado/carregando), `carChange`,
+  `trackChange`, `mode` (replay ligou/desligou ou o interruptor mudou) ou `manual` (`endSession()`, encerramento do app).
+- **Mesma sessão ou nova (item c).** Reiniciar corrida/prova de tempo, voltar aos boxes, ir ao menu, pausar ou perder o
+  sinal **por menos de 10 min** (`sessionIdleEndMs`, antes 60 s) mantém **a mesma sessão** se o carro e a pista forem os
+  mesmos. Passou de 10 min fora da pista/pausado/sem sinal → fecha, e a próxima vez é sessão nova. Escolhi **10 min** (o
+  pedido dava esse número como exemplo) porque cobre um reinício, um menu de ajustes e um "vou pegar uma bebida" sem
+  partir a sessão, e ainda fecha sozinha uma sessão esquecida. Um único limite vale para pista, pausa e silêncio. O fim da
+  sessão é carimbado no **último instante em que o carro esteve na pista** (ou no último pacote, no silêncio), não na hora
+  em que o app percebeu.
+- **Troca de carro (d):** sessão nova na hora (já funcionava; o fim agora usa o instante certo).
+- **Troca de pista (d) — estava errado e foi corrigido.** Com o mesmo carro e menos de 60 s de intervalo o motor mantinha a
+  pista anterior como "confirmada" e **atribuía as voltas da pista nova à antiga** (a identificação só rodava enquanto a
+  pista não estava confirmada). Agora, depois de uma **quebra** (fora da pista ≥ 2 s, silêncio ≥ 5 s ou reinício do
+  contador de pacotes), a próxima volta tem de provar a pista: (1) na largada de uma volta cronometrada procura a pista pela
+  posição/direção da linha (`findTrackByStart`); se achar **outra pista conhecida**, fecha a sessão e abre outra
+  (`trackChange`); se a linha não bate com nada conhecido, esquece a pista ativa (nada de delta/setores errados) e deixa a
+  identificação para o fim da volta; (2) ao fechar a volta, a identificação pela geometria roda de novo e, se a pista for
+  outra que a da sessão, a volta já nasce na **sessão nova** (a anterior é fechada na última volta dela). Limite: com pista
+  **nunca vista**, a gravação bruta (`.gt7rec`) da 1ª volta fica na sessão antiga (a nova começa depois dela); as voltas e
+  os dados ficam certos.
+- **App aberto no meio da volta (b):** a volta em andamento nunca é gravada (só voltas cronometradas desde a linha entram
+  no banco), então não contamina melhor volta, médias, combustível nem consistência. Já funcionava; agora, além disso, essa
+  volta de entrada **não acumula amostras na memória** (antes enchia o buffer até 30 min de pacotes).
+- **Pausa (e):** não fecha a sessão (até o mesmo limite de 10 min). Nova medida **`trackTimeMs`** = tempo de pista
+  realmente dirigido (soma dos intervalos entre pacotes "correndo", cada passo limitado a 1 s): pausa, menu, garagem e
+  silêncio não contam. Fica em `Session.trackTimeMs` (opcional, aditivo; migração v3 `track_time_ms`) e no status ao vivo.
+- **PS5 em repouso / jogo fechado / Wi-Fi (f):** o motor só percebia o silêncio no **próximo pacote** (a sessão podia ficar
+  horas "aberta"). Agora `LiveEngine.tick(now)` roda a cada 5 s (timer do runtime, `unref`, parado no `stop()`) e fecha a
+  sessão quando o silêncio passa de 10 min, com fim no último pacote; as voltas completas já eram salvas a cada volta.
+  Reconexão depois de horas (contador de pacotes recomeça) abre sessão nova sem travar (testado com FakeConsole).
+- **Replay (g):** não cria sessão de piloto **como antes**: durante a captura de referência o motor está em modo replay
+  (sessão `replayCapture`, voltas marcadas `replay`, fora dos recordes pessoais). **O app não detecta replay sozinho** (o
+  jogo não o sinaliza de forma que eu possa verificar sem console): um replay assistido sem captura continua parecendo uma
+  sessão normal. Decisão: não inventar uma heurística que possa jogar fora corridas reais. O estado `replay` do chip só
+  aparece durante a captura de referência.
+- **Sessão sem volta completa (h):** é **descartada** quando fecha (linha do banco + gravação bruta). Decisão: um histórico
+  sem "sessões fantasmas" vale mais que o registro de que você passou 2 min numa pista sem fechar uma volta. O descarte é
+  feito pelo runtime depois de fechar a gravação (`afterSessionEnded`), nunca durante a sessão (que aparece como "em
+  andamento" até acabar). `whenAnalysisIdle()` agora também espera essa limpeza.
+- **Encerramento à força (i):** `Gt7Store.recoverOpenSessions()` (chamado em `Gt7Runtime.start()`, antes de abrir a porta
+  UDP) fecha as sessões com `ended_at` nulo na hora da última volta salva e remove as que não têm volta (e a gravação). Não
+  toca na sessão que o próprio runtime está gravando. O MCP (que cria um `Gt7Runtime` sem `start()`) não mexe nelas.
+- **Memória e disco em sessões longas (j):** (1) voltas de entrada/saída (não cronometradas) não guardam amostras; (2) uma
+  volta cronometrada que nunca fecha continua limitada a `maxLapSamples` (30 min); (3) a gravação bruta guarda no máximo
+  2 pacotes/s **enquanto pausado** e **para ao passar de 300 MB descompactados** por sessão (`maxRecordingBytes`, ~4 h;
+  avisa uma vez; as voltas seguem sendo salvas); (4) os acumuladores da sessão (combustível, melhores setores) são
+  limitados. Não medi o uso de memória do processo em horas reais (só os limites acima, em teste).
+
+### Interruptor "Gravar sessões automaticamente"
+
+- Configuração `autoCapture` (settings, **padrão ligado**), `GET/PATCH /api/settings` (`autoCapture` booleano),
+  `Gt7Runtime.setAutoCapture()`. Desligar **fecha a sessão aberta** (e a salva, se estava sendo salva) e, daí em diante, o
+  motor roda com `EphemeralContext`: leitura vai ao banco (recordes, referência do delta, pistas conhecidas), **escrita
+  fica em memória** — nenhuma sessão, volta, trace, gravação, pista nova nem detecção de curvas. O painel ao vivo segue
+  igual (delta, setores, nome da pista, voltas). Capturas de referência (ação explícita) **continuam sendo salvas**.
+- É independente de "Gravar sessões brutas" (`record`), que só decide se o `.gt7rec` é escrito.
+
+### Visibilidade
+
+- **`ServerStatus.sessionCapture`** (e `/api/status`): o pedido chamava o bloco de `capture`, mas esse nome **já é** a
+  captura de referência (replay); ficou `sessionCapture`, como `consoleConnection` na Onda 6a. Campos:
+  `state: 'waiting'|'recording'|'paused'|'replay'|'idle'`, `enabled`, `sessionId`, `since`, `lapsDone`, `carCode`, `hint`
+  (pt-BR) e, além do pedido, `trackName`, `bestLapMs`, `trackTimeMs` e `detail` (`paused|offTrack|noSignal`, só em
+  `paused`). `idle` = telemetria parada ou interruptor desligado. Republicado a cada volta, abertura/fechamento de sessão e
+  a cada `stats` (1 Hz).
+- **Mensagem WS `sessionSaved`** (`SessionSavedMessage`: sessão, pista, carro, voltas, melhor volta, início/fim) quando uma
+  sessão **com voltas** de piloto fecha (não para replays nem sessões descartadas). O hub só a repassa.
+- **Web:** `components/CaptureStatus.tsx` + `styles/capture-status.css` + `lib/captureStatus.ts` (lógica pura testada). Chip
+  ao lado do chip do PS5: na análise (rodapé da barra lateral e topo no celular) é **link** para a sessão em andamento; no
+  painel ao vivo é **só leitura** (decisão: nenhum toque acidental troca de tela enquanto se pilota; tem `data-no-gesture`).
+  Ponto verde pulsando só em "gravando" (respeita `prefers-reduced-motion`). Aviso "Sessão salva: Pista X, N voltas, melhor
+  1:23,456 — ver" (tempo no formato pt-BR do app, com vírgula) some sozinho em 15 s, tem × e não exige clique; no painel ao
+  vivo fica no topo (longe dos gestos), na análise no canto. Em `?mock=1` o chip diz "Demo · não grava". Montagem: poucas
+  linhas em `Chrome.tsx` (`SourceBadge`), `AnalysisApp.tsx` (`ConnectionPill` e o aviso) e `net/connection.ts`.
+  Configurações ganhou a seção **Captura** (só o interruptor).
+
+### Não verificado
+
+- **Console real:** nada desta onda foi visto com um PS5. Tudo usa o gerador sintético e o FakeConsole (UDP local). Dependem
+  do jogo real: quais flags o GT7 manda em menu/garagem/pausa/replay (assumi `carOnTrack` falso no menu e `paused` na
+  pausa, como o gerador e a Onda 1), se a pausa mantém os pacotes chegando, e como o `lapCount` se comporta em provas com
+  volta de aquecimento.
+- Detecção de replay sem captura (ver acima).
+- Memória do processo após horas de sessão (só os limites foram testados).
+- O aviso "Sessão salva" no celular real e na PWA instalada.
+
+
+## Onda 8b — catálogo de carros e logos
+
+Objetivo: nunca mais procurar "Carro 1234": lista completa de carros do GT7 por marca, com logo, no histórico.
+
+### Dados do catálogo
+
+- **Fonte:** [ddm999/gt7info](https://github.com/ddm999/gt7info), `_data/db/{cars,maker,country,cargrp}.csv` (dados extraídos do
+  jogo pela comunidade). **Licença: MIT-0** (conferi o arquivo `LICENSE` do repositório: permite usar, copiar, modificar e
+  distribuir sem atribuição). Coletado em **2026-11-09**, commit `2648c847f1021be69b67430e65e2246098383e66` (branch `web-new`).
+  Mesmo assim ficam só **fatos** (id, nome oficial, marca, país, grupo, ano) e a fonte citada no README e em `CARS_SOURCE`.
+- **Arquivo:** `packages/shared/src/cars/data.ts` (gerado, tuplas compactas; ~31 KB) + `catalog.ts` (funções puras:
+  `getCar`, `carName`, `carLabel`, `describeCar`, `searchCars`/`searchMakers` sem acento, `groupUsageByMaker`…).
+  Uma única linha nova em `shared/src/index.ts` (`export * from './cars/index.ts'`). O app não depende de rede.
+  Gerador: `packages/shared/scripts/gen-cars.mjs` (fixa o commit; `--ref`/`--from`; recusa dados inconsistentes).
+- **Contagem real:** **590 carros** e **82 marcas na fonte, 77 listadas** (5 marcas da fonte não têm nenhum carro e são
+  omitidas: Fittipaldi Motors, GT Awards (SEMA), Renault Sport, SRT, Willys).
+- **Nome:** o oficial em inglês da fonte, com o sufixo de ano (`A110 '17`). `baseName` tira o sufixo; `year` é derivado do
+  sufixo (`'00–'26` = 2000–2026, `'27–'99` = 1927–1999; o carro mais antigo é de 1929). 163 carros não têm ano no nome.
+  Citroën é exibido com trema; o resto segue a fonte. Países em pt-BR (tabela de 20 códigos no `catalog.ts`).
+- **Grupo:** `1,2,3,4,B,N,X` como na fonte (exibidos `Gr.1`… `Gr.N`, `Gr.X`); **83 carros não têm grupo** na fonte e ficam
+  sem badge (não inferi pelo nome). As classes por PP (N100…N1000) **não** estão nesses CSV (só em `stockperf.csv`, não
+  usado): ficam fora.
+- **Suposição:** o `carCode` da telemetria é o `ID` de `cars.csv` (confere com o demo: 3337 = Alpine A110 '17; e é o uso
+  conhecido da comunidade), mas **não foi conferido com um console real**. Observação da fonte: "McLaren F1 GTR Race Car '97"
+  está sob a marca BMW (id 6); mantive o dado como veio.
+- Carro fora do catálogo: `carLabel` devolve `Carro #1234`; na UI aparece o balde "Fora do catálogo" (marca pseudo `-1`).
+
+### Logos
+
+- `simple-icons@16.37.0` (**devDependency do web**, arquivos CC0-1.0) → `packages/web/scripts/gen-brand-icons.mjs` copia só o
+  `path` (24×24) para `packages/web/src/brands/brandIcons.ts`: **sem dependência em runtime**, sem arquivos de imagem, preenchido
+  com `currentColor` sobre um ladrilho escuro (legível no tema escuro).
+- **36 marcas com logo real, 41 com monograma** (iniciais num círculo; matiz derivado do nome, luminosidade fixa para manter o
+  contraste). Sem logo no `simple-icons` (verificado): Alfa Romeo, Alpine, Dodge, Jaguar, Lancia, Lexus, Mercedes-Benz (removido do
+  pacote; usei o logo "AMG" só para a marca AMG), Pagani, Genesis, Daihatsu, NISMO, Shelby, TVR… Não desenhei nenhum logo à mão.
+- Logos são marcas registradas dos donos, usadas só para identificar o carro (nota no README).
+
+### UI (`packages/web`)
+
+- `CarFilterField` (botão "Carro") + `CarPicker` (folha modal via portal; no celular ocupa 92 % da altura): passo 1 = grade de
+  marcas (abas "No meu histórico" em destaque, com contagem de voltas, e "Todas as marcas do jogo"); busca no passo 1 acha
+  marcas e carros ao mesmo tempo (até 60); passo 2 = lista de carros da marca (nome, ano, grupo, badge "x voltas", "Só os que
+  eu já usei", "Todos os carros da <marca>"). Estado de busca vazio com mensagem e "Limpar a busca". Esc/✕ fecham.
+- Filtro = `{ makerId, carCode }` (`lib/carFilter.ts`, puro e testado), guardado em `localStorage["gt7.carFilter"]` (try/catch via
+  `lib/storage.ts`, validado ao ler). Aplica em: cartões da Início (que passam a falar só dos carros filtrados: melhor volta,
+  voltas, sessões), Todas as sessões (um `?car=` na URL ainda vale), melhores voltas e sessões da página da pista. Chips removíveis
+  (alvo de 44 px) + "Limpar filtros". O select de carro da aba Evolução ficou como estava (texto via `carLabel`).
+- `CarName` (logo pequeno + nome) substitui "Carro 1234" nos cartões, sessões, voltas, comparação, captura e referências.
+  `labels.carLabel` (texto) usa o catálogo, depois o nome informado, depois o código.
+- Painel ao vivo: a tela **Motor** mostra a marca e o nome do carro ao lado de "RPM" (só texto, sem logo; vazio se o carro for
+  desconhecido). `?mock=1` e os gestos não foram tocados.
+- Celular (375 px): grade de 3 colunas (110×112 px por marca), rolagem vertical própria (`overscroll-behavior: contain`), todos os
+  botões do seletor ≥ 44 px (medido), sem overflow horizontal.
+
+### Servidor / MCP
+
+- `GET /api/tracks/overview`: `best`, `cars[]` e `trend` ganham `carName` e `makerName` (null se desconhecido); `carCode` continua.
+- MCP: `carFields(code)` em `format.ts` acrescenta `car_name`/`car_maker` (só quando conhecidos) ao lado de `car` em voltas,
+  sessões, recordes por carro, referências, comparação, evolução e `get_live_state`; o prompt de debrief e o contexto do coach
+  trazem o nome do carro com o `carCode`.
+
+### Testes e verificação
+
+- `shared/src/cars/catalog.test.ts` (integridade: ids únicos, marca existente, nomes não vazios, ≥ 400 carros, busca sem acento,
+  desconhecidos, agrupamento por marca com voltas), `web/src/brands/brandLogos.test.ts` (toda marca tem logo ou monograma, sem logo
+  órfão, iniciais), `web/src/analysis/lib/carFilter.test.ts`, caso novo em `history.test.ts`, `mcp/src/format.test.ts`, caso novo em
+  `server/src/tracks-overview.test.ts`.
+- **Verificado no navegador embutido** (servidor real em outra porta, pasta temporária semeada com 14 sessões de 12 carros reais + 1
+  desconhecido): seletor em duas etapas, abas, busca sem acento ("SÚPRA rz"), estado vazio, escolha de carro, chips, persistência,
+  filtros em Início/Sessões/Pista, nome do carro na página da sessão, em 1280 px e 375 px (no 375 px por medições de DOM, pois as
+  capturas do viewport emulado vinham cortadas).
+- **Não verificado:** a tela Motor com o nome do carro (o `requestAnimationFrame` do painel embutido ficou bloqueado, então o painel
+  ao vivo não renderiza lá; só typecheck), toque real/rolagem fluida em celular de verdade, leitor de tela, o `carCode` real do
+  console, e a aparência de cada um dos 36 logos em tamanho pequeno (vistos só alguns). Nome em português dos carros não existe
+  na fonte (só inglês).

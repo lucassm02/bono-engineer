@@ -5,6 +5,7 @@ import { TIMINGS } from '../config.ts';
 import { CONNECTION_STATE_LABELS, DELTA_REFERENCE_LABELS, VIEW_LABELS } from '../lib/labels.ts';
 import { goToView, setLocked } from '../state/actions.ts';
 import { addNotice, dismissNotice, useUi } from '../state/uiStore.ts';
+import { CaptureStatus, SessionSavedToast } from './CaptureStatus.tsx';
 import { animateStep } from './Carousel.tsx';
 import { ConsoleChip } from './ConsoleLink.tsx';
 
@@ -173,6 +174,8 @@ export function SourceBadge() {
   return (
     <div className="badges" aria-live="polite">
       <ConsoleChip variant="live" />
+      <CaptureStatus variant="live" />
+      <SessionSavedToast />
       {source === 'mock' && (
         <span className="badge badge-demo">
           {auto ? 'Demonstração (sem servidor)' : 'Demonstração'}

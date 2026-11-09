@@ -6,7 +6,7 @@
 
 import type { Gt7Store } from '@gt7/core';
 import { COACH_PERSONA, cornerFocusTask, debriefTask } from '@gt7/mcp';
-import type { Lap, Session, Track } from '@gt7/shared';
+import { carLabel, type Lap, type Session, type Track } from '@gt7/shared';
 import { MAX_TOOL_ITERATIONS } from './config.ts';
 
 /** Stable system prompt (cached prefix: never put per-request data here). */
@@ -66,7 +66,10 @@ export function buildCoachTask(store: Gt7Store, t: CoachTarget): string {
   }
   const ctx: string[] = [];
   if (t.track) ctx.push(`Pista: ${t.track.name} (track_id ${t.track.id}).`);
-  if (t.session) ctx.push(`Sessão: ${t.session.id} (carro ${t.session.carCode}).`);
+  if (t.session)
+    ctx.push(
+      `Sessão: ${t.session.id} (carro ${carLabel(t.session.carCode)} [carCode ${t.session.carCode}]).`,
+    );
   if (t.lap) {
     ctx.push(
       `Volta escolhida pelo piloto: ${t.lap.id} (volta ${t.lap.number}, ${fmtTime(t.lap.timeMs)}${

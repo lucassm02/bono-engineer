@@ -38,6 +38,8 @@ export interface LiveEngineContext {
   /** Persists a closed lap and its trace (trace file writes may complete asynchronously). */
   saveLap(lap: Lap, trace: LapTrace): void;
   getTrack(trackId: Id): Track | null;
+  /** Known tracks (needed by {@link EphemeralContext} to match laps against them). */
+  listTracks?(): Track[];
   getCenterline(trackId: Id): TrackCenterline | null;
   /** Probable track from the start line position + heading (before a full lap is known). */
   findTrackByStart(start: Vec2, headingRad: number): Track | null;
@@ -114,6 +116,10 @@ export class MemoryEngineContext implements LiveEngineContext {
     return this.tracks.get(trackId) ?? null;
   }
 
+  listTracks(): Track[] {
+    return [...this.tracks.values()];
+  }
+
   getCenterline(trackId: Id): TrackCenterline | null {
     return this.centerlines.get(trackId) ?? null;
   }
@@ -166,5 +172,75 @@ export class MemoryEngineContext implements LiveEngineContext {
           (a.carCode === carCode ? 0 : 1) - (b.carCode === carCode ? 0 : 1) || a.timeMs - b.timeMs,
       );
     return refs[0] ? (this.laps.get(refs[0].id) ?? null) : null;
+  }
+}
+
+/**
+ * Context for sessions that must not be saved ("Gravar sessões automaticamente" off): reads go to
+ * the real context, writes stay in memory. Tracks learned during such a session live only here, so
+ * the live view keeps working (delta, sectors, track name) while the database stays untouched.
+ */
+export class EphemeralContext implements LiveEngineContext {
+  readonly tracks = new Map<Id, Track>();
+  readonly centerlines = new Map<Id, TrackCenterline>();
+  readonly laps = new Map<Id, StoredLap>();
+  readonly #base: LiveEngineContext;
+  readonly #newId: () => Id;
+
+  constructor(base: LiveEngineContext, opts: { idFactory?: () => Id } = {}) {
+    this.#base = base;
+    this.#newId = opts.idFactory ?? (() => newId());
+  }
+
+  saveSession(): void {}
+
+  saveLap(lap: Lap, trace: LapTrace): void {
+    this.laps.set(lap.id, { lap: { ...lap }, trace });
+  }
+
+  listTracks(): Track[] {
+    return [...(this.#base.listTracks?.() ?? []), ...this.tracks.values()];
+  }
+
+  getTrack(trackId: Id): Track | null {
+    return this.tracks.get(trackId) ?? this.#base.getTrack(trackId);
+  }
+
+  getCenterline(trackId: Id): TrackCenterline | null {
+    return this.centerlines.get(trackId) ?? this.#base.getCenterline(trackId);
+  }
+
+  findTrackByStart(start: Vec2, headingRad: number): Track | null {
+    return (
+      this.#base.findTrackByStart(start, headingRad) ??
+      matchTrackByStart(start, headingRad, [...this.tracks.values()])
+    );
+  }
+
+  identifyTrack(input: IdentifyTrackInput): IdentifyResult {
+    return identifyOrCreateTrack(
+      {
+        listTracks: () => this.listTracks(),
+        insertTrack: (t) => this.tracks.set(t.id, t),
+        saveCenterline: (c) => this.centerlines.set(c.trackId, c),
+      },
+      { ...input, newId: this.#newId },
+    );
+  }
+
+  getTrackRecords(trackId: Id, carCode: number, sectorCount: number): TrackRecords {
+    return this.#base.getTrackRecords(trackId, carCode, sectorCount);
+  }
+
+  loadLap(lapId: Id): StoredLap | null {
+    return this.laps.get(lapId) ?? this.#base.loadLap(lapId);
+  }
+
+  loadPersonalBest(trackId: Id, carCode: number): StoredLap | null {
+    return this.#base.loadPersonalBest(trackId, carCode);
+  }
+
+  loadBestReference(trackId: Id, carCode: number): StoredLap | null {
+    return this.#base.loadBestReference(trackId, carCode);
   }
 }

@@ -1,13 +1,14 @@
 /** pt-BR labels of the analysis area (codes from the server/core → text). */
 
-import type {
-  CaptureState,
-  ComparisonReferenceKind,
-  CornerKind,
-  FindingConfidence,
-  LapFlag,
-  PacketFormat,
-  SessionMode,
+import {
+  type CaptureState,
+  type ComparisonReferenceKind,
+  type CornerKind,
+  carName,
+  type FindingConfidence,
+  type LapFlag,
+  type PacketFormat,
+  type SessionMode,
 } from '@gt7/shared';
 
 export const SESSION_MODE_LABELS: Record<SessionMode, string> = {
@@ -116,11 +117,13 @@ export function coachToolLabel(name: string): string {
   return COACH_TOOL_LABELS[name] ?? `Usando ${name}`;
 }
 
-/** No car name database yet: the code is all we know (reference metadata may carry a name). */
+/**
+ * Car as text: the catalogue name; else the name given by the caller (reference metadata); else
+ * "Carro #1234" (cars missing from the catalogue, e.g. new DLC, still work everywhere).
+ */
 export function carLabel(carCode: number | null | undefined, name?: string | null): string {
-  if (name) return name;
-  if (carCode === null || carCode === undefined) return '—';
-  return `Carro #${carCode}`;
+  if (carCode === null || carCode === undefined) return name || '—';
+  return carName(carCode) ?? (name || `Carro #${carCode}`);
 }
 
 const dateFmt = new Intl.DateTimeFormat('pt-BR', {

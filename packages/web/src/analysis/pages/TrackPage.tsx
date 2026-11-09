@@ -19,6 +19,8 @@ import { formatDelta, formatLapTime } from '../../lib/format.ts';
 import { navigate, type Route, routes } from '../../lib/route.ts';
 import { addNotice } from '../../state/uiStore.ts';
 import { api } from '../api.ts';
+import { CarName } from '../components/CarName.tsx';
+import { CarFilterChips, CarFilterField } from '../components/CarPicker.tsx';
 import { CompareMap } from '../components/CompareMap.tsx';
 import { LapQuickActions } from '../components/LapActions.tsx';
 import { MiniChart, type MiniSeries } from '../components/MiniChart.tsx';
@@ -33,6 +35,7 @@ import {
   Tag,
   useTitle,
 } from '../components/ui.tsx';
+import { carMatchesFilter, isCarFiltering, lapsPerCar } from '../lib/carFilter.ts';
 import { cornerLabel, fixed, signed } from '../lib/chartData.ts';
 import {
   dayHeading,
@@ -43,6 +46,7 @@ import {
   plural,
 } from '../lib/history.ts';
 import { CORNER_KIND_LABELS, carLabel, formatDateTime, formatDay } from '../lib/labels.ts';
+import { useCarFilter } from '../lib/useCarFilter.ts';
 import { useFetch } from '../useFetch.ts';
 
 const NO_MAP: never[] = [];
@@ -303,7 +307,7 @@ function EvolutionSection({ evo, corners }: { evo: EvolutionReport; corners: Map
   return (
     <>
       <p className="dim a-small">
-        {carLabel(evo.carCode)} · base:{' '}
+        <CarName carCode={evo.carCode} logoSize={18} /> · base:{' '}
         {evo.baseline
           ? `${evo.baseline.kind === 'reference' ? 'referência top' : 'melhor pessoal'} ${formatLapTime(evo.baseline.timeMs)}`
           : 'sem base'}{' '}
@@ -394,8 +398,15 @@ function BestLapsTab({ trackId, hasTopReference }: { trackId: string; hasTopRefe
       limit: 1000,
     }),
   );
+  const [carFilter, setCarFilter] = useCarFilter();
+  const usage = useMemo(
+    () => lapsPerCar((laps.data ?? []).filter((l) => !l.flags.includes('replay'))),
+    [laps.data],
+  );
   const groups = useMemo(() => {
-    const own = (laps.data ?? []).filter((l) => !l.flags.includes('replay'));
+    const own = (laps.data ?? []).filter(
+      (l) => !l.flags.includes('replay') && carMatchesFilter(carFilter, l.carCode),
+    );
     const byCar = new Map<number, Lap[]>();
     for (const l of own) {
       const list = byCar.get(l.carCode);
@@ -406,11 +417,12 @@ function BestLapsTab({ trackId, hasTopReference }: { trackId: string; hasTopRefe
     return [...byCar.entries()]
       .map(([carCode, list]) => ({ carCode, laps: list.sort((a, b) => a.timeMs - b.timeMs) }))
       .sort((a, b) => lastAt(b.laps) - lastAt(a.laps));
-  }, [laps.data]);
+  }, [laps.data, carFilter]);
 
   if (laps.error && !laps.data) return <ErrorBox error={laps.error} onRetry={laps.reload} />;
   if (!laps.data) return <Loading />;
-  if (groups.length === 0) {
+  const filtering = isCarFiltering(carFilter);
+  if (groups.length === 0 && !filtering) {
     return (
       <Empty>
         <p>Ainda não há voltas válidas nesta pista.</p>
@@ -419,63 +431,82 @@ function BestLapsTab({ trackId, hasTopReference }: { trackId: string; hasTopRefe
     );
   }
   return (
-    <div className="a-bestgrid">
-      {groups.map((g) => {
-        const pb = g.laps[0]!;
-        return (
-          <Card
-            key={g.carCode}
-            title={carLabel(g.carCode)}
-            actions={
-              <span className="dim a-small">
-                Melhor <strong className="num a-pbtime">{formatLapTime(pb.timeMs)}</strong>
-              </span>
-            }
-          >
-            <ol className="a-toplaps">
-              {g.laps.slice(0, TOP_PER_CAR).map((l, i) => (
-                <li key={l.id}>
-                  <div className="a-toplap-main">
-                    <span className="a-toplap-pos num">{i + 1}º</span>
-                    <span className="a-toplap-time num" data-best={i === 0 ? '1' : '0'}>
-                      {formatLapTime(l.timeMs)}
-                    </span>
-                    <a className="dim a-small" href={routes.session(l.sessionId)}>
-                      {formatDateTime(l.startedAt)} · volta {l.number}
-                    </a>
-                    {l.isReference && <Tag tone="ref">ref</Tag>}
-                  </div>
-                  <LapQuickActions
-                    lap={l}
-                    pbLapId={pb.id}
-                    hasTopReference={hasTopReference}
-                    onChanged={() => laps.reload()}
-                    onDeleted={() => laps.reload()}
-                  />
-                </li>
-              ))}
-            </ol>
-            {g.laps.length > TOP_PER_CAR && (
-              <p className="dim a-small">
-                + {g.laps.length - TOP_PER_CAR} voltas válidas com este carro.
-              </p>
-            )}
-          </Card>
-        );
-      })}
-    </div>
+    <>
+      {(usage.length > 1 || filtering) && (
+        <>
+          <div className="a-filters">
+            <CarFilterField usage={usage} value={carFilter} onChange={setCarFilter} />
+          </div>
+          {filtering && (
+            <div className="cf-chips">
+              <CarFilterChips value={carFilter} onChange={setCarFilter} />
+            </div>
+          )}
+        </>
+      )}
+      {groups.length === 0 && (
+        <Empty>
+          <p>Nenhuma volta válida com esse carro nesta pista.</p>
+        </Empty>
+      )}
+      <div className="a-bestgrid">
+        {groups.map((g) => {
+          const pb = g.laps[0]!;
+          return (
+            <Card
+              key={g.carCode}
+              title={<CarName carCode={g.carCode} logoSize={24} className="carname-wrap" />}
+              actions={
+                <span className="dim a-small">
+                  Melhor <strong className="num a-pbtime">{formatLapTime(pb.timeMs)}</strong>
+                </span>
+              }
+            >
+              <ol className="a-toplaps">
+                {g.laps.slice(0, TOP_PER_CAR).map((l, i) => (
+                  <li key={l.id}>
+                    <div className="a-toplap-main">
+                      <span className="a-toplap-pos num">{i + 1}º</span>
+                      <span className="a-toplap-time num" data-best={i === 0 ? '1' : '0'}>
+                        {formatLapTime(l.timeMs)}
+                      </span>
+                      <a className="dim a-small" href={routes.session(l.sessionId)}>
+                        {formatDateTime(l.startedAt)} · volta {l.number}
+                      </a>
+                      {l.isReference && <Tag tone="ref">ref</Tag>}
+                    </div>
+                    <LapQuickActions
+                      lap={l}
+                      pbLapId={pb.id}
+                      hasTopReference={hasTopReference}
+                      onChanged={() => laps.reload()}
+                      onDeleted={() => laps.reload()}
+                    />
+                  </li>
+                ))}
+              </ol>
+              {g.laps.length > TOP_PER_CAR && (
+                <p className="dim a-small">
+                  + {g.laps.length - TOP_PER_CAR} voltas válidas com este carro.
+                </p>
+              )}
+            </Card>
+          );
+        })}
+      </div>
+    </>
   );
 }
 
 function SessionsTab({ sessions }: { sessions: Session[] }) {
-  const [car, setCar] = useState('');
-  const cars = useMemo(
-    () => [...new Set(sessions.map((s) => s.carCode))].sort((a, b) => a - b),
+  const [carFilter, setCarFilter] = useCarFilter();
+  const usage = useMemo(
+    () => lapsPerCar(sessions.map((s) => ({ carCode: s.carCode, laps: s.lapCount }))),
     [sessions],
   );
   const groups = useMemo(
-    () => groupSessionsByDay(sessions.filter((s) => !car || String(s.carCode) === car)),
-    [sessions, car],
+    () => groupSessionsByDay(sessions.filter((s) => carMatchesFilter(carFilter, s.carCode))),
+    [sessions, carFilter],
   );
   if (sessions.length === 0) {
     return (
@@ -486,20 +517,22 @@ function SessionsTab({ sessions }: { sessions: Session[] }) {
   }
   return (
     <>
-      {cars.length > 1 && (
-        <div className="a-filters">
-          <label>
-            Carro
-            <select value={car} onChange={(e) => setCar(e.target.value)}>
-              <option value="">Todos</option>
-              {cars.map((c) => (
-                <option key={c} value={String(c)}>
-                  {carLabel(c)}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
+      {(usage.length > 1 || isCarFiltering(carFilter)) && (
+        <>
+          <div className="a-filters">
+            <CarFilterField usage={usage} value={carFilter} onChange={setCarFilter} />
+          </div>
+          {isCarFiltering(carFilter) && (
+            <div className="cf-chips">
+              <CarFilterChips value={carFilter} onChange={setCarFilter} />
+            </div>
+          )}
+        </>
+      )}
+      {groups.length === 0 && (
+        <Empty>
+          <p>Nenhuma sessão com esse carro nesta pista.</p>
+        </Empty>
       )}
       {groups.map((g) => (
         <section key={g.day} className="a-daygroup">
@@ -512,7 +545,9 @@ function SessionsTab({ sessions }: { sessions: Session[] }) {
                   <a className="a-sessionrow" href={routes.session(s.id)}>
                     <span className="a-sessionrow-time num">{formatClock(s.startedAt)}</span>
                     <span className="a-sessionrow-main">
-                      <strong>{carLabel(s.carCode)}</strong>
+                      <strong>
+                        <CarName carCode={s.carCode} logoSize={20} />
+                      </strong>
                       <span className="dim a-small">
                         {plural(s.lapCount, 'volta', 'voltas')}
                         {dur ? ` · ${dur}` : ''}
@@ -825,7 +860,9 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
                         <td>
                           <Tag tone="ref">ref</Tag> {r.driverName ?? 'sem nome'}
                         </td>
-                        <td>{carLabel(r.carCode)}</td>
+                        <td>
+                          <CarName carCode={r.carCode} />
+                        </td>
                         <td className="num num-col">{formatLapTime(r.timeMs)}</td>
                         <td>
                           {mine && (

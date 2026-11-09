@@ -6,6 +6,7 @@
  */
 
 import { type ClientMessage, type ServerMessage, WS_PATH, WS_PROTOCOL_VERSION } from '@gt7/shared';
+import { showSessionSaved } from '../components/CaptureStatus.tsx';
 import { mockConsoleConnection, parseMockConn } from '../lib/consoleLink.ts';
 import { reconcileProfiles } from '../lib/profile.ts';
 import { live } from '../live/liveStore.ts';
@@ -42,6 +43,9 @@ function handleServerMessage(msg: ServerMessage): void {
     case 'sessionChanged':
       useUi.setState({ session: msg.session });
       setSessionId(msg.session?.id ?? null, true);
+      break;
+    case 'sessionSaved':
+      showSessionSaved(msg);
       break;
     case 'status':
       useUi.setState({ serverStatus: msg.status });

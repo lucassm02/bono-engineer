@@ -4,6 +4,7 @@
  */
 
 import type { Session } from '@gt7/shared';
+import { carMatchesFilter, isCarFiltering } from './carFilter.ts';
 
 // ---------------------------------------------------------------------------------------------
 // API types (kept in sync by hand with packages/server/src/tracks-catalog.ts)
@@ -14,11 +15,16 @@ export interface OverviewBest {
   lapId: string;
   sessionId: string;
   carCode: number;
+  /** Catalogue name/maker resolved by the server (absent for cars outside the catalogue). */
+  carName?: string | null;
+  makerName?: string | null;
   at: number;
 }
 
 export interface OverviewCar {
   carCode: number;
+  carName?: string | null;
+  makerName?: string | null;
   laps: number;
   sessions: number;
   bestMs: number | null;
@@ -81,6 +87,8 @@ export interface HomeFilter {
   query: string;
   /** Only tracks driven with this car (null = all). */
   carCode: number | null;
+  /** Only tracks driven with a car of this maker (null = all; see carFilter.ts). */
+  makerId?: number | null;
   /** Hide tracks coming from the demo console. */
   hideDemo: boolean;
 }
@@ -102,8 +110,10 @@ export function filterTracks(
 ): TrackOverview[] {
   if (isDemo && f.hideDemo) return [];
   const q = normalizeText(f.query);
+  const cf = { makerId: f.makerId ?? null, carCode: f.carCode };
+  const carFilter = isCarFiltering(cf) ? cf : null;
   return tracks.filter((t) => {
-    if (f.carCode !== null && !t.cars.some((c) => c.carCode === f.carCode)) return false;
+    if (carFilter && !t.cars.some((c) => carMatchesFilter(carFilter, c.carCode))) return false;
     if (q && !normalizeText(fullTrackName(t)).includes(q)) return false;
     return true;
   });

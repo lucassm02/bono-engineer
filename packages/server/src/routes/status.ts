@@ -33,6 +33,7 @@ export function currentSettings(ctx: RouteContext): ApiSettings {
     liveFormatAuto: s.liveFormatAuto,
     captureFormat: s.captureFormat,
     record: s.record,
+    autoCapture: s.autoCapture,
     deltaReference: { kind: ref.kind, lapId: ref.lapId },
   };
 }
@@ -41,6 +42,7 @@ export function apiStatus(ctx: RouteContext): ApiStatus {
   return {
     ...ctx.hub.status(),
     consoleConnection: ctx.runtime.getConnection(),
+    sessionCapture: ctx.runtime.getSessionCapture(),
     firewall: ctx.firewall.status,
     settings: currentSettings(ctx),
     running: ctx.runtime.running,
@@ -72,6 +74,7 @@ export function statusRoutes(app: FastifyInstance, ctx: RouteContext): void {
       'liveFormatAuto',
       'captureFormat',
       'record',
+      'autoCapture',
       'deltaReference',
     ];
     const unknown = Object.keys(b).filter((k) => !known.includes(k));
@@ -89,6 +92,7 @@ export function statusRoutes(app: FastifyInstance, ctx: RouteContext): void {
     const liveFormatAuto = optBoolean(b, 'liveFormatAuto', 'liveFormatAuto');
     const captureFormat = parseFormat(b, 'captureFormat', 'captureFormat');
     const record = optBoolean(b, 'record', 'record');
+    const autoCapture = optBoolean(b, 'autoCapture', 'autoCapture');
     let ref: { kind: DeltaReferenceKind; lapId: string | null } | undefined;
     if (b.deltaReference !== undefined) {
       const r = bodyObject(b.deltaReference);
@@ -108,6 +112,7 @@ export function statusRoutes(app: FastifyInstance, ctx: RouteContext): void {
     else if (consoleIp !== undefined) runtime.setConsoleIp(consoleIp);
     if (captureFormat !== undefined) runtime.setCaptureFormat(captureFormat);
     if (record !== undefined) runtime.setRecording(record);
+    if (autoCapture !== undefined) runtime.setAutoCapture(autoCapture);
     if (ref) runtime.setDeltaReference(ref.kind, ref.lapId);
     const formatFailed = (e: Error) =>
       hub.notice({

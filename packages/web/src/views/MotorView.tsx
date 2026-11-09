@@ -1,3 +1,4 @@
+import { carName, makerOfCar } from '@gt7/shared';
 import { useRef } from 'react';
 import { setAttr, setStyle, setText } from '../lib/dom.ts';
 import { clamp, formatFixed, formatGear, formatInt } from '../lib/format.ts';
@@ -52,6 +53,9 @@ export function MotorView() {
       'data-stage',
       limiter ? 'limit' : lit >= 8 ? 'red' : lit >= 4 ? 'amber' : 'normal',
     );
+    // Car name from the catalogue (nothing is shown for cars it does not know).
+    const known = carName(f.car.carCode);
+    setText(e.carname, known ? `${makerOfCar(f.car.carCode)?.name ?? ''} ${known}`.trim() : '');
     setText(e.rpm, formatInt(rpm));
     setText(e.gear, formatGear(f.car.gear));
     const sug = f.car.suggestedGear;
@@ -76,6 +80,7 @@ export function MotorView() {
       <div className="motor-rpm" ref={set('rpmBox')} data-stage="normal">
         <div className="motor-rpm-head">
           <span className="readout-label">RPM</span>
+          <span className="readout-label motor-carname" ref={set('carname')} />
           <span className="motor-rpm-value num" ref={set('rpm')}>
             –
           </span>

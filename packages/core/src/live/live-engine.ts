@@ -13,6 +13,16 @@
  *   (windowed nearest-point search) so the delta does not drift.
  * - Sectors (track gates, default 3 equal), live delta vs a selectable reference, delta rate,
  *   predicted lap, fuel per lap, slip, g-forces, next-corner hints.
+ *
+ * Session policy (automatic capture, no "start" button):
+ * - A session opens by itself at the first packet with the car on a track and not paused.
+ * - It stays open through pauses, menus, garage, restarts and short silences (same car, same
+ *   track): it only ends after `sessionIdleEndMs` (10 min) of the car being out of the track /
+ *   paused / silent, or at once on a car change, a track change (found by the lap geometry),
+ *   a replay-mode switch or `endSession()`. `tick(now)` closes it when the console goes quiet.
+ * - The lap in progress when the session opens (the app was opened mid-lap) is never stored: only
+ *   laps timed from the start line are, so it cannot touch best lap, averages or consistency.
+ * - With persistence off (`setPersistence(false)`) the session lives in memory only.
  */
 
 import { EventEmitter } from 'node:events';
@@ -45,7 +55,12 @@ import { centerlinePolyline, lapPolyline } from '../track/fingerprint.ts';
 import { newId } from '../util/ids.ts';
 import { clamp, emaAlpha } from '../util/math.ts';
 import { alignToLine, cumulativeDistance, type Polyline } from '../util/polyline.ts';
-import { type LiveEngineContext, MemoryEngineContext, type TrackRecords } from './context.ts';
+import {
+  EphemeralContext,
+  type LiveEngineContext,
+  MemoryEngineContext,
+  type TrackRecords,
+} from './context.ts';
 import {
   type CornerHintProvider,
   type CornerHintTargets,
@@ -59,6 +74,12 @@ export const NOMINAL_MS_PER_PACKET = 1000 / 60;
 const RESET_GAP = 600;
 /** A packet up to this early (ms) still counts as due for the next throttled frame (jitter). */
 const FRAME_DUE_TOLERANCE_MS = 1;
+/** Out of the track at least this long (loading, menu): the next lap start re-checks the track. */
+const TRACK_RECHECK_GAP_MS = 2000;
+/** Silence at least this long also makes the next lap re-check the track. */
+const TRACK_RECHECK_SILENCE_MS = 5000;
+/** A single step of the "time on track" clock never counts more than this. */
+const MAX_TRACK_TIME_STEP_MS = 1000;
 /** Flags that make a lap invalid. */
 const INVALIDATING: readonly LapFlag[] = ['paused', 'incompleteData', 'discontinuity', 'offTrack'];
 
@@ -74,7 +95,10 @@ export interface LiveEngineOptions {
   maxGapPackets?: number;
   /** Lost packet ratio above this flags the lap `incompleteData` (default 0.02). */
   maxLossRatio?: number;
-  /** Not on track / no packets for this long ends the session (default 60 s). */
+  /**
+   * Out of the track (menu, garage, loading), paused or without packets for this long ends the
+   * session (default 10 min). Shorter breaks (restart, back to the pits, Wi-Fi blip) keep it.
+   */
   sessionIdleEndMs?: number;
   /** Packets to wait for the game's lastLapMs after a lap change (default 60). */
   lapCloseWaitPackets?: number;
@@ -117,6 +141,39 @@ export interface LapDiscardedInfo {
   reason: 'outLap' | 'partial' | 'restart' | 'leftTrack' | 'sessionEnd' | 'streamReset';
 }
 
+/** Why a session was closed. */
+export type SessionEndReason =
+  /** `endSession()` (shutdown, tools). */
+  | 'manual'
+  /** No packets for `sessionIdleEndMs` (PS5 in rest mode, game closed, Wi-Fi down). */
+  | 'silence'
+  /** Out of the track or paused for `sessionIdleEndMs`. */
+  | 'offTrack'
+  | 'carChange'
+  /** The next laps are on another track. */
+  | 'trackChange'
+  /** Replay mode or the "save sessions" switch changed. */
+  | 'mode';
+
+export interface SessionEndInfo {
+  reason: SessionEndReason;
+  /** The session was written to the store (false for the live-only mode). */
+  persisted: boolean;
+}
+
+/** Snapshot of what the engine is doing, for the capture status shown in the UI. */
+export interface EngineCaptureInfo {
+  session: Session | null;
+  /** The open session (or the next one) is written to the store. */
+  persisting: boolean;
+  /** Time actually driven in the open session (pauses and time off track excluded). */
+  trackTimeMs: number;
+  /** Last packet: car on a track (not loading). */
+  onTrack: boolean;
+  paused: boolean;
+  replay: boolean;
+}
+
 export interface LiveEngineEvents {
   frame: [LiveFrame];
   lapStarted: [LapStartedInfo];
@@ -124,7 +181,7 @@ export interface LiveEngineEvents {
   lapDiscarded: [LapDiscardedInfo];
   sessionStarted: [Session];
   sessionUpdated: [Session];
-  sessionEnded: [Session];
+  sessionEnded: [Session, SessionEndInfo];
   trackChanged: [LiveTrackInfo | null];
   stateChanged: [ConnectionState, ConnectionState];
 }
@@ -219,6 +276,15 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   readonly #newId: () => Id;
   readonly #hints: CornerHintProvider;
 
+  /** Context of the open session (a throw-away overlay while sessions are not being saved). */
+  get #ctx(): LiveEngineContext {
+    if (this.#session && this.#ephemeral) {
+      this.#eph ??= new EphemeralContext(this.context, { idFactory: this.#newId });
+      return this.#eph;
+    }
+    return this.context;
+  }
+
   #seq = 0;
   /** Due time (receivedAt ms) of the next throttled frame (accumulator: += interval). */
   #nextFrameT = Number.NEGATIVE_INFINITY;
@@ -231,7 +297,26 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   #link: LiveFrame['link'] | null = null;
   #replayMode = false;
   #state: ConnectionState = 'disconnected';
-  #notOnTrackSince: number | null = null;
+  /** Since when the car is out of the track or paused (null while it is driving). */
+  #inactiveSince: number | null = null;
+  /** Since when the car is out of the track (null while on it; pauses do not count). */
+  #offTrackSince: number | null = null;
+  /** Epoch ms of the last packet that had the car on a track (open session only). */
+  #lastActiveAt: number | null = null;
+  #onTrackNow = false;
+  #pausedNow = false;
+  /** receivedAt of the previous running packet, for the "time on track" clock. */
+  #runningSince: number | null = null;
+  #trackTimeMs = 0;
+  /** The car came back after a break: the next lap must prove it is still the same track. */
+  #needTrackCheck = false;
+  #lastLapDoneAt: number | null = null;
+  /** Last on-track packet before the break that raised `#needTrackCheck`. */
+  #activeBeforeBreak: number | null = null;
+  #persist = true;
+  /** The open session is not written to the store. */
+  #ephemeral = false;
+  #eph: EphemeralContext | null = null;
   #msPerPacket = NOMINAL_MS_PER_PACKET;
   #calGameMs = 0;
   #calPackets = 0;
@@ -274,7 +359,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       deltaReference: opts.deltaReference ?? 'personalBest',
       maxGapPackets: opts.maxGapPackets ?? 15,
       maxLossRatio: opts.maxLossRatio ?? 0.02,
-      sessionIdleEndMs: opts.sessionIdleEndMs ?? 60_000,
+      sessionIdleEndMs: opts.sessionIdleEndMs ?? 600_000,
       lapCloseWaitPackets: opts.lapCloseWaitPackets ?? 60,
       maxLateralM: opts.maxLateralM ?? 25,
       fuelAvgLaps: opts.fuelAvgLaps ?? 3,
@@ -362,13 +447,56 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     };
   }
 
+  /** The open session (or, without one, the next) is written to the store. */
+  get persisting(): boolean {
+    return this.#session ? !this.#ephemeral : this.#persist || this.#replayMode;
+  }
+
+  /** What the capture is doing right now (for the status shown in the UI). */
+  get captureInfo(): EngineCaptureInfo {
+    return {
+      session: this.session,
+      persisting: this.persisting,
+      trackTimeMs: Math.round(this.#trackTimeMs),
+      onTrack: this.#onTrackNow,
+      paused: this.#pausedNow,
+      replay: this.#replayMode,
+    };
+  }
+
   /** Replay (reference capture) mode. Changing it ends the current session. */
   setReplayMode(on: boolean): void {
     if (on === this.#replayMode) return;
     const before = this.#composeState();
-    this.endSession();
+    this.endSession('mode');
     this.#replayMode = on;
     this.#emitStateIfChanged(before);
+  }
+
+  /**
+   * Turns saving on/off. Off = live view only: sessions, laps and tracks learned from now on live
+   * in memory and nothing is written (reference captures, which the user starts explicitly, are
+   * still saved). Changing it ends the open session.
+   */
+  setPersistence(on: boolean): void {
+    if (on === this.#persist) return;
+    this.#persist = on;
+    if (this.#session && !this.#replayMode) this.endSession('mode');
+  }
+
+  /**
+   * Time-based checks that need no packet: closes the session when the console has been silent, or
+   * the car out of the track / paused, for `sessionIdleEndMs`. Call it every few seconds.
+   */
+  tick(nowMs: number): void {
+    const s = this.#session;
+    if (!s) return;
+    const idle = this.options.sessionIdleEndMs;
+    if (this.#lastReceivedAt !== null && nowMs - this.#lastReceivedAt > idle) {
+      this.endSession('silence', this.#lastReceivedAt);
+    } else if (this.#inactiveSince !== null && nowMs - this.#inactiveSince > idle) {
+      this.endSession('offTrack', this.#lastActiveAt ?? this.#inactiveSince);
+    }
   }
 
   /** Selects the delta reference. `lapId` picks a specific lap for 'reference'. */
@@ -382,14 +510,14 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   annotateSession(patch: Partial<Pick<Session, 'recordingFile' | 'notes'>>): void {
     if (!this.#session) return;
     Object.assign(this.#session, patch);
-    this.context.saveSession({ ...this.#session });
+    this.#ctx.saveSession({ ...this.#session });
     this.emit('sessionUpdated', { ...this.#session });
   }
 
   /** Re-reads the active track from the context (after renames, corner/sector edits). */
   refreshTrack(): void {
     if (!this.#track) return;
-    const t = this.context.getTrack(this.#track.id);
+    const t = this.#ctx.getTrack(this.#track.id);
     if (!t) return;
     this.#track = t;
     this.#hintCache.clear();
@@ -397,8 +525,11 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     this.emit('trackChanged', this.trackInfo);
   }
 
-  /** Ends the active session (discarding an unfinished lap). */
-  endSession(): void {
+  /**
+   * Ends the active session (discarding an unfinished lap). `endedAt` defaults to the last
+   * packet time.
+   */
+  endSession(reason: SessionEndReason = 'manual', endedAt?: number): void {
     if (this.#pending) this.#finalize(this.#pending, null);
     const s = this.#session;
     if (!s) return;
@@ -410,17 +541,35 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       });
     }
     this.#lap = null;
-    s.endedAt = this.#lastReceivedAt ?? Date.now();
-    this.context.saveSession({ ...s });
-    this.#session = null;
     this.#lastLapCount = null;
+    this.#finishSession(reason, endedAt);
+    this.#clearActiveTrack();
+  }
+
+  /** Closes the open session record and resets everything scoped to it (not the lap or track). */
+  #finishSession(reason: SessionEndReason, endedAt?: number): void {
+    const s = this.#session;
+    if (!s) return;
+    s.endedAt = Math.max(s.startedAt, endedAt ?? this.#lastReceivedAt ?? Date.now());
+    s.trackTimeMs = Math.round(this.#trackTimeMs);
+    const persisted = !this.#ephemeral;
+    this.#ctx.saveSession({ ...s });
+    this.#session = null;
+    this.#ephemeral = false;
     this.#sessionBestRef = null;
     this.#sessionBestLapMs = null;
     this.#sessionBestSectors = [];
     this.#lastLapMs = null;
     this.#fuelHistory = [];
     this.#cornerPass.clear();
-    this.emit('sessionEnded', { ...s });
+    this.#trackTimeMs = 0;
+    this.#runningSince = null;
+    this.#lastLapDoneAt = null;
+    this.emit('sessionEnded', { ...s }, { reason, persisted });
+  }
+
+  /** Forgets the active track (not on a known one any more); no-op without one. */
+  #clearActiveTrack(): void {
     if (this.#track) {
       this.#track = null;
       this.#trackConfidence = 'unknown';
@@ -447,8 +596,13 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       if (diff > RESET_GAP || diff <= -RESET_GAP) streamReset = true;
       else dPk = diff;
     }
-    const recvGap = this.#lastReceivedAt === null ? 0 : receivedAtMs - this.#lastReceivedAt;
-    if (this.#session && recvGap > this.options.sessionIdleEndMs) this.endSession();
+    const prevReceivedAt = this.#lastReceivedAt;
+    const recvGap = prevReceivedAt === null ? 0 : receivedAtMs - prevReceivedAt;
+    const idleEnd = this.options.sessionIdleEndMs;
+    // the console was silent for too long (PS5 in rest mode, game closed, Wi-Fi down)
+    if (this.#session && prevReceivedAt !== null && recvGap > idleEnd) {
+      this.endSession('silence', prevReceivedAt);
+    }
     this.#lastPacketId = p.packetId;
     this.#lastReceivedAt = receivedAtMs;
     this.#received++;
@@ -456,21 +610,48 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     const f = decodeFlags(p.flags);
     const onTrack = f.carOnTrack && !f.loadingOrProcessing;
     const paused = f.paused;
+    this.#onTrackNow = onTrack;
+    this.#pausedNow = paused;
     this.#state = !onTrack ? 'menu' : paused ? 'paused' : this.#replayMode ? 'replay' : 'onTrack';
 
-    if (onTrack) this.#notOnTrackSince = null;
-    else this.#notOnTrackSince ??= receivedAtMs;
+    // out of the track / paused for too long (checked before the clocks below are reset)
     if (
       this.#session &&
-      this.#notOnTrackSince !== null &&
-      receivedAtMs - this.#notOnTrackSince > this.options.sessionIdleEndMs
+      this.#inactiveSince !== null &&
+      receivedAtMs - this.#inactiveSince > idleEnd
     ) {
-      this.endSession();
+      this.endSession('offTrack', this.#lastActiveAt ?? this.#inactiveSince);
     }
-    if (this.#session && onTrack && !paused && p.carCode !== this.#session.carCode) {
-      this.endSession();
+    // a break (loading screen, back to the garage, silence, stream reset) means the track may have
+    // changed: the next lap start has to confirm it
+    const offFor = this.#offTrackSince === null ? 0 : receivedAtMs - this.#offTrackSince;
+    if (
+      onTrack &&
+      (offFor >= TRACK_RECHECK_GAP_MS || recvGap >= TRACK_RECHECK_SILENCE_MS || streamReset)
+    ) {
+      if (!this.#needTrackCheck) this.#activeBeforeBreak = this.#lastActiveAt;
+      this.#needTrackCheck = true;
     }
-    if (!this.#session && onTrack && !paused) this.#startSession(p, receivedAtMs);
+    this.#offTrackSince = onTrack ? null : (this.#offTrackSince ?? receivedAtMs);
+    const running = onTrack && !paused;
+    this.#inactiveSince = running ? null : (this.#inactiveSince ?? receivedAtMs);
+
+    if (this.#session && running && p.carCode !== this.#session.carCode) {
+      this.endSession('carChange', this.#lastActiveAt ?? undefined);
+    }
+    if (!this.#session && running) this.#startSession(p, receivedAtMs);
+    if (this.#session) {
+      if (onTrack) this.#lastActiveAt = receivedAtMs;
+      // "time on track" clock: only consecutive running packets count
+      if (running) {
+        if (this.#runningSince !== null) {
+          this.#trackTimeMs += clamp(receivedAtMs - this.#runningSince, 0, MAX_TRACK_TIME_STEP_MS);
+        }
+        this.#runningSince = receivedAtMs;
+      } else {
+        this.#runningSince = null;
+      }
+    }
 
     if (streamReset) this.#gforce.reset();
     this.#g = this.#gforce.update(p, (dPk * this.#msPerPacket) / 1000);
@@ -527,26 +708,51 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     if (now !== before) this.emit('stateChanged', now, before);
   }
 
+  /** Opens a session (and the lap bookkeeping) at a packet with the car running on a track. */
   #startSession(p: TelemetryPacket, at: number): void {
+    this.#lastLapCount = null;
+    this.#lap = null;
+    this.#needTrackCheck = false;
+    this.#openSession(p.carCode, p.format, at);
+  }
+
+  #openSession(carCode: number, format: Session['format'], at: number): void {
     const s: Session = {
       id: this.#newId(),
       trackId: null,
-      carCode: p.carCode,
+      carCode,
       startedAt: at,
       endedAt: null,
-      format: p.format,
+      format,
       mode: this.#replayMode ? 'replayCapture' : 'live',
       lapCount: 0,
       bestLapMs: null,
       recordingFile: null,
       notes: null,
+      trackTimeMs: 0,
     };
+    this.#ephemeral = !this.#persist && !this.#replayMode;
     this.#session = s;
-    this.#lastLapCount = null;
-    this.#lap = null;
-    this.context.saveSession({ ...s });
+    this.#trackTimeMs = 0;
+    this.#runningSince = null;
+    this.#lastLapDoneAt = null;
+    this.#lastActiveAt = at;
+    this.#ctx.saveSession({ ...s });
     this.emit('sessionStarted', { ...s });
     this.#reloadReference();
+  }
+
+  /**
+   * Closes the open session and opens a new one for the same car, keeping the lap in progress and
+   * the active track (used when the laps being driven belong to another track).
+   */
+  #switchSession(reason: SessionEndReason, at: number, endedAt: number): void {
+    const cur = this.#session;
+    if (!cur) return;
+    if (this.#pending) this.#finalize(this.#pending, null);
+    const { carCode, format } = cur;
+    this.#finishSession(reason, endedAt);
+    this.#openSession(carCode, format, at);
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -622,13 +828,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
         const lap = this.#newLap(p, at, lc >= 1);
         this.#lap = lap;
         if (lap.timed && this.#session) {
-          if (!this.#track) {
-            const t = this.context.findTrackByStart(
-              { x: p.position.x, z: p.position.z },
-              headingOf(p),
-            );
-            if (t) this.#setActiveTrack(t, 'probable');
-          }
+          this.#checkTrackAtLapStart(p, at);
           this.emit('lapStarted', {
             sessionId: this.#session.id,
             lapNumber: lc,
@@ -672,6 +872,35 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     // receive gap with few packetIds elapsed: the game was frozen (paused without the flag)
     if (recvGap > 1000 && dPk * this.#msPerPacket < recvGap * 0.5) lap.flags.add('paused');
     this.#sample(lap, p, dPk, paused);
+  }
+
+  /**
+   * At the start line of a timed lap: finds the track from the line position when none is active
+   * yet or when the car came back from a break (it may be on another track now). A different
+   * known track closes the session and opens a new one; an unknown start line drops the active
+   * track so the lap is identified from its geometry when it closes.
+   */
+  #checkTrackAtLapStart(p: TelemetryPacket, at: number): void {
+    const session = this.#session;
+    if (!session || (this.#track && !this.#needTrackCheck)) return;
+    const t = this.#ctx.findTrackByStart({ x: p.position.x, z: p.position.z }, headingOf(p));
+    if (t) {
+      if (this.#track?.id === t.id) {
+        this.#needTrackCheck = false; // same track as before the break
+        return;
+      }
+      if (session.trackId && session.trackId !== t.id) {
+        this.#switchSession(
+          'trackChange',
+          at,
+          this.#activeBeforeBreak ?? this.#lastLapDoneAt ?? session.startedAt,
+        );
+      }
+      this.#needTrackCheck = false;
+      this.#setActiveTrack(t, 'probable');
+    } else if (this.#track) {
+      this.#clearActiveTrack();
+    }
   }
 
   /** Advances timing/distance/sectors/delta with one running packet and appends a sample. */
@@ -794,6 +1023,8 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     }
 
     // ---- trace sample ----
+    // laps not timed from the start line (entry / out laps) are never stored: keep no samples
+    if (!lap.timed) return;
     if (lap.builder.length >= this.options.maxLapSamples) {
       lap.flags.add('incompleteData');
       return;
@@ -885,7 +1116,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
 
   #finalize(pc: PendingClose, gameMs: number | null): void {
     this.#pending = null;
-    const session = this.#session;
+    let session = this.#session;
     if (!session) return;
     const lap = pc.lap;
     const flags = lap.flags;
@@ -928,14 +1159,27 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
 
     // ---- track identification ----
     const complete = !flags.has('discontinuity') && trace.length > 600;
-    if (complete && this.#trackConfidence !== 'confirmed') {
+    if (complete && (this.#trackConfidence !== 'confirmed' || this.#needTrackCheck)) {
       const line = lapPolyline(xs, zs);
-      const res = this.context.identifyTrack({
+      const res = this.#ctx.identifyTrack({
         line,
         sourceLapId: lapId,
         y: { s: cumulativeDistance(xs, zs), y: trace.channels.y },
         now: this.#lastReceivedAt ?? Date.now(),
       });
+      // this lap was driven on another track than the session's: it belongs to a new session
+      if (session.trackId && session.trackId !== res.track.id) {
+        this.#switchSession(
+          'trackChange',
+          lap.startedAt,
+          Math.min(
+            this.#activeBeforeBreak ?? this.#lastLapDoneAt ?? session.startedAt,
+            lap.startedAt,
+          ),
+        );
+        session = this.#session ?? session;
+      }
+      this.#needTrackCheck = false;
       this.#setActiveTrack(res.track, 'confirmed');
     }
     const track = this.#track;
@@ -999,15 +1243,16 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       });
     }
 
-    this.context.saveLap(lapRow, trace);
+    this.#ctx.saveLap(lapRow, trace);
 
     // ---- session bookkeeping ----
     session.lapCount++;
     if (personal && (session.bestLapMs === null || timeMs < session.bestLapMs))
       session.bestLapMs = timeMs;
     if (track && session.trackId !== track.id) session.trackId = track.id;
-    this.context.saveSession({ ...session });
+    this.#ctx.saveSession({ ...session });
     this.#lastLapMs = timeMs;
+    this.#lastLapDoneAt = this.#lastReceivedAt ?? Date.now();
     if (personal) {
       if (this.#sessionBestSectors.length !== count) {
         this.#sessionBestSectors = Array.from({ length: count }, () => null);
@@ -1078,7 +1323,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       return;
     }
     const count = (sectorBoundaries(this.#track)?.length ?? 2) + 1;
-    this.#records = this.context.getTrackRecords(this.#track.id, this.#carCode(), count);
+    this.#records = this.#ctx.getTrackRecords(this.#track.id, this.#carCode(), count);
   }
 
   #setActiveTrack(track: Track, confidence: LiveTrackInfo['confidence']): void {
@@ -1090,7 +1335,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       return;
     }
     this.#track = track;
-    const cl = this.context.getCenterline(track.id);
+    const cl = this.#ctx.getCenterline(track.id);
     this.#line = cl && cl.x.length >= 2 ? centerlinePolyline(cl) : null;
     this.#hintCache.clear();
     this.#cornerPass.clear();
@@ -1098,7 +1343,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     this.#refreshRecords();
     if (this.#session && this.#session.trackId !== track.id) {
       this.#session.trackId = track.id;
-      this.context.saveSession({ ...this.#session });
+      this.#ctx.saveSession({ ...this.#session });
       this.emit('sessionUpdated', { ...this.#session });
     }
     this.emit('trackChanged', this.trackInfo);
@@ -1127,14 +1372,14 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
         return;
       }
       if (this.#deltaKind === 'personalBest') {
-        stored = track ? this.context.loadPersonalBest(track.id, this.#carCode()) : null;
+        stored = track ? this.#ctx.loadPersonalBest(track.id, this.#carCode()) : null;
       } else if (this.#deltaLapId) {
-        stored = this.context.loadLap(this.#deltaLapId);
+        stored = this.#ctx.loadLap(this.#deltaLapId);
       } else if (track) {
-        stored = this.context.loadBestReference(track.id, this.#carCode());
+        stored = this.#ctx.loadBestReference(track.id, this.#carCode());
       }
       if (stored && !track && stored.lap.trackId) {
-        const t = this.context.getTrack(stored.lap.trackId);
+        const t = this.#ctx.getTrack(stored.lap.trackId);
         if (t) {
           this.#reloading = false;
           this.#setActiveTrack(t, 'probable');
