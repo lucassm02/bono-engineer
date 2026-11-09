@@ -299,7 +299,8 @@ export interface SetTargetViewMessage {
 
 export interface StartReferenceCaptureMessage {
   type: 'startReferenceCapture';
-  driverName: string;
+  /** Optional since Onda 10a: without it the lap is saved as 'Piloto do replay'. */
+  driverName?: string;
   carName?: string;
   /** Ranking lap time for validation. */
   rankingTimeMs?: number;

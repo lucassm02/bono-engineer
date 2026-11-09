@@ -49,6 +49,8 @@ export interface UiState {
   currentView: ViewId;
   overlayVisible: boolean;
   pickerOpen: boolean;
+  /** Menu sheet with shortcuts to the other areas (history, compare, capture, coach, settings). */
+  menuOpen: boolean;
   /** Editor of the "Personalizada" grid. */
   layoutEditorOpen: boolean;
   lapPopup: LapCompletedEvent | null;
@@ -92,6 +94,7 @@ export const useUi = create<UiState>()(() => ({
   currentView: profile0.startView,
   overlayVisible: false,
   pickerOpen: false,
+  menuOpen: false,
   layoutEditorOpen: false,
   lapPopup: null,
   notices: [],

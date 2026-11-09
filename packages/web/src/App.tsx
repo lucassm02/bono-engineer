@@ -11,24 +11,28 @@ import {
 import { ConsolePanelHost } from './components/ConsoleLink.tsx';
 import { LapPopup } from './components/LapPopup.tsx';
 import { LayoutEditor } from './components/LayoutEditor.tsx';
+import { LiveMenuSheet, MenuButton } from './components/LiveMenu.tsx';
 import { StatusLayer } from './components/StatusLayer.tsx';
 import { useGestures } from './components/useGestures.ts';
 import { ViewPicker } from './components/ViewPicker.tsx';
 import type { GestureOutput } from './lib/gestures.ts';
 import {
   closeLayoutEditor,
+  closeMenu,
   closePicker,
   cycleDeltaReference,
   openPicker,
   setLocked,
   showOverlay,
+  toggleMenu,
 } from './state/actions.ts';
 import { handleDoubleTapOverride } from './state/gestureOverride.ts';
 import { useUi } from './state/uiStore.ts';
 
 function onGesture(g: GestureOutput): void {
   const s = useUi.getState();
-  if (s.pickerOpen || s.layoutEditorOpen || s.profile.locked || s.connectionPanelOpen) return;
+  if (s.pickerOpen || s.menuOpen || s.layoutEditorOpen || s.profile.locked || s.connectionPanelOpen)
+    return;
   if (g === 'tap') showOverlay();
   else if (g === 'doubleTap') {
     if (!handleDoubleTapOverride()) cycleDeltaReference();
@@ -40,11 +44,16 @@ function onKey(e: KeyboardEvent): void {
   const s = useUi.getState();
   if (e.key === 'Escape') {
     if (s.layoutEditorOpen) closeLayoutEditor();
+    else if (s.menuOpen) closeMenu();
     else if (s.pickerOpen) closePicker();
     return;
   }
-  if (s.pickerOpen || s.layoutEditorOpen || s.connectionPanelOpen || s.onboarding === 'active')
+  if (s.onboarding === 'active' || s.connectionPanelOpen) return;
+  if (e.key.toLowerCase() === 'm' && !s.pickerOpen && !s.layoutEditorOpen) {
+    toggleMenu();
     return;
+  }
+  if (s.pickerOpen || s.menuOpen || s.layoutEditorOpen) return;
   if (e.key.toLowerCase() === 'l') {
     setLocked(!s.profile.locked);
     return;
@@ -75,9 +84,11 @@ export function App() {
       <OverlayHeader />
       <EdgeArrows />
       <Dots />
+      <MenuButton />
       <LockButton />
       <LapPopup />
       <Notices />
+      <LiveMenuSheet />
       <ViewPicker />
       <LayoutEditor />
       <ConsolePanelHost />

@@ -308,6 +308,32 @@ describe('server app (Fastify + WS hub + REST) over a FakeConsole', () => {
       400,
     );
 
+    // Renaming a captured reference (only the metadata) keeps where its time came from (Onda 10a).
+    server.runtime.store.setReference(lap.id, {
+      driverName: 'Piloto do replay',
+      source: 'replayCapture',
+      rankingTimeMs: null,
+      carName: null,
+      notes: null,
+      capturedAt: 1,
+      timeSource: 'packets',
+      measuredTimeMs: lap.timeMs,
+    });
+    const renamedRef = await api<Lap>('PUT', `/api/laps/${lap.id}/reference`, {
+      driverName: 'Kokichi',
+      carName: 'Lamborghini Huracan Gr.4',
+      notes: null,
+    });
+    expect(renamedRef.body.referenceMeta).toMatchObject({
+      driverName: 'Kokichi',
+      carName: 'Lamborghini Huracan Gr.4',
+      source: 'replayCapture',
+      timeSource: 'packets',
+      measuredTimeMs: lap.timeMs,
+      capturedAt: 1,
+    });
+    await api('DELETE', `/api/laps/${lap.id}/reference`);
+
     const tracks = await api<Track[]>('GET', '/api/tracks');
     expect(tracks.body.length).toBeGreaterThanOrEqual(1);
     const tid = tracks.body[0]!.id;
@@ -391,10 +417,20 @@ describe('server app (Fastify + WS hub + REST) over a FakeConsole', () => {
 
     const cap = await api<{ state: string }>('GET', '/api/capture');
     expect(cap.body.state).toBe('idle');
-    expect((await api('POST', '/api/capture/start', {})).status).toBe(400);
+    expect((await api('POST', '/api/capture/start', { driverName: 42 })).status).toBe(400);
     expect(
       (await api('POST', '/api/capture/start', { driverName: 'X', trackId: 'nao-existe' })).status,
     ).toBe(400);
+
+    // Onda 10a: the driver is optional; without a name the capture is armed as 'Piloto do replay'.
+    expect((await api('POST', '/api/capture/start', {})).status).toBe(202);
+    const armed = await waitFor(() => {
+      const c = server.runtime.capture.status;
+      return c.state !== 'idle' ? c : false;
+    });
+    expect(armed.driverName).toBe('Piloto do replay');
+    expect((await api('POST', '/api/capture/stop', { save: false })).status).toBe(202);
+    await waitFor(() => server.runtime.capture.status.state === 'idle');
 
     const rec = await fetch(`${BASE}/api/recordings/${sid}`);
     expect(rec.status).toBe(200);

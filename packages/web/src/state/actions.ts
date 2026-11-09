@@ -117,6 +117,15 @@ export function closePicker(): void {
   useUi.setState({ pickerOpen: false });
 }
 
+/** Menu with shortcuts to the other areas; works even with the gestures locked. */
+export function toggleMenu(): void {
+  useUi.setState((s) => ({ menuOpen: !s.menuOpen, overlayVisible: false }));
+}
+
+export function closeMenu(): void {
+  useUi.setState({ menuOpen: false });
+}
+
 export function showLapPopup(event: LapCompletedEvent): void {
   if (!useUi.getState().profile.popupsEnabled) return;
   useUi.setState({ lapPopup: event });

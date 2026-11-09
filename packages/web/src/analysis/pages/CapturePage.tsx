@@ -1,110 +1,246 @@
 /**
- * #/captura — guided reference capture from a Time Trial ranking replay (PLANO §4, Onda 9a): form
- * (with an optional track), three short steps, start/stop, live progress (WS `status.capture`, REST
- * polling as fallback: waiting for the replay → start line → recording → validating) and the result
- * with measured vs typed time + next step. The packet format is not changed any more.
+ * #/captura — one-click reference capture from a Time Trial ranking replay (Onda 10a).
+ *
+ * The app detects the replay, the car (from `carCode`) and the track (from the position) by
+ * itself, so the only things left to type are optional: the ranking time (validates the lap)
+ * and the driver's name. Everything else (car, track, notes) hides under "Mais detalhes". Live
+ * status comes from the WebSocket (`status.capture`), with REST polling as the fallback; the
+ * saved references are listed below, grouped by track.
  */
 
-import type { Lap, ReferenceCaptureStatus, Track } from '@gt7/shared';
-import { useEffect, useRef, useState } from 'react';
-import { clockText } from '../../lib/captureStatus.ts';
+import { type Lap, makerOfCar, type ReferenceCaptureStatus, type Track } from '@gt7/shared';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { formatLapTime } from '../../lib/format.ts';
-import { CONNECTION_STATE_LABELS } from '../../lib/labels.ts';
 import { routes } from '../../lib/route.ts';
 import { useUi } from '../../state/uiStore.ts';
 import { api } from '../api.ts';
-import { CarName } from '../components/CarName.tsx';
-import { Card, ErrorBox, PageHead, Tag, useTitle } from '../components/ui.tsx';
+import { BrandLogo } from '../components/BrandLogo.tsx';
+import { CarSelect } from '../components/CarSelect.tsx';
+import { ReferenceList } from '../components/ReferenceList.tsx';
+import { Card, ErrorBox, PageHead, useTitle } from '../components/ui.tsx';
 import {
-  CAPTURE_STATE_LABELS,
-  CAPTURE_WAITING_LABELS,
-  CAPTURE_WAITING_TITLES,
-  captureIssueLabel,
-} from '../lib/labels.ts';
-import { parseLapTime } from '../lib/lapTime.ts';
-
-const FORM_KEY = 'gt7.captureForm';
-
-interface FormState {
-  driverName: string;
-  carName: string;
-  rankingTime: string;
-  notes: string;
-  /** '' = the app finds the track from the replay's position. */
-  trackId: string;
-}
-
-const EMPTY_FORM: FormState = {
-  driverName: '',
-  carName: '',
-  rankingTime: '',
-  notes: '',
-  trackId: '',
-};
-
-function loadForm(): FormState {
-  try {
-    const raw = localStorage.getItem(FORM_KEY);
-    if (raw) return { ...EMPTY_FORM, ...JSON.parse(raw) };
-  } catch {
-    // ignore
-  }
-  return { ...EMPTY_FORM };
-}
+  type CarChoice,
+  carChoiceValue,
+  carDisplayName,
+  carRequestFields,
+  type DetectionView,
+  detectionView,
+  discardKey,
+  driverSuggestions,
+  parseCarChoice,
+  parseRankingTime,
+  progressView,
+  resolvedCarName,
+  signedMs,
+  timeOriginLabel,
+  visibleIssues,
+} from '../lib/captureForm.ts';
+import { captureIssueLabel } from '../lib/labels.ts';
+import { formatLapTimeInput } from '../lib/lapTime.ts';
+import { useLiveCar } from '../lib/useLiveCar.ts';
+import { useFetch } from '../useFetch.ts';
 
 type Phase = 'form' | 'running' | 'saved' | 'stopped';
 
-/** Progress steps shown while a capture is armed (index = how far it got). */
-const STEPS = [
-  'Aguardando o replay e a pista',
-  'Aguardando a linha de largada',
-  'Gravando a volta',
-  'Validando distância, pacotes e tempo',
-] as const;
+// ---------------------------------------------------------------------------------------------
+// Pieces
+// ---------------------------------------------------------------------------------------------
 
-function stepOf(s: ReferenceCaptureStatus): number {
-  switch (s.state) {
-    case 'recording':
-      return 2;
-    case 'validating':
-      return 3;
-    case 'waitingLapStart':
-      return s.waiting === 'startLine' ? 1 : 0;
-    default:
-      return 0;
-  }
-}
-
-const signedMs = (ms: number) => `${ms > 0 ? '+' : ms < 0 ? '−' : ''}${Math.abs(ms)} ms`;
-
-/** Measured (packets) vs typed (ranking) time of the last lap that reached validation. */
-function TimeCheck({ status }: { status: ReferenceCaptureStatus }) {
-  if (status.measuredLapMs == null) return null;
+function CarChip({ carCode, text }: { carCode: number | null; text: string }) {
+  const maker = makerOfCar(carCode);
   return (
-    <dl className="a-timecheck num">
-      <div>
-        <dt>Medido pelos pacotes</dt>
-        <dd>{formatLapTime(status.measuredLapMs)}</dd>
-      </div>
-      {status.rankingTimeMs != null && (
-        <>
-          <div>
-            <dt>Digitado (ranking)</dt>
-            <dd>{formatLapTime(status.rankingTimeMs)}</dd>
-          </div>
-          <div>
-            <dt>Diferença</dt>
-            <dd>{status.diffMs != null ? signedMs(status.diffMs) : '—'}</dd>
-          </div>
-        </>
-      )}
-    </dl>
+    <span className="cap-chip">
+      {maker && <BrandLogo maker={maker} size={24} />}
+      <span className="cap-chip-text">{text}</span>
+    </span>
   );
 }
 
+/** Live "what the app detected" strip at the top of the page. */
+function DetectionBanner({ view }: { view: DetectionView }) {
+  return (
+    <section className="cap-detect" data-tone={view.tone} aria-live="polite">
+      <span className="cap-detect-dot" aria-hidden="true" />
+      <div className="cap-detect-body">
+        <p className="cap-detect-title">
+          <strong>{view.title}</strong>
+          {view.trackName && <span className="cap-detect-part"> · {view.trackName}</span>}
+          {view.carName && (
+            <span className="cap-detect-part">
+              {' · '}
+              <CarChip carCode={view.carCode} text={view.carName} />
+            </span>
+          )}
+        </p>
+        <p className="cap-detect-msg">{view.message}</p>
+      </div>
+    </section>
+  );
+}
+
+/** One bar with the four steps; the "Gravando" segment fills with the lap. */
+function ProgressBar({ status }: { status: ReferenceCaptureStatus }) {
+  const p = progressView(status);
+  return (
+    <div className="cap-progress">
+      <div
+        className="cap-steps"
+        role="progressbar"
+        aria-label="Andamento da captura"
+        aria-valuemin={1}
+        aria-valuemax={p.steps.length}
+        aria-valuenow={p.step + 1}
+        aria-valuetext={`Passo ${p.step + 1} de ${p.steps.length}: ${p.steps[p.step]?.label}`}
+      >
+        {p.steps.map((s, i) => (
+          <div
+            key={s.label}
+            className="cap-step"
+            data-state={s.state}
+            data-rec={i === 2 && status.state === 'recording' ? '1' : undefined}
+          >
+            <span
+              className="cap-seg"
+              style={
+                i === 2 ? { ['--fill' as string]: `${p.recordingFraction * 100}%` } : undefined
+              }
+            />
+            <span className="cap-seg-label">{s.label}</span>
+          </div>
+        ))}
+      </div>
+      <p className="cap-clock num" data-on={p.clock ? '1' : undefined} aria-live="off">
+        {p.clock || '—:——'}
+        {p.estimate && <span className="cap-clock-est"> {p.estimate}</span>}
+      </p>
+      <p className="cap-now" data-tone={p.tone}>
+        {p.headline}
+      </p>
+      <p className="cap-now-text">{p.text}</p>
+    </div>
+  );
+}
+
+function Issues({ issues }: { issues: string[] }) {
+  if (issues.length === 0) return null;
+  return (
+    <div className="a-rejected" role="alert">
+      <strong>A última volta foi descartada:</strong>
+      <ul>
+        {issues.map((i) => (
+          <li key={i}>{captureIssueLabel(i)}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** Result card: times (measured × typed), car, driver, track and the next steps. */
+function SavedCard({
+  lap,
+  status,
+  trackName,
+  myBest,
+  onAgain,
+}: {
+  lap: Lap | null;
+  status: ReferenceCaptureStatus | null;
+  trackName: string | null;
+  myBest: Lap | null;
+  onAgain: () => void;
+}) {
+  const meta = lap?.referenceMeta ?? null;
+  const measured = status?.measuredLapMs ?? meta?.measuredTimeMs ?? null;
+  const typed = status?.rankingTimeMs ?? meta?.rankingTimeMs ?? null;
+  const diff = status?.diffMs ?? (measured != null && typed != null ? measured - typed : null);
+  const carText = meta?.carName || (lap ? carDisplayName(lap.carCode) : null);
+  return (
+    <div className="cap-saved" role="status">
+      <p className="cap-saved-head">
+        <span className="cap-ok" aria-hidden="true">
+          ✓
+        </span>
+        Volta salva como referência
+      </p>
+      <p className="cap-saved-time num">{lap ? formatLapTime(lap.timeMs) : '…'}</p>
+      <dl className="cap-facts">
+        <div>
+          <dt>Piloto</dt>
+          <dd>{meta?.driverName ?? status?.driverName ?? '—'}</dd>
+        </div>
+        <div>
+          <dt>Carro</dt>
+          <dd>{lap && carText ? <CarChip carCode={lap.carCode} text={carText} /> : '—'}</dd>
+        </div>
+        <div>
+          <dt>Pista</dt>
+          <dd>{trackName ?? status?.trackName ?? '—'}</dd>
+        </div>
+        <div>
+          <dt>Origem do tempo</dt>
+          <dd>{timeOriginLabel(meta)}</dd>
+        </div>
+      </dl>
+      {measured != null && (
+        <dl className="a-timecheck num">
+          <div>
+            <dt>Medido pelos pacotes</dt>
+            <dd>{formatLapTime(measured)}</dd>
+          </div>
+          {typed != null && (
+            <>
+              <div>
+                <dt>Digitado (ranking)</dt>
+                <dd>{formatLapTime(typed)}</dd>
+              </div>
+              <div>
+                <dt>Diferença</dt>
+                <dd>{diff != null ? signedMs(diff) : '—'}</dd>
+              </div>
+            </>
+          )}
+        </dl>
+      )}
+      {typed == null && measured != null && (
+        <p className="dim a-small">
+          Sem o tempo do ranking, vale o medido pelos pacotes (erro de cerca de ±30 ms).
+        </p>
+      )}
+      <div className="a-actions">
+        {lap && myBest ? (
+          <a className="a-btn cap-btn" href={routes.compare({ lap: myBest.id, ref: lap.id })}>
+            Comparar com o meu melhor ({formatLapTime(myBest.timeMs)})
+          </a>
+        ) : lap?.trackId ? (
+          <a className="a-btn cap-btn" href={routes.track(lap.trackId)}>
+            Ver a pista
+          </a>
+        ) : null}
+        <button type="button" className="a-btn a-btn-ghost cap-btn" onClick={onAgain}>
+          Capturar outra
+        </button>
+      </div>
+      {lap && !myBest && (
+        <p className="dim a-small">
+          Ainda não há volta sua válida com este carro nesta pista para comparar.
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------------------------
+
 export function CapturePage() {
-  useTitle('Captura de referência');
-  const [form, setForm] = useState<FormState>(loadForm);
+  useTitle('Capturar referência');
+  const [driver, setDriver] = useState('');
+  const [rankingText, setRankingText] = useState('');
+  const [carChoice, setCarChoice] = useState<CarChoice>('auto');
+  const [trackId, setTrackId] = useState('');
+  const [notes, setNotes] = useState('');
+  const [moreOpen, setMoreOpen] = useState(false);
   const [phase, setPhase] = useState<Phase>('form');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -114,7 +250,12 @@ export function CapturePage() {
   const [savedLap, setSavedLap] = useState<Lap | null>(null);
   const [myBest, setMyBest] = useState<Lap | null>(null);
   const [tracks, setTracks] = useState<Track[]>([]);
+  const [discards, setDiscards] = useState(0);
   const seenActive = useRef(false);
+  const lastDiscard = useRef<string | null>(null);
+  const liveCar = useLiveCar();
+  const refs = useFetch('capture:refs', () => api.references());
+  const reloadRefs = refs.reload;
 
   // Live status: WebSocket when connected, else REST polling (also right after a command).
   const status: ReferenceCaptureStatus | null =
@@ -195,41 +336,68 @@ export function CapturePage() {
         .lap(status.lapId)
         .then(setSavedLap)
         .catch(() => {});
+      reloadRefs();
     } else {
       setPhase('stopped');
     }
+  }, [status, phase, reloadRefs]);
+
+  // How many laps this run threw away (the explanation only shows while it is current).
+  useEffect(() => {
+    if (!status || phase !== 'running') return;
+    const key = discardKey(status);
+    if (key && key !== lastDiscard.current) {
+      lastDiscard.current = key;
+      setDiscards((n) => n + 1);
+    }
   }, [status, phase]);
 
-  const rankingMs = form.rankingTime.trim() ? parseLapTime(form.rankingTime) : null;
-  const rankingInvalid = form.rankingTime.trim() !== '' && rankingMs === null;
+  const ranking = parseRankingTime(rankingText);
+  const drivers = useMemo(() => driverSuggestions(refs.data ?? []), [refs.data]);
+
+  const detection = detectionView({
+    online: wsStatus === 'open' || polled !== null,
+    connection,
+    liveState: liveCar.state,
+    carCode: liveCar.carCode,
+    capture: status,
+  });
+
+  const detectedCar = liveCar.carCode;
+  const detectedCarName =
+    resolvedCarName(detectedCar) ?? (detectedCar ? `Carro #${detectedCar}` : null);
+  const effectiveCar: number | null =
+    carChoice === 'auto' ? detectedCar : carChoice === 'none' ? null : carChoice;
+  const effectiveCarText =
+    carChoice === 'none'
+      ? null
+      : carChoice === 'auto'
+        ? detectedCarName
+        : carDisplayName(carChoice);
+  const chosenTrack = tracks.find((t) => t.id === trackId);
+  const trackLabel = (t: Pick<Track, 'name' | 'layout'>) =>
+    t.layout ? `${t.name} — ${t.layout}` : t.name;
 
   const start = async () => {
     setError(null);
-    if (!form.driverName.trim()) {
-      setError('Informe o nome do piloto do replay.');
+    if (ranking.kind === 'invalid') {
+      setError(ranking.message);
       return;
-    }
-    if (rankingInvalid) {
-      setError('Tempo do ranking inválido. Use o formato 1:30.960.');
-      return;
-    }
-    try {
-      localStorage.setItem(FORM_KEY, JSON.stringify(form));
-    } catch {
-      // ignore
     }
     setBusy(true);
     try {
       const s = await api.startCapture({
-        driverName: form.driverName.trim(),
-        ...(form.carName.trim() ? { carName: form.carName.trim() } : {}),
-        ...(rankingMs ? { rankingTimeMs: rankingMs } : {}),
-        ...(form.trackId ? { trackId: form.trackId } : {}),
-        ...(form.notes.trim() ? { notes: form.notes.trim() } : {}),
+        ...(driver.trim() ? { driverName: driver.trim() } : {}),
+        ...carRequestFields(carChoice, liveCar.carCode),
+        ...(ranking.kind === 'ok' ? { rankingTimeMs: ranking.ms } : {}),
+        ...(trackId ? { trackId } : {}),
+        ...(notes.trim() ? { notes: notes.trim() } : {}),
       });
       setPolled(s);
       // The run counts as finished only after the server reported an active state.
       seenActive.current = s.state !== 'idle';
+      lastDiscard.current = null;
+      setDiscards(0);
       setSavedLap(null);
       setMyBest(null);
       setPhase('running');
@@ -240,10 +408,10 @@ export function CapturePage() {
     }
   };
 
-  const stop = async (save: boolean) => {
+  const stop = async () => {
     setBusy(true);
     try {
-      setPolled(await api.stopCapture(save));
+      setPolled(await api.stopCapture(true));
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -251,289 +419,282 @@ export function CapturePage() {
     }
   };
 
+  const again = () => {
+    setRankingText('');
+    setNotes('');
+    setError(null);
+    setPhase('form');
+  };
+
   const active = !!status && status.state !== 'idle';
-  const stepIndex = status ? stepOf(status) : -1;
-  const rejected = active && status!.issues.length > 0;
+  const issues = status ? visibleIssues(status) : [];
+  const trackNameOf = (id: string | null) => {
+    const t = tracks.find((x) => x.id === id);
+    return t ? trackLabel(t) : null;
+  };
 
   return (
-    <>
+    <div className="cap-page">
       <PageHead
-        title="Captura de referência"
-        sub="Grave a volta de um piloto do topo do ranking assistindo ao replay dele no jogo. A volta vira referência para o delta ao vivo, a comparação e o coach."
+        title="Capturar referência"
+        sub="Assista ao replay de um piloto do topo no jogo e grave a volta dele como referência para o delta ao vivo, a comparação e o coach."
       />
-      <div className="a-capture-grid">
-        <Card title="1. Dados da volta">
+
+      <DetectionBanner view={detection} />
+
+      {phase === 'saved' ? (
+        <Card title="Resultado">
+          <SavedCard
+            lap={savedLap}
+            status={status}
+            trackName={trackNameOf(savedLap?.trackId ?? null)}
+            myBest={myBest}
+            onAgain={again}
+          />
+        </Card>
+      ) : phase === 'running' ? (
+        <Card title="Capturando">
+          {status ? (
+            !active ? (
+              <p className="cap-now">Iniciando a captura…</p>
+            ) : (
+              <>
+                <ProgressBar status={status} />
+                {status.trackName && (
+                  <p className="dim a-small">
+                    Pista: <strong>{status.trackName}</strong>
+                  </p>
+                )}
+                <Issues issues={issues} />
+                {status.state === 'recording' && discards > 0 && (
+                  <p className="dim a-small">
+                    Uma tentativa anterior foi descartada; esta é a próxima volta, gravando sozinho.
+                  </p>
+                )}
+                {status.state === 'waitingLapStart' && issues.length > 0 && (
+                  <p className="dim a-small">O app vai gravar a próxima volta sozinho.</p>
+                )}
+              </>
+            )
+          ) : (
+            <ErrorBox
+              error="Sem resposta do servidor: a captura precisa do app rodando no PC."
+              compact
+            />
+          )}
+          {error && <p className="a-form-error">{error}</p>}
+          <div className="a-actions cap-stop">
+            <button
+              type="button"
+              className="a-btn a-btn-ghost cap-btn"
+              disabled={busy}
+              onClick={stop}
+            >
+              Parar a captura
+            </button>
+          </div>
+        </Card>
+      ) : (
+        <Card title="Capturar esta volta">
           <form
-            className="a-form"
+            className="cap-form"
             onSubmit={(e) => {
               e.preventDefault();
               void start();
             }}
           >
-            <label>
-              Piloto *
+            <label className="cap-field" htmlFor="cap-ranking">
+              Tempo do ranking <span className="cap-opt">(opcional)</span>
               <input
-                className="a-input"
-                value={form.driverName}
-                maxLength={80}
-                placeholder="ex.: Kokichi"
-                disabled={active}
-                onChange={(e) => setForm({ ...form, driverName: e.target.value })}
-              />
-            </label>
-            <label>
-              Carro
-              <input
-                className="a-input"
-                value={form.carName}
-                maxLength={80}
-                placeholder="ex.: Porsche 911 RSR"
-                disabled={active}
-                onChange={(e) => setForm({ ...form, carName: e.target.value })}
-              />
-            </label>
-            <label>
-              Tempo do ranking
-              <input
+                id="cap-ranking"
                 className="a-input num"
-                value={form.rankingTime}
-                inputMode="decimal"
+                value={rankingText}
+                inputMode="text"
+                autoComplete="off"
+                autoCapitalize="off"
+                spellCheck={false}
                 placeholder="1:30.960"
-                disabled={active}
-                aria-invalid={rankingInvalid}
-                onChange={(e) => setForm({ ...form, rankingTime: e.target.value })}
+                aria-invalid={ranking.kind === 'invalid'}
+                aria-describedby="cap-ranking-help"
+                onChange={(e) => setRankingText(e.target.value)}
+                onBlur={() => {
+                  if (ranking.kind === 'ok') setRankingText(formatLapTimeInput(ranking.ms));
+                }}
               />
-              <span className="a-help">
-                {rankingInvalid
-                  ? 'Formato: m:ss.mmm'
-                  : rankingMs
-                    ? `= ${formatLapTime(rankingMs)} — o tempo medido pelos pacotes precisa bater (±0,3 s)`
-                    : 'Opcional, mas ajuda a validar a volta. Sem ele, vale o tempo medido pelos pacotes.'}
-              </span>
-            </label>
-            <label>
-              Pista
-              <select
-                className="a-input"
-                value={form.trackId}
-                disabled={active}
-                onChange={(e) => setForm({ ...form, trackId: e.target.value })}
+              <span
+                id="cap-ranking-help"
+                className="a-help"
+                role={ranking.kind === 'invalid' ? 'alert' : undefined}
               >
-                <option value="">Descobrir sozinho (pela posição do carro)</option>
-                {tracks.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                    {t.layout ? ` — ${t.layout}` : ''}
-                  </option>
-                ))}
-              </select>
-              <span className="a-help">
-                Opcional. O app só reconhece pistas em que você já completou uma volta ao vivo.
+                {ranking.kind === 'invalid'
+                  ? ranking.message
+                  : ranking.kind === 'ok'
+                    ? `Entendi ${ranking.shown}. O tempo medido pelos pacotes precisa bater com ele (diferença de até 0,3 s).`
+                    : 'Copie do ranking do jogo (ex.: 1:30.960). Ajuda a validar a volta; sem ele vale o tempo medido.'}
               </span>
             </label>
-            <label>
-              Notas
-              <textarea
+
+            <label className="cap-field" htmlFor="cap-driver">
+              Piloto <span className="cap-opt">(opcional)</span>
+              <input
+                id="cap-driver"
                 className="a-input"
-                rows={2}
-                maxLength={500}
-                value={form.notes}
-                disabled={active}
-                placeholder="acerto, pneus, condições…"
-                onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                list="cap-drivers"
+                value={driver}
+                maxLength={80}
+                autoComplete="off"
+                placeholder="Piloto do replay"
+                onChange={(e) => setDriver(e.target.value)}
               />
+              <datalist id="cap-drivers">
+                {drivers.map((d) => (
+                  <option key={d} value={d} />
+                ))}
+              </datalist>
             </label>
-            {error && <p className="a-form-error">{error}</p>}
-            <div className="a-actions">
-              {!active ? (
-                <button type="submit" className="a-btn" disabled={busy}>
-                  Iniciar captura
-                </button>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    className="a-btn"
-                    disabled={busy}
-                    onClick={() => stop(true)}
+
+            <ul className="cap-auto" aria-label="Detectado automaticamente">
+              <li>
+                <span className="cap-auto-k">Carro</span>
+                {effectiveCarText ? (
+                  <CarChip carCode={effectiveCar} text={effectiveCarText} />
+                ) : (
+                  <span className="dim">
+                    {carChoice === 'none' ? 'não informado' : 'será reconhecido pelo replay'}
+                  </span>
+                )}
+                {carChoice === 'auto' && detectedCar !== null && (
+                  <span className="cap-auto-tag">detectado</span>
+                )}
+              </li>
+              <li>
+                <span className="cap-auto-k">Pista</span>
+                {chosenTrack ? (
+                  <span>{trackLabel(chosenTrack)}</span>
+                ) : status?.trackName ? (
+                  <span>
+                    {status.trackName} <span className="cap-auto-tag">detectada</span>
+                  </span>
+                ) : (
+                  <span className="dim">será reconhecida pela posição do carro</span>
+                )}
+              </li>
+            </ul>
+
+            <details
+              className="cap-more"
+              open={moreOpen}
+              onToggle={(e) => setMoreOpen((e.currentTarget as HTMLDetailsElement).open)}
+            >
+              <summary>Mais detalhes (corrigir carro ou pista, notas)</summary>
+              <div className="cap-more-body">
+                <label className="cap-field" htmlFor="cap-car">
+                  Carro
+                  <CarSelect
+                    id="cap-car"
+                    value={carChoiceValue(carChoice)}
+                    onChange={(v) => setCarChoice(parseCarChoice(v))}
+                    describedBy="cap-car-help"
+                    lead={[
+                      {
+                        value: 'auto',
+                        label: detectedCarName
+                          ? `Detectado: ${detectedCarName}`
+                          : 'Automático (pelo carro do replay)',
+                      },
+                      { value: 'none', label: 'Não informar' },
+                    ]}
+                  />
+                  <span id="cap-car-help" className="a-help">
+                    Só mude se o detectado estiver errado. Ao escolher um carro, a volta só vale se
+                    o replay for desse carro.
+                  </span>
+                </label>
+                <label className="cap-field" htmlFor="cap-track">
+                  Escolher outra pista
+                  <select
+                    id="cap-track"
+                    className="a-input"
+                    value={trackId}
+                    onChange={(e) => setTrackId(e.target.value)}
                   >
-                    Parar
-                  </button>
-                  <button
-                    type="button"
-                    className="a-btn a-btn-danger"
-                    disabled={busy}
-                    onClick={() => stop(false)}
-                  >
-                    Cancelar e descartar
-                  </button>
-                </>
-              )}
-            </div>
+                    <option value="">Descobrir sozinho (recomendado)</option>
+                    {tracks.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {trackLabel(t)}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="a-help">
+                    O app só reconhece pistas em que você já completou uma volta ao vivo.
+                  </span>
+                </label>
+                <label className="cap-field" htmlFor="cap-notes">
+                  Notas
+                  <textarea
+                    id="cap-notes"
+                    className="a-input"
+                    rows={2}
+                    maxLength={500}
+                    value={notes}
+                    placeholder="acerto, pneus, condições…"
+                    onChange={(e) => setNotes(e.target.value)}
+                  />
+                </label>
+              </div>
+            </details>
+
+            {error && (
+              <p className="a-form-error" role="alert">
+                {error}
+              </p>
+            )}
+            {phase === 'stopped' && (
+              <div className="cap-stopped">
+                <p className="dim">A captura terminou sem salvar nenhuma volta.</p>
+                {status && <Issues issues={status.issues} />}
+              </div>
+            )}
+            <button type="submit" className="cap-go" disabled={busy}>
+              Capturar esta volta
+            </button>
+            <p className="dim a-small cap-go-help">
+              {detection.kind === 'replay' || detection.kind === 'replayUnknownTrack'
+                ? 'Replay pronto: toque e deixe tocar, sem pausar nem avançar.'
+                : 'Pode tocar agora: o app espera o replay começar e grava a próxima volta completa.'}
+            </p>
           </form>
         </Card>
+      )}
 
-        <Card title="2. No jogo">
-          <ol className="a-steps-howto">
-            <li>
-              Abra o <strong>replay da volta do piloto</strong> (Time Trial → ranking → replay) e
-              inicie a captura aqui.
-            </li>
-            <li>
-              Deixe <strong>reproduzir normalmente</strong>, em velocidade 1×:{' '}
-              <strong>não pause, não volte e não avance</strong>. Qualquer salto descarta a volta.
-            </li>
-            <li>
-              Digite o <strong>tempo do ranking</strong> ao lado para validar a volta (opcional).
-            </li>
-          </ol>
-          <p className="dim a-small">
-            O app mede a volta pelos pacotes entre duas passagens pela linha de largada. Se o replay
-            começar no meio da volta, a volta parcial é ignorada e a próxima volta completa é
-            gravada. A pista precisa ser uma em que você já completou uma volta ao vivo. Replays são
-            suavizados: ótimo para aprender frenagens e traçado, não para contar milésimos.
-          </p>
-        </Card>
+      <details className="cap-how">
+        <summary>Como funciona e limites</summary>
+        <ol className="a-steps-howto">
+          <li>
+            No jogo, abra o <strong>replay da volta</strong> (Time Trial › Ranking › Replay) e dê
+            play. O app percebe sozinho.
+          </li>
+          <li>
+            Deixe tocar a <strong>1×</strong>: <strong>não pause, não volte e não avance</strong>.
+            Qualquer salto descarta a volta.
+          </li>
+          <li>O app grava a volta entre duas passagens pela linha de largada e salva sozinho.</li>
+        </ol>
+        <p className="dim a-small">
+          Se o replay começar no meio da volta, a parte inicial é ignorada e a próxima volta
+          completa é gravada. Replays são suavizados: ótimos para aprender frenagens e traçado, não
+          para contar milésimos.
+        </p>
+      </details>
 
-        <Card title="3. Status" className="a-capture-status">
-          {!status && wsStatus !== 'open' && polled === null ? (
-            <ErrorBox
-              error="Sem resposta do servidor: a captura precisa do app rodando no PC."
-              compact
-            />
-          ) : (
-            <>
-              <p className="a-capture-state" data-state={status?.state ?? 'idle'}>
-                <span className="a-dot" aria-hidden="true" />
-                {status
-                  ? phase === 'running' && !active
-                    ? 'Iniciando a captura…'
-                    : status.state === 'waitingLapStart' && status.waiting
-                      ? CAPTURE_WAITING_TITLES[status.waiting]
-                      : CAPTURE_STATE_LABELS[status.state]
-                  : '—'}
-              </p>
-              {connection && (
-                <p className="dim a-small">
-                  Console: {CONNECTION_STATE_LABELS[connection]}
-                  {status?.replayDetected ? ' · replay detectado' : ''}
-                  {status?.trackName ? ` · pista: ${status.trackName}` : ''}
-                </p>
-              )}
-              {active && status && (
-                <>
-                  <ol className="a-steps">
-                    {STEPS.map((text, i) => (
-                      <li
-                        key={text}
-                        data-step={i < stepIndex ? 'done' : i === stepIndex ? 'now' : 'todo'}
-                      >
-                        {i === 2 && status.state === 'recording' && status.recordingMs != null
-                          ? `Gravando a volta ${clockText(status.recordingMs)}`
-                          : text}
-                      </li>
-                    ))}
-                  </ol>
-                  {status.state === 'recording' && status.lapFraction != null && (
-                    <progress
-                      className="a-progress"
-                      max={1}
-                      value={status.lapFraction}
-                      aria-label="Progresso da volta"
-                    />
-                  )}
-                  {status.state === 'waitingLapStart' && status.waiting && (
-                    <p
-                      className={status.waiting === 'unknownTrack' ? 'a-form-error' : 'dim'}
-                      role="status"
-                    >
-                      {CAPTURE_WAITING_LABELS[status.waiting]}
-                    </p>
-                  )}
-                </>
-              )}
-              {rejected && (
-                <div className="a-rejected" role="alert">
-                  <strong>Volta descartada</strong> — o app espera a próxima passagem pela linha:
-                  <ul>
-                    {status!.issues.map((i) => (
-                      <li key={i}>{captureIssueLabel(i)}</li>
-                    ))}
-                  </ul>
-                  <TimeCheck status={status!} />
-                </div>
-              )}
-              {!active && status && status.issues.length > 0 && phase !== 'saved' && (
-                <div className="a-rejected">
-                  <strong>Problemas na última tentativa:</strong>
-                  <ul>
-                    {status.issues.map((i) => (
-                      <li key={i}>{captureIssueLabel(i)}</li>
-                    ))}
-                  </ul>
-                  <TimeCheck status={status} />
-                </div>
-              )}
-              {phase === 'saved' && (
-                <div className="a-saved">
-                  <p>
-                    <Tag tone="sb">salva</Tag> Volta de referência de{' '}
-                    <strong>{status?.driverName ?? form.driverName}</strong>
-                    {savedLap && (
-                      <>
-                        {' '}
-                        em <span className="num">{formatLapTime(savedLap.timeMs)}</span> ·{' '}
-                        <CarName
-                          carCode={savedLap.carCode}
-                          name={savedLap.referenceMeta?.carName}
-                          logoSize={20}
-                        />
-                      </>
-                    )}
-                  </p>
-                  {status && <TimeCheck status={status} />}
-                  {status?.timeSource && (
-                    <p className="dim a-small">
-                      {status.timeSource === 'ranking'
-                        ? 'Tempo salvo: o do ranking que você digitou (o medido pelos pacotes confere).'
-                        : 'Tempo salvo: medido pelos pacotes (±1–2 pacotes, cerca de ±30 ms), pois nenhum tempo do ranking foi digitado.'}
-                    </p>
-                  )}
-                  <div className="a-actions">
-                    {savedLap && myBest ? (
-                      <a
-                        className="a-btn"
-                        href={routes.compare({ lap: myBest.id, ref: savedLap.id })}
-                      >
-                        Comparar com o seu melhor ({formatLapTime(myBest.timeMs)})
-                      </a>
-                    ) : savedLap?.trackId ? (
-                      <a className="a-btn" href={routes.track(savedLap.trackId)}>
-                        Ver a pista
-                      </a>
-                    ) : null}
-                    <button
-                      type="button"
-                      className="a-btn a-btn-ghost"
-                      onClick={() => setPhase('form')}
-                    >
-                      Capturar outra
-                    </button>
-                  </div>
-                  {savedLap && !myBest && (
-                    <p className="dim a-small">
-                      Ainda não há volta sua válida com este carro nesta pista para comparar.
-                    </p>
-                  )}
-                </div>
-              )}
-              {phase === 'stopped' && !active && (
-                <p className="dim">Captura encerrada sem volta salva.</p>
-              )}
-            </>
-          )}
-        </Card>
-      </div>
-    </>
+      <ReferenceList
+        refs={refs.data}
+        error={refs.error}
+        loading={refs.loading}
+        tracks={tracks}
+        drivers={drivers}
+        onReload={reloadRefs}
+      />
+    </div>
   );
 }

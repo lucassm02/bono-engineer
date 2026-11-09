@@ -1,0 +1,42 @@
+/* "Nova versão — atualizar": discreet pill, bottom centre, . */
+.update-notice {
+  position: fixed;
+  left: 50%;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: calc(100vw - 24px);
+  padding: 4px 4px 4px 14px;
+  background: var(--panel-2);
+  border: 1px solid var(--accent);
+  border-radius: 99px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+  font-size: 14px;
+}
+.update-notice-go,
+.update-notice-x {
+  min-height: 44px;
+  border: 0;
+  border-radius: 99px;
+  font: inherit;
+  cursor: pointer;
+}
+.update-notice-go {
+  padding: 0 16px;
+  background: var(--accent);
+  color: #000;
+  font-weight: 700;
+}
+.update-notice-x {
+  min-width: 44px;
+  background: transparent;
+  color: var(--dim);
+}
+.update-notice-go:focus-visible,
+.update-notice-x:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}

@@ -150,6 +150,9 @@ export function sessionRoutes(app: FastifyInstance, ctx: RouteContext): void {
       carName: carName === undefined ? (prev?.carName ?? null) : carName,
       notes: notes === undefined ? (prev?.notes ?? null) : notes,
       capturedAt: prev?.capturedAt ?? Date.now(),
+      // Renaming must not lose where the time came from (Onda 9a/10a).
+      ...(prev?.timeSource ? { timeSource: prev.timeSource } : {}),
+      ...(prev?.measuredTimeMs != null ? { measuredTimeMs: prev.measuredTimeMs } : {}),
     };
     const saved = store.setReference(id, meta);
     runtime.refreshTrack();

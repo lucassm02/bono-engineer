@@ -6,6 +6,7 @@
 import { Component, type ReactNode, useEffect } from 'react';
 import { CaptureStatus, SessionSavedToast } from '../components/CaptureStatus.tsx';
 import { ConsoleChip, ConsolePanelHost } from '../components/ConsoleLink.tsx';
+import { UpdateNotice } from '../components/UpdateNotice.tsx';
 import type { Route } from '../lib/route.ts';
 import { routes } from '../lib/route.ts';
 import { dismissNotice, useUi } from '../state/uiStore.ts';
@@ -22,6 +23,7 @@ import '../styles/analysis.css';
 import '../styles/home.css';
 import '../styles/cars.css';
 import '../styles/tracks.css';
+import '../styles/capture.css';
 
 type IconName = 'live' | 'home' | 'compare' | 'capture' | 'coach' | 'guide' | 'config';
 
@@ -291,6 +293,7 @@ export default function AnalysisApp({ route }: { route: Route }) {
       <Toasts />
       <SessionSavedToast />
       <ConsolePanelHost />
+      <UpdateNotice />
     </div>
   );
 }

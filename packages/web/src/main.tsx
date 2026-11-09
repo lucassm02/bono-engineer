@@ -6,11 +6,13 @@ import { BOOT_WAIT_MS, bootTarget, openedWithoutRoute } from './lib/boot.ts';
 import { decideOnboarding, ONBOARDING_KEY, ONBOARDING_WAIT_MS } from './lib/onboarding.ts';
 import { isAnalysisRoute, navigate, parseRoute, type Route, routes } from './lib/route.ts';
 import { loadString } from './lib/storage.ts';
+import { startSwUpdateWatch } from './lib/swUpdate.ts';
 import { setupKeepAwake } from './lib/wakeLock.ts';
 import { startConnection } from './net/connection.ts';
 import { addNotice, useUi } from './state/uiStore.ts';
 import './styles/connection.css';
 import './styles/index.css';
+import './styles/live-menu.css';
 import './styles/views-extra.css';
 
 /** Analysis & settings area: separate chunk, so the live dashboard bundle stays light. */
@@ -19,6 +21,7 @@ const AnalysisApp = lazy(() => import('./analysis/AnalysisApp.tsx'));
 const Onboarding = lazy(() => import('./components/Onboarding.tsx'));
 
 startConnection();
+startSwUpdateWatch();
 setupKeepAwake((mode) => {
   useUi.setState({ keepAwake: mode });
   if (mode !== 'wakeLock' && !isAnalysisRoute(parseRoute(location.hash))) {

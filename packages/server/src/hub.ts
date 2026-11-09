@@ -25,6 +25,7 @@ import {
   isPacketFormat,
   isViewId,
   normalizeDeviceProfile,
+  normalizeDriverName,
   type ServerMessage,
   type ServerStatus,
   type ViewId,
@@ -500,9 +501,6 @@ export class WsHub {
         return;
       }
       case 'startReferenceCapture': {
-        if (typeof msg.driverName !== 'string' || !msg.driverName.trim()) {
-          return this.#error(c, 'badMessage', 'Informe o nome do piloto da referência.');
-        }
         if (msg.format !== undefined && !isPacketFormat(msg.format)) {
           return this.#error(c, 'badMessage', 'Formato de pacote inválido.');
         }
@@ -515,7 +513,7 @@ export class WsHub {
         const fmt = msg.format ?? this.#savedCaptureFormat();
         this.runtime
           .startReferenceCapture({
-            driverName: msg.driverName.trim().slice(0, 80),
+            driverName: normalizeDriverName(msg.driverName),
             carName: typeof msg.carName === 'string' ? msg.carName.slice(0, 80) : null,
             rankingTimeMs: ranking,
             notes: typeof msg.notes === 'string' ? msg.notes.slice(0, 500) : null,

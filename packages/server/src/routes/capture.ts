@@ -1,8 +1,8 @@
 /** /api/capture: reference (replay) capture start/stop/status. */
 
-import { isPacketFormat, type ReferenceCaptureStatus } from '@gt7/shared';
+import { isPacketFormat, normalizeDriverName, type ReferenceCaptureStatus } from '@gt7/shared';
 import type { FastifyInstance } from 'fastify';
-import { badRequest, bodyObject, optBoolean, optNumber, optString, reqString } from '../http.ts';
+import { badRequest, bodyObject, optBoolean, optNumber, optString } from '../http.ts';
 import type { RouteContext } from './context.ts';
 
 export function captureRoutes(app: FastifyInstance, ctx: RouteContext): void {
@@ -15,14 +15,15 @@ export function captureRoutes(app: FastifyInstance, ctx: RouteContext): void {
   /**
    * Arms a capture (Onda 9a) and answers 202 right away; progress (waiting for the replay, track,
    * start line, recording, validation) is pushed as `status` / `notice` over the WebSocket and is
-   * in `GET /api/capture`. Body: `driverName` (required), optional `carName`, `notes`,
+   * in `GET /api/capture`. Body: optional `driverName` (default "Piloto do replay"), `carName`, `notes`,
    * `rankingTimeMs` (validation), `expectedCarCode` and `trackId` (skips the identification of
    * the track from the replay's position; 400 if it does not exist). `format` is accepted but the
    * packet format is not changed any more.
    */
   app.post('/capture/start', async (req, reply) => {
     const b = bodyObject(req.body);
-    const driverName = reqString(b, 'driverName', 'driverName', 80);
+    // Optional since Onda 10a: without a name the lap is saved as 'Piloto do replay'.
+    const driverName = normalizeDriverName(optString(b, 'driverName', 'driverName', 80));
     const carName = optString(b, 'carName', 'carName', 80);
     const notes = optString(b, 'notes', 'notes', 500);
     const rankingTimeMs = optNumber(b, 'rankingTimeMs', 'rankingTimeMs', {
