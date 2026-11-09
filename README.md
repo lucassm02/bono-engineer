@@ -426,10 +426,11 @@ O servidor MCP entrega à IA métricas de piloto já calculadas, não os 60 Hz c
 **Claude Code, stdio** (já com o caminho deste repositório):
 
 ```powershell
-claude mcp add gt7 -- node --disable-warning=ExperimentalWarning --import file:///C:/Users/lucas/Projects/gt7/node_modules/tsx/dist/loader.mjs C:\Users\lucas\Projects\gt7\packages\mcp\src\stdio.ts --data C:\Users\lucas\Projects\gt7\data
+claude mcp add gt7 -- node --disable-warning=ExperimentalWarning --import file:///C:/Users/lucas/Projects/gt7/node_modules/tsx/dist/loader.mjs C:\Users\lucas\Projects\gt7\packages\mcp\src\stdio.ts
 ```
 
-Use `--scope user` para valer em todos os projetos.
+Use `--scope user` para valer em todos os projetos. Sem `--data`, o MCP lê a mesma pasta de dados do app
+(veja "Onde ficam os dados"), então não há caminho para configurar.
 
 **Claude Code, HTTP** (app rodando):
 
@@ -450,9 +451,7 @@ claude mcp add --transport http gt7-live http://localhost:8770/mcp --header "Aut
         "--disable-warning=ExperimentalWarning",
         "--import",
         "file:///C:/Users/lucas/Projects/gt7/node_modules/tsx/dist/loader.mjs",
-        "C:\\Users\\lucas\\Projects\\gt7\\packages\\mcp\\src\\stdio.ts",
-        "--data",
-        "C:\\Users\\lucas\\Projects\\gt7\\data"
+        "C:\\Users\\lucas\\Projects\\gt7\\packages\\mcp\\src\\stdio.ts"
       ]
     }
   }
@@ -460,9 +459,10 @@ claude mcp add --transport http gt7-live http://localhost:8770/mcp --header "Aut
 ```
 
 Pontos de atenção: o `--import` precisa ser uma **URL `file:///`** (o Claude Desktop inicia o processo em
-outra pasta); `node` precisa estar no PATH; o `--data` deve ser a pasta de dados do app (`data`, **não**
-`data\demo`). Logs do processo: `%APPDATA%\Claude\logs\mcp-server-gt7.log`. A seção **Configurações › Integração com IA**
-do app mostra os mesmos trechos prontos.
+outra pasta); `node` precisa estar no PATH. O `--data` é opcional: só use se mudou a pasta de dados do app
+(`--data` ou `GT7_DATA` no servidor); ele deve apontar para a pasta de dados, **não** para a subpasta `demo`.
+Logs do processo: `%APPDATA%\Claude\logs\mcp-server-gt7.log`. A seção **Configurações › Integração com IA**
+do app mostra trechos prontos (eles já trazem o caminho real da pasta em uso, o que também funciona).
 
 Depois, peça em linguagem natural ("faça o debrief da minha última sessão"), ou use os prompts prontos
 `debrief_sessao`, `foco_curva` e `plano_treino`. Lista de ferramentas e detalhes:
@@ -480,7 +480,7 @@ Depois, peça em linguagem natural ("faça o debrief da minha última sessão"),
 | `npm run build` | Compila o painel web |
 | `npm run desktop` | App de desktop (Electron) em modo de desenvolvimento: compila o necessário e abre a janela |
 | `npm run desktop:dist` | Gera o instalador e o `.exe` portátil em `packages/desktop/release` (veja "App de desktop") |
-| `npm run mcp` | Servidor MCP stdio (use `npm run -s mcp -- --data data` para o npm não escrever no stdout) |
+| `npm run mcp` | Servidor MCP stdio (use `npm run -s mcp` para o npm não escrever no stdout; a pasta de dados é a do app) |
 | `npm run mcp:sample-chart` | Regera os gráficos de exemplo em `docs/` (dados sintéticos) |
 | `npm run sniff -- --ps-ip IP` | Conecta ao console e imprime 1 linha por segundo (diagnóstico; opções: `--format A\|B\|~\|C`, `--record arquivo.gt7rec`, `--discover`) |
 | `npm run live -- --ps-ip IP` | Linha ao vivo no terminal usando o motor completo (delta, setores) |
@@ -493,7 +493,7 @@ No PowerShell, o formato `~` precisa de aspas: `--format '~'`.
 > **Atenção no Windows PowerShell 5.1:** o `npm.ps1` engole o primeiro `--`, então
 > `npm run demo -- --no-open` abre o navegador mesmo assim e `npm run -s mcp -- --data X`
 > ignora o `--data`. Use `npm.cmd run demo -- --no-open`, repita o separador (`-- --`),
-> ou variáveis de ambiente (`$env:GT7_NO_OPEN=1`, `$env:GT7_DATA="C:\caminho\data"`).
+> ou variáveis de ambiente (`$env:GT7_NO_OPEN=1`, `$env:GT7_DATA="C:\outra\pasta"`).
 > No Git Bash e no cmd funciona normalmente.
 
 ### Flags do servidor (opcionais, para avançados: `npm start -- ...`, `npm run demo -- ...`)
