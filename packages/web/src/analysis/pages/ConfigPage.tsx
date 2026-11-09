@@ -12,11 +12,13 @@ import {
   DELTA_REFERENCE_KINDS,
   type DeviceInfo,
   PACKET_FORMATS,
+  PRODUCT_NAME,
   VIEW_IDS,
   type ViewId,
 } from '@gt7/shared';
 import { useEffect, useState } from 'react';
 import { ConnectionDetails } from '../../components/ConsoleLink.tsx';
+import { GT7_INTEGRATION } from '../../lib/integrations.ts';
 import { DELTA_REFERENCE_LABELS, VIEW_LABELS } from '../../lib/labels.ts';
 import { ONBOARDING_KEY } from '../../lib/onboarding.ts';
 import { type Route, routes } from '../../lib/route.ts';
@@ -64,16 +66,21 @@ function useSave() {
 
 function ConnectionSection({ status, onChange }: { status: ApiStatus; onChange: () => void }) {
   const s = status.settings;
+  const isDemo = (status.telemetrySource ?? (status.simulator ? 'demo' : 'gt7')) === 'demo';
   const { busy, run } = useSave();
   const patch = async (p: ApiSettingsPatch, ok: string) => {
     if (await run(() => api.patchSettings(p), ok)) onChange();
   };
   return (
-    <Card title="Conexão com o PS5" id="conexao">
+    <Card title="Integração de telemetria" id="conexao">
+      <p className="a-integration-label">
+        <strong>{GT7_INTEGRATION.name}</strong>
+        <Tag tone="info">{GT7_INTEGRATION.platform}</Tag>
+      </p>
       <div className="cx-inline">
         <ConnectionDetails />
       </div>
-      {status.simulator && (
+      {isDemo && (
         <p className="a-note a-mt">
           <Tag tone="warn">Demo</Tag> Modo demonstração: o console é simulado dentro do app.
         </p>
@@ -727,7 +734,7 @@ function AboutSection({ status }: { status: ApiStatus }) {
     <Card title="Sobre" id="sobre">
       <div className="a-setting-row">
         <div>
-          <strong>GT7 Engenheiro</strong>
+          <strong>{PRODUCT_NAME}</strong>
           <div className="dim a-small">
             Versão <span className="num">{status.serverVersion}</span> · porta{' '}
             <span className="num">{status.httpPort}</span>

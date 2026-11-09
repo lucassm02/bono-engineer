@@ -6,7 +6,7 @@
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-export const APP_NAME = 'GT7 Race Engineer';
+const LEGACY_PROFILE_NAME = 'GT7 Race Engineer';
 
 export interface PathContext {
   platform?: NodeJS.Platform;
@@ -29,10 +29,10 @@ export function electronUserDataDir(ctx: PathContext = {}): string {
   const env = ctx.env ?? process.env;
   const home = ctx.home ?? homedir();
   if (platform === 'win32') {
-    return join(env.LOCALAPPDATA || join(home, 'AppData', 'Local'), APP_NAME);
+    return join(env.LOCALAPPDATA || join(home, 'AppData', 'Local'), LEGACY_PROFILE_NAME);
   }
   if (platform === 'darwin') {
-    return join(home, 'Library', 'Application Support', `${APP_NAME} Desktop`);
+    return join(home, 'Library', 'Application Support', `${LEGACY_PROFILE_NAME} Desktop`);
   }
   return join(env.XDG_CONFIG_HOME || join(home, '.config'), 'gt7-race-engineer-desktop');
 }

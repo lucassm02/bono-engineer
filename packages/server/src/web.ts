@@ -8,7 +8,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import fastifyStatic from '@fastify/static';
 import { AnalysisError } from '@gt7/core';
-import { API_PREFIX, WS_PATH } from '@gt7/shared';
+import { API_PREFIX, PRODUCT_NAME, WS_PATH } from '@gt7/shared';
 import type { FastifyError, FastifyInstance } from 'fastify';
 import { analysisErrorStatus, HttpError, requestPath, sendError } from './http.ts';
 
@@ -25,7 +25,7 @@ const MISSING_DIST_HTML = `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>GT7 Race Engineer</title>
+<title>${PRODUCT_NAME}</title>
 <style>
   :root { color-scheme: dark; }
   body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #0b0d10;

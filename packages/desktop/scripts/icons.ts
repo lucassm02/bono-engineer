@@ -1,58 +1,19 @@
 /**
- * Generates the app icon from an SVG (speedometer in the dashboard's palette) with @resvg/resvg-js:
- * build/icon.png (512), build/tray.png (32) and build/icon.ico (16…256, PNG-compressed entries).
- * Pure JS output, no native tooling. Run by scripts/build.ts.
+ * Generates desktop and PWA assets from the same vector mark.
+ * The desktop build uses generateIcons. Run npm run brand:icons to refresh both sets.
  */
 
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { Resvg } from '@resvg/resvg-js';
+import { brandIconContents, PRODUCT_NAME } from '../../shared/src/brand.ts';
 
-const C = 256;
-const CY = C + 28;
-const R = 150;
-
-function pt(deg: number, r = R): [number, number] {
-  const a = (deg * Math.PI) / 180;
-  return [C + r * Math.cos(a), CY + r * Math.sin(a)];
-}
-
-/** Arc along the gauge from `a0` to `a1` degrees (SVG angles, clockwise from the +x axis). */
-function arc(a0: number, a1: number, r = R): string {
-  const [x0, y0] = pt(a0, r);
-  const [x1, y1] = pt(a1, r);
-  const large = a1 - a0 > 180 ? 1 : 0;
-  return `M${x0.toFixed(1)} ${y0.toFixed(1)} A${r} ${r} 0 ${large} 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`;
-}
-
-export function iconSvg(): string {
-  const start = 135;
-  const sweep = 270;
-  const at = (f: number) => start + sweep * f;
-  const seg = (f0: number, f1: number, color: string) =>
-    `<path d="${arc(at(f0), at(f1))}" fill="none" stroke="${color}" stroke-width="44" stroke-linecap="butt"/>`;
-  const ticks: string[] = [];
-  for (let i = 0; i <= 10; i++) {
-    const major = i % 5 === 0;
-    const [x0, y0] = pt(at(i / 10), R - 38);
-    const [x1, y1] = pt(at(i / 10), R - (major ? 76 : 62));
-    ticks.push(
-      `<line x1="${x0.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}" stroke="#f1f4f6" stroke-opacity="${major ? 0.95 : 0.55}" stroke-width="${major ? 9 : 6}" stroke-linecap="round"/>`,
-    );
-  }
-  const [nx, ny] = pt(at(0.72), R - 52);
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-<title>GT7 Race Engineer</title>
-<rect width="512" height="512" rx="112" fill="#0b0d10"/>
-<circle cx="${C}" cy="${CY}" r="${R + 44}" fill="#14181d"/>
-<circle cx="${C}" cy="${CY}" r="${R + 44}" fill="none" stroke="#262d35" stroke-width="10"/>
-${seg(0.012, 0.58, '#22e07a')}${seg(0.6, 0.78, '#ffb21e')}${seg(0.8, 0.988, '#ff3d4a')}
-${ticks.join('\n')}
-<line x1="${C}" y1="${CY}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}" stroke="#f1f4f6" stroke-width="16" stroke-linecap="round"/>
-<circle cx="${C}" cy="${CY}" r="26" fill="#f1f4f6"/>
-<circle cx="${C}" cy="${CY}" r="10" fill="#0b0d10"/>
-<rect x="196" y="${CY + 96}" width="120" height="14" rx="7" fill="#f1f4f6" fill-opacity="0.8"/>
-</svg>`;
+function iconSvg(maskable = false): string {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<title>${PRODUCT_NAME}</title>
+${brandIconContents(maskable)}
+</svg>\n`;
 }
 
 function png(svg: string, size: number): Buffer {
@@ -94,4 +55,16 @@ export function generateIcons(buildDir: string): void {
     join(buildDir, 'icon.ico'),
     buildIco(sizes.map((size) => ({ size, data: png(svg, size) }))),
   );
+}
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  const desktop = join(dirname(fileURLToPath(import.meta.url)), '..');
+  generateIcons(join(desktop, 'build'));
+  const web = join(desktop, '..', 'web', 'public');
+  const svg = iconSvg();
+  writeFileSync(join(web, 'favicon.svg'), svg);
+  writeFileSync(join(web, 'icon-192.png'), png(svg, 192));
+  writeFileSync(join(web, 'icon-512.png'), png(svg, 512));
+  writeFileSync(join(web, 'apple-touch-icon.png'), png(iconSvg(true), 180));
+  writeFileSync(join(web, 'icon-maskable-512.png'), png(iconSvg(true), 512));
 }

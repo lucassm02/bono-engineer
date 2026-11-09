@@ -440,6 +440,8 @@ export interface ApiStatus extends ServerStatus {
   tokenRequired: boolean;
   /** In-process fake console (demo mode). */
   simulator: boolean;
+  /** Configured telemetry source. Absent on servers from before the brand update. */
+  telemetrySource?: 'gt7' | 'demo';
 }
 
 /** GET /api/lan: where the dashboard is reachable from the phone. */

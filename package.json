@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "GT7 Race Engineer: live telemetry dashboard, lap analysis and MCP coach for Gran Turismo 7",
+  "description": "Bono Engineer: live telemetry, race radio and lap analysis for sim racing",
   "engines": {
     "node": ">=24.0.0"
   },
@@ -27,6 +27,7 @@
     "start": "node --disable-warning=ExperimentalWarning --import tsx packages/server/src/main.ts",
     "demo": "node --disable-warning=ExperimentalWarning --import tsx packages/server/src/main.ts --sim",
     "build": "npm run build -w @gt7/web",
+    "brand:icons": "node --import tsx packages/desktop/scripts/icons.ts",
     "desktop": "node --disable-warning=ExperimentalWarning --import tsx packages/desktop/scripts/dev.ts",
     "desktop:build": "node --disable-warning=ExperimentalWarning --import tsx packages/desktop/scripts/build.ts",
     "desktop:dist": "node --disable-warning=ExperimentalWarning --import tsx packages/desktop/scripts/dist.ts"

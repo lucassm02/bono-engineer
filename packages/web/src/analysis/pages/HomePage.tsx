@@ -5,6 +5,7 @@
 
 import { useMemo, useState } from 'react';
 import { formatLapTime } from '../../lib/format.ts';
+import { GT7_INTEGRATION } from '../../lib/integrations.ts';
 import { routes } from '../../lib/route.ts';
 import { loadJson, saveJson } from '../../lib/storage.ts';
 import { api } from '../api.ts';
@@ -174,14 +175,13 @@ function EmptyHome({ hiddenDemo, onShowDemo }: { hiddenDemo: boolean; onShowDemo
         </p>
       ) : (
         <p>
-          Abra o Gran Turismo 7 e dê algumas voltas: cada pista que você correr ganha um cartão com
-          seus tempos, sem precisar criar pastas nem configurar nada.
+          Entre em uma pista no simulador conectado e dê algumas voltas. Seus tempos aparecem aqui,
+          organizados por pista.
         </p>
       )}
       {!hiddenDemo && (
         <p className="dim">
-          Ainda não ligou o console?{' '}
-          <a href={routes.config('conexao')}>Veja a conexão com o PlayStation</a>.
+          <a href={routes.config('conexao')}>Configurar a integração de telemetria</a>
         </p>
       )}
       <div className="a-actions a-actions-center">
@@ -249,24 +249,47 @@ export function HomePage() {
 
   return (
     <>
-      <PageHead
-        title="Suas pistas"
-        sub={
-          data && tracks.length > 0
-            ? `${plural(tracks.length, 'pista', 'pistas')} · ${plural(totalLaps, 'volta', 'voltas')} guardadas. Escolha uma pista para ver seus melhores tempos e evolução.`
-            : 'Seu histórico de voltas, organizado por pista automaticamente.'
-        }
-        actions={
-          <>
-            <a className="a-btn a-btn-ghost" href={routes.sessions()}>
-              Todas as sessões
-            </a>
-            <a className="a-btn" href={routes.live()}>
-              Ao vivo
-            </a>
-          </>
-        }
-      />
+      <div className="a-pitwall">
+        <div className="a-pitwall-content">
+          <p className="a-pitwall-kicker">Seu engenheiro de pista</p>
+          <PageHead
+            title="Suas pistas"
+            sub={
+              data && tracks.length > 0
+                ? `${plural(tracks.length, 'pista', 'pistas')} · ${plural(totalLaps, 'volta', 'voltas')} guardadas. Escolha uma pista para ver seus melhores tempos e evolução.`
+                : 'Seu histórico de voltas, organizado por pista automaticamente.'
+            }
+            actions={
+              <>
+                <a className="a-btn" href={routes.live()}>
+                  Abrir painel ao vivo
+                </a>
+                <a className="a-btn a-btn-ghost" href={routes.sessions()}>
+                  Todas as sessões
+                </a>
+              </>
+            }
+          />
+          <a className="a-pitwall-integration" href={routes.config('conexao')}>
+            <span>{isDemo ? 'Fonte das voltas' : 'Integração disponível'}</span>
+            <strong>{isDemo ? 'Demonstração' : GT7_INTEGRATION.name}</strong>
+          </a>
+        </div>
+        <svg className="a-pitwall-signal" viewBox="0 0 440 236" aria-hidden="true">
+          <path
+            className="a-pitwall-grid"
+            d="M0 44h440M0 93h440M0 142h440M0 191h440M72 0v236M132 0v236M192 0v236M252 0v236M312 0v236M372 0v236"
+          />
+          <path
+            className="a-pitwall-echo"
+            d="M0 192h105l38-26h31l39-48h35l28 22h44l56-38h64M0 180h97l43-32h32l38-47h39l30 25h41l54-40h66"
+          />
+          <path className="a-pitwall-trace" d="M0 166h95l43-38h30l40-48h42l30 28h37l55-41h68" />
+          <path className="a-pitwall-axis" d="M208 44v148M372 44v148" />
+          <circle cx="208" cy="80" r="4" />
+          <circle cx="372" cy="67" r="4" />
+        </svg>
+      </div>
 
       {overview.error && !data ? (
         <ErrorBox error={overview.error} onRetry={overview.reload} />

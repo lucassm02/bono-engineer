@@ -11,6 +11,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../analysis/api.ts';
 import { copyText } from '../analysis/components/ui.tsx';
 import { agoText, describeLink, hostsProbedText, ipSourceLabel } from '../lib/consoleLink.ts';
+import { GT7_INTEGRATION } from '../lib/integrations.ts';
 import {
   HELP_AFTER_MS,
   needsHelp,
@@ -167,7 +168,7 @@ function SearchStep({ startedAt }: { startedAt: number }) {
   return (
     <>
       <Radar found={false} />
-      <h1>Vamos achar o seu PS5</h1>
+      <h1>Conecte o {GT7_INTEGRATION.name}</h1>
       <p className="ob-lead">
         No PS5, <strong>abra o Gran Turismo 7 e entre em uma pista</strong> (ou num replay). O resto
         é comigo.

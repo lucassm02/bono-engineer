@@ -1,12 +1,13 @@
 /** Small building blocks of the analysis area (cards, states, confirm, copy). */
 
+import { PRODUCT_NAME } from '@gt7/shared';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { routes } from '../../lib/route.ts';
 import type { ApiError } from '../api.ts';
 
 export function useTitle(title: string): void {
   useEffect(() => {
-    document.title = `${title} · GT7 Engenheiro`;
+    document.title = `${title} · ${PRODUCT_NAME}`;
   }, [title]);
 }
 

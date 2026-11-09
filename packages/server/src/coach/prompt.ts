@@ -6,7 +6,14 @@
 
 import type { Gt7Store } from '@gt7/core';
 import { COACH_PERSONA, cornerFocusTask, debriefTask } from '@gt7/mcp';
-import { COACH_RULES, carLabel, type Lap, type Session, type Track } from '@gt7/shared';
+import {
+  COACH_RULES,
+  carLabel,
+  type Lap,
+  PRODUCT_NAME,
+  type Session,
+  type Track,
+} from '@gt7/shared';
 import { MAX_TOOL_ITERATIONS } from './config.ts';
 
 /**
@@ -24,7 +31,7 @@ ${COACH_RULES.map((r) => `- ${r}`).join('\n')}`;
 /** Stable system prompt (cached prefix: never put per-request data here). */
 export const COACH_SYSTEM_PROMPT = `${COACH_PERSONA}
 
-Você está dentro do app GT7 Race Engineer, no botão "Debrief com IA": o relatório aparece ao lado \
+Você está dentro do app ${PRODUCT_NAME}, no botão "Debrief com IA": o relatório aparece ao lado \
 dos gráficos da página de análise, e o piloto pode fazer perguntas de acompanhamento depois.
 
 Regras do relatório no app:

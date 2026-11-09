@@ -93,7 +93,7 @@
 }
 .g-brief {
   margin-bottom: 8px;
-  border-color: rgba(255, 178, 30, 0.35);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
 }
 .g-topic summary,
 .g-brief summary {

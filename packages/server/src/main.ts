@@ -14,7 +14,7 @@
 import { type ChildProcess, spawn, spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { defaultDataDir, migrateLegacyData } from '@gt7/core';
-import type { ConsoleLinkState } from '@gt7/shared';
+import { type ConsoleLinkState, PRODUCT_NAME } from '@gt7/shared';
 import { type Gt7Server, SERVER_VERSION } from './app.ts';
 import { renderBanner, renderFirewall } from './banner.ts';
 import {
@@ -161,7 +161,7 @@ async function main(): Promise<void> {
 
   if (running.attached) {
     const url = withToken(running.url, cfg.token);
-    console.log(`  O GT7 Race Engineer já está aberto em ${running.url}.`);
+    console.log(`  O ${PRODUCT_NAME} já está aberto em ${running.url}.`);
     if (cfg.open) {
       console.log('  Abrindo o navegador nele.');
       openBrowser(url);

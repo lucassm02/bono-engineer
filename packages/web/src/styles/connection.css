@@ -250,7 +250,7 @@
 }
 .cx-status[data-tone="busy"],
 .cx-status[data-tone="info"] {
-  border-color: rgba(255, 178, 30, 0.4);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
 }
 .cx-status[data-tone="warn"] {
   border-color: rgba(255, 214, 10, 0.4);
@@ -326,7 +326,12 @@
   flex-direction: column;
   overflow-y: auto;
   background:
-    radial-gradient(900px 520px at 50% -8%, rgba(255, 178, 30, 0.14), transparent 70%), var(--bg);
+    radial-gradient(
+      900px 520px at 50% -8%,
+      color-mix(in srgb, var(--accent) 14%, transparent),
+      transparent 70%
+    ),
+    var(--bg);
   color: var(--text);
   user-select: text;
   -webkit-user-select: text;

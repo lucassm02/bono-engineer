@@ -1,6 +1,11 @@
 /** Startup banner (pt-BR): local + LAN URLs, terminal QR, console and firewall status. */
 
-import type { ConsoleIpSource, FirewallStatus, PacketFormat } from '@gt7/shared';
+import {
+  type ConsoleIpSource,
+  type FirewallStatus,
+  type PacketFormat,
+  PRODUCT_NAME,
+} from '@gt7/shared';
 import { qrTerminal } from './lan.ts';
 
 export interface BannerInput {
@@ -27,7 +32,7 @@ export interface BannerInput {
 
 export async function renderBanner(b: BannerInput): Promise<string> {
   const lines: string[] = [];
-  const title = `GT7 Race Engineer — servidor v${b.version}`;
+  const title = `${PRODUCT_NAME} — servidor v${b.version}`;
   lines.push('', `  ${title}`, `  ${'─'.repeat(title.length)}`);
   lines.push(`  Neste PC:     ${b.localUrl}`);
   if (b.devUrl) lines.push(`  Vite (dev):   ${b.devUrl}`);

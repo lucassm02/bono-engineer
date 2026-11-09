@@ -54,6 +54,7 @@ export function apiStatus(ctx: RouteContext): ApiStatus {
     httpPort: ctx.httpPort,
     tokenRequired: ctx.tokenRequired,
     simulator: ctx.simulator,
+    telemetrySource: ctx.simulator ? 'demo' : 'gt7',
   };
 }
 

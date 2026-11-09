@@ -36,6 +36,7 @@ import type {
   TrackRecognition,
   ViewId,
 } from '@gt7/shared';
+import { PRODUCT_NAME } from '@gt7/shared';
 import type { TracksOverview } from './lib/history.ts';
 
 export class ApiError extends Error {
@@ -55,7 +56,7 @@ export class ApiError extends Error {
 }
 
 export const OFFLINE_MESSAGE =
-  'Não foi possível falar com o servidor do GT7 Engenheiro. Confira se ele está rodando ' +
+  `Não foi possível falar com o servidor do ${PRODUCT_NAME}. Confira se ele está rodando ` +
   '(npm start ou npm run demo) e se este aparelho está na mesma rede.';
 
 const STATUS_MESSAGES: Record<number, string> = {

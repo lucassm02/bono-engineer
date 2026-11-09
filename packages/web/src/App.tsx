@@ -1,3 +1,4 @@
+import { PRODUCT_NAME } from '@gt7/shared';
 import { useEffect, useRef } from 'react';
 import { animateStep, Carousel } from './components/Carousel.tsx';
 import {
@@ -73,6 +74,7 @@ export function App() {
   useGestures(rootRef, onGesture);
 
   useEffect(() => {
+    document.title = PRODUCT_NAME;
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);

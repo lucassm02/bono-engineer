@@ -1,5 +1,5 @@
 /*
- * GT7 Engenheiro — dashboard styles.
+ * Bono Engineer — dashboard styles.
  * Pure black base (OLED phones in a mount: max contrast, min battery). Pit-board amber is the only
  * UI-chrome accent; green/red/purple/yellow are reserved for racing semantics (delta, sectors,
  * tyres, shift lights). One condensed DIN-like family carries every number.
@@ -14,6 +14,8 @@
   --dim: #8592a0;
   --faint: #46515c;
   --accent: #ffb21e;
+  --brand-signal: #66e4f6;
+  --brand-surface: #0b1118;
   --gain: #22e07a;
   --loss: #ff3d4a;
   --purple: #b266ff;
@@ -28,6 +30,37 @@
   --safe-b: max(env(safe-area-inset-bottom), 8px);
   --safe-l: max(env(safe-area-inset-left), 12px);
   color-scheme: dark;
+}
+
+.product-brand {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+}
+.product-brand img {
+  display: block;
+  border: 1px solid #243642;
+  border-radius: 9px;
+}
+.product-wordmark {
+  display: grid;
+  gap: 3px;
+  line-height: 1;
+  white-space: nowrap;
+}
+.product-wordmark strong {
+  font-size: 22px;
+  font-weight: 750;
+  letter-spacing: -0.04em;
+}
+.product-wordmark span {
+  color: var(--brand-signal);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
 }
 
 *,

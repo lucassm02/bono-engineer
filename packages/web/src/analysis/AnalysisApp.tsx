@@ -6,6 +6,7 @@
 import { Component, type ReactNode, useEffect } from 'react';
 import { CaptureStatus, SessionSavedToast } from '../components/CaptureStatus.tsx';
 import { ConsoleChip, ConsolePanelHost } from '../components/ConsoleLink.tsx';
+import { ProductBrand } from '../components/ProductBrand.tsx';
 import { UpdateNotice } from '../components/UpdateNotice.tsx';
 import type { Route } from '../lib/route.ts';
 import { routes } from '../lib/route.ts';
@@ -257,8 +258,7 @@ export default function AnalysisApp({ route }: { route: Route }) {
     <div className="a-app">
       <aside className="a-side">
         <a className="a-brand" href={routes.home()}>
-          <span className="a-brand-mark" aria-hidden="true" />
-          GT7 Engenheiro
+          <ProductBrand />
         </a>
         <nav className="a-nav" aria-label="Seções">
           {NAV.map((n) => (
@@ -280,8 +280,7 @@ export default function AnalysisApp({ route }: { route: Route }) {
       </aside>
       <header className="a-mtop">
         <a className="a-brand" href={routes.home()}>
-          <span className="a-brand-mark" aria-hidden="true" />
-          GT7 Engenheiro
+          <ProductBrand />
         </a>
         <ConnectionPill />
       </header>

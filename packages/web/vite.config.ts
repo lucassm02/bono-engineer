@@ -1,6 +1,7 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { PRODUCT_DESCRIPTION, PRODUCT_NAME } from '../shared/src/brand.ts';
 
 // Keep in sync with @gt7/shared DEFAULT_HTTP_PORT (not imported: the config is bundled by Node
 // before workspace TS sources are resolvable).
@@ -15,9 +16,9 @@ export default defineConfig({
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
         id: '/',
-        name: 'GT7 Engenheiro',
-        short_name: 'GT7 Eng.',
-        description: 'Painel ao vivo de telemetria do Gran Turismo 7',
+        name: PRODUCT_NAME,
+        short_name: 'Bono',
+        description: PRODUCT_DESCRIPTION,
         lang: 'pt-BR',
         dir: 'ltr',
         start_url: '/',

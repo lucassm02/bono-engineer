@@ -4,6 +4,7 @@
  * (no network, no script) loaded through a data: URL.
  */
 
+import { BRAND_SIGNAL, BRAND_SURFACE, brandIconContents, PRODUCT_NAME } from '@gt7/shared';
 import { ACTION_SCHEME } from './paths.ts';
 
 export function escapeHtml(s: string): string {
@@ -19,39 +20,33 @@ const BASE_CSS = `
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; }
-  body { display: grid; place-items: center; background: #0b0d10; color: #e8eaed;
+  body { display: grid; place-items: center; background: ${BRAND_SURFACE}; color: #e8eaed;
     font: 16px/1.5 "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; overflow: hidden; }
   main { max-width: 560px; padding: 24px; text-align: center; }
-  .logo { width: 96px; height: 96px; margin: 0 auto 20px; display: block; }
+  .logo { width: 96px; height: 96px; margin: 0 auto 20px; display: block;
+    border: 1px solid #243642; border-radius: 21px; }
   h1 { font-size: 22px; font-weight: 600; margin: 0 0 10px; }
   p { margin: 8px 0; color: #b8bec6; }
-  .brand { letter-spacing: .14em; text-transform: uppercase; font-size: 12px; color: #6f7882; margin-top: 28px; }
+  .brand { letter-spacing: .14em; text-transform: uppercase; font-size: 12px; color: ${BRAND_SIGNAL}; margin-top: 28px; }
 `;
 
-const LOGO = `<svg class="logo" viewBox="0 0 96 96" aria-hidden="true">
-  <rect width="96" height="96" rx="20" fill="#000"/>
-  <path d="M26 74 A34 34 0 1 1 70 74" fill="none" stroke="#22e07a" stroke-width="9" stroke-dasharray="90 400"/>
-  <path d="M26 74 A34 34 0 1 1 70 74" fill="none" stroke="#ffb21e" stroke-width="9" stroke-dasharray="0 94 30 400"/>
-  <path d="M26 74 A34 34 0 1 1 70 74" fill="none" stroke="#ff3d4a" stroke-width="9" stroke-dasharray="0 128 32 400"/>
-  <line x1="48" y1="54" x2="63" y2="34" stroke="#f1f4f6" stroke-width="5" stroke-linecap="round"/>
-  <circle cx="48" cy="54" r="6" fill="#f1f4f6"/>
-</svg>`;
+const LOGO = `<svg class="logo" viewBox="0 0 64 64" aria-hidden="true">${brandIconContents()}</svg>`;
 
 export function splashHtml(): string {
   return `<!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><title>GT7 Race Engineer</title>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>${PRODUCT_NAME}</title>
 <style>${BASE_CSS}
   .spin { width: 28px; height: 28px; margin: 18px auto 6px; border-radius: 50%;
-    border: 3px solid #26303a; border-top-color: #22e07a; animation: r .9s linear infinite; }
+    border: 3px solid #26303a; border-top-color: ${BRAND_SIGNAL}; animation: r .9s linear infinite; }
   @keyframes r { to { transform: rotate(360deg); } }
-  @media (prefers-reduced-motion: reduce) { .spin { animation: none; border-top-color: #22e07a; } }
+  @media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
 </style></head>
 <body><main>
   ${LOGO}
   <h1>Iniciando…</h1>
   <div class="spin" role="status" aria-label="Iniciando"></div>
   <p>Preparando o servidor e o painel.</p>
-  <div class="brand">GT7 Race Engineer</div>
+  <div class="brand">${PRODUCT_NAME}</div>
 </main></body></html>`;
 }
 
@@ -70,12 +65,12 @@ export function errorHtml(input: ErrorPageInput): string {
     ? `<p class="small">Detalhes técnicos: <code>${escapeHtml(input.logFile)}</code></p>`
     : '';
   return `<!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><title>GT7 Race Engineer</title>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>${PRODUCT_NAME}</title>
 <style>${BASE_CSS}
   h1 { color: #ffb21e; }
   .actions { margin-top: 22px; display: flex; gap: 12px; justify-content: center; }
   a.btn { display: inline-block; padding: 10px 20px; border-radius: 8px; text-decoration: none;
-    font-weight: 600; background: #22e07a; color: #04210f; }
+    font-weight: 600; background: ${BRAND_SIGNAL}; color: ${BRAND_SURFACE}; }
   a.btn.secondary { background: #1c2128; color: #e8eaed; border: 1px solid #333c46; }
   a.btn:focus-visible { outline: 3px solid #7cc4ff; outline-offset: 2px; }
   pre { text-align: left; background: #12161b; border: 1px solid #26303a; border-radius: 8px;
@@ -86,7 +81,7 @@ export function errorHtml(input: ErrorPageInput): string {
 </style></head>
 <body><main>
   ${LOGO}
-  <h1>Não foi possível abrir o GT7 Race Engineer</h1>
+  <h1>Não foi possível abrir o ${PRODUCT_NAME}</h1>
   <p>${escapeHtml(input.message)}</p>
   ${detail}
   ${log}

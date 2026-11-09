@@ -1,9 +1,12 @@
-# GT7 Engenheiro (GT7 Race Engineer)
+# Bono Engineer
 
-App de telemetria para **Gran Turismo 7** pensado para uma coisa: **você pilotar melhor**. Ele recebe os
-dados do PS4/PS5 pela rede local, mostra um painel ao vivo no PC e no celular, e depois da sessão diz
+Seu engenheiro de pista no sim racing, com telemetria, rádio e análise de voltas.
+A integração disponível hoje é **Gran Turismo 7** no PlayStation. O Bono recebe os
+dados pela rede local, mostra um painel ao vivo no PC e no celular, e depois da sessão diz
 **onde você perde tempo, por quê e o que fazer diferente**, curva a curva. Também consegue capturar a volta de
 um piloto do topo do ranking (pelo replay do Time Trial) para você comparar e usar como alvo.
+
+Veja a [identidade do Bono Engineer e o plano multissimulação](docs/bono-engineer.md).
 
 > Projeto pessoal, sem relação com a Polyphony Digital. O protocolo de telemetria do GT7 não tem
 > documentação oficial; tudo vem de engenharia reversa da comunidade (veja o [estudo](ESTUDO-TELEMETRIA-GT7.md)).
@@ -90,7 +93,7 @@ configura no painel.
   `data/` antiga dentro do projeto (versões anteriores) e a nova ainda não existir, ela é **copiada uma vez**
   (a antiga é mantida; pode apagá-la depois de conferir).
 - **Porta:** a 8770. Se outro programa a estiver usando, o app escolhe a próxima livre (8771…) e mostra no
-  banner. Se o GT7 Race Engineer **já estiver aberto**, um segundo `npm start` só abre o navegador nele e sai.
+  banner. Se o Bono Engineer **já estiver aberto**, um segundo `npm start` só abre o navegador nele e sai.
 - **Console:** o app **acha o PlayStation sozinho** (veja abaixo). Nada de IP para digitar.
 
 Na **primeira abertura** (sem sessões e sem console encontrado) um assistente de 3 passos acompanha a busca do
@@ -144,8 +147,8 @@ Saída em `packages/desktop/release/` (ignorada pelo git):
 
 | Arquivo | Para quê |
 |---|---|
-| `GT7-Race-Engineer-Setup-0.1.0.exe` (~110 MB) | **Instalador** de um clique, **só para o seu usuário** (não pede administrador); cria atalhos no Menu Iniciar e na Área de Trabalho |
-| `GT7-Race-Engineer-0.1.0-portable.exe` (~100 MB) | Um único `.exe` que roda de qualquer pasta, sem instalar (a 1ª abertura demora mais: ele se descompacta numa pasta temporária) |
+| `Bono-Engineer-Setup-0.1.0.exe` (~110 MB) | **Instalador** de um clique, **só para o seu usuário** (não pede administrador); cria atalhos no Menu Iniciar e na Área de Trabalho |
+| `Bono-Engineer-0.1.0-portable.exe` (~100 MB) | Um único `.exe` que roda de qualquer pasta, sem instalar (a 1ª abertura demora mais: ele se descompacta numa pasta temporária) |
 
 A primeira geração baixa o Electron (~110 MB) para o cache do usuário; as seguintes reaproveitam. Para só
 experimentar sem empacotar: `npm run desktop` (compila o necessário e abre o app em modo de desenvolvimento;

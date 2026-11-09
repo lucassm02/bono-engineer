@@ -121,7 +121,7 @@
   max-width: 100%;
   min-height: 36px;
   padding: 2px 2px 2px 8px;
-  background: rgba(255, 178, 30, 0.1);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
   border: 1px solid var(--accent);
   border-radius: 999px;
   font-size: 14px;
@@ -148,7 +148,7 @@
 }
 .cf-chip-x:hover,
 .cf-chip-x:focus-visible {
-  background: rgba(255, 178, 30, 0.2);
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
   outline: none;
 }
 .cf-chip-clear {
@@ -265,7 +265,7 @@
 .cp-tabs button[aria-pressed="true"] {
   color: var(--text);
   border-color: var(--accent);
-  background: rgba(255, 178, 30, 0.1);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 .cp-hint {
   margin: 6px 0 10px;
@@ -295,7 +295,7 @@
 }
 .cp-all:hover,
 .cp-all:focus-visible {
-  background: rgba(255, 178, 30, 0.1);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
   outline: none;
 }
 .cp-all-sub {
@@ -354,7 +354,7 @@
 }
 .cp-brand[data-used="1"] {
   background: var(--panel-2);
-  border-color: rgba(255, 178, 30, 0.55);
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
 }
 .cp-brand[data-active="1"] {
   border-color: var(--accent);
@@ -408,7 +408,7 @@
 }
 .cp-car[data-active="1"] {
   border-color: var(--accent);
-  background: rgba(255, 178, 30, 0.1);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
 .cp-car-main {
   flex: 1;

@@ -25,7 +25,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { resolveDataDir } from '@gt7/core';
-import { DEFAULT_HTTP_PORT, isPacketFormat, type PacketFormat } from '@gt7/shared';
+import { DEFAULT_HTTP_PORT, isPacketFormat, type PacketFormat, PRODUCT_NAME } from '@gt7/shared';
 
 /** Repository root (packages/server/src → ../../..). */
 export const REPO_ROOT = resolve(fileURLToPath(new URL('../../../', import.meta.url)));
@@ -68,7 +68,7 @@ export interface ServerConfig {
 
 export class ConfigError extends Error {}
 
-export const HELP_TEXT = `GT7 Race Engineer — servidor
+export const HELP_TEXT = `${PRODUCT_NAME} — servidor
 
 Uso normal: npm start   (sem nenhuma opção; npm run demo = demonstração, npm run dev = desenvolvimento)
 

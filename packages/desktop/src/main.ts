@@ -9,6 +9,7 @@
 
 import { join } from 'node:path';
 import { parseConfig, type RunningServer, StartServerError, startServer } from '@gt7/server';
+import { BRAND_SURFACE, PRODUCT_NAME } from '@gt7/shared';
 import {
   app,
   BrowserWindow,
@@ -25,7 +26,6 @@ import {
 import { initLog, log, logFilePath } from './log.ts';
 import { errorHtml, splashHtml, toDataUrl } from './pages.ts';
 import {
-  APP_NAME,
   bundledWebDist,
   electronUserDataDir,
   isInternalUrl,
@@ -36,12 +36,12 @@ import {
 import { type DesktopState, readDesktopState, writeDesktopState } from './state-file.ts';
 import { fitWindowState, MIN_SIZE, type WindowState } from './window-state.ts';
 
-const BG = '#0b0d10';
+const BG = BRAND_SURFACE;
 const LOGIN_ARGS = ['--hidden'];
 const START_HIDDEN = process.argv.includes('--hidden');
 
 // Own folder for Chromium's files; the history stays in the shared data folder (see paths.ts).
-app.setName(APP_NAME);
+app.setName(PRODUCT_NAME);
 app.setPath('userData', electronUserDataDir());
 app.setAppUserModelId('com.lucas.gt7raceengineer');
 const STATE_FILE = join(app.getPath('userData'), 'desktop-state.json');
@@ -162,7 +162,7 @@ function createWindow(): BrowserWindow {
     screen.getAllDisplays().map((d) => d.workArea),
   );
   const w = new BrowserWindow({
-    title: APP_NAME,
+    title: PRODUCT_NAME,
     width: fit.width,
     height: fit.height,
     ...(fit.x !== undefined && fit.y !== undefined ? { x: fit.x, y: fit.y } : {}),
@@ -304,7 +304,7 @@ async function boot(): Promise<void> {
     for (const w of r.warnings) log(`aviso: ${w}`);
     log(
       r.attached
-        ? `usando o GT7 Race Engineer que já estava aberto na porta ${r.port}`
+        ? `usando o ${PRODUCT_NAME} que já estava aberto na porta ${r.port}`
         : `servidor em ${r.url} (dados em ${r.config.dataDir})${r.portNote ? `; ${r.portNote}` : ''}`,
     );
     await refreshPhoneUrl();
@@ -356,13 +356,13 @@ function setAutoStart(on: boolean): void {
 /** Windows notification-area balloon (other platforms have no equivalent here). */
 function balloon(content: string): void {
   if (process.platform === 'win32') {
-    tray?.displayBalloon({ iconType: 'info', title: APP_NAME, content });
+    tray?.displayBalloon({ iconType: 'info', title: PRODUCT_NAME, content });
   }
 }
 
 function buildTrayMenu(): Menu {
   const items: MenuItemConstructorOptions[] = [
-    { label: `Abrir ${APP_NAME}`, click: showWindow },
+    { label: `Abrir ${PRODUCT_NAME}`, click: showWindow },
     phoneUrl
       ? {
           label: 'Copiar endereço para acesso remoto',
@@ -389,7 +389,7 @@ function buildTrayMenu(): Menu {
 
 function refreshTrayTooltip(): void {
   if (!tray) return;
-  tray.setToolTip(phoneUrl ? `${APP_NAME}\nAcesso remoto: ${phoneUrl}` : APP_NAME);
+  tray.setToolTip(phoneUrl ? `${PRODUCT_NAME}\nAcesso remoto: ${phoneUrl}` : PRODUCT_NAME);
 }
 
 function createTray(): void {
@@ -400,7 +400,7 @@ function createTray(): void {
     tray = null;
     return;
   }
-  tray.setToolTip(APP_NAME);
+  tray.setToolTip(PRODUCT_NAME);
   tray.on('click', showWindow);
   tray.on('double-click', showWindow);
   tray.on('right-click', () => tray?.popUpContextMenu(buildTrayMenu()));
