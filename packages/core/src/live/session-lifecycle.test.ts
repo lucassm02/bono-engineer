@@ -483,3 +483,55 @@ describe('(j) long sessions stay bounded', () => {
     expect(frame.fuel.perLapAvg!).toBeCloseTo(used.reduce((s, v) => s + v, 0) / 3, 6);
   });
 });
+
+describe('(k) frozen stream (real PS5: left the track to a menu, flags still say "on track")', () => {
+  /** The same packet again with a fresh id: identical position/speed while the "lap clock" runs. */
+  const frozenFrom = (p: TelemetryPacket, i: number): TelemetryPacket => ({
+    ...p,
+    speedMps: 12,
+    packetId: p.packetId + 1 + i,
+    currentLapMs: (p.currentLapMs ?? 0) + (i + 1) * 17,
+  });
+
+  it('is treated like a pause: no track time, state paused, the lap is not counted', () => {
+    const r = rig();
+    const gen = drive(2, 31, 1000);
+    r.feedAll(gen.packets.slice(0, 6000)); // well into the session, driving
+    expect(r.engine.state).toBe('onTrack');
+    const base = gen.packets[5999]!;
+    for (let i = 0; i < 90; i++) r.feed(frozenFrom(base, i)); // 1.5 s frozen
+    expect(r.engine.state).toBe('paused');
+    const trackTime = r.engine.captureInfo.trackTimeMs;
+    for (let i = 90; i < 600; i++) r.feed(frozenFrom(base, i)); // 8.5 s more
+    expect(r.engine.state).toBe('paused');
+    expect(r.engine.captureInfo.trackTimeMs - trackTime).toBeLessThan(500);
+    expect(r.engine.session).not.toBeNull(); // still inside the 30 s grace
+  });
+
+  it('closes the session once the freeze lasts 30 s, and a new one opens when driving resumes', () => {
+    const r = rig();
+    const gen = drive(2, 32, 1000);
+    r.feedAll(gen.packets.slice(0, 6000));
+    const first = r.started[0]!.id;
+    const base = gen.packets[5999]!;
+    for (let i = 0; i < 2200; i++) r.feed(frozenFrom(base, i)); // ~36 s
+    expect(r.engine.session).toBeNull();
+    expect(r.ended.at(-1)?.session.id).toBe(first);
+    expect(r.ended.at(-1)?.info.reason).toBe('offTrack');
+    // the car moves again (new position every packet)
+    const sim = gen.packets
+      .slice(6000, 6200)
+      .map((p, i) => ({ ...p, packetId: base.packetId + 5000 + i }));
+    r.feedAll(sim);
+    expect(r.started.length).toBeGreaterThan(1);
+  });
+
+  it('a real stop (speed ~0, same position) is not a freeze', () => {
+    const r = rig();
+    const gen = drive(2, 33, 1000);
+    r.feedAll(gen.packets.slice(0, 6000));
+    const base = gen.packets[5999]!;
+    for (let i = 0; i < 300; i++) r.feed({ ...base, speedMps: 0, packetId: base.packetId + 1 + i });
+    expect(r.engine.state).toBe('onTrack');
+  });
+});

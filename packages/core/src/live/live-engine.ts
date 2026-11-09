@@ -83,6 +83,12 @@ const MAX_TRACK_TIME_STEP_MS = 1000;
 /** Flags that make a lap invalid. */
 const INVALIDATING: readonly LapFlag[] = ['paused', 'incompleteData', 'discontinuity', 'offTrack'];
 
+/** A "moving" car (m/s) whose position does not change for this long is a frozen stream. */
+const FROZEN_MIN_SPEED_MPS = 2;
+const FROZEN_MIN_MS = 1000;
+/** A frozen stream this long means the driver left the track: the session is closed. */
+const FROZEN_END_MS = 30_000;
+
 export interface LiveEngineOptions {
   context?: LiveEngineContext;
   /** Frame emission rate (default 30 Hz). */
@@ -297,6 +303,10 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   #link: LiveFrame['link'] | null = null;
   #replayMode = false;
   #state: ConnectionState = 'disconnected';
+  /** Consecutive packets with an unchanged position while the car claims to move. */
+  #frozenPk = 0;
+  /** Epoch ms since the stream is frozen (null while it is not). */
+  #frozenSince: number | null = null;
   /** Since when the car is out of the track or paused (null while it is driving). */
   #inactiveSince: number | null = null;
   /** Since when the car is out of the track (null while on it; pauses do not count). */
@@ -568,6 +578,30 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     this.emit('sessionEnded', { ...s }, { reason, persisted });
   }
 
+  /**
+   * True while the packets claim a moving car (> FROZEN_MIN_SPEED_MPS) whose position has not
+   * changed for FROZEN_MIN_MS. Counts packets (dPk), so dropped packets still advance the clock.
+   */
+  #updateFrozen(p: TelemetryPacket, onTrack: boolean, dPk: number, receivedAtMs: number): boolean {
+    const prev = this.#lastPacket;
+    const same =
+      prev !== null &&
+      onTrack &&
+      p.speedMps > FROZEN_MIN_SPEED_MPS &&
+      p.position.x === prev.position.x &&
+      p.position.y === prev.position.y &&
+      p.position.z === prev.position.z;
+    if (!same) {
+      this.#frozenPk = 0;
+      this.#frozenSince = null;
+      return false;
+    }
+    this.#frozenPk += dPk;
+    if (this.#frozenPk * this.#msPerPacket < FROZEN_MIN_MS) return false;
+    this.#frozenSince ??= receivedAtMs - this.#frozenPk * this.#msPerPacket;
+    return true;
+  }
+
   /** Forgets the active track (not on a known one any more); no-op without one. */
   #clearActiveTrack(): void {
     if (this.#track) {
@@ -609,7 +643,13 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
 
     const f = decodeFlags(p.flags);
     const onTrack = f.carOnTrack && !f.loadingOrProcessing;
-    const paused = f.paused;
+    // Frozen stream: observed on a real PS5 (Sport Mode time trial) after leaving the track to a
+    // menu/replay screen — the flags still say "car on track" and the lap clock keeps counting, but
+    // every car value is identical. A moving car cannot keep the exact same position, so this is
+    // treated like a pause (no track time, the lap is invalid) and ends the session after a while.
+    // (When the game itself says "paused" its data is frozen too; that keeps the normal pause rules.)
+    const frozen = this.#updateFrozen(p, onTrack && !f.paused, dPk, receivedAtMs);
+    const paused = f.paused || frozen;
     this.#onTrackNow = onTrack;
     this.#pausedNow = paused;
     this.#state = !onTrack ? 'menu' : paused ? 'paused' : this.#replayMode ? 'replay' : 'onTrack';
@@ -621,6 +661,14 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       receivedAtMs - this.#inactiveSince > idleEnd
     ) {
       this.endSession('offTrack', this.#lastActiveAt ?? this.#inactiveSince);
+    }
+    // a frozen stream is not a real pause: the driver left the track, so close the session sooner
+    if (
+      this.#session &&
+      this.#frozenSince !== null &&
+      receivedAtMs - this.#frozenSince > FROZEN_END_MS
+    ) {
+      this.endSession('offTrack', this.#lastActiveAt ?? this.#frozenSince);
     }
     // a break (loading screen, back to the garage, silence, stream reset) means the track may have
     // changed: the next lap start has to confirm it
