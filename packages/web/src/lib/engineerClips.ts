@@ -17,6 +17,7 @@ export function radioPack(voiceUri: string): RadioPack | null {
 }
 
 let context: AudioContext | undefined;
+let output: GainNode | undefined;
 const buffers = new Map<string, Promise<AudioBuffer>>();
 const decoded = new Map<string, AudioBuffer>();
 let playing: { source: AudioBufferSourceNode; preview: boolean } | null = null;
@@ -66,6 +67,7 @@ export function playRadioClip(
   phrase: string,
   preview: boolean,
   done?: () => void,
+  volume = 1,
 ): boolean {
   const buffer = decoded.get(pack.file);
   const clip = pack.clips[phrase];
@@ -73,7 +75,12 @@ export function playRadioClip(
   if (playing) stopRadioClip(playing.preview);
   const source = context.createBufferSource();
   source.buffer = buffer;
-  source.connect(context.destination);
+  if (!output) {
+    output = context.createGain();
+    output.connect(context.destination);
+  }
+  output.gain.value = volume;
+  source.connect(output);
   playing = { source, preview };
   source.onended = () => {
     if (playing?.source !== source) return;
@@ -83,4 +90,8 @@ export function playRadioClip(
   };
   source.start(0, clip[0], clip[1]);
   return true;
+}
+
+export function setRadioClipVolume(volume: number): void {
+  if (output) output.gain.value = volume;
 }

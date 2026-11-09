@@ -50,6 +50,48 @@
   gap: 8px;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 145px), 1fr));
 }
+.engineer-controls input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+.engineer-reference-info,
+.engineer-training {
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow-wrap: anywhere;
+}
+.engineer-training > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.engineer-training > p,
+.engineer-training > button {
+  margin-top: 8px;
+}
+.engineer-training-corners {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 145px), 1fr));
+  max-height: 12rem;
+  overflow: auto;
+  margin: 8px 0 0;
+  border: 1px solid var(--line);
+}
+.engineer-training-corners label {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+}
+.engineer-training-results li > span {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--dim);
+}
+.engineer-training-results a {
+  color: var(--accent);
+}
 
 .engineer-hud {
   --radio-color: var(--accent);
@@ -82,6 +124,23 @@
 .engineer-hud-mode {
   display: block;
 }
+.engineer-hud-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+}
+.engineer-hud-settings {
+  pointer-events: auto;
+  border: 0;
+  border-radius: 4px;
+  padding: 5px 6px;
+  background: var(--panel-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
 .engineer-hud-call {
   display: flex;
   align-items: baseline;
@@ -108,5 +167,11 @@
   }
   .app:has(.engineer-hud) {
     --live-portrait-footer-space: 136px;
+  }
+}
+
+@media (min-width: 481px) and (min-height: 480px) {
+  .app:has(.engineer-hud) .view {
+    padding-bottom: calc(var(--safe-b) + 136px);
   }
 }

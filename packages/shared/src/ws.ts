@@ -169,6 +169,7 @@ export interface ServerStatus {
    * Automatic session capture state. (core, additive) Named `sessionCapture` because `capture` is the reference (replay) capture.
    */
   sessionCapture?: SessionCaptureStatus;
+  engineerAudioDeviceId?: Id | null;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -400,6 +401,7 @@ export interface ApiSettings {
   /** "Gravar sessões automaticamente" (default true). False = live view only, nothing is saved. */
   autoCapture: boolean;
   deltaReference: { kind: DeltaReferenceKind; lapId: Id | null };
+  engineerAudioDeviceId?: Id | null;
 }
 
 /** PATCH /api/settings body (every field optional). */
@@ -414,6 +416,7 @@ export interface ApiSettingsPatch {
   record?: boolean;
   autoCapture?: boolean;
   deltaReference?: { kind: DeltaReferenceKind; lapId?: Id | null };
+  engineerAudioDeviceId?: Id | null;
 }
 
 /** POST /api/discovery/scan: restarts the console search. */

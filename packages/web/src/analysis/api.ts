@@ -24,6 +24,7 @@ import type {
   CoachReport,
   CoachReportSummary,
   DeviceInfo,
+  EngineerRadioLog,
   FirewallStatus,
   LanInfo,
   Lap,
@@ -154,6 +155,9 @@ export const api = {
   session: (id: string) => get<SessionDetail>(`/api/sessions/${enc(id)}`),
   deleteSession: (id: string) => request<{ ok: true }>('DELETE', `/api/sessions/${enc(id)}`),
   lap: (id: string) => get<Lap>(`/api/laps/${enc(id)}`),
+  engineerRadio: (id: string) => get<EngineerRadioLog[]>(`/api/laps/${enc(id)}/engineer-radio`),
+  saveEngineerRadio: (id: string, log: EngineerRadioLog) =>
+    request<{ ok: true }>('PUT', `/api/laps/${enc(id)}/engineer-radio`, log),
   trackLaps: (
     trackId: string,
     q: {

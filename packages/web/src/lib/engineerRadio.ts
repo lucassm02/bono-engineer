@@ -56,6 +56,7 @@ export function engineerCall(
   cue: EngineerCue,
   car: LiveCar,
   estimate: (text: string, ms: number) => number,
+  anticipationMs = 0,
 ): EngineerCall | null {
   const speed = car.speedKmh / 3.6;
   if (speed < 8 || cue.aheadM < 0) return null;
@@ -73,10 +74,17 @@ export function engineerCall(
   if (isBrake(cue.kind)) {
     if (brake >= BRAKE_ON_THRESHOLD) return null;
     for (const [meters, spoken] of MARKS) {
-      if (cue.aheadM > meters || cue.aheadM < meters - Math.max(4, speed * 0.13)) continue;
       const text = `${words.phrase} em ${spoken}.`;
-      const budget = eta - 350;
-      if (budget >= estimate(text, words.ms + spoken.length * 50 + 380)) {
+      const duration = estimate(text, words.ms + spoken.length * 50 + 380);
+      const reserve = 350 + anticipationMs;
+      if (
+        cue.aheadM < meters - Math.max(4, speed * 0.13) ||
+        (meters / speed) * 1000 < duration + reserve
+      )
+        continue;
+      if (cue.aheadM > meters) break;
+      const budget = eta - 350 - anticipationMs;
+      if (budget >= duration) {
         return call(text, budget, true);
       }
     }
@@ -84,7 +92,7 @@ export function engineerCall(
     return eta <= 950 && eta - 150 >= estimate(text, 500) ? call(text, eta - 150, true) : null;
   }
 
-  if (eta > 750) return null;
+  if (eta > 750 + anticipationMs) return null;
   const release = cue.kind === 'release' || cue.kind === 'releaseSmooth';
   if (release && brake < BRAKE_ON_THRESHOLD) return null;
   if (!release && throttle >= 0.1) return null;

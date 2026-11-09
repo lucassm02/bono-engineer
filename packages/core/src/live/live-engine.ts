@@ -232,7 +232,10 @@ export interface LiveEngineEvents {
   packet: [EnginePacketInfo];
 }
 
+type LiveEngineerMark = Pick<EngineerMark, 'kind' | 'atM' | 'untilM'> & { cornerId: Id };
+
 interface LapState {
+  engineerReferenceLapId?: Id;
   number: number;
   timed: boolean;
   startPacketId: number;
@@ -402,7 +405,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   #engineerPlan: {
     id: Id;
     timeMs: number;
-    marks: Pick<EngineerMark, 'kind' | 'atM' | 'untilM'>[];
+    marks: LiveEngineerMark[];
   } | null = null;
   #cornerPass = new Map<string, CornerPass>();
 
@@ -1467,6 +1470,9 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     else if (!this.#deltaRef) this.#reloadReference();
 
     const event: LapCompletedEvent = {
+      startedAt: lap.startedAt,
+      carCode: lap.carCode,
+      engineerReferenceLapId: lap.engineerReferenceLapId,
       sessionId: session.id,
       lapId,
       lapNumber: lap.number,
@@ -1616,7 +1622,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       if (!ref.lap.valid || ref.lap.trackId !== track.id || ref.lap.carCode !== p.carCode) {
         return { status: 'incompatible' };
       }
-      const marks = new Map<string, Pick<EngineerMark, 'kind' | 'atM' | 'untilM'>>();
+      const marks = new Map<string, LiveEngineerMark>();
       const stored = { lap: ref.lap, trace: ref.trace };
       for (const corner of track.corners) {
         for (const mark of this.#cornerTargets(track, corner, stored)?.engineerMarks ?? []) {
@@ -1643,6 +1649,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
           if (span > line.length / 2) continue;
           marks.set(`${mark.kind}|${Math.round(point.s)}`, {
             kind: mark.kind,
+            cornerId: corner.id,
             atM: point.s,
             untilM: end ? point.s + span : undefined,
           });
@@ -1652,6 +1659,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     }
 
     const plan = this.#engineerPlan;
+    lap.engineerReferenceLapId = plan.id;
     if (plan.marks.length === 0) return { status: 'noCues' };
     const length = line.length;
     const cues: EngineerCue[] = [];
@@ -1662,6 +1670,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       if (aheadM > 310 || aheadM + span < -18) continue;
       cues.push({
         id: `${plan.id}|${i}`,
+        cornerId: mark.cornerId,
         kind: mark.kind,
         aheadM,
         ...(span > 0 ? { endAheadM: aheadM + span } : {}),
@@ -1753,6 +1762,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     const slip = wheelSlipRatios(p);
     return {
       seq: ++this.#seq,
+      sessionId: this.#session?.id ?? null,
       t: now,
       packetId: p.packetId,
       format: p.format,
@@ -1807,6 +1817,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
         },
         referenceLapMs: ref?.timeMs ?? null,
         currentLapValid: timed && !flagsInvalid,
+        startedAt: lap?.startedAt,
       },
       sectors,
       distanceM: dist,

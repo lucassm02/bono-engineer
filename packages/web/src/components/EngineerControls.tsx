@@ -1,27 +1,24 @@
-import { DELTA_REFERENCE_KINDS, type DeltaReferenceKind } from '@gt7/shared';
 import { useEffect, useState } from 'react';
 import { api } from '../analysis/api.ts';
 import { useFetch } from '../analysis/useFetch.ts';
 import { RADIO_VOICES, radioPack } from '../lib/engineerClips.ts';
-import { formatLapTime } from '../lib/format.ts';
-import { DELTA_REFERENCE_LABELS } from '../lib/labels.ts';
 import { portugueseVoices, speechSupported } from '../lib/speech.ts';
-import { live } from '../live/liveStore.ts';
-import { useLiveRender } from '../live/raf.ts';
-import { dispatchProfile } from '../state/actions.ts';
 import {
   type EngineerPace,
   setEngineerEnabled,
   setEngineerMuted,
   setEngineerVoice,
+  setRadioControls,
   stopEngineerPreview,
   testEngineerVoice,
   useEngineer,
 } from '../state/engineer.ts';
 import { useUi } from '../state/uiStore.ts';
+import { EngineerReference } from './EngineerReference.tsx';
 
 export function EngineerControls() {
   const enabled = useEngineer((s) => s.enabled);
+  const controls = useEngineer((s) => s.controls);
   const muted = useEngineer((s) => s.muted);
   const voiceError = useEngineer((s) => s.voiceError);
   const voiceLoading = useEngineer((s) => s.voiceLoading);
@@ -41,36 +38,35 @@ export function EngineerControls() {
     refresh();
     return () => synth.removeEventListener('voiceschanged', refresh);
   }, [canSpeak]);
-  const profileKind = useUi((s) => s.profile.deltaReference);
-  const [track, setTrack] = useState(() => live.frame?.track?.id ?? null);
-  const [car, setCar] = useState(() => live.frame?.car.carCode ?? 0);
-  const [sendError, setSendError] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const deviceId = useUi((s) => s.profile.deviceId);
+  const serverStatus = useUi((s) => s.serverStatus);
+  const [deviceError, setDeviceError] = useState(false);
+  const [savingDevice, setSavingDevice] = useState(false);
   const settings = useFetch('engineer-reference', api.settings);
-  const current = settings.data?.deltaReference;
-  useLiveRender((frame) => {
-    setTrack(frame.track?.id ?? null);
-    setCar(frame.car.carCode);
-  });
-  const { data, error } = useFetch(track && car > 0 ? `${track}|${car}` : null, () =>
-    api.trackLaps(track!, { carCode: car, references: 'only', validOnly: true, orderBy: 'time' }),
-  );
-  const laps = (data ?? []).filter((lap) => lap.trackId === track && lap.carCode === car);
-  const selectedId = current?.lapId;
+  const audioDevice = serverStatus?.engineerAudioDeviceId ?? '';
+  const audioHere = !audioDevice || audioDevice === deviceId;
+  const otherDevices = serverStatus?.devices.filter((device) => device.deviceId !== deviceId) ?? [];
 
-  async function selectReference(value: string) {
-    const lapId = value.startsWith('lap:') ? value.slice(4) : null;
-    const kind = lapId ? 'reference' : (value as DeltaReferenceKind);
-    setSaving(true);
-    setSendError(false);
+  async function selectAudioDevice(value: string) {
+    setSavingDevice(true);
+    setDeviceError(false);
+    if (!audioHere && (!value || value === deviceId) && enabled && !muted) testEngineerVoice(false);
     try {
-      const updated = await api.patchSettings({ deltaReference: { kind, lapId } });
-      settings.setData(updated);
-      dispatchProfile({ type: 'setDeltaReference', kind });
+      const updated = await api.patchSettings({ engineerAudioDeviceId: value || null });
+      useUi.setState((state) =>
+        state.serverStatus
+          ? {
+              serverStatus: {
+                ...state.serverStatus,
+                engineerAudioDeviceId: updated.engineerAudioDeviceId,
+              },
+            }
+          : {},
+      );
     } catch {
-      setSendError(true);
+      setDeviceError(true);
     } finally {
-      setSaving(false);
+      setSavingDevice(false);
     }
   }
 
@@ -81,41 +77,77 @@ export function EngineerControls() {
         <button
           type="button"
           className="btn btn-ghost"
-          onClick={() => setEngineerEnabled(!enabled)}
+          onClick={() => setEngineerEnabled(!enabled, audioHere)}
         >
           {enabled ? 'Desativar' : 'Ativar'}
         </button>
       </header>
       <p>Instruções de pilotagem em voz e na tela, a partir da sua referência.</p>
       <label>
-        Volta de referência do painel
+        Volume do rádio · {Math.round(controls.volume * 100)}%
+        <input
+          type="range"
+          min={0}
+          max={100}
+          step={5}
+          value={Math.round(controls.volume * 100)}
+          onChange={(event) =>
+            setRadioControls({ volume: Number(event.currentTarget.value) / 100 })
+          }
+        />
+      </label>
+      <div className="engineer-voice-options">
+        <label>
+          Antecipação
+          <select
+            value={controls.anticipationMs}
+            onChange={(event) =>
+              setRadioControls({ anticipationMs: Number(event.currentTarget.value) })
+            }
+          >
+            <option value={0}>Padrão</option>
+            <option value={350}>Mais cedo (+0,35 s)</option>
+            <option value={700}>Bem antes (+0,7 s)</option>
+          </select>
+        </label>
+        <label>
+          Nível de detalhe
+          <select
+            value={controls.detail}
+            onChange={(event) =>
+              setRadioControls({
+                detail: event.currentTarget.value === 'essential' ? 'essential' : 'full',
+              })
+            }
+          >
+            <option value="essential">Essencial · frenagens principais</option>
+            <option value="full">Completo · todas as dicas</option>
+          </select>
+        </label>
+      </div>
+      <label>
+        Aparelho que toca o rádio
         <select
-          value={selectedId ? `lap:${selectedId}` : (current?.kind ?? profileKind)}
-          disabled={saving || settings.loading}
-          onChange={(event) => selectReference(event.currentTarget.value)}
+          value={audioDevice}
+          disabled={savingDevice || !serverStatus}
+          onChange={(event) => void selectAudioDevice(event.currentTarget.value)}
         >
-          {DELTA_REFERENCE_KINDS.map((kind) => (
-            <option value={kind} key={kind}>
-              {DELTA_REFERENCE_LABELS[kind]}
+          <option value="">Cada aparelho controla o próprio som</option>
+          <option value={deviceId}>Somente neste aparelho</option>
+          {otherDevices.map((device) => (
+            <option key={device.deviceId} value={device.deviceId}>
+              {device.name}
             </option>
           ))}
-          {selectedId && !laps.some((lap) => lap.id === selectedId) && (
-            <option value={`lap:${selectedId}`}>Volta selecionada anteriormente</option>
-          )}
-          {laps.map((lap) => (
-            <option value={`lap:${lap.id}`} key={lap.id}>
-              {`${lap.referenceMeta?.driverName ?? 'Referência'} · ${formatLapTime(lap.timeMs)}`}
-            </option>
-          ))}
+          {audioDevice &&
+            !audioHere &&
+            !otherDevices.some((device) => device.deviceId === audioDevice) && (
+              <option value={audioDevice}>Aparelho selecionado · desconectado</option>
+            )}
         </select>
       </label>
-      {(sendError || error) && (
-        <p role="status">
-          {sendError
-            ? 'Não foi possível trocar a referência.'
-            : 'Não foi possível listar as referências salvas.'}
-        </p>
-      )}
+      {!audioHere && <p>Ative o engenheiro no aparelho escolhido para ouvir o rádio.</p>}
+      {deviceError && <p role="status">Não foi possível alterar o aparelho do rádio.</p>}
       <div className="engineer-voice-options">
         <label>
           Voz do rádio
@@ -165,7 +197,7 @@ export function EngineerControls() {
           type="button"
           className="btn btn-ghost"
           disabled={!audioAvailable}
-          onClick={() => setEngineerMuted(!muted)}
+          onClick={() => setEngineerMuted(!muted, audioHere)}
         >
           {muted ? 'Ativar som' : 'Silenciar'}
         </button>
@@ -181,6 +213,7 @@ export function EngineerControls() {
       {(!audioAvailable || voiceError) && (
         <p role="status">Voz indisponível neste aparelho. As instruções aparecem na tela.</p>
       )}
+      <EngineerReference settings={settings} audioHere={audioHere} />
     </section>
   );
 }

@@ -1,6 +1,7 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { seedSyntheticData } from '@gt7/core';
 import type { ApiDiscoveryScanResult, ApiSettings, ApiStatus } from '@gt7/shared';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp, type Gt7Server } from './app.ts';
@@ -117,5 +118,40 @@ describe('REST: console connection, discovery and format settings (no UDP)', () 
     expect(r.body.started).toBe(false);
     expect(r.body.consoleConnection.state).toBe('idle');
     expect(r.body.consoleConnection.hint).toBeTruthy();
+  });
+
+  it('broadcasts the selected radio device and allows another dashboard to read saved calls', async () => {
+    expect(
+      (await call<ApiSettings>('PATCH', '/api/settings', { engineerAudioDeviceId: 'tablet' })).body
+        .engineerAudioDeviceId,
+    ).toBe('tablet');
+    expect(server.hub.status().engineerAudioDeviceId).toBe('tablet');
+    const seeded = await seedSyntheticData(server.runtime, [
+      { profile: 'amateur', laps: 2, seed: 4 },
+    ]);
+    const [lap, reference] = seeded.sessions[0]!.lapIds;
+    const url = `/api/laps/${lap}/engineer-radio`;
+    const log = {
+      deviceId: 'tablet',
+      referenceLapId: reference,
+      calls: [
+        {
+          cornerId: 'T1',
+          kind: 'brake',
+          text: 'Freio em cem.',
+          distanceM: 80,
+          actionDistanceM: 180,
+        },
+      ],
+    };
+    expect((await call('PUT', url, log)).status).toBe(200);
+    expect((await call('PUT', url, log)).status).toBe(200);
+    expect((await call('GET', url)).body).toEqual([log]);
+    expect((await call('DELETE', `/api/laps/${lap}`)).status).toBe(200);
+    expect(server.runtime.store.getEngineerRadioLogs(lap!)).toEqual([]);
+    expect(
+      (await call<ApiSettings>('PATCH', '/api/settings', { engineerAudioDeviceId: null })).body
+        .engineerAudioDeviceId,
+    ).toBeNull();
   });
 });

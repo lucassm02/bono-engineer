@@ -1,5 +1,6 @@
 /** /api/status, /api/settings, /api/firewall, /api/lan. */
 
+import { SETTINGS_KEYS } from '@gt7/core';
 import {
   type ApiDiscoveryScanResult,
   type ApiSettings,
@@ -35,6 +36,10 @@ export function currentSettings(ctx: RouteContext): ApiSettings {
     record: s.record,
     autoCapture: s.autoCapture,
     deltaReference: { kind: ref.kind, lapId: ref.lapId },
+    engineerAudioDeviceId: runtime.store.getSetting<string | null>(
+      SETTINGS_KEYS.engineerAudioDeviceId,
+      null,
+    ),
   };
 }
 
@@ -76,6 +81,7 @@ export function statusRoutes(app: FastifyInstance, ctx: RouteContext): void {
       'record',
       'autoCapture',
       'deltaReference',
+      'engineerAudioDeviceId',
     ];
     const unknown = Object.keys(b).filter((k) => !known.includes(k));
     if (unknown.length) throw badRequest(`Campo(s) desconhecido(s): ${unknown.join(', ')}.`);
@@ -93,6 +99,11 @@ export function statusRoutes(app: FastifyInstance, ctx: RouteContext): void {
     const captureFormat = parseFormat(b, 'captureFormat', 'captureFormat');
     const record = optBoolean(b, 'record', 'record');
     const autoCapture = optBoolean(b, 'autoCapture', 'autoCapture');
+    const audioDevice =
+      b.engineerAudioDeviceId === null
+        ? null
+        : optString(b, 'engineerAudioDeviceId', 'engineerAudioDeviceId', 160);
+    if (audioDevice === '') throw badRequest('Informe um identificador de aparelho válido.');
     let ref: { kind: DeltaReferenceKind; lapId: string | null } | undefined;
     if (b.deltaReference !== undefined) {
       const r = bodyObject(b.deltaReference);
@@ -114,6 +125,8 @@ export function statusRoutes(app: FastifyInstance, ctx: RouteContext): void {
     if (record !== undefined) runtime.setRecording(record);
     if (autoCapture !== undefined) runtime.setAutoCapture(autoCapture);
     if (ref) runtime.setDeltaReference(ref.kind, ref.lapId);
+    if (audioDevice !== undefined)
+      runtime.store.setSetting(SETTINGS_KEYS.engineerAudioDeviceId, audioDevice);
     const formatFailed = (e: Error) =>
       hub.notice({
         level: 'error',

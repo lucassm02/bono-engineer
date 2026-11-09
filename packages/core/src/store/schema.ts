@@ -113,6 +113,15 @@ export const MIGRATIONS: readonly string[] = [
   ALTER TABLE reference_meta ADD COLUMN time_source TEXT;
   ALTER TABLE reference_meta ADD COLUMN measured_time_ms INTEGER;
   `,
+  `
+  CREATE TABLE engineer_radio_logs (
+    lap_id TEXT NOT NULL REFERENCES laps(id) ON DELETE CASCADE,
+    device_id TEXT NOT NULL,
+    reference_lap_id TEXT NOT NULL,
+    calls_json TEXT NOT NULL,
+    PRIMARY KEY (lap_id, device_id, reference_lap_id)
+  );
+  `,
 ];
 
 export const SCHEMA_VERSION = MIGRATIONS.length;

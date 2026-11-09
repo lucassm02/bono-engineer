@@ -79,6 +79,7 @@ export interface LiveLapTiming {
    * when it is not a timed lap (out lap / joined mid-lap). (core, additive)
    */
   currentLapValid?: boolean;
+  startedAt?: number;
 }
 
 export interface LiveTrackInfo {
@@ -105,23 +106,40 @@ export interface NextCornerHint {
   lastPassDeltaMs: number | null;
 }
 
-export type EngineerCueKind =
-  | 'brake'
-  | 'brakeHard'
-  | 'brakeLight'
-  | 'release'
-  | 'releaseSmooth'
-  | 'coast'
-  | 'throttle'
-  | 'throttleSmooth';
+export const ENGINEER_CUE_KINDS = [
+  'brake',
+  'brakeHard',
+  'brakeLight',
+  'release',
+  'releaseSmooth',
+  'coast',
+  'throttle',
+  'throttleSmooth',
+] as const;
+export type EngineerCueKind = (typeof ENGINEER_CUE_KINDS)[number];
 
 export interface EngineerCue {
   id: string;
+  cornerId?: string;
   kind: EngineerCueKind;
   /** Signed distance from the car to the action point. */
   aheadM: number;
   /** Remaining distance to the end of an instruction that spans a zone. */
   endAheadM?: number;
+}
+
+export interface EngineerRadioCall {
+  cornerId: string;
+  kind: EngineerCueKind;
+  text: string;
+  distanceM: number;
+  actionDistanceM: number;
+}
+
+export interface EngineerRadioLog {
+  deviceId: Id;
+  referenceLapId: Id;
+  calls: EngineerRadioCall[];
 }
 
 export type LiveEngineerFrame =
@@ -194,6 +212,7 @@ export interface LiveGForce {
 
 /** One dashboard frame (server → clients, ~30–60 Hz). Keep it JSON-serializable. */
 export interface LiveFrame {
+  sessionId?: Id | null;
   /** Monotonic frame sequence number. */
   seq: number;
   /** Server epoch ms when the frame was produced. */
@@ -225,6 +244,9 @@ export interface LiveFrame {
 
 /** Emitted once when a lap closes (drives the lap pop-up card and the Tempos view). */
 export interface LapCompletedEvent {
+  startedAt?: number;
+  carCode?: number;
+  engineerReferenceLapId?: Id;
   sessionId: Id;
   lapId: Id;
   lapNumber: number;

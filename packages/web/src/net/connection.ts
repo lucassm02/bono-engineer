@@ -13,6 +13,8 @@ import { live } from '../live/liveStore.ts';
 import { MockSession } from '../live/mock.ts';
 import { trackGeometry } from '../live/trackGeometry.ts';
 import { goToView, showLapPopup } from '../state/actions.ts';
+import { completeEngineerJournal, flushEngineerJournal } from '../state/engineerJournal.ts';
+import { completeEngineerTrainingLap } from '../state/engineerTraining.ts';
 import { recordLap, resetSessionLaps, setSessionId } from '../state/sessionStore.ts';
 import { addNotice, loadLocalProfile, setProfile, useUi } from '../state/uiStore.ts';
 import { setSender } from './transport.ts';
@@ -30,12 +32,15 @@ function handleServerMessage(msg: ServerMessage): void {
   switch (msg.type) {
     case 'welcome':
       useUi.setState({ serverVersion: msg.serverVersion });
+      void flushEngineerJournal();
       break;
     case 'frame':
       if (useUi.getState().source === 'server') live.push(msg.frame);
       break;
     case 'lapCompleted':
       recordLap(msg.event);
+      completeEngineerJournal(msg.event);
+      completeEngineerTrainingLap(msg.event);
       showLapPopup(msg.event);
       // The server may have just built the track centerline: retry the map geometry.
       trackGeometry.retry();

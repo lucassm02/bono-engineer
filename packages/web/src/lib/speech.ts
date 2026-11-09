@@ -23,7 +23,7 @@ export function speakPtBr(
   owner: VoiceChannel,
   text: string,
   onDone?: (elapsedMs: number | null) => void,
-  options?: { voiceUri: string; rate: number },
+  options?: { voiceUri: string; rate: number; volume?: number; onStart?: () => void },
 ): boolean {
   if (!speechSupported() || !text) return false;
   try {
@@ -43,6 +43,10 @@ export function speakPtBr(
       u.lang = voice.lang;
     }
     u.rate = options?.rate ?? 1.1;
+    u.volume = options?.volume ?? 1;
+    u.onstart = () => {
+      if (current === u) options?.onStart?.();
+    };
     const sentAt = performance.now();
     const done = (ok: boolean) => {
       if (current !== u) return;

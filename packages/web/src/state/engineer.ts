@@ -4,6 +4,7 @@ import {
   prepareRadioPack,
   radioClipMs,
   radioPack,
+  setRadioClipVolume,
   stopRadioClip,
 } from '../lib/engineerClips.ts';
 import { ENGINEER_PREVIEW } from '../lib/engineerRadio.ts';
@@ -12,6 +13,13 @@ import { loadJson, saveJson } from '../lib/storage.ts';
 
 const KEY = 'gt7.engineer.muted';
 const VOICE_KEY = 'gt7.engineer.voice';
+const RADIO_KEY = 'gt7.engineer.controls';
+export interface RadioControls {
+  volume: number;
+  anticipationMs: number;
+  detail: 'essential' | 'full';
+}
+const savedControls = loadJson<Partial<RadioControls>>(RADIO_KEY);
 export const ENGINEER_PACES = { calma: 0.95, normal: 1.1, rapida: 1.25 } as const;
 export type EngineerPace = keyof typeof ENGINEER_PACES;
 const savedVoice = loadJson<{ voiceUri?: string; pace?: EngineerPace }>(VOICE_KEY);
@@ -21,6 +29,17 @@ export const useEngineer = create(() => ({
   voiceError: false,
   voiceLoading: false,
   previewPlaying: false,
+  controls: {
+    volume:
+      typeof savedControls?.volume === 'number'
+        ? Math.min(1, Math.max(0, savedControls.volume))
+        : 1,
+    anticipationMs:
+      typeof savedControls?.anticipationMs === 'number'
+        ? Math.min(700, Math.max(0, savedControls.anticipationMs))
+        : 0,
+    detail: savedControls?.detail === 'essential' ? 'essential' : 'full',
+  } as RadioControls,
   voiceUri: typeof savedVoice?.voiceUri === 'string' ? savedVoice.voiceUri : 'radio:dora',
   pace:
     savedVoice?.pace === 'calma' || savedVoice?.pace === 'rapida'
@@ -41,12 +60,25 @@ export function engineerVoiceMs(phrase: string, estimateMs: number): number {
   );
 }
 
-export function playEngineerVoice(phrase: string, test = false, done?: () => void): boolean {
+export function setRadioControls(change: Partial<RadioControls>): void {
+  const controls = { ...useEngineer.getState().controls, ...change };
+  setRadioClipVolume(controls.volume);
+  useEngineer.setState({ controls });
+  saveJson(RADIO_KEY, controls);
+}
+
+export function playEngineerVoice(
+  phrase: string,
+  test = false,
+  done?: () => void,
+  onStart?: () => void,
+): boolean {
   if (!test && useEngineer.getState().previewPlaying) stopEngineerPreview();
-  const { voiceUri, pace } = useEngineer.getState();
+  const { voiceUri, pace, controls } = useEngineer.getState();
   const pack = radioPack(voiceUri);
   if (pack) {
-    const started = playRadioClip(pack, phrase, test, done);
+    const started = playRadioClip(pack, phrase, test, done, controls.volume);
+    if (started) onStart?.();
     if (!started) useEngineer.setState({ voiceError: true });
     return started;
   }
@@ -61,7 +93,7 @@ export function playEngineerVoice(phrase: string, test = false, done?: () => voi
       }
       done?.();
     },
-    { voiceUri, rate: ENGINEER_PACES[pace] },
+    { voiceUri, rate: ENGINEER_PACES[pace], volume: controls.volume, onStart },
   );
   if (!started) useEngineer.setState({ voiceError: true });
   return started;
@@ -117,20 +149,20 @@ export function testEngineerVoice(sample = true): void {
   );
 }
 
-export function setEngineerEnabled(enabled: boolean): void {
+export function setEngineerEnabled(enabled: boolean, playVoice = true): void {
   useEngineer.setState({ enabled });
-  if (enabled && !useEngineer.getState().muted) testEngineerVoice(false);
+  if (enabled && playVoice && !useEngineer.getState().muted) testEngineerVoice(false);
   if (!enabled) {
     stopEngineerVoice();
     stopEngineerPreview();
   }
 }
 
-export function setEngineerMuted(muted: boolean): void {
+export function setEngineerMuted(muted: boolean, playVoice = true): void {
   useEngineer.setState({ muted });
   saveJson(KEY, muted);
   if (muted) {
     stopEngineerVoice();
     stopEngineerPreview();
-  } else testEngineerVoice(false);
+  } else if (playVoice) testEngineerVoice(false);
 }

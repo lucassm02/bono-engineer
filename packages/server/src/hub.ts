@@ -206,6 +206,10 @@ export class WsHub {
   /** Decorated server status (adds firewall). */
   status(): ServerStatus {
     const s = this.runtime.getStatus();
+    s.engineerAudioDeviceId = this.runtime.store.getSetting<string | null>(
+      SETTINGS_KEYS.engineerAudioDeviceId,
+      null,
+    );
     const fw = this.options.firewall?.();
     return fw ? { ...s, firewall: fw } : s;
   }

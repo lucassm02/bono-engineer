@@ -9,16 +9,19 @@ import type {
   ApiTraces,
   ApiTrackAnalysis,
   COMPARISON_REFERENCE_KINDS,
+  EngineerRadioLog,
   Lap,
   MapCorner,
 } from '@gt7/shared';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { formatDelta, formatLapTime } from '../../lib/format.ts';
 import { navigate, type Route, routes } from '../../lib/route.ts';
+import { flushEngineerJournal } from '../../state/engineerJournal.ts';
 import { api, urls } from '../api.ts';
 import { CarName } from '../components/CarName.tsx';
 import { type BrakeMarker, CompareMap, type MapLine } from '../components/CompareMap.tsx';
 import { CornerTable } from '../components/CornerTable.tsx';
+import { EngineerRadioReview } from '../components/EngineerRadioReview.tsx';
 import { FindingsPanel } from '../components/FindingsPanel.tsx';
 import { type ChartLap, SyncCharts } from '../components/SyncCharts.tsx';
 import { Card, Empty, ErrorBox, Loading, PageHead, Tag, useTitle } from '../components/ui.tsx';
@@ -50,6 +53,7 @@ export interface CompareData {
   track: ApiTrackAnalysis | null;
   micro: ApiMicrosectors | null;
   theoretical: { theoreticalBestMs: number; bestLapMs: number; laps: number } | null;
+  radio?: EngineerRadioLog[];
 }
 
 function lapOptionLabel(l: Lap): string {
@@ -76,6 +80,10 @@ export function ComparePage({ route }: { route: Route }) {
   useTitle('Comparação de voltas');
 
   const cmp = useFetch(lapId ? `cmp:${lapId}:${ref}` : null, () => api.compare(lapId, ref));
+  const radio = useFetch(lapId ? `radio:${lapId}` : null, async () => {
+    await flushEngineerJournal();
+    return api.engineerRadio(lapId);
+  });
   const refId = cmp.data?.referenceLap.id ?? null;
   const trackId = cmp.data?.lap.trackId ?? null;
   const lapIds = useMemo(
@@ -155,6 +163,7 @@ export function ComparePage({ route }: { route: Route }) {
         track: track.data,
         micro: micro.data,
         theoretical: theo.data ?? null,
+        radio: radio.data ?? undefined,
       }}
       tracesError={traces.error?.message ?? null}
       trackLaps={trackLaps.data ?? []}
@@ -182,7 +191,7 @@ export function CompareView({
   initialCorner: string | null;
   demo?: boolean;
 }) {
-  const { cmp, traces, track, micro, theoretical } = data;
+  const { cmp, traces, track, micro, theoretical, radio } = data;
   const c = cmp.comparison;
   const lap = cmp.lap;
   const refLap = cmp.referenceLap;
@@ -190,6 +199,13 @@ export function CompareView({
   const [range, setRange] = useState<[number, number] | null>(null);
   const [focus, setFocus] = useState<string | null>(null);
   const lengthM = c.lengthM ?? track?.polyline.lengthM ?? traces?.toM ?? 0;
+  const radioMarkers = useMemo(
+    () =>
+      radio
+        ?.filter((log) => log.referenceLapId === refLap.id)
+        .flatMap((log) => log.calls.map((call) => call.distanceM)),
+    [radio, refLap.id],
+  );
 
   const corners: MapCorner[] = useMemo(() => {
     if (track?.corners.length) return track.corners;
@@ -498,6 +514,7 @@ export function CompareView({
         <div className="a-cmp-charts">
           {traces ? (
             <SyncCharts
+              radioMarkers={radioMarkers}
               traces={traces}
               laps={chartLaps}
               refId={refLap.id}
@@ -560,6 +577,15 @@ export function CompareView({
           <p className="dim">Esta pista ainda não tem curvas detectadas.</p>
         )}
       </Card>
+      {radio && (
+        <EngineerRadioReview
+          lapId={lap.id}
+          referenceId={refLap.id}
+          logs={radio}
+          rows={c.rows}
+          onCorner={zoomCorner}
+        />
+      )}
     </>
   );
 }

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { type EngineerCall, engineerCall, engineerDisplay, isBrake } from '../lib/engineerRadio.ts';
 import { live } from '../live/liveStore.ts';
 import { useLiveRender } from '../live/raf.ts';
+import { toggleMenu } from '../state/actions.ts';
 import {
   engineerVoiceMs,
   playEngineerVoice,
@@ -10,6 +11,8 @@ import {
   stopEngineerVoice,
   useEngineer,
 } from '../state/engineer.ts';
+import { recordEngineerCall } from '../state/engineerJournal.ts';
+import { TRAINING_LAPS, useEngineerTraining } from '../state/engineerTraining.ts';
 import { useUi } from '../state/uiStore.ts';
 
 const STALE_MS = 450;
@@ -32,6 +35,11 @@ function EngineerHud() {
   const [display, setDisplay] = useState<ReturnType<typeof engineerDisplay>>(null);
   const [pending, setPending] = useState(false);
   const muted = useEngineer((s) => s.muted);
+  const controls = useEngineer((s) => s.controls);
+  const deviceId = useUi((s) => s.profile.deviceId);
+  const audioDevice = useUi((s) => s.serverStatus?.engineerAudioDeviceId);
+  const audioHere = !audioDevice || audioDevice === deviceId;
+  const training = useEngineerTraining((s) => s.run);
   const voiceError = useEngineer((s) => s.voiceError);
   const voiceLoading = useEngineer((s) => s.voiceLoading);
   const active = useRef<(EngineerCall & { deadline: number }) | null>(null);
@@ -83,8 +91,17 @@ function EngineerHud() {
       return;
     }
 
-    const { cues } = engineer;
-    const ids = new Set(cues.map((c) => c.id));
+    const inTraining = training && training.laps.length < TRAINING_LAPS;
+    const cues = inTraining
+      ? engineer.cues.filter(
+          (cue) =>
+            training.trackId === f.track?.id &&
+            training.carCode === f.car.carCode &&
+            training.referenceId === engineer.referenceLapId &&
+            training.corners.some((corner) => corner.id === cue.cornerId),
+        )
+      : engineer.cues;
+    const ids = new Set(engineer.cues.map((c) => c.id));
     for (const id of spoken.current) if (!ids.has(id)) spoken.current.delete(id);
     setStatus(STATUS.ready);
     setPending(engineer.pendingReference);
@@ -96,6 +113,8 @@ function EngineerHud() {
     const ui = useUi.getState();
     if (
       muted ||
+      !audioHere ||
+      controls.volume === 0 ||
       voiceError ||
       voiceLoading ||
       ui.menuOpen ||
@@ -107,21 +126,53 @@ function EngineerHud() {
       (c) => isBrake(c.kind) && c.aheadM >= 0 && c.aheadM < f.car.speedKmh / 3.6,
     );
     const calls = cues
-      .filter((c) => !spoken.current.has(c.id) && (!imminentBrake || isBrake(c.kind)))
-      .map((c) => engineerCall(c, f.car, engineerVoiceMs))
-      .filter((c) => c !== null)
+      .filter(
+        (c) =>
+          !spoken.current.has(c.id) &&
+          (!imminentBrake || isBrake(c.kind)) &&
+          (controls.detail === 'full' || c.kind === 'brake' || c.kind === 'brakeHard'),
+      )
+      .flatMap((cue) => {
+        const call = engineerCall(cue, f.car, engineerVoiceMs, controls.anticipationMs);
+        return call ? [{ ...call, cue }] : [];
+      })
       .sort((a, b) => Number(b.brake) - Number(a.brake) || a.expiresInMs - b.expiresInMs);
     const call = calls[0];
     if (!call || (active.current && (!call.brake || active.current.brake))) return;
 
     const playing = { ...call, deadline: now + call.expiresInMs };
     active.current = playing;
-    const started = playEngineerVoice(call.text, false, () => {
-      if (active.current === playing) active.current = null;
-    });
+    const started = playEngineerVoice(
+      call.text,
+      false,
+      () => {
+        if (active.current === playing) active.current = null;
+      },
+      () => {
+        const latest = live.frame;
+        const latestEngineer = latest?.engineer;
+        if (
+          active.current !== playing ||
+          !latest ||
+          latest.sessionId !== f.sessionId ||
+          latest.lap.startedAt !== f.lap.startedAt ||
+          latestEngineer?.status !== 'ready'
+        )
+          return;
+        const latestCue = latestEngineer.cues.find((cue) => cue.id === call.id);
+        if (latestCue) recordEngineerCall(latest, latestCue, call.text, deviceId);
+      },
+    );
     if (started) spoken.current.add(call.id);
     else active.current = null;
   });
+
+  useEffect(() => {
+    if (!audioHere || muted || controls.volume === 0) {
+      stopEngineerVoice();
+      active.current = null;
+    }
+  }, [audioHere, muted, controls.volume]);
 
   useEffect(() => {
     const visibility = () => {
@@ -149,18 +200,35 @@ function EngineerHud() {
 
   return (
     <aside className="engineer-hud" data-action={display?.kind} aria-label="Engenheiro ao vivo">
-      <span className="engineer-hud-mode">
-        {muted
-          ? 'Engenheiro · sem som'
-          : voiceError
-            ? 'Engenheiro · voz indisponível'
-            : 'Engenheiro ao vivo'}
-      </span>
+      <div className="engineer-hud-heading">
+        <span className="engineer-hud-mode">
+          {!audioHere
+            ? 'Engenheiro · áudio em outro aparelho'
+            : muted || controls.volume === 0
+              ? 'Engenheiro · sem som'
+              : voiceError
+                ? 'Engenheiro · voz indisponível'
+                : 'Engenheiro ao vivo'}
+        </span>
+        <button
+          type="button"
+          data-no-gesture
+          className="engineer-hud-settings"
+          onClick={toggleMenu}
+        >
+          Ajustar rádio
+        </button>
+      </div>
       <div className="engineer-hud-call">
         <strong>{display?.label ?? status}</strong>
         {display?.meters != null && <b className="engineer-hud-distance">{display.meters} m</b>}
       </div>
       {pending && !display && <small>Nova referência na próxima volta</small>}
+      {training && (
+        <small>
+          Treino · {training.laps.length}/{TRAINING_LAPS} voltas válidas
+        </small>
+      )}
     </aside>
   );
 }

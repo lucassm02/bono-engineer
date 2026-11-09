@@ -26,6 +26,8 @@ import type {
   CoachUsage,
   Corner,
   DeviceProfile,
+  EngineerRadioCall,
+  EngineerRadioLog,
   Id,
   Lap,
   LapFlag,
@@ -550,6 +552,30 @@ export class Gt7Store {
   getLap(id: Id): Lap | null {
     const r = this.db.prepare(`${Gt7Store.#LAP_SELECT} WHERE l.id = ?`).get(id) as Row | undefined;
     return r ? this.#lap(r) : null;
+  }
+
+  saveEngineerRadioLog(lapId: Id, log: EngineerRadioLog): void {
+    this.db
+      .prepare(`INSERT INTO engineer_radio_logs (lap_id, device_id, reference_lap_id, calls_json)
+      VALUES (?, ?, ?, ?) ON CONFLICT (lap_id, device_id, reference_lap_id)
+      DO UPDATE SET calls_json = excluded.calls_json`)
+      .run(lapId, log.deviceId, log.referenceLapId, JSON.stringify(log.calls));
+  }
+
+  getEngineerRadioLogs(lapId: Id): EngineerRadioLog[] {
+    const rows = this.db
+      .prepare(`SELECT device_id, reference_lap_id, calls_json FROM engineer_radio_logs
+      WHERE lap_id = ? ORDER BY device_id, reference_lap_id`)
+      .all(lapId) as {
+      device_id: string;
+      reference_lap_id: string;
+      calls_json: string;
+    }[];
+    return rows.map((row) => ({
+      deviceId: row.device_id,
+      referenceLapId: row.reference_lap_id,
+      calls: JSON.parse(row.calls_json) as EngineerRadioCall[],
+    }));
   }
 
   /** Laps of a session in lap order. */

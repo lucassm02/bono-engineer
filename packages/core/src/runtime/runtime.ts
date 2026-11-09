@@ -66,6 +66,7 @@ export const CORE_VERSION = '0.1.0';
 
 /** Keys of the persisted runtime settings (settings table). */
 export const SETTINGS_KEYS = {
+  engineerAudioDeviceId: 'engineerAudioDeviceId',
   consoleIp: 'consoleIp',
   consoleIpSource: 'consoleIpSource',
   liveFormat: 'liveFormat',

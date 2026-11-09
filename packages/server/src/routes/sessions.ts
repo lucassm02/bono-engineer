@@ -3,7 +3,14 @@
 import { createReadStream, existsSync, statSync } from 'node:fs';
 import { isAbsolute, relative, resolve } from 'node:path';
 import type { ListLapsOptions } from '@gt7/core';
-import type { Lap, ReferenceMeta, Session, SessionDetail } from '@gt7/shared';
+import {
+  ENGINEER_CUE_KINDS,
+  type EngineerCueKind,
+  type Lap,
+  type ReferenceMeta,
+  type Session,
+  type SessionDetail,
+} from '@gt7/shared';
 import type { FastifyInstance } from 'fastify';
 import {
   badRequest,
@@ -18,6 +25,7 @@ import {
   queryBool,
   queryInt,
   queryString,
+  reqString,
 } from '../http.ts';
 import type { RouteContext } from './context.ts';
 
@@ -119,6 +127,40 @@ export function sessionRoutes(app: FastifyInstance, ctx: RouteContext): void {
   });
 
   app.get('/laps/:id', async (req) => getLap(idParam(req.params)));
+
+  app.get('/laps/:id/engineer-radio', async (req) => {
+    const lap = getLap(idParam(req.params));
+    return store.getEngineerRadioLogs(lap.id);
+  });
+
+  app.put('/laps/:id/engineer-radio', async (req) => {
+    const lap = getLap(idParam(req.params));
+    const body = bodyObject(req.body);
+    const deviceId = reqString(body, 'deviceId', 'aparelho', 160);
+    const referenceLapId = reqString(body, 'referenceLapId', 'referência', 160);
+    if (!isSafeId(referenceLapId)) throw badRequest('Referência inválida.');
+    if (!Array.isArray(body.calls) || body.calls.length === 0 || body.calls.length > 256) {
+      throw badRequest('Informe entre 1 e 256 chamadas.');
+    }
+    const calls = body.calls.map((item) => {
+      const row = bodyObject(item);
+      const cornerId = reqString(row, 'cornerId', 'curva', 160);
+      const kind = reqString(row, 'kind', 'tipo de chamada', 24);
+      if (!(ENGINEER_CUE_KINDS as readonly string[]).includes(kind))
+        throw badRequest('Tipo de chamada inválido.');
+      const text = reqString(row, 'text', 'chamada', 120);
+      const distanceM = optNumber(row, 'distanceM', 'posição da chamada', { min: 0, max: 100_000 });
+      const actionDistanceM = optNumber(row, 'actionDistanceM', 'posição da ação', {
+        min: 0,
+        max: 100_000,
+      });
+      if (distanceM === undefined || actionDistanceM === undefined)
+        throw badRequest('Informe as duas posições da chamada.');
+      return { cornerId, kind: kind as EngineerCueKind, text, distanceM, actionDistanceM };
+    });
+    store.saveEngineerRadioLog(lap.id, { deviceId, referenceLapId, calls });
+    return { ok: true };
+  });
 
   app.delete('/laps/:id', async (req) => {
     const id = idParam(req.params);

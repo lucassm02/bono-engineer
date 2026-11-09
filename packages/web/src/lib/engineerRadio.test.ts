@@ -38,6 +38,16 @@ describe('Engenheiro ao vivo', () => {
     expect(engineerCall({ ...cue, aheadM: -1 }, driver(140), estimate)).toBeNull();
   });
 
+  it('waits for the closest safe braking call and advances it when more anticipation is requested', () => {
+    const cue: EngineerCue = { id: 'T1', kind: 'brake', aheadM: 100 };
+    const duration = () => 1200;
+    expect(engineerCall(cue, driver(100), duration)).toBeNull();
+    expect(engineerCall(cue, driver(100), duration, 700)?.text).toBe('Freio em cem.');
+    expect(engineerCall({ ...cue, aheadM: 50 }, driver(100), duration)?.text).toBe(
+      'Freio em cinquenta.',
+    );
+  });
+
   it('only calls for coasting while there is time before the pickup', () => {
     const cue: EngineerCue = { id: 'roll', kind: 'coast', aheadM: 4, endAheadM: 28 };
     expect(engineerCall(cue, driver(80), estimate)?.text).toBe('Deixa rolar.');

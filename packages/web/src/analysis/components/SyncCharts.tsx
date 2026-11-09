@@ -32,6 +32,7 @@ interface Props {
   onRange: (r: [number, number] | null) => void;
   bus: CursorBus;
   focusCorner?: string | null;
+  radioMarkers?: readonly number[];
 }
 
 const Y_AXIS = 54;
@@ -53,6 +54,7 @@ export function SyncCharts({
   onRange,
   bus,
   focusCorner,
+  radioMarkers,
 }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const plotsRef = useRef<uPlot[]>([]);
@@ -65,6 +67,8 @@ export function SyncCharts({
   focusRef.current = focusCorner ?? null;
   const cornersRef = useRef(corners);
   cornersRef.current = corners;
+  const radioMarkersRef = useRef(radioMarkers);
+  radioMarkersRef.current = radioMarkers;
 
   const syncKey = useMemo(() => `cmp-${Math.random().toString(36).slice(2)}`, []);
   const full: [number, number] = useMemo(
@@ -110,6 +114,11 @@ export function SyncCharts({
         const l = Math.max(x0, u.bbox.left);
         const r = Math.min(x1, u.bbox.left + u.bbox.width);
         ctx.fillRect(l, top, r - l, height);
+      }
+      ctx.fillStyle = '#7aa7ff';
+      for (const meters of radioMarkersRef.current ?? []) {
+        const x = u.valToPos(meters, 'x', true);
+        if (x >= u.bbox.left && x < u.bbox.left + u.bbox.width) ctx.fillRect(x, top, 1, height);
       }
       ctx.restore();
     };
@@ -376,7 +385,7 @@ export function SyncCharts({
   // biome-ignore lint/correctness/useExhaustiveDependencies: redraw trigger
   useEffect(() => {
     for (const o of plotsRef.current) o.redraw(false);
-  }, [focusCorner, corners]);
+  }, [focusCorner, corners, radioMarkers]);
 
   return (
     <div className="a-charts" ref={hostRef}>
