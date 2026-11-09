@@ -468,12 +468,25 @@ function McpSection({ status }: { status: ApiStatus }) {
   const i = info.data;
   const lanUrl = i?.http.lanUrls[0] ?? null;
   const localUrl = i?.http.localUrl ?? `http://localhost:${status.httpPort}/mcp`;
+  const tokenRequired = i?.http.tokenRequired ?? status.tokenRequired;
+  const codexConfig = [
+    '[mcp_servers.gt7]',
+    `url = ${JSON.stringify(localUrl)}`,
+    ...(tokenRequired ? ['bearer_token_env_var = "GT7_TOKEN"'] : []),
+  ].join('\n');
   return (
-    <Card title="Integração com IA (Claude Desktop / Claude Code)" id="mcp">
+    <Card title="Integração com IA (MCP)" id="mcp">
       <p>
-        Opcional. Permite que o Claude (no seu PC) consulte suas voltas e análises. Copie o trecho
-        que combina com o seu programa; os caminhos já são os desta instalação.
+        Opcional. Permite que o Codex ou o Claude consultem suas voltas e análises. Copie o trecho
+        para o seu cliente. Os endereços e caminhos correspondem a esta instalação.
       </p>
+      <h3 className="a-h3">Codex (com o app aberto — inclui o estado ao vivo)</h3>
+      <CodeBlock label="Adicione ao ~/.codex/config.toml e reinicie o Codex" code={codexConfig} />
+      {tokenRequired && (
+        <p className="dim a-small">
+          Defina <code>GT7_TOKEN</code> no ambiente do Codex com o mesmo token de acesso do app.
+        </p>
+      )}
       <h3 className="a-h3">Claude Code (com o app aberto — inclui o estado ao vivo)</h3>
       {i && <CodeBlock label="Cole no terminal" code={i.claudeCode.http} />}
       <ul className="a-url-list">

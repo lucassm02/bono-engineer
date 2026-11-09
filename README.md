@@ -21,7 +21,7 @@ um piloto do topo do ranking (pelo replay do Time Trial) para você comparar e u
 - **Voltas de referência do top**: você assiste ao replay de um piloto do ranking e o app grava a volta dele
   como referência (delta ao vivo contra o top, comparação e coach).
 - **Coach com IA**: "Debrief com IA" dentro do app (usa a sua chave da API da Anthropic) e um **servidor MCP**
-  para Claude Desktop / Claude Code consultarem seus dados, inclusive com gráficos em imagem.
+  para Codex, Claude Desktop e Claude Code consultarem seus dados, inclusive com gráficos em imagem.
 - **Treino de curva**: tela que mostra as metas da próxima curva (frenagem, V-mín, retomada) e o resultado da
   última passagem, com aviso por voz opcional.
 
@@ -441,7 +441,7 @@ só é capturada se o primeiro pacote cair a ~1 pacote depois dela; senão vale 
 5. **Custo:** as chamadas usam **a sua conta da API da Anthropic** e são cobradas por ela; o app não estima nem
    limita gastos. Modelos menores custam menos.
 
-### (e) Claude Desktop / Claude Code via MCP
+### (e) Codex, Claude Desktop e Claude Code via MCP
 
 O servidor MCP entrega à IA métricas de piloto já calculadas, não os 60 Hz crus. Há dois transportes:
 
@@ -449,6 +449,9 @@ O servidor MCP entrega à IA métricas de piloto já calculadas, não os 60 Hz c
 |---|---|---|
 | **stdio** | Claude inicia o processo e lê o banco da pasta de dados (app pode estar fechado) | não |
 | **HTTP** `http://localhost:8770/mcp` | com o app rodando (`npm start`) | sim |
+
+Para conectar o Codex, copie o bloco TOML em **Configurações › Integração com IA** ou siga o
+[exemplo para Codex via HTTP](packages/mcp/README.md#codex-streamable-http).
 
 **Claude Code, stdio** (já com o caminho deste repositório):
 

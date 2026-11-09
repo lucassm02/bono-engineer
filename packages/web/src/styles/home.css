@@ -41,6 +41,15 @@
 .a-nav-icon {
   flex: none;
 }
+.a-side .a-nav-label,
+.a-side-foot .cx-chip-text,
+.a-side-foot .cs-text {
+  min-width: 0;
+  max-width: none;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
+}
 .a-nav-short {
   display: none;
 }
@@ -51,6 +60,10 @@
 .a-side-foot {
   margin-top: auto;
   padding: 8px;
+}
+.a-side-foot .cx-chip,
+.a-side-foot .cs-chip {
+  max-width: 100%;
 }
 .a-mtop {
   display: none;

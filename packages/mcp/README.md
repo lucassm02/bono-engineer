@@ -1,7 +1,7 @@
 # @gt7/mcp — servidor MCP do GT7 Race Engineer
 
 Expõe suas sessões, voltas, comparações curva a curva, consistência, microssetores, traces,
-histórico de evolução e **gráficos em imagem (PNG)** para qualquer cliente MCP (Claude Desktop,
+histórico de evolução e **gráficos em imagem (PNG)** para qualquer cliente MCP (Codex, Claude Desktop,
 Claude Code…). A IA recebe métricas de piloto já calculadas (frenagem, V-mín, trail braking,
 retomada, roda livre…), nunca os 60 Hz crus.
 
@@ -76,6 +76,21 @@ Se o servidor rodar com `--token <segredo>`, o `/mcp` também exige o token. Com
 O coach do próprio app ("Debrief com IA", `POST /api/coach/debrief`) usa **estas mesmas
 ferramentas** (cliente MCP em memória) e os mesmos textos dos prompts (`COACH_PERSONA`,
 `debriefTask`, `cornerFocusTask`, `trainingPlanTask`, exportados pelo pacote).
+
+## Codex (Streamable HTTP)
+
+Mantenha o GT7 Race Engineer aberto. Adicione este bloco a `~/.codex/config.toml` e reinicie o Codex.
+Em **Configurações › Integração com IA**, o app oferece um bloco copiável com a porta desta instalação.
+
+```toml
+[mcp_servers.gt7]
+url = "http://localhost:8770/mcp"
+```
+
+Se o app exigir um token, acrescente `bearer_token_env_var = "GT7_TOKEN"` ao bloco e defina
+`GT7_TOKEN` no ambiente do Codex com o mesmo token de acesso do app. Use `codex mcp list`
+para conferir o cadastro. Em uma conversa no Codex, experimente pedir “Liste minhas últimas
+três sessões no GT7 e resuma minha melhor volta”. [Documentação do Codex sobre MCP](https://learn.chatgpt.com/docs/extend/mcp#configure-with-configtoml)
 
 ## Ferramentas
 
