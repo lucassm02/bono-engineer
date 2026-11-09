@@ -12,6 +12,7 @@ import { registerAuth, registerOriginGuard } from './auth.ts';
 import { CoachService, type CoachServiceOptions } from './coach/service.ts';
 import { FirewallChecker, type FirewallCheckerOptions } from './firewall.ts';
 import { type HubOptions, type HubSocket, WsHub } from './hub.ts';
+import { INSTANCE_HEADER } from './identity.ts';
 import { type InterfacesFn, LanResolver } from './lan.ts';
 import { type RouteContext, type RouteModule, registerApi } from './routes/index.ts';
 import { registerWeb } from './web.ts';
@@ -91,6 +92,10 @@ export async function createApp(opts: CreateAppOptions = {}): Promise<Gt7Server>
   });
 
   try {
+    // Identity first, so even a 401/403 tells a second `npm start` "the app is already open here".
+    app.addHook('onRequest', async (_req, reply) => {
+      reply.header(INSTANCE_HEADER, opts.simulator ? 'demo' : 'real');
+    });
     registerOriginGuard(app);
     registerAuth(app, token);
     await app.register(fastifyWebsocket, { options: { maxPayload: WS_MAX_PAYLOAD } });

@@ -1,11 +1,13 @@
 /**
- * Server configuration from CLI args + environment variables (CLI wins).
+ * Server configuration from CLI args + environment variables (CLI wins). `npm start` needs NO
+ * argument: every option below is an advanced override.
  *
- *   --port N          GT7_PORT        HTTP/WebSocket port (default 8770)
+ *   --port N          GT7_PORT        HTTP/WebSocket port (default 8770; if busy, the next free one)
  *   --host ADDR       GT7_HOST        bind address (default 0.0.0.0 = whole LAN)
- *   --data DIR        GT7_DATA        data dir (default <repo>/data; with --sim <repo>/data/demo)
- *   --ps-ip IP        GT7_PS_IP       console IP (default: saved, else broadcast discovery)
- *   --format F        GT7_FORMAT      live packet format A | B | ~ | C (default: saved, else ~)
+ *   --data DIR        GT7_DATA        data dir (default: per-user folder, see core/util/data-dir.ts;
+ *                                     with --sim its `demo` subfolder)
+ *   --ps-ip IP        GT7_PS_IP       console IP (default: saved, else automatic discovery)
+ *   --format F        GT7_FORMAT      pin the live packet format A | B | ~ | C (default: automatic)
  *   --token T         GT7_TOKEN       require this token for /api and /ws
  *   --sim             GT7_SIM=1       demo: in-process fake console with synthetic laps
  *   --sim-profile P                   pro | amateur (default amateur)
@@ -22,11 +24,14 @@ import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
+import { resolveDataDir } from '@gt7/core';
 import { DEFAULT_HTTP_PORT, isPacketFormat, type PacketFormat } from '@gt7/shared';
 
 /** Repository root (packages/server/src → ../../..). */
 export const REPO_ROOT = resolve(fileURLToPath(new URL('../../../', import.meta.url)));
 export const DEFAULT_WEB_DIST = join(REPO_ROOT, 'packages', 'web', 'dist');
+/** Where the data lived before the per-user folder existed (migrated once, then ignored). */
+export const LEGACY_DATA_DIR = join(REPO_ROOT, 'data');
 
 /** Alternate UDP ports for the in-process simulator, so a real console on 33739/33740 is untouched. */
 export const SIM_CONSOLE_PORT = 47739;
@@ -43,8 +48,12 @@ export interface SimConfig {
 
 export interface ServerConfig {
   port: number;
+  /** The port was given by the user (--port / GT7_PORT): no automatic fallback to another one. */
+  portExplicit: boolean;
   host: string;
   dataDir: string;
+  /** The data folder was given by the user (--data / GT7_DATA): no migration, no default folder. */
+  dataDirExplicit: boolean;
   webDist: string;
   consoleIp: string | null;
   liveFormat: PacketFormat | null;
@@ -61,13 +70,14 @@ export class ConfigError extends Error {}
 
 export const HELP_TEXT = `GT7 Race Engineer — servidor
 
-Uso: npm start -- [opções]     (npm run demo = --sim, npm run dev = --dev)
+Uso normal: npm start   (sem nenhuma opção; npm run demo = demonstração, npm run dev = desenvolvimento)
 
-  --port N          porta HTTP/WebSocket (padrão 8770; env GT7_PORT)
+Tudo abaixo é opcional, para usuários avançados:
+  --port N          porta HTTP/WebSocket (padrão 8770; se estiver ocupada usa a próxima livre; env GT7_PORT)
   --host ADDR       endereço de escuta (padrão 0.0.0.0 = toda a rede; env GT7_HOST)
-  --data DIR        pasta de dados (padrão <repo>/data; com --sim, <repo>/data/demo; env GT7_DATA ou GT7_DATA_DIR)
-  --ps-ip IP        IP do PlayStation (padrão: o salvo, senão busca na rede; env GT7_PS_IP)
-  --format F        formato do pacote ao vivo: A | B | ~ | C (env GT7_FORMAT)
+  --data DIR        pasta de dados (padrão: %APPDATA%GT7 Race Engineer, e a subpasta demo com --sim; env GT7_DATA ou GT7_DATA_DIR)
+  --ps-ip IP        fixa o IP do PlayStation (padrão: o app encontra sozinho; env GT7_PS_IP)
+  --format F        fixa o formato do pacote ao vivo: A | B | ~ | C (padrão: automático; env GT7_FORMAT)
   --token T         exige este token na API e no WebSocket (env GT7_TOKEN)
   --sim             demonstração: console falso com voltas sintéticas (env GT7_SIM=1)
   --sim-profile P   pro | amateur (padrão amateur)
@@ -128,7 +138,8 @@ export function parseConfig(
   }
   const str = (k: string) => (typeof values[k] === 'string' ? (values[k] as string) : undefined);
 
-  const port = int(str('port') ?? env.GT7_PORT, 'port', 1, 65535) ?? DEFAULT_HTTP_PORT;
+  const portArg = int(str('port') ?? env.GT7_PORT, 'port', 1, 65535);
+  const port = portArg ?? DEFAULT_HTTP_PORT;
   const host = str('host') ?? env.GT7_HOST ?? '0.0.0.0';
   const simOn = values.sim === true || envFlag(env.GT7_SIM);
 
@@ -158,12 +169,8 @@ export function parseConfig(
     };
   }
 
-  const dataArg = str('data') ?? (env.GT7_DATA || env.GT7_DATA_DIR || undefined);
-  const dataDir = dataArg
-    ? resolve(dataArg)
-    : simOn
-      ? join(REPO_ROOT, 'data', 'demo')
-      : join(REPO_ROOT, 'data');
+  const dataArg = str('data') || env.GT7_DATA || env.GT7_DATA_DIR || undefined;
+  const dataDir = resolveDataDir({ override: dataArg, demo: simOn, env });
 
   let open = !envFlag(env.GT7_NO_OPEN);
   if (values.open === true) open = true;
@@ -171,8 +178,10 @@ export function parseConfig(
 
   return {
     port,
+    portExplicit: portArg !== undefined,
     host,
     dataDir,
+    dataDirExplicit: !!dataArg,
     webDist: DEFAULT_WEB_DIST,
     consoleIp: psIp ?? null,
     liveFormat: fmt ?? null,

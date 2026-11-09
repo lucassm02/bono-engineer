@@ -3,8 +3,11 @@ import { defineConfig } from 'vitest/config';
 /** Tests that bind real UDP/TCP sockets and stream at 20x speed: timing-sensitive under load. */
 const NETWORK_TESTS = [
   'packages/core/src/runtime/runtime.test.ts',
+  'packages/core/src/runtime/discovery.test.ts',
   'packages/protocol/src/integration.test.ts',
+  'packages/protocol/src/discovery.integration.test.ts',
   'packages/server/src/app.test.ts',
+  'packages/server/src/startup.test.ts',
 ];
 
 export default defineConfig({

@@ -2,6 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import type { NetworkInterfaceInfo } from 'node:os';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { defaultDataDir } from '@gt7/core';
 import type { LanInfo } from '@gt7/shared';
 import { afterEach, describe, expect, it } from 'vitest';
 import { type CreateAppOptions, createApp, type Gt7Server } from './app.ts';
@@ -192,11 +193,14 @@ describe('config', () => {
       consolePort: SIM_CONSOLE_PORT,
       clientPort: SIM_CLIENT_PORT,
     });
-    expect(c.dataDir.replaceAll('\\', '/')).toMatch(/\/data\/demo$/);
+    expect(c.dataDir).toBe(
+      join(defaultDataDir({ env: { GT7_PORT: '1234', GT7_TOKEN: 'abc' } }), 'demo'),
+    );
 
-    const d = parseConfig([], { GT7_PORT: '1234', GT7_NO_OPEN: '1', GT7_PS_IP: '192.168.0.20' });
+    const denv = { GT7_PORT: '1234', GT7_NO_OPEN: '1', GT7_PS_IP: '192.168.0.20' };
+    const d = parseConfig([], denv);
     expect(d).toMatchObject({ port: 1234, open: false, consoleIp: '192.168.0.20', sim: null });
-    expect(d.dataDir.replaceAll('\\', '/')).toMatch(/\/data$/);
+    expect(d.dataDir).toBe(defaultDataDir({ env: denv }));
 
     expect(() => parseConfig(['--port', 'abc'], {})).toThrow(ConfigError);
     expect(() => parseConfig(['--format', 'Z'], {})).toThrow(ConfigError);

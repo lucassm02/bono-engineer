@@ -113,13 +113,13 @@ export function ComparePage({ route }: { route: Route }) {
       <>
         <PageHead
           title="Comparação de voltas"
-          back={{ href: routes.sessions(), label: 'Sessões' }}
+          back={{ href: routes.home(), label: 'Suas pistas' }}
         />
         <Empty>
-          <p>Escolha uma volta numa sessão para comparar com a referência.</p>
+          <p>Escolha uma volta para comparar com a sua melhor ou com a de um piloto do top.</p>
           <p>
-            <a className="a-btn" href={routes.sessions()}>
-              Ver sessões
+            <a className="a-btn" href={routes.home()}>
+              Escolher uma pista
             </a>
           </p>
         </Empty>
@@ -131,7 +131,7 @@ export function ComparePage({ route }: { route: Route }) {
       <>
         <PageHead
           title="Comparação de voltas"
-          back={{ href: routes.sessions(), label: 'Sessões' }}
+          back={{ href: routes.home(), label: 'Suas pistas' }}
         />
         <ErrorBox error={cmp.error} onRetry={cmp.reload} />
         {ref !== 'auto' && (

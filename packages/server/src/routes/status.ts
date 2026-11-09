@@ -1,6 +1,7 @@
 /** /api/status, /api/settings, /api/firewall, /api/lan. */
 
 import {
+  type ApiDiscoveryScanResult,
   type ApiSettings,
   type ApiStatus,
   DELTA_REFERENCE_KINDS,
@@ -27,7 +28,9 @@ export function currentSettings(ctx: RouteContext): ApiSettings {
   const ref = runtime.engine.deltaReference;
   return {
     consoleIp: s.consoleIp,
+    consoleIpSource: s.consoleIpSource,
     liveFormat: s.liveFormat,
+    liveFormatAuto: s.liveFormatAuto,
     captureFormat: s.captureFormat,
     record: s.record,
     deltaReference: { kind: ref.kind, lapId: ref.lapId },
@@ -37,6 +40,7 @@ export function currentSettings(ctx: RouteContext): ApiSettings {
 export function apiStatus(ctx: RouteContext): ApiStatus {
   return {
     ...ctx.hub.status(),
+    consoleConnection: ctx.runtime.getConnection(),
     firewall: ctx.firewall.status,
     settings: currentSettings(ctx),
     running: ctx.runtime.running,
@@ -62,16 +66,27 @@ export function statusRoutes(app: FastifyInstance, ctx: RouteContext): void {
 
   app.patch('/settings', async (req) => {
     const b = bodyObject(req.body);
-    const known = ['consoleIp', 'liveFormat', 'captureFormat', 'record', 'deltaReference'];
+    const known = [
+      'consoleIp',
+      'liveFormat',
+      'liveFormatAuto',
+      'captureFormat',
+      'record',
+      'deltaReference',
+    ];
     const unknown = Object.keys(b).filter((k) => !known.includes(k));
     if (unknown.length) throw badRequest(`Campo(s) desconhecido(s): ${unknown.join(', ')}.`);
 
     // Validate everything first, then apply.
-    const consoleIp = optString(b, 'consoleIp', 'consoleIp', 64)?.trim();
+    // null (or an empty text) = forget the typed IP and go back to automatic discovery
+    const clearIp =
+      b.consoleIp === null || (typeof b.consoleIp === 'string' && !b.consoleIp.trim());
+    const consoleIp = clearIp ? undefined : optString(b, 'consoleIp', 'consoleIp', 64)?.trim();
     if (consoleIp !== undefined && !isIPv4(consoleIp)) {
       throw badRequest('IP do console inválido (ex.: 192.168.0.20).');
     }
     const liveFormat = parseFormat(b, 'liveFormat', 'liveFormat');
+    const liveFormatAuto = optBoolean(b, 'liveFormatAuto', 'liveFormatAuto');
     const captureFormat = parseFormat(b, 'captureFormat', 'captureFormat');
     const record = optBoolean(b, 'record', 'record');
     let ref: { kind: DeltaReferenceKind; lapId: string | null } | undefined;
@@ -89,22 +104,42 @@ export function statusRoutes(app: FastifyInstance, ctx: RouteContext): void {
       ref = { kind: r.kind as DeltaReferenceKind, lapId };
     }
 
-    if (consoleIp !== undefined) runtime.setConsoleIp(consoleIp);
+    if (clearIp) runtime.setConsoleIp(null);
+    else if (consoleIp !== undefined) runtime.setConsoleIp(consoleIp);
     if (captureFormat !== undefined) runtime.setCaptureFormat(captureFormat);
     if (record !== undefined) runtime.setRecording(record);
     if (ref) runtime.setDeltaReference(ref.kind, ref.lapId);
-    if (liveFormat !== undefined) {
-      // Applies after the ingestor cooldown (~15 s); progress goes out as notices/status.
-      runtime.setPacketFormat(liveFormat).catch((e: Error) =>
-        hub.notice({
-          level: 'error',
-          code: 'formatFailed',
-          message: `Falha ao trocar o formato: ${e.message}`,
-        }),
-      );
+    const formatFailed = (e: Error) =>
+      hub.notice({
+        level: 'error',
+        code: 'formatFailed',
+        message: `Falha ao trocar o formato: ${e.message}`,
+      });
+    if (liveFormatAuto === true) {
+      // Automatic mode wins over a format sent in the same request ("~" first, then B, then A).
+      runtime.setLiveFormatAuto(true).catch(formatFailed);
+    } else if (liveFormat !== undefined) {
+      // Pins the format; applies after the ingestor cooldown (~15 s), progress goes out as notices/status.
+      runtime.setPacketFormat(liveFormat).catch(formatFailed);
+    } else if (liveFormatAuto === false) {
+      runtime.setLiveFormatAuto(false).catch(formatFailed);
     }
     hub.scheduleStatus();
     return currentSettings(ctx);
+  });
+
+  // Forget the typed IP: back to automatic discovery.
+  app.delete('/settings/consoleIp', async () => {
+    runtime.setConsoleIp(null);
+    hub.scheduleStatus();
+    return currentSettings(ctx);
+  });
+
+  // Restart the search for the console (fast sweep again) and the automatic format round.
+  app.post('/discovery/scan', async (): Promise<ApiDiscoveryScanResult> => {
+    const started = runtime.rescan();
+    hub.scheduleStatus();
+    return { started, consoleConnection: runtime.getConnection() };
   });
 
   app.get('/firewall', async () => ctx.firewall.status);

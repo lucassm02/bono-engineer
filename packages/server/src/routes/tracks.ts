@@ -12,6 +12,7 @@ import {
   optNullableString,
   optNumber,
 } from '../http.ts';
+import { buildTracksOverview, type TrackOverview } from '../tracks-catalog.ts';
 import type { RouteContext } from './context.ts';
 
 const MAX_SECTORS = 20;
@@ -88,6 +89,23 @@ export function trackRoutes(app: FastifyInstance, ctx: RouteContext): void {
   };
 
   app.get('/tracks', async () => store.listTracks());
+
+  /**
+   * Home screen data in one request: per track thumbnail, counts, best lap, cars and trend.
+   * `simulator` tells the UI that everything here comes from the demo console (badge "Demo").
+   */
+  app.get(
+    '/tracks/overview',
+    async (): Promise<{ simulator: boolean; tracks: TrackOverview[] }> => ({
+      simulator: ctx.simulator,
+      tracks: buildTracksOverview({
+        tracks: store.listTracks(),
+        sessions: store.listSessions({ limit: 1000 }),
+        lapsOf: (id) => store.listLapsForTrack(id, { orderBy: 'startedAt', limit: 20000 }),
+        centerlineOf: (id) => store.getCenterline(id),
+      }),
+    }),
+  );
 
   app.get('/tracks/:id', async (req) => getTrack(trackId(req.params)));
 

@@ -30,7 +30,7 @@ npm run sim -- --port 44739 --target-port 44740 --host 127.0.0.1
 npm run sniff -- --ps-ip 192.168.0.50                 # real PS5 (format A)
 npm run sniff -- --ps-ip 127.0.0.1 --format B         # against `npm run sim`
 npm run sniff -- --ps-ip 192.168.0.50 --format '~' --record data/recordings/live.gt7rec
-npm run sniff -- --discover                           # try broadcast discovery (network dependent)
+npm run sniff -- --discover                           # find the console by itself: broadcast + unicast sweep of the local /24 (needs the game on a track)
 ```
 
 Output: `speed rpm gear(suggested) throttle brake lap last best | format rate loss flags`.

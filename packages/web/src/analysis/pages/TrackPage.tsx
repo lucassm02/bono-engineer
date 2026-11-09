@@ -1,6 +1,6 @@
 /**
- * #/analise/pista/:trackId?session= — track map + corner names, sectors, re-detection, records and
- * references, consistency of a session, microsector theoretical best and evolution over days.
+ * #/analise/pista/:trackId?tab=&session= — one track in five tabs: best laps per car, sessions by
+ * day, evolution (+ consistency), top-of-the-world references and corners (map, names, sectors).
  */
 
 import type {
@@ -9,6 +9,7 @@ import type {
   CornerMetricKey,
   EvolutionCornerPoint,
   EvolutionReport,
+  Lap,
   MapCorner,
   MetricStats,
   Session,
@@ -19,7 +20,9 @@ import { navigate, type Route, routes } from '../../lib/route.ts';
 import { addNotice } from '../../state/uiStore.ts';
 import { api } from '../api.ts';
 import { CompareMap } from '../components/CompareMap.tsx';
+import { LapQuickActions } from '../components/LapActions.tsx';
 import { MiniChart, type MiniSeries } from '../components/MiniChart.tsx';
+import { EditableTrackName, NewTrackPrompt } from '../components/TrackNaming.tsx';
 import {
   Card,
   ConfirmButton,
@@ -31,6 +34,14 @@ import {
   useTitle,
 } from '../components/ui.tsx';
 import { cornerLabel, fixed, signed } from '../lib/chartData.ts';
+import {
+  dayHeading,
+  formatClock,
+  formatDuration,
+  formatKm,
+  groupSessionsByDay,
+  plural,
+} from '../lib/history.ts';
 import { CORNER_KIND_LABELS, carLabel, formatDateTime, formatDay } from '../lib/labels.ts';
 import { useFetch } from '../useFetch.ts';
 
@@ -356,6 +367,175 @@ function EvolutionSection({ evo, corners }: { evo: EvolutionReport; corners: Map
 }
 
 // ---------------------------------------------------------------------------------------------
+// Tabs
+// ---------------------------------------------------------------------------------------------
+
+const TABS = [
+  { id: 'melhores', label: 'Melhores voltas' },
+  { id: 'sessoes', label: 'Sessões' },
+  { id: 'evolucao', label: 'Evolução' },
+  { id: 'referencias', label: 'Referências do top' },
+  { id: 'curvas', label: 'Curvas' },
+] as const;
+type TabId = (typeof TABS)[number]['id'];
+
+function isTab(v: string | undefined): v is TabId {
+  return TABS.some((t) => t.id === v);
+}
+
+const TOP_PER_CAR = 5;
+
+function BestLapsTab({ trackId, hasTopReference }: { trackId: string; hasTopReference: boolean }) {
+  const laps = useFetch(`bl:${trackId}`, () =>
+    api.trackLaps(trackId, {
+      validOnly: true,
+      references: 'exclude',
+      orderBy: 'time',
+      limit: 1000,
+    }),
+  );
+  const groups = useMemo(() => {
+    const own = (laps.data ?? []).filter((l) => !l.flags.includes('replay'));
+    const byCar = new Map<number, Lap[]>();
+    for (const l of own) {
+      const list = byCar.get(l.carCode);
+      if (list) list.push(l);
+      else byCar.set(l.carCode, [l]);
+    }
+    const lastAt = (list: Lap[]) => Math.max(...list.map((l) => l.startedAt));
+    return [...byCar.entries()]
+      .map(([carCode, list]) => ({ carCode, laps: list.sort((a, b) => a.timeMs - b.timeMs) }))
+      .sort((a, b) => lastAt(b.laps) - lastAt(a.laps));
+  }, [laps.data]);
+
+  if (laps.error && !laps.data) return <ErrorBox error={laps.error} onRetry={laps.reload} />;
+  if (!laps.data) return <Loading />;
+  if (groups.length === 0) {
+    return (
+      <Empty>
+        <p>Ainda não há voltas válidas nesta pista.</p>
+        <p className="dim">Complete uma volta limpa (sem sair da pista) e ela aparece aqui.</p>
+      </Empty>
+    );
+  }
+  return (
+    <div className="a-bestgrid">
+      {groups.map((g) => {
+        const pb = g.laps[0]!;
+        return (
+          <Card
+            key={g.carCode}
+            title={carLabel(g.carCode)}
+            actions={
+              <span className="dim a-small">
+                Melhor <strong className="num a-pbtime">{formatLapTime(pb.timeMs)}</strong>
+              </span>
+            }
+          >
+            <ol className="a-toplaps">
+              {g.laps.slice(0, TOP_PER_CAR).map((l, i) => (
+                <li key={l.id}>
+                  <div className="a-toplap-main">
+                    <span className="a-toplap-pos num">{i + 1}º</span>
+                    <span className="a-toplap-time num" data-best={i === 0 ? '1' : '0'}>
+                      {formatLapTime(l.timeMs)}
+                    </span>
+                    <a className="dim a-small" href={routes.session(l.sessionId)}>
+                      {formatDateTime(l.startedAt)} · volta {l.number}
+                    </a>
+                    {l.isReference && <Tag tone="ref">ref</Tag>}
+                  </div>
+                  <LapQuickActions
+                    lap={l}
+                    pbLapId={pb.id}
+                    hasTopReference={hasTopReference}
+                    onChanged={() => laps.reload()}
+                    onDeleted={() => laps.reload()}
+                  />
+                </li>
+              ))}
+            </ol>
+            {g.laps.length > TOP_PER_CAR && (
+              <p className="dim a-small">
+                + {g.laps.length - TOP_PER_CAR} voltas válidas com este carro.
+              </p>
+            )}
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+function SessionsTab({ sessions }: { sessions: Session[] }) {
+  const [car, setCar] = useState('');
+  const cars = useMemo(
+    () => [...new Set(sessions.map((s) => s.carCode))].sort((a, b) => a - b),
+    [sessions],
+  );
+  const groups = useMemo(
+    () => groupSessionsByDay(sessions.filter((s) => !car || String(s.carCode) === car)),
+    [sessions, car],
+  );
+  if (sessions.length === 0) {
+    return (
+      <Empty>
+        <p>Nenhuma sessão nesta pista ainda.</p>
+      </Empty>
+    );
+  }
+  return (
+    <>
+      {cars.length > 1 && (
+        <div className="a-filters">
+          <label>
+            Carro
+            <select value={car} onChange={(e) => setCar(e.target.value)}>
+              <option value="">Todos</option>
+              {cars.map((c) => (
+                <option key={c} value={String(c)}>
+                  {carLabel(c)}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      )}
+      {groups.map((g) => (
+        <section key={g.day} className="a-daygroup">
+          <h3 className="a-dayhead">{dayHeading(g.day)}</h3>
+          <ul className="a-sessionlist">
+            {g.items.map((s) => {
+              const dur = formatDuration(s.startedAt, s.endedAt);
+              return (
+                <li key={s.id}>
+                  <a className="a-sessionrow" href={routes.session(s.id)}>
+                    <span className="a-sessionrow-time num">{formatClock(s.startedAt)}</span>
+                    <span className="a-sessionrow-main">
+                      <strong>{carLabel(s.carCode)}</strong>
+                      <span className="dim a-small">
+                        {plural(s.lapCount, 'volta', 'voltas')}
+                        {dur ? ` · ${dur}` : ''}
+                        {s.endedAt === null && <Tag tone="info">em andamento</Tag>}
+                        {s.mode === 'replayCapture' && <Tag tone="ref">captura de replay</Tag>}
+                      </span>
+                    </span>
+                    <span className="a-sessionrow-best num">
+                      {s.bestLapMs ? formatLapTime(s.bestLapMs) : '–'}
+                    </span>
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ))}
+      <p className="dim a-small">Para apagar uma sessão inteira, abra-a e use “Apagar sessão”.</p>
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------------------------
 
@@ -371,7 +551,7 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
   const [focus, setFocus] = useState<string | null>(null);
   const [sectors, setSectors] = useState<string>('');
   const [carCode, setCarCode] = useState<number | null>(null);
-  const [renaming, setRenaming] = useState<string | null>(null);
+  const tab: TabId = isTab(route.query.tab) ? route.query.tab : 'melhores';
 
   const data: ApiTrackAnalysis | null = ta.data;
   const track = data?.track ?? trackOnly.data ?? null;
@@ -379,10 +559,10 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
   const sessionList = sessions.data ?? [];
   const sessionId = pickSession(sessionList, route.query.session);
 
-  const consistency = useFetch(sessionId ? `cons:${sessionId}` : null, () =>
+  const consistency = useFetch(tab === 'evolucao' && sessionId ? `cons:${sessionId}` : null, () =>
     api.consistency(sessionId),
   );
-  const theo = useFetch(sessionId ? `theo:${sessionId}` : null, async () => {
+  const theo = useFetch(tab === 'evolucao' && sessionId ? `theo:${sessionId}` : null, async () => {
     const s = await api.session(sessionId);
     const ids = s.laps
       .filter((l) => l.valid && !l.isReference)
@@ -394,7 +574,9 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
   const cars = data?.records.cars ?? [];
   const car =
     carCode ?? (cars.length ? [...cars].sort((a, b) => b.laps - a.laps)[0]!.carCode : null);
-  const evo = useFetch(`evo:${id}:${car ?? ''}`, () => api.evolution(id, car ?? undefined));
+  const evo = useFetch(tab === 'evolucao' ? `evo:${id}:${car ?? ''}` : null, () =>
+    api.evolution(id, car ?? undefined),
+  );
 
   useEffect(() => {
     if (track) setSectors(String(track.sectorGates.length || 3));
@@ -406,7 +588,7 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
     if (trackOnly.error || !trackOnly.loading) {
       return (
         <>
-          <PageHead title="Pista" back={{ href: routes.sessions(), label: 'Sessões' }} />
+          <PageHead title="Pista" back={{ href: routes.home(), label: 'Suas pistas' }} />
           <ErrorBox error={trackOnly.error ?? ta.error} onRetry={ta.reload} />
         </>
       );
@@ -430,213 +612,205 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
   const anyPb = [...cars].sort(
     (a, b) => (a.personalBestMs ?? 1e12) - (b.personalBestMs ?? 1e12),
   )[0];
+  const ownSessions = sessionList.filter((s) => s.mode === 'live');
+  const needsName = track.source === 'auto' && track.name.startsWith('Pista desconhecida');
+  const bestRef =
+    data?.references.reduce<number | null>(
+      (b, r) => (b === null || r.timeMs < b ? r.timeMs : b),
+      null,
+    ) ?? null;
+  const tabHref = (t: TabId) =>
+    routes.track(id, { tab: t === 'melhores' ? undefined : t, session: route.query.session });
 
   return (
     <>
       <PageHead
-        back={{ href: routes.sessions({ track: id }), label: 'Sessões desta pista' }}
+        back={{ href: routes.home(), label: 'Suas pistas' }}
         title={
-          renaming !== null ? (
-            <form
-              className="a-rename"
-              onSubmit={async (e) => {
-                e.preventDefault();
-                try {
-                  await api.renameTrack(id, renaming.trim());
-                  setRenaming(null);
-                  reload();
-                } catch (x) {
-                  addNotice('error', (x as Error).message, 6000);
-                }
-              }}
-            >
-              <input
-                className="a-input"
-                value={renaming}
-                maxLength={80}
-                // biome-ignore lint/a11y/noAutofocus: inline rename
-                autoFocus
-                onChange={(e) => setRenaming(e.target.value)}
-                aria-label="Nome da pista"
-              />
-              <button type="submit" className="a-btn a-btn-sm" disabled={!renaming.trim()}>
-                Salvar
-              </button>
-              <button
-                type="button"
-                className="a-btn a-btn-ghost a-btn-sm"
-                onClick={() => setRenaming(null)}
-              >
-                Cancelar
-              </button>
-            </form>
-          ) : (
-            <>
-              {track.name}{' '}
-              <button
-                type="button"
-                className="a-link-btn a-small"
-                onClick={() => setRenaming(track.name)}
-              >
-                renomear
-              </button>
-            </>
-          )
+          <EditableTrackName
+            trackId={id}
+            name={track.name}
+            layout={track.layout ?? null}
+            lengthM={track.lengthM}
+            onSaved={reload}
+          />
         }
         sub={
           <>
-            {(track.lengthM / 1000).toFixed(3).replace('.', ',')} km · {track.corners.length} curvas
-            · {track.sectorGates.length} setores
-            {data && (
-              <>
-                {' '}
-                · {data.sessionCount} sessões · {data.lapCount} voltas
-              </>
-            )}
+            {formatKm(track.lengthM, 3)} · {track.corners.length} curvas ·{' '}
+            {track.sectorGates.length} setores
+          </>
+        }
+        actions={
+          <>
+            <a className="a-btn a-btn-ghost" href={routes.sessions({ track: id })}>
+              Lista de sessões
+            </a>
+            <a className="a-btn" href={routes.coach()}>
+              Debrief com IA
+            </a>
           </>
         }
       />
 
-      <div className="a-track-grid">
-        <div className="a-map-box a-map-track">
-          {data ? (
-            <CompareMap
-              outline={{ x: data.polyline.x, z: data.polyline.z }}
-              distanceM={[]}
-              lines={[]}
-              corners={corners}
-              brakeMarkers={[]}
-              range={null}
-              focusCorner={focus}
-              bus={null}
-              onCorner={onCorner}
-            />
-          ) : (
-            <Empty>A pista ainda não tem linha de referência (complete uma volta limpa).</Empty>
-          )}
-        </div>
-        <Card
-          title="Curvas"
-          actions={
-            <ConfirmButton
-              className="a-btn a-btn-ghost a-btn-sm"
-              label="Redetectar curvas"
-              question="Detectar as curvas de novo? (nomes próximos são mantidos)"
-              confirmLabel="Redetectar"
-              onConfirm={async () => {
-                try {
-                  const r = await api.redetectCorners(id);
-                  addNotice(
-                    'info',
-                    r.detected ? `${r.corners.length} curvas detectadas.` : 'Nada mudou.',
-                  );
-                  reload();
-                } catch (e) {
-                  addNotice('error', (e as Error).message, 6000);
-                }
-              }}
-            />
-          }
-        >
-          {corners.length === 0 && track.corners.length === 0 ? (
-            <p className="dim">Nenhuma curva detectada ainda.</p>
-          ) : (
-            <div className="a-table-wrap a-corner-edit">
-              <table className="a-table">
-                <thead>
-                  <tr>
-                    <th>Curva</th>
-                    <th>Nome</th>
-                    <th>Marco de frenagem</th>
-                    <th />
-                  </tr>
-                </thead>
-                <tbody>
-                  {(corners.length
-                    ? corners
-                    : track.corners.map((c) => ({ ...c, apexX: 0, apexZ: 0 }))
-                  ).map((c) => (
-                    <CornerRow
-                      key={c.id}
-                      trackId={id}
-                      corner={c}
-                      focused={focus === c.id}
-                      onSaved={reload}
-                    />
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-          <form
-            className="a-inline-form a-mt"
-            onSubmit={async (e) => {
-              e.preventDefault();
-              const n = Number(sectors);
-              if (!Number.isInteger(n) || n < 1 || n > 20) {
-                addNotice('warn', 'Use de 1 a 20 setores.');
-                return;
-              }
-              try {
-                await api.setSectorCount(id, n);
-                addNotice('info', `${n} setores de mesmo comprimento.`);
-                reload();
-              } catch (x) {
-                addNotice('error', (x as Error).message, 6000);
-              }
-            }}
-          >
-            <label>
-              Setores (iguais)
-              <input
-                className="a-input a-input-num"
-                type="number"
-                min={1}
-                max={20}
-                value={sectors}
-                onChange={(e) => setSectors(e.target.value)}
-              />
-            </label>
-            <button type="submit" className="a-btn a-btn-ghost">
-              Aplicar
-            </button>
-            <span className="dim a-small">
-              Tempos de setor de voltas antigas não são recalculados.
-            </span>
-          </form>
-        </Card>
-      </div>
+      {needsName && (
+        <NewTrackPrompt trackId={id} lengthM={track.lengthM} onSaved={reload} variant="inline" />
+      )}
 
       {data && (
-        <Card title="Recordes e referências" className="a-mt">
-          <div className="a-records">
-            <div>
-              <span className="a-sum-k">Melhor de todos (inclui referências)</span>
-              <span className="a-sum-v num">{formatLapTime(data.records.overallBestMs)}</span>
-            </div>
-            {cars.map((c) => (
-              <div key={c.carCode}>
-                <span className="a-sum-k">
-                  {carLabel(c.carCode)} · {c.validLaps}/{c.laps} válidas
-                </span>
-                <span className="a-sum-v num">{formatLapTime(c.personalBestMs)}</span>
-                {c.personalBestLapId && (
-                  <a
-                    className="a-small"
-                    href={routes.compare({ lap: c.personalBestLapId, ref: 'bestReference' })}
-                  >
-                    comparar com o top
-                  </a>
-                )}
-              </div>
-            ))}
+        <div className="a-stats a-track-stats">
+          <div>
+            <span className="a-sum-k">Sua melhor volta</span>
+            <span className="a-sum-v num">{formatLapTime(anyPb?.personalBestMs ?? null)}</span>
           </div>
-          {data.references.length > 0 ? (
-            <div className="a-table-wrap a-mt">
+          <div>
+            <span className="a-sum-k">Melhor do top</span>
+            <span className="a-sum-v num">{bestRef ? formatLapTime(bestRef) : '–'}</span>
+          </div>
+          <div>
+            <span className="a-sum-k">Sessões</span>
+            <span className="a-sum-v num">{sessions.data ? ownSessions.length : '–'}</span>
+          </div>
+          <div>
+            <span className="a-sum-k">Voltas</span>
+            <span className="a-sum-v num">{data.lapCount}</span>
+          </div>
+        </div>
+      )}
+
+      <nav className="a-tabs" aria-label="Seções da pista">
+        {TABS.map((t) => (
+          <a
+            key={t.id}
+            aria-current={tab === t.id ? 'page' : undefined}
+            href={tabHref(t.id)}
+            onClick={(e) => {
+              e.preventDefault();
+              navigate(tabHref(t.id), true);
+            }}
+          >
+            {t.label}
+          </a>
+        ))}
+      </nav>
+
+      {tab === 'melhores' && (
+        <BestLapsTab trackId={id} hasTopReference={!!data?.references.length} />
+      )}
+
+      {tab === 'sessoes' &&
+        (sessions.error && !sessions.data ? (
+          <ErrorBox error={sessions.error} onRetry={sessions.reload} />
+        ) : !sessions.data ? (
+          <Loading />
+        ) : (
+          <SessionsTab sessions={sessionList} />
+        ))}
+
+      {tab === 'evolucao' && (
+        <>
+          <Card
+            title="Evolução"
+            actions={
+              cars.length > 1 && (
+                <select
+                  value={car ?? ''}
+                  onChange={(e) => setCarCode(Number(e.target.value))}
+                  aria-label="Carro"
+                >
+                  {cars.map((c) => (
+                    <option key={c.carCode} value={c.carCode}>
+                      {carLabel(c.carCode)}
+                    </option>
+                  ))}
+                </select>
+              )
+            }
+          >
+            {evo.error ? (
+              <ErrorBox error={evo.error} compact />
+            ) : !evo.data ? (
+              <Loading />
+            ) : (
+              <EvolutionSection evo={evo.data} corners={corners} />
+            )}
+          </Card>
+          <Card
+            title="Consistência de uma sessão"
+            className="a-mt"
+            actions={
+              sessionList.length > 0 && (
+                <select
+                  value={sessionId}
+                  onChange={(e) =>
+                    navigate(routes.track(id, { tab: 'evolucao', session: e.target.value }), true)
+                  }
+                  aria-label="Sessão"
+                >
+                  {sessionList.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {formatDateTime(s.startedAt)} · {s.lapCount} voltas
+                      {s.mode === 'replayCapture' ? ' · replay' : ''}
+                    </option>
+                  ))}
+                </select>
+              )
+            }
+          >
+            {!sessionId ? (
+              <p className="dim">Nenhuma sessão nesta pista.</p>
+            ) : consistency.error ? (
+              <ErrorBox error={consistency.error} compact />
+            ) : !consistency.data ? (
+              <Loading />
+            ) : (
+              <ConsistencySection report={consistency.data} corners={corners} />
+            )}
+            {theo.data && (
+              <div className="a-theo">
+                <h3 className="a-h3">Volta ideal da sessão</h3>
+                <div className="a-stats">
+                  <div>
+                    <span className="a-sum-k">Sua melhor</span>
+                    <span className="a-sum-v num">{formatLapTime(theo.data.report.bestLapMs)}</span>
+                  </div>
+                  <div>
+                    <span className="a-sum-k">Melhores setores</span>
+                    <span className="a-sum-v num">
+                      {formatLapTime(theo.data.report.theoreticalBestSectorsMs)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="a-sum-k">Melhores {theo.data.report.count} microssetores</span>
+                    <span className="a-sum-v num">
+                      {formatLapTime(theo.data.report.theoreticalBestMs)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="a-sum-k">Ganho possível</span>
+                    <span className="a-sum-v num" data-tone="gain">
+                      {formatDelta(theo.data.report.theoreticalBestMs - theo.data.report.bestLapMs)}
+                    </span>
+                  </div>
+                </div>
+                <p className="dim a-small">
+                  Soma dos melhores trechos de {theo.data.report.laps.length} voltas válidas: o
+                  quanto você já mostrou que consegue andar.
+                </p>
+              </div>
+            )}
+          </Card>
+        </>
+      )}
+
+      {tab === 'referencias' && (
+        <Card title="Referências do top mundial">
+          {data && data.references.length > 0 ? (
+            <div className="a-table-wrap">
               <table className="a-table">
                 <thead>
                   <tr>
-                    <th>Referência</th>
+                    <th>Piloto</th>
                     <th>Carro</th>
                     <th className="num-col">Tempo</th>
                     <th />
@@ -659,7 +833,7 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
                               className="a-btn a-btn-sm"
                               href={routes.compare({ lap: mine, ref: r.lapId })}
                             >
-                              Comparar meu melhor
+                              Comparar com minha melhor
                             </a>
                           )}
                         </td>
@@ -670,105 +844,131 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
               </table>
             </div>
           ) : (
-            <p className="dim a-mt">
-              Nenhuma referência do top nesta pista.{' '}
-              <a href={routes.capture()}>Capture uma volta de replay</a>.
-            </p>
+            <div className="a-empty">
+              <p>Nenhuma volta do top guardada para esta pista.</p>
+              <p className="dim">
+                Assista ao replay de um piloto do ranking no Time Trial e o app grava a volta dele
+                como alvo para você comparar.
+              </p>
+              <a className="a-btn" href={routes.capture()}>
+                Capturar uma referência
+              </a>
+            </div>
           )}
         </Card>
       )}
 
-      <Card
-        title="Consistência"
-        className="a-mt"
-        actions={
-          sessionList.length > 0 && (
-            <select
-              value={sessionId}
-              onChange={(e) => navigate(routes.track(id, { session: e.target.value }), true)}
-              aria-label="Sessão"
-            >
-              {sessionList.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {formatDateTime(s.startedAt)} · {s.lapCount} voltas
-                  {s.mode === 'replayCapture' ? ' · replay' : ''}
-                </option>
-              ))}
-            </select>
-          )
-        }
-      >
-        {!sessionId ? (
-          <p className="dim">Nenhuma sessão nesta pista.</p>
-        ) : consistency.error ? (
-          <ErrorBox error={consistency.error} compact />
-        ) : !consistency.data ? (
-          <Loading />
-        ) : (
-          <ConsistencySection report={consistency.data} corners={corners} />
-        )}
-        {theo.data && (
-          <div className="a-theo">
-            <h3 className="a-h3">Volta ideal da sessão</h3>
-            <div className="a-stats">
-              <div>
-                <span className="a-sum-k">Sua melhor</span>
-                <span className="a-sum-v num">{formatLapTime(theo.data.report.bestLapMs)}</span>
-              </div>
-              <div>
-                <span className="a-sum-k">Melhores setores</span>
-                <span className="a-sum-v num">
-                  {formatLapTime(theo.data.report.theoreticalBestSectorsMs)}
-                </span>
-              </div>
-              <div>
-                <span className="a-sum-k">Melhores {theo.data.report.count} microssetores</span>
-                <span className="a-sum-v num">
-                  {formatLapTime(theo.data.report.theoreticalBestMs)}
-                </span>
-              </div>
-              <div>
-                <span className="a-sum-k">Ganho possível</span>
-                <span className="a-sum-v num" data-tone="gain">
-                  {formatDelta(theo.data.report.theoreticalBestMs - theo.data.report.bestLapMs)}
-                </span>
-              </div>
-            </div>
-            <p className="dim a-small">
-              Soma dos melhores trechos de {theo.data.report.laps.length} voltas válidas: o quanto
-              você já mostrou que consegue andar.
-            </p>
+      {tab === 'curvas' && (
+        <div className="a-track-grid">
+          <div className="a-map-box a-map-track">
+            {data ? (
+              <CompareMap
+                outline={{ x: data.polyline.x, z: data.polyline.z }}
+                distanceM={[]}
+                lines={[]}
+                corners={corners}
+                brakeMarkers={[]}
+                range={null}
+                focusCorner={focus}
+                bus={null}
+                onCorner={onCorner}
+              />
+            ) : (
+              <Empty>A pista ainda não tem linha de referência (complete uma volta limpa).</Empty>
+            )}
           </div>
-        )}
-      </Card>
-
-      <Card
-        title="Evolução"
-        className="a-mt"
-        actions={
-          cars.length > 1 && (
-            <select
-              value={car ?? ''}
-              onChange={(e) => setCarCode(Number(e.target.value))}
-              aria-label="Carro"
+          <Card
+            title="Curvas"
+            actions={
+              <ConfirmButton
+                className="a-btn a-btn-ghost a-btn-sm"
+                label="Redetectar curvas"
+                question="Detectar as curvas de novo? (nomes próximos são mantidos)"
+                confirmLabel="Redetectar"
+                onConfirm={async () => {
+                  try {
+                    const r = await api.redetectCorners(id);
+                    addNotice(
+                      'info',
+                      r.detected ? `${r.corners.length} curvas detectadas.` : 'Nada mudou.',
+                    );
+                    reload();
+                  } catch (e) {
+                    addNotice('error', (e as Error).message, 6000);
+                  }
+                }}
+              />
+            }
+          >
+            {corners.length === 0 && track.corners.length === 0 ? (
+              <p className="dim">Nenhuma curva detectada ainda.</p>
+            ) : (
+              <div className="a-table-wrap a-corner-edit">
+                <table className="a-table">
+                  <thead>
+                    <tr>
+                      <th>Curva</th>
+                      <th>Nome</th>
+                      <th>Marco de frenagem</th>
+                      <th />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(corners.length
+                      ? corners
+                      : track.corners.map((c) => ({ ...c, apexX: 0, apexZ: 0 }))
+                    ).map((c) => (
+                      <CornerRow
+                        key={c.id}
+                        trackId={id}
+                        corner={c}
+                        focused={focus === c.id}
+                        onSaved={reload}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            <form
+              className="a-inline-form a-mt"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const n = Number(sectors);
+                if (!Number.isInteger(n) || n < 1 || n > 20) {
+                  addNotice('warn', 'Use de 1 a 20 setores.');
+                  return;
+                }
+                try {
+                  await api.setSectorCount(id, n);
+                  addNotice('info', `${n} setores de mesmo comprimento.`);
+                  reload();
+                } catch (x) {
+                  addNotice('error', (x as Error).message, 6000);
+                }
+              }}
             >
-              {cars.map((c) => (
-                <option key={c.carCode} value={c.carCode}>
-                  {carLabel(c.carCode)}
-                </option>
-              ))}
-            </select>
-          )
-        }
-      >
-        {evo.error ? (
-          <ErrorBox error={evo.error} compact />
-        ) : !evo.data ? (
-          <Loading />
-        ) : (
-          <EvolutionSection evo={evo.data} corners={corners} />
-        )}
-      </Card>
+              <label>
+                Setores (iguais)
+                <input
+                  className="a-input a-input-num"
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={sectors}
+                  onChange={(e) => setSectors(e.target.value)}
+                />
+              </label>
+              <button type="submit" className="a-btn a-btn-ghost">
+                Aplicar
+              </button>
+              <span className="dim a-small">
+                Tempos de setor de voltas antigas não são recalculados.
+              </span>
+            </form>
+          </Card>
+        </div>
+      )}
     </>
   );
 }

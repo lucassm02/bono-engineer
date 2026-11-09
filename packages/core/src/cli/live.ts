@@ -15,11 +15,12 @@ import {
   type SectorSplit,
 } from '@gt7/shared';
 import { Gt7Runtime } from '../runtime/runtime.ts';
+import { resolveDataDir } from '../util/data-dir.ts';
 
 const { values } = parseArgs({
   options: {
     'ps-ip': { type: 'string' },
-    data: { type: 'string', default: 'data' },
+    data: { type: 'string' },
     format: { type: 'string' },
     ref: { type: 'string' },
     'ref-lap': { type: 'string' },
@@ -35,8 +36,8 @@ if (values.help) {
   console.log(`GT7 live line (core runtime).
 
 Options:
-  --ps-ip IP            console IP (default: last saved, else broadcast discovery)
-  --data DIR            data dir (default data)
+  --ps-ip IP            console IP (default: last saved, else automatic discovery)
+  --data DIR            data dir (default: the per-user GT7 Race Engineer folder)
   --format F            packet format ~ | A | B | C (default: saved, else ~)
   --ref KIND            delta reference: personalBest | sessionBest | reference
   --ref-lap ID          reference lap id (with --ref reference)
@@ -110,7 +111,7 @@ function line(f: LiveFrame): string {
 
 async function main(): Promise<void> {
   const runtime = new Gt7Runtime({
-    dataDir: values.data,
+    dataDir: resolveDataDir({ override: values.data }),
     ...(values['ps-ip'] ? { consoleIp: values['ps-ip'] } : {}),
     ...(fmt ? { liveFormat: fmt } : {}),
     ...(values['no-record'] ? { record: false } : {}),

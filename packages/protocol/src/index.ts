@@ -15,6 +15,29 @@ export {
   readSeed,
   salsaXor,
 } from './crypto.ts';
+export {
+  type ArpEntry,
+  type ArpReader,
+  ConsoleDiscovery,
+  type ConsoleDiscoveryEvents,
+  type ConsoleDiscoveryOptions,
+  type DiscoveryInfo,
+  intToIp,
+  ipToInt,
+  isLoopbackIPv4,
+  isPrivateIPv4,
+  isSonyMac,
+  type OrderHints,
+  orderScanHosts,
+  PLAYSTATION_OUIS,
+  type PlanScanOptions,
+  parseArpTable,
+  planScanSubnets,
+  prefixLength,
+  readArpTable,
+  type ScanSubnet,
+  toBatches,
+} from './discovery.ts';
 export { encodePacket } from './encode.ts';
 export {
   Gt7Ingestor,

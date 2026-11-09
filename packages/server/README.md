@@ -5,10 +5,10 @@ Servidor HTTP + WebSocket (Fastify) que liga a telemetria do GT7 (`@gt7/core`) a
 `0.0.0.0` (celular na mesma rede Wi-Fi).
 
 ```powershell
-npm start                 # servidor + painel compilado (packages/web/dist)
-npm run demo              # idem, com console falso (voltas sintéticas, dados em data/demo)
+npm start                 # sem argumentos: porta livre, dados na pasta do usuário, console achado sozinho
+npm run demo              # idem, com console falso (voltas sintéticas, subpasta demo dos dados)
 npm run dev               # servidor + Vite (http://localhost:5173)
-npm start -- --help       # todas as opções (porta, pasta de dados, IP do console, token…)
+npm start -- --help       # opções avançadas (porta, pasta de dados, IP do console, token…)
 ```
 
 Com `--token <segredo>`, `/api/*`, `/ws` e `/mcp` exigem o token (`?token=`, cabeçalho
@@ -23,8 +23,10 @@ Os tipos de requisição/resposta ficam em `@gt7/shared` (`ws.ts`, `api.ts`, `co
 
 | Método | Rota | Resposta |
 |---|---|---|
-| GET | `/api/status` | `ApiStatus` (conexão, ingestor, captura, dispositivos, firewall, configurações) |
-| GET / PATCH | `/api/settings` | `ApiSettings` (IP do console, formatos ao vivo/captura, gravação, referência do delta) |
+| GET | `/api/status` | `ApiStatus` (conexão, `consoleConnection` com o estado da busca/ligação ao PlayStation, ingestor, captura, dispositivos, firewall, configurações) |
+| GET / PATCH | `/api/settings` | `ApiSettings` (IP do console e origem, formato ao vivo e modo automático, formato de captura, gravação, referência do delta). `consoleIp: null` volta à descoberta automática |
+| DELETE | `/api/settings/consoleIp` | Esquece o IP fixado e volta à descoberta automática (`ApiSettings`) |
+| POST | `/api/discovery/scan` | Recomeça a busca do console (`ApiDiscoveryScanResult`; `started=false` se a telemetria está parada) |
 | GET / POST | `/api/firewall`, `/api/firewall/check` | `FirewallStatus` |
 | GET | `/api/lan` | `LanInfo` (URLs da LAN + QR em SVG) |
 

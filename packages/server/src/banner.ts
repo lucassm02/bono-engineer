@@ -1,6 +1,6 @@
 /** Startup banner (pt-BR): local + LAN URLs, terminal QR, console and firewall status. */
 
-import type { FirewallStatus, PacketFormat } from '@gt7/shared';
+import type { ConsoleIpSource, FirewallStatus, PacketFormat } from '@gt7/shared';
 import { qrTerminal } from './lan.ts';
 
 export interface BannerInput {
@@ -10,9 +10,16 @@ export interface BannerInput {
   preferredUrl: string | null;
   devUrl: string | null;
   consoleIp: string | null;
+  consoleSource?: ConsoleIpSource | null;
   liveFormat: PacketFormat;
+  /** The packet format is automatic (default) rather than pinned. */
+  liveFormatAuto?: boolean;
   simulator: boolean;
   dataDir: string;
+  /** Old data folder copied to `dataDir` on this run (null when nothing was migrated). */
+  dataMigratedFrom?: string | null;
+  /** Why the port is not the default one (null when it is). */
+  portNote?: string | null;
   webBuilt: boolean;
   tokenRequired: boolean;
   host: string;
@@ -32,23 +39,27 @@ export async function renderBanner(b: BannerInput): Promise<string> {
   } else {
     lines.push('  No celular:   nenhuma rede local encontrada');
   }
+  if (b.portNote) lines.push(`  Porta:        ${b.portNote}`);
   if (b.tokenRequired)
     lines.push('  Acesso:       protegido por token (abra pelo endereço com ?token=)');
   if (!b.webBuilt) {
     lines.push(
       b.devUrl
         ? '  Painel:       servido pelo Vite (modo dev)'
-        : '  Painel:       NÃO compilado — rode "npm run build" (a API já funciona)',
+        : '  Painel:       não foi possível montar — rode "npm install" e "npm run build" (a API já funciona)',
     );
   }
+  const fmt = b.liveFormatAuto === false ? `formato '${b.liveFormat}' fixo` : 'formato automático';
   lines.push(
     b.simulator
-      ? `  Console:      SIMULADOR (dados sintéticos, formato '${b.liveFormat}')`
+      ? '  Console:      SIMULADOR (dados sintéticos de demonstração)'
       : b.consoleIp
-        ? `  Console:      ${b.consoleIp} (formato '${b.liveFormat}')`
-        : `  Console:      procurando o PlayStation na rede (formato '${b.liveFormat}'); use --ps-ip para fixar`,
+        ? `  Console:      ${b.consoleIp} (${b.consoleSource === 'discovered' ? 'encontrado sozinho' : 'IP fixado'}, ${fmt})`
+        : `  Console:      procurando o PlayStation na rede, automático (${fmt})`,
   );
   lines.push(`  Dados:        ${b.dataDir}`);
+  if (b.dataMigratedFrom)
+    lines.push(`                (copiados de ${b.dataMigratedFrom}; a pasta antiga foi mantida)`);
   const qrTarget = b.preferredUrl;
   if (qrTarget) {
     try {

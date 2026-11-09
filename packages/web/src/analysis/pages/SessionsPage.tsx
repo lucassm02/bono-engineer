@@ -1,17 +1,19 @@
-/** #/analise — sessions list with track/car/mode filters, plus the known tracks. */
+/** #/analise — every session in one table, with track/car/mode filters (the home is #/inicio). */
 
 import type { Session, Track } from '@gt7/shared';
 import { useMemo, useState } from 'react';
 import { formatLapTime } from '../../lib/format.ts';
 import { navigate, type Route, routes } from '../../lib/route.ts';
 import { api } from '../api.ts';
-import { Card, Empty, ErrorBox, Loading, PageHead, Tag, useTitle } from '../components/ui.tsx';
+import { Empty, ErrorBox, Loading, PageHead, Tag, useTitle } from '../components/ui.tsx';
+import { fullTrackName } from '../lib/history.ts';
 import { carLabel, formatDateTime, SESSION_MODE_LABELS } from '../lib/labels.ts';
 import { useFetch } from '../useFetch.ts';
 
 export function trackName(tracks: Track[] | null, id: string | null): string {
   if (!id) return 'Pista não identificada';
-  return tracks?.find((t) => t.id === id)?.name ?? id;
+  const t = tracks?.find((x) => x.id === id);
+  return t ? fullTrackName(t) : 'Pista';
 }
 
 export function SessionsPage({ route }: { route: Route }) {
@@ -46,8 +48,9 @@ export function SessionsPage({ route }: { route: Route }) {
   return (
     <>
       <PageHead
-        title="Sessões"
-        sub="Escolha uma sessão para ver as voltas, comparar com a referência e marcar voltas de referência."
+        back={{ href: routes.home(), label: 'Suas pistas' }}
+        title="Todas as sessões"
+        sub="Todas as sessões em ordem de data. Para ver por pista, volte ao início."
         actions={
           <>
             <a className="a-btn a-btn-ghost" href={routes.capture()}>
@@ -102,8 +105,7 @@ export function SessionsPage({ route }: { route: Route }) {
             <>
               <p>Nenhuma sessão gravada ainda.</p>
               <p className="dim">
-                Ligue o console e dê algumas voltas (ou rode <code>npm run demo</code>); cada volta
-                completa aparece aqui.
+                Abra o Gran Turismo 7 e dê algumas voltas: cada volta completa aparece aqui sozinha.
               </p>
             </>
           ) : (
@@ -156,26 +158,6 @@ export function SessionsPage({ route }: { route: Route }) {
             </tbody>
           </table>
         </div>
-      )}
-
-      {tracks.data && tracks.data.length > 0 && (
-        <Card title="Pistas" className="a-mt">
-          <ul className="a-track-list">
-            {tracks.data.map((t) => (
-              <li key={t.id}>
-                <a href={routes.track(t.id)}>{t.name}</a>
-                <span className="dim num">
-                  {' '}
-                  · {(t.lengthM / 1000).toFixed(2).replace('.', ',')} km · {t.corners.length} curvas
-                </span>
-              </li>
-            ))}
-          </ul>
-          <p className="dim a-small">
-            Na página da pista: nomes das curvas, setores, consistência por sessão e evolução ao
-            longo dos dias.
-          </p>
-        </Card>
       )}
     </>
   );

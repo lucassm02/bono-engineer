@@ -35,8 +35,45 @@ export interface ReferenceCaptureStatus {
   issues: string[];
 }
 
+/**
+ * Where the console conversation stands (zero-config discovery), shown by the UI as the
+ * "Conexão com o PlayStation" card.
+ * - idle: telemetry not running (UDP port busy or not started yet).
+ * - searching: no console IP known yet; scanning the local network(s).
+ * - found: console IP known (manual, saved or discovered) but no packet received yet — the game
+ *   is closed / in a menu without telemetry ("aguardando o jogo": not an error).
+ * - receiving: valid telemetry packets are arriving.
+ * - lost: packets were arriving and stopped (game closed/paused, console off, IP changed).
+ */
+export type ConsoleLinkState = 'idle' | 'searching' | 'found' | 'receiving' | 'lost';
+
+/** How the current console IP was obtained. */
+export type ConsoleIpSource = 'manual' | 'discovered' | 'simulator';
+
+/** Console link + discovery status (`ServerStatus.consoleConnection`). */
+export interface ConsoleConnection {
+  state: ConsoleLinkState;
+  consoleIp: string | null;
+  /** null while no IP is known. */
+  source: ConsoleIpSource | null;
+  /** Networks being scanned, CIDR (e.g. "192.168.0.0/24"); empty without a private network. */
+  subnets: string[];
+  /** Addresses probed with a heartbeat since the current search started. */
+  hostsProbed: number;
+  /** Epoch ms when the last scan round started, null if none yet. */
+  lastScanAt: number | null;
+  /** Epoch ms of the last valid telemetry packet, null if none yet. */
+  lastPacketAt: number | null;
+  /** pt-BR guidance for the user (null when everything is fine). */
+  hint: string | null;
+}
+
 /** Server/link status snapshot. */
 export interface ServerStatus {
+  /**
+   * High-level driving state (disconnected/menu/onTrack…). NOT the console link: for that see
+   * {@link ServerStatus.consoleConnection}.
+   */
   connection: ConnectionState;
   ingestor: IngestorStats;
   /** LAN URLs where the dashboard is reachable (for QR code). */
@@ -55,6 +92,8 @@ export interface ServerStatus {
   serverVersion: string;
   /** Windows Firewall check for LAN access (filled by the server). (server, additive) */
   firewall?: FirewallStatus;
+  /** Console link and automatic discovery state. (core, additive) */
+  consoleConnection?: ConsoleConnection;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -248,8 +287,16 @@ export interface FirewallStatus {
 
 /** Runtime settings as exposed by GET/PATCH /api/settings. */
 export interface ApiSettings {
+  /** Current console IP (manual, saved or discovered); null while still searching. */
   consoleIp: string | null;
+  /** 'manual' = typed by the user (kept unless dead), 'discovered' = found by the scan. */
+  consoleIpSource: ConsoleIpSource | null;
   liveFormat: PacketFormat;
+  /**
+   * True (default): the app tries '~' then 'B' then 'A' by itself and saves what works.
+   * False once the user pinned a format.
+   */
+  liveFormatAuto: boolean;
   captureFormat: PacketFormat;
   record: boolean;
   deltaReference: { kind: DeltaReferenceKind; lapId: Id | null };
@@ -257,15 +304,28 @@ export interface ApiSettings {
 
 /** PATCH /api/settings body (every field optional). */
 export interface ApiSettingsPatch {
-  consoleIp?: string;
+  /** IPv4 to pin manually; `null` goes back to automatic discovery (same as DELETE /api/settings/consoleIp). */
+  consoleIp?: string | null;
+  /** Pins this format (turns `liveFormatAuto` off unless `liveFormatAuto: true` is sent too). */
   liveFormat?: PacketFormat;
+  /** true = automatic format (~ → B → A); false = keep the current one. */
+  liveFormatAuto?: boolean;
   captureFormat?: PacketFormat;
   record?: boolean;
   deltaReference?: { kind: DeltaReferenceKind; lapId?: Id | null };
 }
 
+/** POST /api/discovery/scan: restarts the console search. */
+export interface ApiDiscoveryScanResult {
+  /** The search was (re)started. */
+  started: boolean;
+  consoleConnection: ConsoleConnection;
+}
+
 /** GET /api/status. */
 export interface ApiStatus extends ServerStatus {
+  /** Always present in the REST status. */
+  consoleConnection: ConsoleConnection;
   firewall: FirewallStatus;
   settings: ApiSettings;
   /** UDP ingestor running. */

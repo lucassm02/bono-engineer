@@ -33,6 +33,7 @@ import type {
   Track,
   ViewId,
 } from '@gt7/shared';
+import type { TracksOverview } from './lib/history.ts';
 
 export class ApiError extends Error {
   constructor(
@@ -176,6 +177,10 @@ export const api = {
   track: (id: string) => get<Track>(`/api/tracks/${enc(id)}`),
   renameTrack: (id: string, name: string) =>
     request<Track>('PATCH', `/api/tracks/${enc(id)}`, { name }),
+  /** Names a track (and its layout). The server marks the name as confirmed by the user. */
+  nameTrack: (id: string, name: string, layout: string | null) =>
+    request<Track>('PATCH', `/api/tracks/${enc(id)}`, { name, layout }),
+  tracksOverview: () => get<TracksOverview>('/api/tracks/overview'),
   patchCorner: (
     trackId: string,
     cornerId: string,

@@ -17,6 +17,7 @@ import {
   type TelemetryPacket,
 } from '@gt7/shared';
 import { decryptPacket } from './crypto.ts';
+import { ConsoleDiscovery, type ConsoleDiscoveryOptions, type DiscoveryInfo } from './discovery.ts';
 import { tryParsePacket } from './parse.ts';
 
 export interface Gt7IngestorOptions {
@@ -39,12 +40,23 @@ export interface Gt7IngestorOptions {
   /** Stats emission interval (default 1000 ms). */
   statsIntervalMs?: number;
   /**
-   * Try to find the console by sending heartbeats to the subnet broadcast address(es) and learning
-   * the IP from the first valid responder. Undocumented, network dependent. Default false.
+   * Automatic discovery. While no console IP is known heartbeats go to the subnet broadcast
+   * address(es); in rounds they also go to every host of the local private /24 network(s) (unicast
+   * sweep, see discovery.ts), and the first host answering with a valid packet becomes the
+   * console. The sweep repeats while no console is answering, so a console whose IP changed is
+   * found again: a configured IP that has been silent for `deadAfterMs` gives way to a different
+   * valid responder. Default false.
    */
   discovery?: boolean;
   /** Explicit broadcast addresses for discovery (default: computed from local interfaces). */
   broadcastAddresses?: string[];
+  /** Tuning/injection for the unicast sweep (tests); `false` keeps only the broadcast. */
+  scan?: false | Partial<Omit<ConsoleDiscoveryOptions, 'send' | 'needed'>>;
+  /**
+   * The console counts as gone when no valid packet came from it for this long (default 10 s):
+   * the sweep runs meanwhile and a different responder may replace it.
+   */
+  deadAfterMs?: number;
   /** Only accept packets from the console IP once known (default false: any valid packet). */
   strictSource?: boolean;
 }
@@ -64,8 +76,13 @@ export interface Gt7IngestorEvents {
   packet: [IngestedPacket];
   state: [IngestorState, IngestorState];
   stats: [IngestorStats];
-  /** Console IP learned through discovery. */
-  discovered: [string];
+  /**
+   * Console IP learned through discovery; `previous` is the IP it replaced (a console that
+   * changed address), null for the first discovery.
+   */
+  discovered: [ip: string, previous: string | null];
+  /** A discovery round started or finished. */
+  scan: [DiscoveryInfo];
   /** Non-fatal problems (socket errors, xor mismatch...). */
   warning: [Error];
 }
@@ -91,10 +108,18 @@ export function localBroadcastAddresses(): string[] {
 }
 
 export class Gt7Ingestor extends EventEmitter<Gt7IngestorEvents> {
-  readonly options: Required<Omit<Gt7IngestorOptions, 'consoleIp' | 'broadcastAddresses'>> & {
+  readonly options: Required<
+    Omit<Gt7IngestorOptions, 'consoleIp' | 'broadcastAddresses' | 'scan'>
+  > & {
     broadcastAddresses?: string[];
+    scan?: Gt7IngestorOptions['scan'];
   };
   #consoleIp: string | null;
+  #discovery: ConsoleDiscovery | null = null;
+  /** performance.now() when the current console IP was set/adopted. */
+  #consoleSinceMono = 0;
+  /** performance.now() of the last valid packet from the current console IP. */
+  #consolePacketMono: number | null = null;
   #format: PacketFormat;
   #socket: Socket | null = null;
   #state: IngestorState = 'stopped';
@@ -136,7 +161,9 @@ export class Gt7Ingestor extends EventEmitter<Gt7IngestorEvents> {
       statsIntervalMs: opts.statsIntervalMs ?? 1000,
       discovery: opts.discovery ?? false,
       strictSource: opts.strictSource ?? false,
+      deadAfterMs: opts.deadAfterMs ?? 10_000,
       ...(opts.broadcastAddresses ? { broadcastAddresses: opts.broadcastAddresses } : {}),
+      ...(opts.scan !== undefined ? { scan: opts.scan } : {}),
     };
     this.#consoleIp = opts.consoleIp ?? null;
     this.#format = this.options.format;
@@ -155,6 +182,11 @@ export class Gt7Ingestor extends EventEmitter<Gt7IngestorEvents> {
 
   get consoleIp(): string | null {
     return this.#consoleIp;
+  }
+
+  /** Epoch ms of the last valid packet (live, unlike `stats` which refreshes ~1 Hz). */
+  get lastPacketAt(): number | null {
+    return this.#lastPacketAt;
   }
 
   /** Latest stats snapshot (computed on demand). */
@@ -189,8 +221,10 @@ export class Gt7Ingestor extends EventEmitter<Gt7IngestorEvents> {
       }
     }
     this.#winStart = performance.now();
+    this.#consoleSinceMono = this.#winStart;
     this.#setState('connecting');
     this.#startHeartbeats();
+    if (this.options.discovery && this.options.scan !== false) this.#startSweep();
     this.#watchdog = setInterval(() => this.#checkTimeout(), Math.min(250, this.options.timeoutMs));
     this.#statsTimer = setInterval(() => this.#emitStats(), this.options.statsIntervalMs);
   }
@@ -198,6 +232,8 @@ export class Gt7Ingestor extends EventEmitter<Gt7IngestorEvents> {
   /** Stops heartbeats and closes the socket. */
   async stop(): Promise<void> {
     this.#stopHeartbeats();
+    this.#discovery?.stop();
+    this.#discovery = null;
     for (const t of [this.#watchdog, this.#statsTimer, this.#switchTimer]) if (t) clearInterval(t);
     this.#watchdog = this.#statsTimer = this.#switchTimer = null;
     this.#switchResolve?.();
@@ -208,11 +244,37 @@ export class Gt7Ingestor extends EventEmitter<Gt7IngestorEvents> {
     this.#setState('stopped');
   }
 
-  /** Changes the console IP (resets the loss tracker). */
-  setConsoleIp(ip: string): void {
+  /**
+   * Changes the console IP (resets the loss tracker). `null` goes back to automatic discovery
+   * (needs `discovery`): heartbeats go to the broadcast addresses and the sweep restarts.
+   */
+  setConsoleIp(ip: string | null): void {
+    if (ip === null && !this.options.discovery) {
+      throw new Error('Gt7Ingestor: cannot clear the console IP without discovery');
+    }
     this.#consoleIp = ip;
     this.#lastPacketId = null;
+    this.#consoleSinceMono = performance.now();
+    this.#consolePacketMono = null;
+    this.#discovery?.restart();
     this.#sendHeartbeat();
+  }
+
+  /** Restarts the search for the console (fast phase again). No-op without discovery. */
+  rescan(): void {
+    this.#discovery?.restart();
+  }
+
+  /** Discovery progress (empty when discovery is off). */
+  get discoveryInfo(): DiscoveryInfo {
+    return (
+      this.#discovery?.info ?? { subnets: [], hostsProbed: 0, lastScanAt: null, scanning: false }
+    );
+  }
+
+  /** True while the current console IP is silent for longer than `deadAfterMs` (or never spoke). */
+  get consoleDead(): boolean {
+    return this.#isConsoleDead(performance.now());
   }
 
   /**
@@ -278,6 +340,36 @@ export class Gt7Ingestor extends EventEmitter<Gt7IngestorEvents> {
     }
   }
 
+  /** Sweep probe: a heartbeat of the current format to `ip`; send errors are not reported. */
+  #probe(ip: string): void {
+    const sock = this.#socket;
+    if (!sock || this.#state === 'switchingFormat') return;
+    sock.send(Buffer.from(this.#format, 'latin1'), this.options.consolePort, ip, () => {});
+    this.#heartbeats++;
+  }
+
+  #startSweep(): void {
+    const d = new ConsoleDiscovery({
+      ...(this.options.scan || {}),
+      send: (ip) => this.#probe(ip),
+      needed: () => this.#socket !== null && this.#isConsoleDead(performance.now()),
+      priority: () => (this.#consoleIp ? [this.#consoleIp] : []),
+    });
+    d.on('scan', (info) => this.emit('scan', info));
+    this.#discovery = d;
+    d.start();
+  }
+
+  /**
+   * No valid packet from the current console for `deadAfterMs` since the later of "IP set" and
+   * "last packet" — also true for an IP that never answered, and always while no IP is known.
+   */
+  #isConsoleDead(nowMono: number): boolean {
+    if (!this.#consoleIp) return true;
+    const since = Math.max(this.#consoleSinceMono, this.#consolePacketMono ?? 0);
+    return nowMono - since > this.options.deadAfterMs;
+  }
+
   #isFresh(): boolean {
     return (
       this.#lastPacketAt !== null &&
@@ -322,6 +414,25 @@ export class Gt7Ingestor extends EventEmitter<Gt7IngestorEvents> {
         this.#decryptFailures++;
         return;
       }
+      // Who is talking: adopt the first responder when no console is known, let a different
+      // responder replace a console that went silent, and ignore strangers while it is alive.
+      const nowMono = performance.now();
+      let adopted: { ip: string; previous: string | null } | null = null;
+      if (this.options.discovery) {
+        if (!this.#consoleIp) {
+          adopted = { ip: rinfo.address, previous: null };
+        } else if (rinfo.address !== this.#consoleIp) {
+          if (!this.#isConsoleDead(nowMono)) return;
+          adopted = { ip: rinfo.address, previous: this.#consoleIp };
+        }
+        if (adopted) {
+          this.#consoleIp = adopted.ip;
+          this.#consoleSinceMono = nowMono;
+          this.#lastPacketId = null;
+          this.#dupStreak = 0;
+        }
+      }
+
       // Loss / duplicate tracking by packetId.
       const id = packet.packetId;
       const last = this.#lastPacketId;
@@ -344,17 +455,15 @@ export class Gt7Ingestor extends EventEmitter<Gt7IngestorEvents> {
       this.#lastPacketId = id;
 
       const now = Date.now();
-      const mono = performance.now();
+      const mono = nowMono;
+      this.#consolePacketMono = mono;
       this.#received++;
       this.#winReceived++;
       this.#lastPacketAt = now;
       this.#lastPacketMono = mono;
       this.#receivedFormat = dec.format;
 
-      if (!this.#consoleIp && this.options.discovery) {
-        this.#consoleIp = rinfo.address;
-        this.emit('discovered', rinfo.address);
-      }
+      if (adopted) this.emit('discovered', adopted.ip, adopted.previous);
       if (this.#state === 'connecting' || this.#state === 'timeout') this.#setState('connected');
 
       this.emit('packet', {

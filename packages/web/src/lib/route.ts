@@ -3,7 +3,8 @@
  * (empty hash, `#/`, `#/painel`) is the live dashboard. Hash routing works the same on the Vite dev
  * server, the Fastify static server and inside the installed PWA (no server rewrite needed).
  *
- *   #/analise                         sessions list
+ *   #/inicio                          home: history organised by track (default outside a race)
+ *   #/analise                         all sessions list
  *   #/analise/sessao/:sessionId       session detail (laps)
  *   #/analise/comparar?lap=&ref=&extra=a,b   lap comparison
  *   #/analise/pista/:trackId?session= track page (consistency, evolution)
@@ -14,6 +15,7 @@
 
 export type RouteName =
   | 'live'
+  | 'home'
   | 'sessions'
   | 'session'
   | 'compare'
@@ -73,6 +75,7 @@ export function parseRoute(hash: string): Route {
   });
   const [a, b, c] = segs;
   if (segs.length === 0 || (a === 'painel' && segs.length === 1)) return r('live');
+  if (a === 'inicio' && segs.length === 1) return r('home');
   if (a === 'analise') {
     if (segs.length === 1) return r('sessions');
     if (b === 'sessao' && c && segs.length === 3) return r('session', { id: c });
@@ -108,6 +111,7 @@ export function href(path: string, query: Record<string, QueryValue> = {}): stri
 
 export const routes = {
   live: () => '#/',
+  home: () => '#/inicio',
   sessions: (q: { track?: string; car?: string | number } = {}) =>
     href('/analise', { track: q.track, car: q.car }),
   session: (id: string) => href(`/analise/sessao/${encodeURIComponent(id)}`),
@@ -118,8 +122,8 @@ export const routes = {
       extra: q.extra?.length ? q.extra.join(',') : undefined,
       corner: q.corner,
     }),
-  track: (id: string, q: { session?: string } = {}) =>
-    href(`/analise/pista/${encodeURIComponent(id)}`, { session: q.session }),
+  track: (id: string, q: { session?: string; tab?: string } = {}) =>
+    href(`/analise/pista/${encodeURIComponent(id)}`, { session: q.session, tab: q.tab }),
   capture: () => href('/captura'),
   config: (section?: string) => href('/config', { s: section }),
   coach: (q: { id?: string; session?: string; lap?: string; ref?: string; corner?: string } = {}) =>

@@ -948,3 +948,207 @@
   na 1ª volta); aceitável (≤ 20 000 pontos).
 - Não testado: celular real (scroll-snap/iOS, Wake Lock, vibração, zoom por toque), coach com chave
   real, console real (sinais de volante/mapa, ré × neutro).
+
+
+## Onda 6b — histórico por pista e navegação
+
+Objetivo: abrir o app e já ver o histórico organizado por pista, sem criar pastas nem configurar nada.
+
+- **Nova home `#/inicio`** (`HomePage.tsx`): grade de cartões por pista, ordenada pela atividade mais
+  recente. Cada cartão: miniatura do traçado (SVG, mesma orientação do mapa: `(−x, z)`, norte em cima),
+  nome, km, nº de sessões e voltas, melhor volta (+ quando e carro), tendência, carros usados e
+  selo "ref. do top". Busca por texto (sem acento) e filtro por carro. `#/analise` continua sendo a
+  lista de "todas as sessões" (agora acessível por um botão na home).
+- **Dados da home em uma requisição**: `GET /api/tracks/overview` (`routes/tracks.ts`, lógica pura em
+  `server/src/tracks-catalog.ts`, com testes). Só conta voltas **próprias** (sem referências nem
+  replays); referências saem à parte (`referenceCount`, `bestReferenceMs`). Miniatura = centerline
+  reamostrada em 96 pontos. Os tipos foram **duplicados à mão** em `web/src/analysis/lib/history.ts`
+  (não mexi em `packages/shared`).
+- **Tendência** = melhor volta da última sessão ao vivo contra a sessão anterior **com o mesmo carro**
+  (diferença < 50 ms = "Estável"; sem sessão anterior = não mostra nada).
+- **Abertura sem rota** (`lib/boot.ts`, `main.tsx`): URL "pelada" (`/`, PWA) espera até 2,5 s o
+  primeiro status do servidor. Corrida em andamento (`onTrack`, `paused`, `replay`) ou demo no
+  navegador (`?mock=1`) → painel ao vivo; qualquer outra coisa (menu, console desconectado, servidor
+  fora do ar) → `#/inicio`. `#/`, `#/painel`, `#/inicio` explícitos nunca são redirecionados.
+  `switchingFormat` **não** conta como corrida (era o estado de um servidor sem console).
+  Do painel ao vivo, segurar a tela → "Histórico e ajustes" abre a home (antes "Abrir análise").
+- **Demo**: `ApiStatus.simulator` já existia; o overview repete `simulator` e o web põe o selo "Demo"
+  em todos os cartões, um aviso e a opção "Esconder demonstração" (guardada no localStorage). Não há
+  marca por pista no banco: demo é por servidor (a pasta `demo` é separada da real).
+  Estado vazio: duas frases, "Ver demonstração" (`/?mock=1`, painel ao vivo simulado) e o aviso de
+  que `npm run demo` enche o histórico de exemplo.
+- **Nome de pista sem trabalho**: o motor já cria "Pista desconhecida N" (`source: 'auto'`); isso é o
+  gatilho do aviso discreto "Nova pista detectada — qual é?" (home e página da pista; "Agora não"
+  guarda o id no localStorage). Candidatos "Parece ser…" por **comprimento da volta com tolerância de
+  1,5 %** (`trackSuggest.ts`), sempre com um clique de confirmação; autocomplete (ordem: começa com o
+  texto, depois mais próximo em comprimento). Nunca nomeia sozinho. Salva por `PATCH /api/tracks/:id`
+  (já existia: aceita `name` e `layout` e marca `source: 'user'`), então não precisou de endpoint
+  novo. Nome editável inline no título da pista (clique, Enter salva, Esc cancela).
+  No modo demo o aviso não aparece na home (a "pista" é do simulador).
+- **Lista de pistas do GT7** (`web/src/data/gt7Tracks.ts`): conferida contra listas da comunidade
+  (GTPlanet, dg-edge, theloadout). Comprimento só onde é conhecido com razoável certeza (circuitos
+  reais; Red Bull Ring curto 2.336 m e Sardegna A 5.120 m vêm do Giant Bomb); fictícias e layouts
+  sem número confiável ficam sem comprimento (nunca são sugeridas por tamanho, só achadas
+  digitando). É conveniência, não autoridade: dá para digitar qualquer nome. Limitação: não sei se a
+  lista cobre DLCs recentes; pistas novas entram editando o arquivo.
+- **Página da pista** (`#/analise/pista/:id?tab=`): abas Melhores voltas (por carro, top 5, com
+  ações rápidas), Sessões (agrupadas por dia: "Hoje", "Ontem", "sexta-feira, 06 de novembro"),
+  Evolução (+ consistência e volta ideal), Referências do top e Curvas (mapa, nomes, setores).
+  A consistência/volta ideal só carrega na aba Evolução.
+- **Sessão e voltas**: cabeçalho com dia/hora local pt-BR, carro, resumo (voltas, melhor, duração,
+  início); cada volta marca válida/inválida, "melhor da sessão", **volta de saída / de entrada** e
+  os demais motivos; ações rápidas "Comparar com minha melhor" (a volta que já é a melhor oferece
+  "Comparar com o top"), "Definir como referência" (um clique, piloto "Você"; os detalhes ficam em
+  "Mais › Referência com detalhes…") e "Excluir" (confirmação em dois passos). Tudo com endpoints
+  que já existiam (`PUT /api/laps/:id/reference`, `DELETE /api/laps/:id`, `DELETE /api/sessions/:id`).
+  No celular a tabela de voltas vira lista de cartões.
+- **Navegação**: barra lateral enxuta no PC (≥ 900 px) e barra inferior no celular, com Ao vivo,
+  Início·Pistas, Comparar, Captura, Coach IA e Ajustes. Os gestos do carrossel ao vivo e o modo
+  `?mock=1` não foram tocados (a barra só existe na área de análise).
+- **Testes**: `server/src/tracks-overview.test.ts` (lógica pura + HTTP + renomear),
+  `web/src/analysis/lib/history.test.ts` (filtro, agrupamento por dia, sugestão por comprimento,
+  autocomplete, boot, rotas, formatação).
+- **Não verificado**: celular real, gestos do carrossel após a mudança de rota inicial em aparelho
+  real, PWA instalada (service worker pode servir a versão antiga até atualizar), servidor com milhares
+  de voltas (o overview carrega todas as voltas de cada pista, sem traces, num único request).
+
+
+## Onda 6a — zero-config e descoberta
+
+Meta: abrir e usar. `npm start` sem argumento nenhum basta; o IP do PS5, o formato do pacote, a porta e a
+pasta de dados deixam de ser coisas que o usuário decide.
+
+### Dados na pasta do usuário
+
+- Padrão: Windows `%APPDATA%\GT7 Race Engineer`; macOS `~/Library/Application Support/GT7 Race Engineer`; Linux
+  `$XDG_DATA_HOME/gt7-race-engineer` (senão `~/.local/share/gt7-race-engineer`). `--sim` usa a subpasta `demo`.
+  Lógica em `core/src/util/data-dir.ts` (`defaultDataDir`, `resolveDataDir`, `migrateLegacyData`), exportada de
+  `@gt7/core` para o servidor e o MCP usarem a mesma regra. Override continua: `--data` > `GT7_DATA` >
+  `GT7_DATA_DIR`.
+- **Migração única e não destrutiva** (`main.ts`): se `<repo>/data/sessions.db` existe e a pasta nova **não existe**,
+  copia `<repo>/data` (banco com `-wal`/`-shm`, `traces/`, `recordings/`; a subpasta `demo` fica de fora) para
+  `<pasta nova>.migrando` e renomeia para a pasta nova (uma cópia interrompida não deixa pasta pela metade). A pasta
+  antiga **não é apagada nem alterada**; o terminal diz "Seus dados foram copiados para …". Não roda com `--data`/
+  `GT7_DATA` (o usuário escolheu a pasta). Se a pasta nova já existe (mesmo vazia), nada é copiado: é a regra mais
+  simples que nunca sobrescreve nada.
+- O banner mostra o caminho (e, na migração, de onde veio). `npm run live` também usa a pasta nova por padrão.
+- **Fora do escopo desta onda (outro dono):** o `stdio` do MCP ainda cai em `<repo>/data` quando chamado sem
+  `--data`/`GT7_DATA_DIR`; depois da migração esse caminho fica congelado. Deve usar `resolveDataDir()` de
+  `@gt7/core`. (A página de Configurações já passa `--data <pasta real>` explicitamente via `/api/mcp/info`.)
+
+### Porta e instância única
+
+- Toda resposta HTTP leva `x-gt7-race-engineer: real|demo` (`identity.ts`, hook `onRequest` registrado antes do guarda
+  de origem e do token, então até o 401 leva o cabeçalho). Não precisa de endpoint novo nem de token.
+- `pickPort` (`startup.ts`), a partir de 8770: instância nossa **do mesmo modo** respondendo → abre o navegador nela e
+  sai com código 0; porta livre → usa; outro programa → tenta a próxima (até 20). `--port`/`GT7_PORT` explícito ocupado
+  é erro (o usuário pediu aquela). Demo ao lado de uma instância real **não** a reaproveita (modo diferente): usa
+  outra porta. `--dev` não escolhe porta (o proxy do Vite aponta fixo para 8770).
+- Verificação da porta livre = tentar escutar; a janela de corrida até o `listen` real é desprezível e o `EADDRINUSE`
+  final ainda é tratado.
+
+### Painel compilado sozinho
+
+- `npm start` chama `buildWeb` (`npm run build -w @gt7/web`) quando `packages/web/dist/index.html` não existe **ou** é
+  mais antigo que qualquer fonte (`web/src`, `web/public`, `shared/src`, `index.html`, `vite.config.ts`,
+  `package-lock.json`). Custa alguns ms quando está em dia (varredura de diretório), ~30 s quando precisa. Falha de
+  build não derruba o app: imprime o erro, segue servindo a API. Não roda em `--dev`.
+
+### Descoberta unicast do PS5 (`protocol/src/discovery.ts`)
+
+- O broadcast sozinho não é confiável; o console responde a heartbeat **unicast**. Para cada interface IPv4 **privada**
+  (10/8, 172.16/12, 192.168/16; sem loopback, link-local, pública, IPv6) enumera os hosts da sub-rede: máscara mais
+  larga que /24 → só o /24 do IP local; mais estreita (/25, /26…) → a rede real; /31 e /32 ignoradas; redes repetidas
+  fundidas; placas virtuais (Hyper-V, WSL, VPN, Docker…) por último. Exclui rede, broadcast e o IP do próprio PC.
+- Envio em **lotes de 64** com 20 ms entre lotes (253 hosts ≈ 60 ms), pelo **socket do ingestor** (origem 33740), então
+  a resposta cai direto no pipeline de decrypt/parse existente. Console = primeiro host cujo pacote decifra com magic
+  válido. Falha de envio (ENOBUFS, sem rota) não interrompe a rodada.
+- Cadência (`ConsoleDiscovery`): rodada imediata, depois a cada 5 s por 30 s, depois a cada 15 s, **só enquanto não há
+  console respondendo** (consulta o estado a cada 1 s; ao voltar a precisar, recomeça a fase rápida). `restart()`
+  (botão "buscar de novo") zera contadores e varre já. O broadcast de 1 Hz sem IP continua como antes.
+- Dica de ordem (nunca requisito): IP salvo primeiro, depois vizinhos da tabela ARP (`arp -a`, parse de Windows e
+  Linux/macOS, cache de 60 s, falha vira lista vazia) cuja OUI é de Sony/PlayStation (lista curta e conhecida,
+  `PLAYSTATION_OUIS`) ou cujo nome sugere PlayStation, depois os demais vizinhos ARP (estão vivos), depois o resto.
+- **Quem é "o console" (ingestor):** com `discovery` ligado, o 1º respondente válido é adotado quando não há IP; um
+  respondente **diferente** só substitui o IP atual se este estiver **morto** — sem pacote válido dele por
+  `deadAfterMs` (10 s) desde o último pacote ou desde que o IP foi definido (também vale para IP que nunca respondeu).
+  Enquanto o IP está vivo, pacotes de outros hosts são **descartados** (um segundo console/PS4 não embaralha o contador
+  de pacotes). Isso cumpre "não sobrescrever IP manual a menos que esteja morto". `discovered` ganhou 2º argumento
+  (IP anterior); `setConsoleIp(null)` volta ao automático; novos `rescan()`, `discoveryInfo`, `consoleDead`,
+  `lastPacketAt` e evento `scan`.
+- **Segurança de rede:** só envia 1 byte (o heartbeat) à porta 33739, só em faixas privadas locais. Nada sai da LAN.
+- Verificado com **console real**: no PC do desenvolvedor a varredura achou o PS5 em 192.168.3.26 sem nenhuma
+  configuração (banco vazio, fonte "discovered", 253 hosts testados, 60 Hz, 0 perda, formato `~`). Ver "Não
+  verificado" abaixo para o que falta.
+
+### Estado de conexão exposto à UI
+
+- **Nome do campo:** o pedido era `ServerStatus.connection`, mas esse nome **já existe** (`ConnectionState`:
+  onTrack/menu/paused… e é lido pelo painel). Para manter a compatibilidade ficou **`consoleConnection`**
+  (`ConsoleConnection` em `@gt7/shared/ws.ts`), opcional em `ServerStatus` (vai nas mensagens WS `status`) e
+  obrigatório em `ApiStatus`.
+- `ConsoleConnection = { state: 'idle'|'searching'|'found'|'receiving'|'lost', consoleIp, source: 'manual'|
+  'discovered'|'simulator'|null, subnets, hostsProbed, lastScanAt, lastPacketAt, hint }`. `hostsProbed` = hosts testados
+  desde que a busca atual começou (zera ao reiniciar a busca). Estados: `idle` = telemetria parada (porta UDP ocupada
+  tem dica própria); `searching` = sem IP; `found` = IP conhecido e nenhum pacote nesta execução ("aguardando o jogo",
+  **não é erro**); `receiving` = pacote nos últimos `timeoutMs` (3 s); `lost` = já recebeu e parou. `hint` em pt-BR
+  (ex.: "Procurando o PlayStation na rede. Abra o Gran Turismo 7 no PS5 e entre numa pista."), `null` quando recebendo.
+  Calculado em `Gt7Runtime.getConnection()` e republicado a cada `stats` (1 Hz) e a cada rodada de varredura.
+- `source`: IP digitado / `--ps-ip` = `manual`; achado pela varredura = `discovered` (salvo em `consoleIpSource`); IP
+  salvo por versão antiga, sem fonte, é tratado como `manual` (conservador). Demo = `simulator` (nunca salvo).
+- `ApiSettings` ganhou `consoleIpSource` e `liveFormatAuto`; `ApiSettingsPatch.consoleIp` aceita `null` (e texto vazio)
+  = automático; novo `liveFormatAuto`. Novas rotas: `DELETE /api/settings/consoleIp` e `POST /api/discovery/scan`
+  (`ApiDiscoveryScanResult { started, consoleConnection }`; `started=false` se a telemetria está parada).
+
+### Formato do pacote automático
+
+- `liveFormatAuto` (padrão `true`, persistido). `--format`/`GT7_FORMAT`/opção `liveFormat`, `PATCH liveFormat` e a
+  mensagem WS `setPacketFormat` **fixam** o formato (auto desliga) e o app nunca mais o muda; `PATCH liveFormatAuto:
+  true` volta ao automático (vence um `liveFormat` enviado junto) e põe `~`.
+- Rodada (`runtime.ts`): começa no formato salvo (`~` na 1ª vez); sem nenhum pacote válido por `autoFormatTimeoutMs`
+  (5 s com IP; 12 s sem IP, para caberem 2 varreduras) passa ao próximo de `~ → B → A`, **uma tentativa por formato**,
+  e ao esgotar volta a `~` e para (evita ficar trocando de formato eternamente com o jogo fechado). Cada troca usa o
+  `setFormat` do ingestor, portanto **mantém a pausa de 15 s** do console. O 1º pacote válido num formato o grava como
+  `liveFormat` (e avisa se não for `~`).
+- **Auto-cura:** se os pacotes param (sessão acabou) estando num formato de reserva, após `autoFormatHealDelayMs`
+  (10 s) volta a `~` e abre outra rodada. Sem isso, abrir o jogo no meio da rodada deixaria o app em `B`/`A` para sempre.
+  Custo conhecido: num console que só aceita `B`/`A`, cada fim de sessão custa ~40 s de tentativas (pode atrasar a
+  próxima conexão em até ~20 s).
+- Limite honesto: com o jogo **fechado** não há como distinguir "formato errado" de "sem jogo"; por isso a rodada é
+  única por busca/IP e é rearmada por troca de IP, `POST /api/discovery/scan` e fim de sessão em formato de reserva. A
+  captura de referência continua trocando para `captureFormat` por conta própria e desliga a rodada enquanto dura.
+- Substitui o antigo fallback único `~ → B` de 10 s (`formatFallbackTimeoutMs` saiu; `formatFallback: null` ainda
+  desliga a rodada, por compatibilidade com os testes).
+
+### Terminal e flags
+
+- `--help` ficou curto e em pt-BR, com as flags como "avançadas". Mensagens do terminal curtas em pt-BR: uma linha
+  quando o estado do console muda ("Console: recebendo telemetria de …"), avisos `[aviso]`/`[erro]`, porta UDP ocupada,
+  painel sendo preparado. O terminal é só um log; o banner mostra "Console: … (encontrado sozinho | IP fixado,
+  formato automático)" e a porta, se diferente da padrão.
+
+### Testes
+
+- Unitários (sem rede): `protocol/src/discovery.test.ts` (máscaras, /24 de redes largas, /26, fusão e ordem de
+  interfaces, ARP Windows e Linux, ordem dos hosts, lotes de 64, cadência 5 s/15 s com timers falsos, silêncio quando não
+  precisa, reinício, envio que lança, sem rede), `core/src/util/data-dir.test.ts`, `core/src/runtime/connection.test.ts`,
+  `server/src/{config,status-api}.test.ts`.
+- Rede (projeto `network`, sequenciais): `protocol/src/discovery.integration.test.ts` (FakeConsole em `127.0.0.x`:
+  acha por varredura, console que sobe depois, **redescobre após mudar de IP**, IP fixado vivo não é sobrescrito e é
+  trocado quando morre, `setConsoleIp(null)`), `core/src/runtime/discovery.test.ts` (estados `searching → receiving →
+  lost`, avisos, IP salvo e fonte; rodada de formato contra um console que só fala `A`; cura; formato fixado nunca muda),
+  `server/src/startup.test.ts` (cabeçalho de identidade com token, `pickPort`, `webNeedsBuild`). Em Windows,
+  `127.0.0.2…254` fazem bind normalmente, então o teste usa endereços de loopback diferentes como "IPs de console".
+- Os testes que iniciam o runtime com portas de teste passam `ingestor.discovery: false` (o padrão agora é descoberta
+  ligada, e eles varreriam a rede real).
+
+### Não verificado / pendências
+
+- **Console real:** só a varredura com o jogo aberto (pausado) foi observada (acima). Não verificado: redescoberta
+  após mudança real de IP, rede com várias placas/VPN ativas, a rodada de formato com o console real (só `~` foi
+  necessário), comportamento com PS4, e se o PS5 responde a heartbeat em broadcast (não precisa mais).
+- OUIs de PlayStation vêm de memória; são só heurística de ordem.
+- O painel (outro dono) precisa consumir `consoleConnection`, o botão que chama `POST /api/discovery/scan`, o campo de
+  IP vazio = automático, e `liveFormatAuto`; o README já os descreve.
+- Redes /16 grandes: só o /24 do IP local é varrido (limite pedido); console em outra faixa do mesmo /16 não é achado
+  sem fixar o IP.

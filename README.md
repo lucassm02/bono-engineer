@@ -41,7 +41,7 @@ flowchart LR
 
     subgraph PC ["Servidor no PC (Node.js)  -  porta 8770"]
         ING["Ingestor<br/>UDP + decifra + parse"] --> ENG["Motor ao vivo<br/>voltas, setores, delta"]
-        ENG --> DB[("data/<br/>SQLite + traces + .gt7rec")]
+        ENG --> DB[("pasta de dados<br/>SQLite + traces + .gt7rec")]
         DB --> ANA["Análise<br/>curvas, métricas, comparação"]
         ENG --> WS["HTTP + WebSocket + REST"]
         ANA --> WS
@@ -68,10 +68,11 @@ Na pasta do projeto (`C:\Users\lucas\Projects\gt7`), no PowerShell:
 
 ```powershell
 npm install        # instala tudo (workspaces)
-npm run build      # compila o painel web (packages/web/dist)
 ```
 
-Os pacotes Node não têm etapa de build: o TypeScript roda direto via `tsx`.
+Só isso. Os pacotes Node não têm etapa de build (o TypeScript roda direto via `tsx`) e o painel web é
+compilado sozinho pelo `npm start` quando falta ou quando o código dele mudou (~30 s; `npm run build` continua
+existindo, mas não é preciso).
 
 ## Primeira execução
 
@@ -79,11 +80,20 @@ Os pacotes Node não têm etapa de build: o TypeScript roda direto via `tsx`.
 npm start
 ```
 
-O servidor abre o navegador no PC e imprime no terminal: a URL local, a **URL para o celular**, um **QR code**,
-o IP/formato do console, a pasta de dados e o estado do **firewall**. `Ctrl+C` encerra (fecha UDP, WebSocket e
-banco com segurança; um segundo `Ctrl+C` força a saída).
+**Sem nenhuma opção.** O servidor abre o navegador no PC e imprime no terminal: a URL local, a **URL para o
+celular**, um **QR code**, o console, a pasta de dados e o estado do **firewall**. `Ctrl+C` encerra (fecha UDP,
+WebSocket e banco com segurança; um segundo `Ctrl+C` força a saída). O terminal é só um log: tudo se vê e se
+configura no painel.
 
-Se o painel mostrar "Servidor ok, console não conectado", siga a próxima seção.
+- **Dados:** ficam na pasta do usuário (`%APPDATA%\GT7 Race Engineer` no Windows; `~/Library/Application Support/GT7 Race Engineer`
+  no macOS; `$XDG_DATA_HOME/gt7-race-engineer` ou `~/.local/share/gt7-race-engineer` no Linux), criada sozinha. Se existir uma pasta
+  `data/` antiga dentro do projeto (versões anteriores) e a nova ainda não existir, ela é **copiada uma vez**
+  (a antiga é mantida; pode apagá-la depois de conferir).
+- **Porta:** a 8770. Se outro programa a estiver usando, o app escolhe a próxima livre (8771…) e mostra no
+  banner. Se o GT7 Race Engineer **já estiver aberto**, um segundo `npm start` só abre o navegador nele e sai.
+- **Console:** o app **acha o PlayStation sozinho** (veja abaixo). Nada de IP para digitar.
+
+Se o painel mostrar "Procurando o PlayStation…" ou "Aguardando o jogo", siga a próxima seção.
 
 ### Modo demonstração (sem console)
 
@@ -95,7 +105,7 @@ npm run demo
 
 Sobe um "console falso" dentro do mesmo processo, com voltas sintéticas de um piloto amador numa pista
 inventada ("Synthetic Ring", ~4,4 km). Usa portas UDP alternativas (47739/47740), então **não atrapalha** um
-console real, e grava em `data/demo` (separado dos seus dados reais). Opções úteis:
+console real, e grava na subpasta `demo` da pasta de dados (separada dos seus dados reais). Opções úteis:
 `npm run demo -- --sim-profile pro`, `--sim-seed 3`, `--sim-replay`, `--sim-laps 5`.
 
 Dica: depois de duas ou três voltas sintéticas, abra `#/analise` e compare duas voltas para ver a análise.
@@ -114,26 +124,34 @@ dev liga sozinho um modo "Demonstração (sem servidor)". Também dá para abrir
 
 ## Configurar o console
 
-### 1. Achar o IP do PS5
+### 1. Descoberta automática (padrão)
 
-No PS5: **Configurações › Rede › Status da conexão › Ver status da conexão** e anote o **Endereço IPv4**
-(algo como `192.168.0.20`). Dica: reserve esse IP fixo no roteador para não mudar.
+Você não precisa saber o IP do PS5. O app envia o "heartbeat" de telemetria para **cada endereço da sua rede
+local** (a faixa /24 de cada placa de rede privada, em lotes pequenos; além do broadcast) e adota o primeiro que
+responder com um pacote válido do GT7. O IP encontrado fica salvo.
 
-### 2. Informar o IP ao app
+- A busca **repete** enquanto o console não responde (a cada 5 s no primeiro meio minuto, depois a cada 15 s).
+- Se o IP do PS5 **mudar** (DHCP/reinício do roteador) e o antigo ficar mudo por mais de 10 s, o app **redescobre
+  sozinho** e avisa.
+- O estado aparece no painel: *procurando* → *console encontrado, aguardando o jogo* → *recebendo telemetria*
+  (ou *sinal perdido*). Não é erro esperar: **o PS5 só transmite com o GT7 aberto numa pista** (ou replay).
+- Para recomeçar a busca na hora: botão de busca nas Configurações (`POST /api/discovery/scan`).
 
-Duas opções (o IP fica salvo no banco, então só precisa fazer uma vez):
+### 2. Fixar o IP (opcional)
 
-- **No app:** abra `http://localhost:8770/#/config` (ou no painel: segurar a tela › **Abrir análise** ›
-  **Configurações**), seção **Console e formatos** › campo **IP do PlayStation**.
+Só se a descoberta não funcionar (rede com isolamento de clientes, sub-rede diferente entre PC e PS5…). No PS5:
+**Configurações › Rede › Status da conexão › Ver status da conexão › Endereço IPv4**. Depois:
+
+- **No app:** `http://localhost:8770/#/config` › **Console e formatos** › **IP do PlayStation**. Esvaziar o
+  campo (ou `DELETE /api/settings/consoleIp`) volta ao modo automático.
 - **Na linha de comando:** `npm start -- --ps-ip 192.168.0.20`.
 
-Sem IP, o app tenta **descobrir o console por broadcast** e grava o que encontrar. Isso depende do roteador e
-não é garantido: prefira informar o IP.
+Um IP fixado por você **não é sobrescrito** a menos que ele fique mudo por mais de 10 s e outro host responda.
 
 ### 3. Abrir o jogo
 
 O console só transmite telemetria **enquanto você está dirigindo** (na pista). Em menus o painel mostra "No
-menu". Entre numa pista (Time Trial, Treino livre etc.).
+menu". Entre numa pista (Time Trial, Treino livre etc).
 
 ### Formatos de pacote
 
@@ -147,8 +165,10 @@ console ficar ~15 s sem receber pedidos, por isso o app avisa que "a troca leva 
 | `A` | Básico, o mais compatível | Sem volante: alguns diagnósticos ficam indisponíveis |
 | `C` | Experimental: acrescenta tipo de superfície (asfalto/zebra/grama) e tempo da volta atual | Layout e criptografia ainda não verificados |
 
-Fallback automático: se nada chegar em **10 s** pedindo `~`, o app tenta `B` uma vez e avisa. (Se o console
-estiver desligado nessa hora, ele fica em `B` até você reiniciar ou trocar o formato em Configurações.)
+**Formato automático (padrão).** O app começa em `~`; se nenhum pacote válido chegar em ~5 s, tenta `B` e depois
+`A` (uma rodada; cada troca respeita a pausa de ~15 s do console), grava o que funcionou e avisa. Se a sessão
+acabar num formato de reserva, volta para `~` depois de alguns segundos. Se você **escolher** um formato em
+Configurações (ou `--format`), ele fica fixo e o app não mexe mais; há opção para voltar ao automático.
 
 ### Firewall do Windows
 
@@ -300,7 +320,7 @@ O servidor MCP entrega à IA métricas de piloto já calculadas, não os 60 Hz c
 
 | Transporte | Quando | `get_live_state` |
 |---|---|---|
-| **stdio** | Claude inicia o processo e lê o banco em `data/` (app pode estar fechado) | não |
+| **stdio** | Claude inicia o processo e lê o banco da pasta de dados (app pode estar fechado) | não |
 | **HTTP** `http://localhost:8770/mcp` | com o app rodando (`npm start`) | sim |
 
 **Claude Code, stdio** (já com o caminho deste repositório):
@@ -354,8 +374,8 @@ Depois, peça em linguagem natural ("faça o debrief da minha última sessão"),
 
 | Comando | O que faz |
 |---|---|
-| `npm start` | Servidor + painel compilado; abre o navegador |
-| `npm run demo` | Idem com console falso (voltas sintéticas, dados em `data/demo`) |
+| `npm start` | Servidor + painel (compila o painel se preciso); abre o navegador. **Sem argumentos.** |
+| `npm run demo` | Idem com console falso (voltas sintéticas, dados na subpasta `demo`) |
 | `npm run dev` | Servidor + Vite em `http://localhost:5173` |
 | `npm run build` | Compila o painel web |
 | `npm run mcp` | Servidor MCP stdio (use `npm run -s mcp -- --data data` para o npm não escrever no stdout) |
@@ -374,15 +394,15 @@ No PowerShell, o formato `~` precisa de aspas: `--format '~'`.
 > ou variáveis de ambiente (`$env:GT7_NO_OPEN=1`, `$env:GT7_DATA="C:\caminho\data"`).
 > No Git Bash e no cmd funciona normalmente.
 
-### Flags do servidor (`npm start -- ...`, `npm run demo -- ...`)
+### Flags do servidor (opcionais, para avançados: `npm start -- ...`, `npm run demo -- ...`)
 
 | Flag | Variável de ambiente | Descrição |
 |---|---|---|
-| `--port N` | `GT7_PORT` | Porta HTTP/WebSocket (padrão 8770) |
+| `--port N` | `GT7_PORT` | Porta HTTP/WebSocket (padrão 8770; ocupada por outro programa → a próxima livre; com `--port` explícito ocupada = erro) |
 | `--host ADDR` | `GT7_HOST` | Endereço de escuta (padrão `0.0.0.0` = toda a rede; `127.0.0.1` = só este PC) |
-| `--data DIR` | `GT7_DATA` | Pasta de dados (padrão `<repo>/data`; com `--sim`, `<repo>/data/demo`) |
-| `--ps-ip IP` | `GT7_PS_IP` | IP do PlayStation (padrão: o salvo; senão busca por broadcast) |
-| `--format F` | `GT7_FORMAT` | Formato ao vivo `A`, `B`, `~` ou `C` |
+| `--data DIR` | `GT7_DATA` | Pasta de dados (padrão: a pasta do usuário, veja "Onde ficam os dados"; com `--sim`, a subpasta `demo`) |
+| `--ps-ip IP` | `GT7_PS_IP` | Fixa o IP do PlayStation (padrão: o app encontra sozinho) |
+| `--format F` | `GT7_FORMAT` | Fixa o formato ao vivo `A`, `B`, `~` ou `C` (padrão: automático) |
 | `--token T` | `GT7_TOKEN` | Exige o token em `/api`, `/ws` e `/mcp` (abra o painel com `?token=T`; o QR já leva o token) |
 | `--sim` | `GT7_SIM=1` | Demonstração com console falso |
 | `--sim-profile P` | | `pro` ou `amateur` (padrão) |
@@ -407,32 +427,42 @@ formatos ao vivo e de captura, gravação das sessões e referência padrão do 
 
 ## Onde ficam os dados
 
-Tudo em `data/` (ignorado pelo git; `data/demo` é da demonstração):
+Na **pasta do usuário** (criada sozinha; a subpasta `demo` é da demonstração):
+
+| Sistema | Pasta |
+|---|---|
+| Windows | `%APPDATA%\GT7 Race Engineer` (ex.: `C:\Users\voce\AppData\Roaming\GT7 Race Engineer`) |
+| macOS | `~/Library/Application Support/GT7 Race Engineer` |
+| Linux | `$XDG_DATA_HOME/gt7-race-engineer` (padrão `~/.local/share/gt7-race-engineer`) |
+
+`--data DIR` ou `GT7_DATA` trocam a pasta. Nas Configurações › MCP aparece o caminho real em uso. Versões
+antigas guardavam em `<projeto>/data`: se essa pasta existir e a nova não, o app **copia uma vez** (a antiga é
+mantida). Dentro da pasta:
 
 | Caminho | Conteúdo |
 |---|---|
-| `data/sessions.db` (+ `-wal`, `-shm`) | SQLite: sessões, voltas, pistas, curvas, linhas centrais, configurações (inclui a chave da API, se salva), relatórios do coach |
-| `data/traces/*.bin.gz` | Dados de cada volta (60 Hz, por canal) |
-| `data/recordings/*.gt7rec` | Gravação crua de cada sessão (~20 KB/s); permite reprocessar depois e vira fixture de teste |
+| `sessions.db` (+ `-wal`, `-shm`) | SQLite: sessões, voltas, pistas, curvas, linhas centrais, configurações (inclui a chave da API, se salva), relatórios do coach |
+| `traces/*.bin.gz` | Dados de cada volta (60 Hz, por canal) |
+| `recordings/*.gt7rec` | Gravação crua de cada sessão (~20 KB/s); permite reprocessar depois e vira fixture de teste |
 
-- **Backup:** feche o app (`Ctrl+C`) e copie a pasta `data/` inteira (os arquivos `-wal`/`-shm` fazem parte do
+- **Backup:** feche o app (`Ctrl+C`) e copie a pasta de dados inteira (os arquivos `-wal`/`-shm` fazem parte do
   banco). Restaurar = colocar a pasta de volta com o app fechado.
 - **Limpeza:** na área de análise, **Apagar volta / Apagar sessão** remove também os traces e a gravação. Para
-  zerar tudo, feche o app e apague `data/` (ou só `data/demo`). Relatórios do coach guardam imagens (~0,5–1 MB
+  zerar tudo, feche o app e apague a pasta de dados (ou só a subpasta `demo`). Relatórios do coach guardam imagens (~0,5–1 MB
   cada); o app mantém os **50 mais recentes** (configurável de 5 a 500 em `PUT /api/coach/config`, campo `maxReports`) e você pode apagar os outros pela tela do Coach.
-- A chave da API salva fica em texto no banco local: não compartilhe a pasta `data/`.
+- A chave da API salva fica em texto no banco local: não compartilhe a pasta de dados.
 
 ## Solução de problemas
 
 | Sintoma | O que verificar |
 |---|---|
-| **Sem dados / "console não conectado"** | PS5 ligado e **dentro de uma pista** (não no menu). IP correto em Configurações (ou `--ps-ip`). Firewall com UDP 33740. Nenhum outro app de telemetria aberto. Teste isolado: `npm run sniff -- --ps-ip <IP> --format B` (feche o app antes: ambos usam a porta 33740) |
+| **"Procurando o PlayStation…" / "Aguardando o jogo"** | Normal enquanto o GT7 não está aberto: o PS5 só responde **dentro de uma pista**. PC e PS5 na mesma sub-rede (a busca varre o /24 de cada placa), sem isolamento de clientes. Firewall com UDP 33740. Nenhum outro app de telemetria aberto. Se não achar, fixe o IP em Configurações (ou `--ps-ip`). Teste isolado: `npm run sniff -- --ps-ip <IP> --format B` (feche o app antes: ambos usam a porta 33740) |
 | **Aviso "porta UDP já em uso"** | Outro programa (SimHub, outra cópia do app, `sniff`) está com a 33740. O painel abre, mas sem dados ao vivo |
-| **IP errado / mudou** | PS5 trocou de IP depois de reiniciar o roteador. Releia em Configurações › Rede e atualize. Reserve IP fixo no roteador |
+| **IP mudou** | O app redescobre sozinho (se o IP não foi fixado por você, ou se o fixado ficou mudo por 10 s). Para forçar, use a busca nas Configurações |
 | **Celular não abre a URL** | Mesma rede Wi-Fi? Regra TCP 8770 criada e rede do PC como "Privada"? Roteador com isolamento de clientes / rede convidado? Use o IP mostrado em "No celular:" (há PCs com várias placas: tente as URLs alternativas) |
 | **Painel diz "Sem conexão com o servidor"** | O servidor caiu ou o celular está em outra rede. Ele tenta reconectar sozinho (botão "Tentar agora") |
 | **iPhone apaga a tela** | Ajustes › Tela e Brilho › Bloqueio automático › Nunca. O truque do vídeo pode não funcionar no iOS; veja o roteiro de testes |
-| **Formato `~` sem dados** | Espere ~10 s: o app cai sozinho para `B` e avisa. Se não cair, escolha `B` em Configurações › Formato ao vivo. Perde-se o acelerador/freio "crus" |
+| **Formato `~` sem dados** | No modo automático o app cai sozinho para `B` e depois `A` (leva ~20 s por tentativa) e avisa. Se você fixou um formato, escolha outro em Configurações › Formato ao vivo. Em `B`/`A` perde-se o acelerador/freio "crus" |
 | **Replay não mostra dados (captura)** | O replay não envia `~`: a captura usa `B` (troca de até ~15 s). Inicie a captura **antes** do play e aguarde "Aguardando o replay cruzar a linha de chegada" |
 | **Captura rejeitada** | Leia o motivo: pausa, salto, pacotes perdidos, comprimento da pista, tempo diferente do ranking (±0,3 s) ou carro diferente. Assista de novo a 1×, sem pular |
 | **Delta/setores não aparecem** | Precisa da 1ª volta completa e válida na pista (e de uma referência). Volta 0 (saída) não conta |
@@ -475,7 +505,7 @@ gt7/
     mcp/        servidor MCP (stdio + HTTP), ferramentas, prompts e gráficos PNG
     web/        painel ao vivo (11 telas) e área de análise (React + Vite, PWA)
   docs/         guias e gráficos de exemplo
-  data/         seus dados (fora do git)
+  (seus dados ficam na pasta do usuário, fora do projeto)
 ```
 
 Documentos:

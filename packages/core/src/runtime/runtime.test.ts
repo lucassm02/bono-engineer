@@ -71,6 +71,7 @@ describe('Gt7Runtime over UDP (FakeConsole)', () => {
         bindPort: CLIENT_PORT,
         bindAddress: '127.0.0.1',
         consolePort: CONSOLE_PORT,
+        discovery: false,
         heartbeatIntervalMs: 100,
         timeoutMs: 1000,
         statsIntervalMs: 250,

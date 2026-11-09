@@ -117,5 +117,15 @@ export {
   type TrackRepository,
   UNKNOWN_TRACK_PREFIX,
 } from './track/fingerprint.ts';
+export {
+  DATA_DIR_NAME,
+  type DataDirContext,
+  DEMO_SUBDIR,
+  defaultDataDir,
+  type MigrationResult,
+  migrateLegacyData,
+  type ResolveDataDirOptions,
+  resolveDataDir,
+} from './util/data-dir.ts';
 export { newId, sequentialIds } from './util/ids.ts';
 export { alignToLine, cumulativeDistance, Polyline, type Projection } from './util/polyline.ts';

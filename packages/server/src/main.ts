@@ -1,29 +1,33 @@
 /**
- * Server entry point.
+ * Server entry point. `npm start` needs no argument: it picks a free port (or just opens the
+ * browser on the instance that is already running), keeps the data in the user's folder, builds
+ * the dashboard when it is missing and finds the PlayStation by itself.
  *
  *   npm start            server (serves packages/web/dist) + opens the browser
- *   npm run demo         same with an in-process fake console (synthetic laps, data/demo)
+ *   npm run demo         same with an in-process fake console (synthetic laps, <data>/demo)
  *   npm run dev          server + Vite dev server (http://localhost:5173, proxies /ws and /api)
  *
  * Run with `node --disable-warning=ExperimentalWarning --import tsx packages/server/src/main.ts`.
- * See config.ts / `--help` for flags and environment variables.
+ * See config.ts / `--help` for the (optional, advanced) flags and environment variables.
  */
 
 import { type ChildProcess, spawn, spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import type { Gt7RuntimeOptions } from '@gt7/core';
+import { join } from 'node:path';
+import { defaultDataDir, type Gt7RuntimeOptions, migrateLegacyData } from '@gt7/core';
+import type { ConsoleLinkState } from '@gt7/shared';
 import { createApp, type Gt7Server, SERVER_VERSION } from './app.ts';
 import { renderBanner, renderFirewall } from './banner.ts';
 import {
   ConfigError,
   HELP_TEXT,
+  LEGACY_DATA_DIR,
   parseConfig,
   REPO_ROOT,
   type ServerConfig,
   webDistExists,
 } from './config.ts';
 import { DemoConsole } from './sim.ts';
+import { buildWeb, npmCliPath, pickPort, webNeedsBuild } from './startup.ts';
 
 const VITE_URL = 'http://localhost:5173/';
 
@@ -48,12 +52,8 @@ function openBrowser(url: string): void {
   }
 }
 
-/** npm's JS entry (no shell needed): npm_execpath under npm scripts, else next to node.exe. */
-function npmCliPath(): string | null {
-  const fromEnv = process.env.npm_execpath;
-  if (fromEnv && /.c?js$/.test(fromEnv) && existsSync(fromEnv)) return fromEnv;
-  const bundled = join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js');
-  return existsSync(bundled) ? bundled : null;
+function withToken(url: string, token: string | null): string {
+  return token ? `${url}?token=${encodeURIComponent(token)}` : url;
 }
 
 function spawnVite(isStopping: () => boolean): ChildProcess {
@@ -83,6 +83,7 @@ function runtimeOptions(cfg: ServerConfig): Omit<Gt7RuntimeOptions, 'statusExtra
   const opts: Omit<Gt7RuntimeOptions, 'statusExtras'> = { dataDir: cfg.dataDir };
   if (cfg.sim) {
     opts.consoleIp = '127.0.0.1';
+    opts.simulator = true;
     opts.persistConsoleIp = false; // the fake console's 127.0.0.1 never becomes a saved setting
     opts.ingestor = {
       bindAddress: '127.0.0.1',
@@ -98,6 +99,43 @@ function runtimeOptions(cfg: ServerConfig): Omit<Gt7RuntimeOptions, 'statusExtra
   return opts;
 }
 
+/** The dashboard is built on demand: the first run (or after an update) just takes a bit longer. */
+async function ensureWeb(cfg: ServerConfig): Promise<boolean> {
+  if (cfg.dev) return webDistExists(cfg.webDist);
+  const webDir = join(REPO_ROOT, 'packages', 'web');
+  const needs =
+    !webDistExists(cfg.webDist) ||
+    webNeedsBuild(
+      cfg.webDist,
+      [join(webDir, 'src'), join(webDir, 'public'), join(REPO_ROOT, 'packages', 'shared', 'src')],
+      [
+        join(webDir, 'index.html'),
+        join(webDir, 'vite.config.ts'),
+        join(webDir, 'package.json'),
+        join(REPO_ROOT, 'package-lock.json'),
+      ],
+    );
+  if (!needs) return true;
+  console.log('  Preparando o painel (só na primeira vez ou depois de uma atualização, ~30 s)…');
+  const started = Date.now();
+  const r = await buildWeb(REPO_ROOT);
+  if (r.ok) {
+    console.log(`  Painel pronto (${Math.round((Date.now() - started) / 1000)} s).`);
+    return true;
+  }
+  console.error(`  Aviso: não consegui montar o painel automaticamente.\n${r.output.trimEnd()}`);
+  console.error('  Rode "npm install" e depois "npm run build". A API continua funcionando.');
+  return webDistExists(cfg.webDist);
+}
+
+const LINK_LINES: Record<ConsoleLinkState, (ip: string | null) => string | null> = {
+  idle: () => null,
+  searching: () => 'Console: procurando o PlayStation na rede…',
+  found: (ip) => `Console: ${ip} — aguardando o jogo (abra o Gran Turismo 7 e entre numa pista).`,
+  receiving: (ip) => `Console: recebendo telemetria de ${ip}.`,
+  lost: () => 'Console: sem dados (jogo fechado ou em pausa). Continuo procurando.',
+};
+
 async function main(): Promise<void> {
   let cfg: ServerConfig;
   try {
@@ -111,7 +149,47 @@ async function main(): Promise<void> {
     return;
   }
 
-  const webBuilt = webDistExists(cfg.webDist);
+  // One-time move of the old <repo>/data to the user's folder (the old one is kept).
+  let migratedFrom: string | null = null;
+  if (!cfg.dataDirExplicit) {
+    const m = migrateLegacyData(LEGACY_DATA_DIR, defaultDataDir());
+    if (m.migrated) {
+      migratedFrom = m.from;
+      console.log(`  Seus dados foram copiados para ${m.to} (a pasta antiga foi mantida).`);
+    } else if (m.reason === 'failed') {
+      console.error(`  Aviso: não consegui copiar os dados antigos de ${m.from}: ${m.error}`);
+    }
+  }
+
+  // Port: reuse the running instance, or the first free port from the default one.
+  let portNote: string | null = null;
+  if (!cfg.dev) {
+    const choice = await pickPort(cfg.port, cfg.host, cfg.sim ? 'demo' : 'real', cfg.portExplicit);
+    if (choice.kind === 'existing') {
+      const url = withToken(`http://localhost:${choice.port}/`, cfg.token);
+      console.log(`  O GT7 Race Engineer já está aberto em http://localhost:${choice.port}/.`);
+      if (cfg.open) {
+        console.log('  Abrindo o navegador nele.');
+        openBrowser(url);
+        await new Promise((r) => setTimeout(r, 400));
+      }
+      process.exit(0);
+    }
+    if (choice.kind === 'busy') {
+      console.error(
+        cfg.portExplicit
+          ? `Erro: a porta ${choice.port} já está em uso por outro programa. Use --port com outro número.`
+          : `Erro: nenhuma porta livre a partir da ${cfg.port}. Feche algum programa ou use --port.`,
+      );
+      process.exit(1);
+    }
+    if (choice.skipped.length) {
+      portNote = `a porta ${choice.skipped[0]} estava ocupada por outro programa; usando a ${choice.port}`;
+    }
+    cfg = { ...cfg, port: choice.port };
+  }
+
+  const webBuilt = await ensureWeb(cfg);
   let server: Gt7Server;
   try {
     server = await createApp({
@@ -134,7 +212,7 @@ async function main(): Promise<void> {
     const code = (e as NodeJS.ErrnoException).code;
     console.error(
       code === 'EADDRINUSE'
-        ? `Erro: a porta ${cfg.port} já está em uso (o servidor já está aberto?). Use --port para outra porta.`
+        ? `Erro: a porta ${cfg.port} já está em uso (o app já está aberto?). Use --port para outra.`
         : `Erro ao escutar em ${cfg.host}:${cfg.port}: ${(e as Error).message}`,
     );
     await server.close();
@@ -178,9 +256,9 @@ async function main(): Promise<void> {
     const code = (e as NodeJS.ErrnoException).code;
     console.error(
       code === 'EADDRINUSE'
-        ? '  Aviso: a porta UDP de telemetria já está em uso (outro app de telemetria aberto?). ' +
+        ? '  Aviso: a porta UDP 33740 já está em uso (SimHub ou outro app de telemetria aberto?). ' +
             'O painel e o histórico funcionam, mas sem dados ao vivo.'
-        : `  Aviso: falha ao iniciar a telemetria: ${(e as Error).message}`,
+        : `  Aviso: a telemetria não iniciou: ${(e as Error).message}`,
     );
   }
 
@@ -196,9 +274,13 @@ async function main(): Promise<void> {
       preferredUrl: lan.preferredUrl(),
       devUrl: cfg.dev ? VITE_URL : null,
       consoleIp: runtime.consoleIp,
+      consoleSource: runtime.getSettings().consoleIpSource,
       liveFormat: runtime.liveFormat,
+      liveFormatAuto: runtime.getSettings().liveFormatAuto,
       simulator: !!cfg.sim,
       dataDir: cfg.dataDir,
+      dataMigratedFrom: migratedFrom,
+      portNote,
       webBuilt,
       tokenRequired: !!cfg.token,
       host: cfg.host,
@@ -207,6 +289,16 @@ async function main(): Promise<void> {
   const fw = renderFirewall(server.firewall.status);
   if (fw) console.log(fw);
 
+  // The terminal is just an optional log: one line whenever the console link changes.
+  let lastLink: ConsoleLinkState | null = null;
+  runtime.on('status', (st) => {
+    const c = st.consoleConnection;
+    if (!c || c.state === lastLink) return;
+    const first = lastLink === null;
+    lastLink = c.state;
+    const line = LINK_LINES[c.state](c.consoleIp);
+    if (line && !(first && c.state === 'searching')) console.log(`  ${line}`);
+  });
   runtime.on('lapCompleted', (e) => {
     const tags = [e.isPersonalBest ? 'melhor pessoal' : '', e.valid ? '' : 'inválida']
       .filter(Boolean)
@@ -214,14 +306,13 @@ async function main(): Promise<void> {
     console.log(`  Volta ${e.lapNumber}: ${fmtLap(e.timeMs)}${tags ? ` (${tags})` : ''}`);
   });
   runtime.on('notice', (n) => {
-    if (n.level !== 'info' || n.code === 'consoleDiscovered')
-      console.log(`  [${n.level}] ${n.message}`);
+    if (n.level !== 'info' || n.code === 'consoleDiscovered' || n.code === 'formatAuto')
+      console.log(`  [${n.level === 'error' ? 'erro' : 'aviso'}] ${n.message}`);
   });
 
   if (cfg.open) {
     const target = cfg.dev ? VITE_URL : lan.localUrl();
-    const url = cfg.token ? `${target}?token=${encodeURIComponent(cfg.token)}` : target;
-    setTimeout(() => openBrowser(url), cfg.dev ? 2500 : 300).unref();
+    setTimeout(() => openBrowser(withToken(target, cfg.token)), cfg.dev ? 2500 : 300).unref();
   }
 }
 

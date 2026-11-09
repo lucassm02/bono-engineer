@@ -87,10 +87,10 @@ export function ViewPicker() {
             className="btn picker-analysis"
             onClick={() => {
               closePicker();
-              location.hash = '#/analise';
+              location.hash = '#/inicio';
             }}
           >
-            Abrir análise
+            Histórico e ajustes
           </button>
           <button type="button" className="btn btn-ghost" ref={closeRef} onClick={closePicker}>
             Fechar

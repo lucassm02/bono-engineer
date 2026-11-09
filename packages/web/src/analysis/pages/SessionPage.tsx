@@ -1,4 +1,7 @@
-/** #/analise/sessao/:id — laps table, selection for comparison, references, downloads, delete. */
+/**
+ * #/analise/sessao/:id — session summary, laps table (invalid / out / in laps marked), quick
+ * actions per lap (compare with my best, set as reference, delete), downloads and delete session.
+ */
 
 import type { Lap } from '@gt7/shared';
 import { type ReactNode, useMemo, useState } from 'react';
@@ -6,6 +9,7 @@ import { formatLapTime, formatSectorTime } from '../../lib/format.ts';
 import { navigate, routes } from '../../lib/route.ts';
 import { addNotice } from '../../state/uiStore.ts';
 import { api, urls } from '../api.ts';
+import { LapQuickActions } from '../components/LapActions.tsx';
 import {
   ConfirmButton,
   Empty,
@@ -16,12 +20,14 @@ import {
   useTitle,
 } from '../components/ui.tsx';
 import {
-  carLabel,
-  formatDateTime,
-  INFO_FLAGS,
-  LAP_FLAG_LABELS,
-  SESSION_MODE_LABELS,
-} from '../lib/labels.ts';
+  dayHeading,
+  dayKey,
+  formatClock,
+  formatDuration,
+  fullTrackName,
+  plural,
+} from '../lib/history.ts';
+import { carLabel, formatDateTime, INFO_FLAGS, LAP_FLAG_LABELS } from '../lib/labels.ts';
 import { formatLapTimeInput, parseLapTime } from '../lib/lapTime.ts';
 import { useFetch } from '../useFetch.ts';
 
@@ -116,6 +122,21 @@ export function SessionPage({ id }: { id: string }) {
   const detail = useFetch(`session:${id}`, () => api.session(id), 10000);
   const trackId = detail.data?.session.trackId ?? null;
   const track = useFetch(trackId ? `track:${trackId}` : null, () => api.track(trackId!));
+  const carCode = detail.data?.session.carCode;
+  const pb = useFetch(
+    trackId && carCode !== undefined ? `pb:${trackId}:${carCode}` : null,
+    async () => {
+      const list = await api.trackLaps(trackId!, {
+        carCode: carCode!,
+        validOnly: true,
+        references: 'exclude',
+        orderBy: 'time',
+        limit: 5,
+      });
+      return list.find((l) => !l.flags.includes('replay')) ?? null;
+    },
+  );
+  const refs = useFetch(trackId ? `refs:${trackId}` : null, () => api.references(trackId!));
   const [selected, setSelected] = useState<string[]>([]);
   const [editing, setEditing] = useState<string | null>(null);
   useTitle('Sessão');
@@ -157,24 +178,27 @@ export function SessionPage({ id }: { id: string }) {
         });
 
   const sectorCount = Math.max(0, ...laps.map((l) => l.sectorTimesMs.length));
-  const trackLabel = track.data?.name ?? (trackId ? trackId : 'Pista não identificada');
+  const trackLabel = track.data
+    ? fullTrackName(track.data)
+    : trackId
+      ? 'Pista'
+      : 'Pista não identificada';
 
   return (
     <>
       <PageHead
-        back={{ href: routes.sessions(), label: 'Sessões' }}
-        title={trackLabel}
+        back={
+          trackId
+            ? { href: routes.track(trackId, { tab: 'sessoes' }), label: trackLabel }
+            : { href: routes.home(), label: 'Suas pistas' }
+        }
+        title={trackId ? <a href={routes.track(trackId)}>{trackLabel}</a> : trackLabel}
         sub={
           <>
-            {formatDateTime(session.startedAt)} · {carLabel(session.carCode)} ·{' '}
-            {SESSION_MODE_LABELS[session.mode]} · formato {session.format} · {session.lapCount}{' '}
-            voltas
-            {active && (
-              <>
-                {' '}
-                <Tag tone="info">em andamento</Tag>
-              </>
-            )}
+            {dayHeading(dayKey(session.startedAt))}, {formatClock(session.startedAt)} ·{' '}
+            {carLabel(session.carCode)}
+            {session.mode === 'replayCapture' && <Tag tone="ref">captura de replay</Tag>}
+            {active && <Tag tone="info">em andamento</Tag>}
           </>
         }
         actions={
@@ -204,7 +228,7 @@ export function SessionPage({ id }: { id: string }) {
                 try {
                   await api.deleteSession(session.id);
                   addNotice('info', 'Sessão apagada.');
-                  navigate(routes.sessions());
+                  navigate(trackId ? routes.track(trackId, { tab: 'sessoes' }) : routes.home());
                 } catch (e) {
                   addNotice('error', (e as Error).message, 6000);
                 }
@@ -213,6 +237,31 @@ export function SessionPage({ id }: { id: string }) {
           </>
         }
       />
+
+      <div className="a-stats a-session-stats">
+        <div>
+          <span className="a-sum-k">Voltas</span>
+          <span className="a-sum-v num">{laps.length}</span>
+          <span className="dim a-small">
+            {plural(laps.filter((l) => l.valid).length, 'válida', 'válidas')}
+          </span>
+        </div>
+        <div>
+          <span className="a-sum-k">Melhor volta</span>
+          <span className="a-sum-v num">{bestLap ? formatLapTime(bestLap.timeMs) : '–'}</span>
+          {bestLap && <span className="dim a-small">volta {bestLap.number}</span>}
+        </div>
+        <div>
+          <span className="a-sum-k">Duração</span>
+          <span className="a-sum-v num">
+            {formatDuration(session.startedAt, session.endedAt) ?? '–'}
+          </span>
+        </div>
+        <div>
+          <span className="a-sum-k">Início</span>
+          <span className="a-sum-v num">{formatDateTime(session.startedAt)}</span>
+        </div>
+      </div>
 
       <div className="a-selbar" data-active={selected.length > 0 ? '1' : '0'}>
         <span>
@@ -290,7 +339,9 @@ export function SessionPage({ id }: { id: string }) {
                           {sel >= 0 && <span className="a-check-n">{sel + 1}</span>}
                         </label>
                       </td>
-                      <td className="num num-col">{l.number}</td>
+                      <td className="num num-col a-lap-n" data-label="Volta">
+                        {l.number}
+                      </td>
                       <td className="num num-col">
                         <span data-best={isBest ? '1' : '0'} className="a-laptime">
                           {formatLapTime(l.timeMs)}
@@ -299,104 +350,103 @@ export function SessionPage({ id }: { id: string }) {
                       {Array.from({ length: sectorCount }, (_, k) => {
                         const v = l.sectorTimesMs[k] ?? null;
                         const purple = l.valid && v !== null && v === best[k];
+                        const sectorKey = `S${k + 1}`;
                         return (
-                          // biome-ignore lint/suspicious/noArrayIndexKey: sector columns
-                          <td key={k} className="num num-col" data-sector={purple ? 'best' : ''}>
+                          <td
+                            key={sectorKey}
+                            className="num num-col"
+                            data-label={`S${k + 1}`}
+                            data-sector={purple ? 'best' : ''}
+                          >
                             {formatSectorTime(v)}
                           </td>
                         );
                       })}
-                      <td>
-                        {l.valid ? (
-                          <Tag tone="sb">válida</Tag>
-                        ) : (
-                          <Tag
-                            tone="bad"
-                            title={badFlags.map((f) => LAP_FLAG_LABELS[f]).join(', ')}
-                          >
-                            inválida
-                          </Tag>
-                        )}
-                        {badFlags.map((f) => (
-                          <span key={f} className="a-flag">
-                            {LAP_FLAG_LABELS[f]}
-                          </span>
-                        ))}
-                        {infoFlags.map((f) => (
-                          <span key={f} className="a-flag a-flag-info">
-                            {LAP_FLAG_LABELS[f]}
-                          </span>
-                        ))}
-                        {l.isReference && (
-                          <Tag tone="ref" title={l.referenceMeta?.notes ?? undefined}>
-                            ref · {l.referenceMeta?.driverName ?? 'referência'}
-                            {l.referenceMeta?.rankingTimeMs
-                              ? ` (${formatLapTime(l.referenceMeta.rankingTimeMs)})`
-                              : ''}
-                          </Tag>
-                        )}
-                      </td>
-                      <td>
-                        <div className="a-row-actions">
-                          <a
-                            className="a-btn a-btn-sm"
-                            href={routes.compare({ lap: l.id, ref: 'auto' })}
-                          >
-                            Comparar
-                          </a>
-                          {l.isReference ? (
-                            <ConfirmButton
-                              className="a-btn a-btn-ghost a-btn-sm"
-                              label="Tirar referência"
-                              question="Deixar de ser referência?"
-                              confirmLabel="Sim"
-                              onConfirm={async () => {
-                                try {
-                                  replaceLap(await api.unsetReference(l.id));
-                                } catch (e) {
-                                  addNotice('error', (e as Error).message, 6000);
-                                }
-                              }}
-                            />
+                      <td className="a-lap-status">
+                        <div className="a-laptags">
+                          {l.valid ? (
+                            <Tag tone="sb">válida</Tag>
                           ) : (
-                            <button
-                              type="button"
-                              className="a-btn a-btn-ghost a-btn-sm"
-                              onClick={() => setEditing(l.id)}
+                            <Tag
+                              tone="bad"
+                              title={badFlags.map((f) => LAP_FLAG_LABELS[f]).join(', ')}
                             >
-                              Marcar referência
-                            </button>
+                              inválida
+                            </Tag>
                           )}
-                          <details className="a-menu">
-                            <summary className="a-btn a-btn-ghost a-btn-sm">Mais</summary>
-                            <div className="a-menu-body">
-                              <a href={urls.lapCsv(l.id)} download>
-                                Baixar CSV
-                              </a>
-                              <a href={urls.lapTrace(l.id)} download>
-                                Baixar trace (JSON)
-                              </a>
-                              <a href={routes.coach({ session: session.id, lap: l.id })}>
-                                Debrief desta volta
-                              </a>
-                              <ConfirmButton
-                                className="a-btn a-btn-danger a-btn-sm"
-                                label="Apagar volta"
-                                question="Apagar esta volta?"
-                                confirmLabel="Apagar"
-                                onConfirm={async () => {
-                                  try {
-                                    await api.deleteLap(l.id);
-                                    setSelected((s) => s.filter((x) => x !== l.id));
-                                    detail.reload();
-                                  } catch (e) {
-                                    addNotice('error', (e as Error).message, 6000);
-                                  }
-                                }}
-                              />
-                            </div>
-                          </details>
+                          {isBest && <Tag tone="pb">melhor da sessão</Tag>}
+                          {l.flags.includes('outLap') && (
+                            <Tag
+                              tone="warn"
+                              title="Saiu dos boxes ou do grid: volta lenta, não conta como volta lançada"
+                            >
+                              volta de saída
+                            </Tag>
+                          )}
+                          {l.flags.includes('inLap') && (
+                            <Tag tone="warn" title="Terminou nos boxes ou no fim da sessão">
+                              volta de entrada
+                            </Tag>
+                          )}
+                          {badFlags
+                            .filter((f) => f !== 'outLap' && f !== 'inLap')
+                            .map((f) => (
+                              <span key={f} className="a-flag">
+                                {LAP_FLAG_LABELS[f]}
+                              </span>
+                            ))}
+                          {infoFlags.map((f) => (
+                            <span key={f} className="a-flag a-flag-info">
+                              {LAP_FLAG_LABELS[f]}
+                            </span>
+                          ))}
+                          {l.isReference && (
+                            <Tag tone="ref" title={l.referenceMeta?.notes ?? undefined}>
+                              referência · {l.referenceMeta?.driverName ?? 'referência'}
+                              {l.referenceMeta?.rankingTimeMs
+                                ? ` (${formatLapTime(l.referenceMeta.rankingTimeMs)})`
+                                : ''}
+                            </Tag>
+                          )}
                         </div>
+                      </td>
+                      <td className="a-lap-actions">
+                        <LapQuickActions
+                          lap={l}
+                          pbLapId={pb.data?.id ?? null}
+                          hasTopReference={(refs.data?.length ?? 0) > 0}
+                          onChanged={replaceLap}
+                          onDeleted={() => {
+                            setSelected((x) => x.filter((y) => y !== l.id));
+                            detail.reload();
+                            pb.reload();
+                          }}
+                          extra={
+                            <details className="a-menu">
+                              <summary className="a-btn a-btn-ghost a-btn-sm">Mais</summary>
+                              <div className="a-menu-body">
+                                {!l.isReference && (
+                                  <button
+                                    type="button"
+                                    className="a-link-btn"
+                                    onClick={() => setEditing(l.id)}
+                                  >
+                                    Referência com detalhes…
+                                  </button>
+                                )}
+                                <a href={routes.coach({ session: session.id, lap: l.id })}>
+                                  Debrief desta volta
+                                </a>
+                                <a href={urls.lapCsv(l.id)} download>
+                                  Baixar CSV
+                                </a>
+                                <a href={urls.lapTrace(l.id)} download>
+                                  Baixar trace (JSON)
+                                </a>
+                              </div>
+                            </details>
+                          }
+                        />
                       </td>
                     </tr>
                   </FragmentRows>
