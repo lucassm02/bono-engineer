@@ -5,8 +5,11 @@
 
 import { GT7_CLIENT_PORT } from '@gt7/shared';
 import { useEffect, useState } from 'react';
+import { describeLink } from '../lib/consoleLink.ts';
 import { statusKind } from '../lib/status.ts';
 import { retryServerNow, startMock } from '../net/connection.ts';
+import { rescanConsole } from '../net/consoleActions.ts';
+import { openConnectionPanel, useConsoleConnection } from '../state/consoleLink.ts';
 import { useUi } from '../state/uiStore.ts';
 
 function useCountdown(until: number | null): number | null {
@@ -27,6 +30,8 @@ export function StatusLayer() {
   const wsRetryAt = useUi((s) => s.wsRetryAt);
   const liveState = useUi((s) => s.liveState);
   const serverStatus = useUi((s) => s.serverStatus);
+  const conn = useConsoleConnection();
+  const link = describeLink(conn);
   const kind = statusKind({ source, wsStatus, wsEverOpened, wsAttempt, liveState });
   const secs = useCountdown(kind === 'noServer' ? wsRetryAt : null);
 
@@ -83,26 +88,21 @@ export function StatusLayer() {
       )}
       {kind === 'noConsole' && (
         <>
-          <h1>Servidor ok, console não conectado</h1>
-          <p>
-            Nenhum dado do GT7 está chegando
-            {serverStatus?.consoleIp ? (
-              <>
-                {' '}
-                do PS5 em <strong>{serverStatus.consoleIp}</strong>
-              </>
-            ) : null}
-            .
-          </p>
+          <h1>{conn ? link.title : 'Servidor ok, console não conectado'}</h1>
+          {conn && link.detail && <p>{link.detail}</p>}
           <ul>
-            <li>Ligue o PS5 e abra o Gran Turismo 7.</li>
-            <li>
-              Confira o IP do PS5 (Configurações › Rede › Ver status da conexão) e informe no
-              servidor.
-            </li>
-            <li>Libere a porta UDP {GT7_CLIENT_PORT} no Firewall do Windows (rede privada).</li>
-            <li>PS5 e PC na mesma rede.</li>
+            <li>PS5 ligado e na mesma rede (Wi-Fi) que este PC.</li>
+            <li>Gran Turismo 7 aberto numa pista (no menu o PS5 não envia dados).</li>
+            <li>Porta UDP {GT7_CLIENT_PORT} liberada no Firewall do Windows (rede privada).</li>
           </ul>
+          <div className="status-actions" data-no-gesture>
+            <button type="button" className="btn" onClick={() => void rescanConsole()}>
+              Procurar de novo
+            </button>
+            <button type="button" className="btn btn-ghost" onClick={openConnectionPanel}>
+              Detalhes
+            </button>
+          </div>
           {serverStatus && (
             <p className="dim num">
               Pacotes recebidos: {serverStatus.ingestor.received}. Formato pedido:{' '}

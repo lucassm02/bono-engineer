@@ -5,6 +5,7 @@
 
 import {
   type ConnectionState,
+  type ConsoleConnection,
   type DeviceProfile,
   type LapCompletedEvent,
   normalizeDeviceProfile,
@@ -53,6 +54,12 @@ export interface UiState {
   lapPopup: LapCompletedEvent | null;
   notices: Notice[];
   keepAwake: KeepAwakeMode;
+  /** Simulated console link while the in-browser demo runs. */
+  mockConnection: ConsoleConnection | null;
+  /** Details panel of the console link (opened from the discreet indicator). */
+  connectionPanelOpen: boolean;
+  /** First-run assistant: 'unknown' = not decided yet, 'active' = showing, 'off' = never/finished. */
+  onboarding: 'unknown' | 'active' | 'off';
 }
 
 const PROFILE_KEY = 'gt7.profile';
@@ -89,6 +96,9 @@ export const useUi = create<UiState>()(() => ({
   lapPopup: null,
   notices: [],
   keepAwake: 'pending',
+  mockConnection: null,
+  connectionPanelOpen: false,
+  onboarding: 'unknown',
 }));
 
 /** Stores the profile (keeps the current view when still enabled) and persists it locally. */

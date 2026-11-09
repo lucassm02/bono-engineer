@@ -93,6 +93,11 @@ configura no painel.
   banner. Se o GT7 Race Engineer **já estiver aberto**, um segundo `npm start` só abre o navegador nele e sai.
 - **Console:** o app **acha o PlayStation sozinho** (veja abaixo). Nada de IP para digitar.
 
+Na **primeira abertura** (sem sessões e sem console encontrado) um assistente de 3 passos acompanha a busca do
+PS5 ao vivo, mostra o QR code do celular e some sozinho (dá para **Pular**; Configurações › Sobre › *Rever o
+assistente*). O estado da conexão fica sempre num indicador discreto (clique para ver detalhes, **Procurar de
+novo**, **Usar outro IP** ou **Voltar ao automático**).
+
 Se o painel mostrar "Procurando o PlayStation…" ou "Aguardando o jogo", siga a próxima seção.
 
 ### Modo demonstração (sem console)
@@ -122,6 +127,63 @@ npm run lint       # Biome
 No `dev` o painel fica na porta 5173 e a API/WebSocket na 8770 (o Vite faz proxy). Sem servidor, o painel em
 dev liga sozinho um modo "Demonstração (sem servidor)". Também dá para abrir `http://localhost:5173/?mock=1`.
 
+## App de desktop
+
+Além do `npm start`, o projeto gera um **aplicativo de Windows** (Electron) que você só abre: ele embute o
+mesmo servidor, mostra o painel numa janela própria e **fica na bandeja** ao fechar, para o celular continuar
+acessando. Nada de terminal, Node ou `npm` para quem só vai usar.
+
+### Como gerar
+
+```powershell
+npm install
+npm run desktop:dist     # compila o painel, empacota e gera os instaladores (alguns minutos)
+```
+
+Saída em `packages/desktop/release/` (ignorada pelo git):
+
+| Arquivo | Para quê |
+|---|---|
+| `GT7-Race-Engineer-Setup-0.1.0.exe` (~110 MB) | **Instalador** de um clique, **só para o seu usuário** (não pede administrador); cria atalhos no Menu Iniciar e na Área de Trabalho |
+| `GT7-Race-Engineer-0.1.0-portable.exe` (~100 MB) | Um único `.exe` que roda de qualquer pasta, sem instalar (a 1ª abertura demora mais: ele se descompacta numa pasta temporária) |
+
+A primeira geração baixa o Electron (~110 MB) para o cache do usuário; as seguintes reaproveitam. Para só
+experimentar sem empacotar: `npm run desktop` (compila o necessário e abre o app em modo de desenvolvimento;
+`Ctrl+Shift+I` abre as ferramentas do desenvolvedor).
+
+### Como usar
+
+- **Abra o app** pelo atalho. Aparece "Iniciando…" por alguns segundos e depois o painel (o mesmo do navegador).
+  Uma segunda abertura só traz a janela existente para a frente.
+- **Fechar a janela (X) não encerra o app**: ele vai para a **bandeja** (ícone perto do relógio) e o servidor
+  continua, então o celular segue conectado. Clique no ícone para reabrir.
+- **Menu da bandeja** (botão direito): *Abrir*, *Copiar endereço do celular*, *Iniciar com o Windows*
+  (desligado por padrão; abre o app escondido na bandeja ao ligar o PC) e *Sair* (encerra de verdade).
+- **Atalhos:** `F11` tela cheia, `F5`/`Ctrl+R` recarrega, `Ctrl` + `+`/`-`/`0` zoom. A janela lembra tamanho e posição.
+- O app escuta na rede como o `npm start` (porta 8770 ou a próxima livre), então o **celular** abre o endereço
+  que *Copiar endereço do celular* entrega, com as mesmas regras de firewall da seção abaixo.
+
+### O que muda em relação ao `npm start`
+
+- **Os dados são os mesmos**: `%APPDATA%\GT7 Race Engineer` (histórico, voltas, configurações, chave do coach).
+  Você pode alternar entre o app e `npm start` sem perder nada. Os arquivos do Chromium (cache, janela, log
+  `logs\desktop.log`) ficam à parte, em `%LOCALAPPDATA%\GT7 Race Engineer`.
+- **Não rode os dois ao mesmo tempo**: se o `npm start` já estiver aberto, o app **usa o servidor que já existe**
+  (a janela só o mostra; *Sair* não o encerra). Dois servidores disputariam a mesma porta UDP 33740 e o mesmo banco.
+- O app **não usa `tsx` nem `npm`**: o servidor vai compilado num único arquivo (esbuild) e o painel já vem pronto
+  dentro do pacote. Para atualizar, gere o pacote de novo e reinstale por cima (os dados ficam).
+- Se o servidor não subir, a janela mostra uma página de erro em português com **Tentar de novo**; os detalhes
+  técnicos ficam em `%LOCALAPPDATA%\GT7 Race Engineer\logs\desktop.log`.
+- O servidor MCP para o Claude Desktop/Claude Code continua sendo o `npm run mcp` (ou o endereço `/mcp` do app
+  aberto); o app de desktop não instala o `stdio` do MCP.
+
+### Aviso do Windows (SmartScreen)
+
+O pacote **não tem assinatura de código** (certificado pago). Na primeira vez o Windows pode mostrar "O Windows
+protegeu o computador" (SmartScreen): clique em **Mais informações → Executar assim mesmo**. É esperado para um
+programa pessoal sem assinatura; o instalador não pede privilégios de administrador. Antivírus podem demorar na
+primeira abertura do `.exe` portátil, pelo mesmo motivo.
+
 ## Configurar o console
 
 ### 1. Descoberta automática (padrão)
@@ -142,8 +204,8 @@ responder com um pacote válido do GT7. O IP encontrado fica salvo.
 Só se a descoberta não funcionar (rede com isolamento de clientes, sub-rede diferente entre PC e PS5…). No PS5:
 **Configurações › Rede › Status da conexão › Ver status da conexão › Endereço IPv4**. Depois:
 
-- **No app:** `http://localhost:8770/#/config` › **Console e formatos** › **IP do PlayStation**. Esvaziar o
-  campo (ou `DELETE /api/settings/consoleIp`) volta ao modo automático.
+- **No app:** `http://localhost:8770/#/config` › **Conexão com o PS5** › **Usar outro IP**. O botão
+  **Voltar ao automático** (ou `DELETE /api/settings/consoleIp`) desfaz.
 - **Na linha de comando:** `npm start -- --ps-ip 192.168.0.20`.
 
 Um IP fixado por você **não é sobrescrito** a menos que ele fique mudo por mais de 10 s e outro host responda.
@@ -192,7 +254,7 @@ netsh advfirewall firewall add rule name="GT7 Race Engineer (UDP 33740)" dir=in 
 - As regras valem para a rede **Privada**. Confira que o Wi-Fi do PC está marcado como "Privada".
 - Se você já liberou o `node.exe` quando o Windows perguntou, o app não consegue detectar isso e pode ainda
   avisar que faltam regras; pode ignorar.
-- Em **Configurações › Celular e firewall** há o botão "Verificar de novo".
+- Em **Configurações › Celular** há o botão "Verificar de novo".
 
 ### Rede
 
@@ -207,7 +269,7 @@ netsh advfirewall firewall add rule name="GT7 Race Engineer (UDP 33740)" dir=in 
 
 1. Com o app rodando, abra no celular a **URL da rede** impressa no terminal (ex.:
    `http://192.168.0.10:8770`) ou aponte a câmera para o **QR code**. Também aparece em
-   **Configurações › Celular e firewall**.
+   **Configurações › Celular**.
 2. **Adicionar à tela inicial** para abrir em tela cheia:
    - **Android (Chrome):** menu ⋮ › *Adicionar à tela inicial* (ou *Instalar app*).
    - **iPhone (Safari):** botão Compartilhar › *Adicionar à Tela de Início*.
@@ -250,7 +312,7 @@ navegador).
 
 ### Controle remoto pelo PC
 
-Em **Configurações › Dispositivos** há a lista dos painéis conectados; o botão **Mostrar tela** escolhe no PC
+Em **Configurações › Aparelhos conectados** há a lista dos painéis conectados; o botão **Mostrar tela** escolhe no PC
 qual tela aparece no celular (só funciona se a tela estiver ligada naquele dispositivo).
 
 ## Fluxos principais
@@ -361,7 +423,7 @@ claude mcp add --transport http gt7-live http://localhost:8770/mcp --header "Aut
 
 Pontos de atenção: o `--import` precisa ser uma **URL `file:///`** (o Claude Desktop inicia o processo em
 outra pasta); `node` precisa estar no PATH; o `--data` deve ser a pasta de dados do app (`data`, **não**
-`data\demo`). Logs do processo: `%APPDATA%\Claude\logs\mcp-server-gt7.log`. A tela **Configurações › MCP**
+`data\demo`). Logs do processo: `%APPDATA%\Claude\logs\mcp-server-gt7.log`. A seção **Configurações › Integração com IA**
 do app mostra os mesmos trechos prontos.
 
 Depois, peça em linguagem natural ("faça o debrief da minha última sessão"), ou use os prompts prontos
@@ -378,6 +440,8 @@ Depois, peça em linguagem natural ("faça o debrief da minha última sessão"),
 | `npm run demo` | Idem com console falso (voltas sintéticas, dados na subpasta `demo`) |
 | `npm run dev` | Servidor + Vite em `http://localhost:5173` |
 | `npm run build` | Compila o painel web |
+| `npm run desktop` | App de desktop (Electron) em modo de desenvolvimento: compila o necessário e abre a janela |
+| `npm run desktop:dist` | Gera o instalador e o `.exe` portátil em `packages/desktop/release` (veja "App de desktop") |
 | `npm run mcp` | Servidor MCP stdio (use `npm run -s mcp -- --data data` para o npm não escrever no stdout) |
 | `npm run mcp:sample-chart` | Regera os gráficos de exemplo em `docs/` (dados sintéticos) |
 | `npm run sniff -- --ps-ip IP` | Conecta ao console e imprime 1 linha por segundo (diagnóstico; opções: `--format A\|B\|~\|C`, `--record arquivo.gt7rec`, `--discover`) |
@@ -435,7 +499,7 @@ Na **pasta do usuário** (criada sozinha; a subpasta `demo` é da demonstração
 | macOS | `~/Library/Application Support/GT7 Race Engineer` |
 | Linux | `$XDG_DATA_HOME/gt7-race-engineer` (padrão `~/.local/share/gt7-race-engineer`) |
 
-`--data DIR` ou `GT7_DATA` trocam a pasta. Nas Configurações › MCP aparece o caminho real em uso. Versões
+`--data DIR` ou `GT7_DATA` trocam a pasta. Em Configurações › Integração com IA aparece o caminho real em uso. Versões
 antigas guardavam em `<projeto>/data`: se essa pasta existir e a nova não, o app **copia uma vez** (a antiga é
 mantida). Dentro da pasta:
 
@@ -504,6 +568,7 @@ gt7/
     server/     Fastify: painel, REST, WebSocket, MCP HTTP, coach IA, QR, firewall
     mcp/        servidor MCP (stdio + HTTP), ferramentas, prompts e gráficos PNG
     web/        painel ao vivo (11 telas) e área de análise (React + Vite, PWA)
+    desktop/    app de Windows (Electron): janela, bandeja e empacotamento do servidor + painel
   docs/         guias e gráficos de exemplo
   (seus dados ficam na pasta do usuário, fora do projeto)
 ```

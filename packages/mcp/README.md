@@ -9,7 +9,7 @@ Dois transportes:
 
 | Transporte | Quando usar | `get_live_state` |
 |---|---|---|
-| **stdio** (`packages/mcp/src/stdio.ts`) | Claude Desktop/Code iniciam o processo, que lê o mesmo banco SQLite (`data/`) | não (só dados gravados) |
+| **stdio** (`packages/mcp/src/stdio.ts`) | Claude Desktop/Code iniciam o processo, que lê o mesmo banco SQLite do app (pasta de dados do usuário) | não (só dados gravados) |
 | **Streamable HTTP** (`http://localhost:8770/mcp`) | com o app rodando (`npm start`), montado no servidor | sim |
 
 Os exemplos abaixo usam o repositório em `C:\Users\lucas\Projects\gt7`; troque pelo seu caminho.
@@ -27,9 +27,7 @@ Edite `%APPDATA%\Claude\claude_desktop_config.json` (Windows) e reinicie o Claud
         "--disable-warning=ExperimentalWarning",
         "--import",
         "file:///C:/Users/lucas/Projects/gt7/node_modules/tsx/dist/loader.mjs",
-        "C:\\Users\\lucas\\Projects\\gt7\\packages\\mcp\\src\\stdio.ts",
-        "--data",
-        "C:\\Users\\lucas\\Projects\\gt7\\data"
+        "C:\\Users\\lucas\\Projects\\gt7\\packages\\mcp\\src\\stdio.ts"
       ]
     }
   }
@@ -38,20 +36,21 @@ Edite `%APPDATA%\Claude\claude_desktop_config.json` (Windows) e reinicie o Claud
 
 - O `--import` precisa ser uma **URL `file:///`** absoluta (no Windows, `C:\...` não é aceito
   ali), porque o Claude Desktop inicia o processo em outra pasta.
-- `--data` aponta para a pasta de dados do app (`sessions.db` + `traces/`). Alternativa: variável de
-  ambiente `GT7_DATA_DIR` (`"env": { "GT7_DATA_DIR": "C:\\...\\data" }`). Sem nenhum dos dois, usa
-  `<repo>/data`.
+- **`--data` é opcional.** Sem ele, o servidor abre a mesma pasta de dados do app (`%APPDATA%\GT7 Race Engineer` no
+  Windows; macOS/Linux em `~/Library/Application Support/GT7 Race Engineer` / `~/.local/share/gt7-race-engineer`).
+  Ordem de prioridade: `--data` > variável `GT7_DATA` / `GT7_DATA_DIR` > pasta padrão do app. Use `--data` só
+  para apontar para outra pasta (por exemplo `%APPDATA%\GT7 Race Engineer\demo`, os dados da demonstração).
 - `node` precisa estar no PATH (Node ≥ 24). Se não estiver, use o caminho completo, ex.
   `"command": "C:\\Program Files\\nodejs\\node.exe"`.
 
 ## Claude Code (stdio)
 
 ```powershell
-claude mcp add gt7 -- node --disable-warning=ExperimentalWarning --import file:///C:/Users/lucas/Projects/gt7/node_modules/tsx/dist/loader.mjs C:\Users\lucas\Projects\gt7\packages\mcp\src\stdio.ts --data C:\Users\lucas\Projects\gt7\data
+claude mcp add gt7 -- node --disable-warning=ExperimentalWarning --import file:///C:/Users/lucas/Projects/gt7/node_modules/tsx/dist/loader.mjs C:\Users\lucas\Projects\gt7\packages\mcp\src\stdio.ts
 ```
 
 Use `--scope user` para ficar disponível em todos os projetos. Dentro do repositório também
-funciona `npm run -s mcp -- --data data` (o `-s` evita que o npm escreva no stdout, que é o canal
+funciona `npm run -s mcp` (o `-s` evita que o npm escreva no stdout, que é o canal
 do protocolo).
 
 ## HTTP (app em execução)

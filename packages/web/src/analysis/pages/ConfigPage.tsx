@@ -1,6 +1,7 @@
 /**
- * #/config — console & packet formats, recording, default delta reference, firewall, LAN URLs + QR,
- * connected devices (remote "show view"), MCP connection snippets and the AI coach settings.
+ * #/config — everything is configured here, in plain language: connection with the PS5 (with
+ * automatic discovery), phone (QR + firewall), AI coach, data folder, AI integration (MCP) and about.
+ * Technical options sit behind "Avançado".
  */
 
 import {
@@ -15,8 +16,11 @@ import {
   type ViewId,
 } from '@gt7/shared';
 import { useEffect, useState } from 'react';
+import { ConnectionDetails } from '../../components/ConsoleLink.tsx';
 import { DELTA_REFERENCE_LABELS, VIEW_LABELS } from '../../lib/labels.ts';
+import { ONBOARDING_KEY } from '../../lib/onboarding.ts';
 import type { Route } from '../../lib/route.ts';
+import { saveString } from '../../lib/storage.ts';
 import { addNotice, useUi } from '../../state/uiStore.ts';
 import { api } from '../api.ts';
 import {
@@ -58,102 +62,53 @@ function useSave() {
 
 // ---------------------------------------------------------------------------------------------
 
-function ConsoleSection({ status, onChange }: { status: ApiStatus; onChange: () => void }) {
+function ConnectionSection({ status, onChange }: { status: ApiStatus; onChange: () => void }) {
   const s = status.settings;
-  const [ip, setIp] = useState(s.consoleIp ?? '');
   const { busy, run } = useSave();
-  useEffect(() => setIp(s.consoleIp ?? ''), [s.consoleIp]);
   const patch = async (p: ApiSettingsPatch, ok: string) => {
     if (await run(() => api.patchSettings(p), ok)) onChange();
   };
-  const ipValid = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.test(ip.trim());
   return (
-    <Card title="Console e formatos" id="console">
-      <form
-        className="a-inline-form"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (ipValid) void patch({ consoleIp: ip.trim() }, 'IP do console salvo.');
-        }}
-      >
-        <label>
-          IP do PlayStation
-          <input
-            className="a-input num"
-            value={ip}
-            placeholder="192.168.0.20"
-            inputMode="decimal"
-            onChange={(e) => setIp(e.target.value)}
-            aria-invalid={ip.trim() !== '' && !ipValid}
-          />
-        </label>
-        <button
-          type="submit"
-          className="a-btn"
-          disabled={busy || !ipValid || ip.trim() === s.consoleIp}
-        >
-          Salvar
-        </button>
-        <span className="dim a-small">
-          {status.consoleIp
-            ? `Em uso: ${status.consoleIp}`
-            : 'Sem IP: o app procura o console por broadcast.'}
-          {status.simulator && ' · modo demonstração (console simulado)'}
-        </span>
-      </form>
+    <Card title="Conexão com o PS5" id="conexao">
+      <div className="cx-inline">
+        <ConnectionDetails />
+      </div>
+      {status.simulator && (
+        <p className="a-note a-mt">
+          <Tag tone="warn">Demo</Tag> Modo demonstração: o console é simulado dentro do app.
+        </p>
+      )}
 
-      <div className="a-format-grid a-mt">
-        <fieldset className="a-fieldset">
-          <legend>Formato ao vivo</legend>
-          {PACKET_FORMATS.map((f) => (
-            <label key={f} className="a-radio">
-              <input
-                type="radio"
-                name="liveFormat"
-                checked={s.liveFormat === f}
-                disabled={busy}
-                onChange={() =>
-                  patch({ liveFormat: f }, `Trocando para o formato ${f} (até ~15 s).`)
-                }
-              />
-              <span>
-                <strong>{PACKET_FORMAT_INFO[f].label}</strong>
-                <span className="dim a-small">{PACKET_FORMAT_INFO[f].text}</span>
-              </span>
-            </label>
-          ))}
-        </fieldset>
-        <fieldset className="a-fieldset">
-          <legend>Formato da captura de replay</legend>
-          {PACKET_FORMATS.map((f) => (
-            <label key={f} className="a-radio">
-              <input
-                type="radio"
-                name="captureFormat"
-                checked={s.captureFormat === f}
-                disabled={busy}
-                onChange={() => patch({ captureFormat: f }, `Capturas usarão o formato ${f}.`)}
-              />
-              <span>
-                <strong>
-                  {f === 'B' ? 'B (recomendado para replay)' : PACKET_FORMAT_INFO[f].label}
-                </strong>
-                {f === '~' && <span className="dim a-small">Não funciona em replay.</span>}
-              </span>
-            </label>
-          ))}
-          <p className="dim a-small">
-            O jogo só manda <strong>~</strong> ao vivo; em replay use <strong>B</strong>. A troca de
-            formato espera ~15 s (o console precisa parar de receber o pedido anterior).
-          </p>
-        </fieldset>
+      <div className="a-setting-row a-mt">
+        <div>
+          <strong>Formato do pacote: automático (recomendado)</strong>
+          <div className="dim a-small">
+            O app descobre sozinho o formato que o seu console aceita.
+            {s.liveFormatAuto
+              ? ` Em uso agora: ${PACKET_FORMAT_INFO[s.liveFormat].label}.`
+              : ` Fixado em ${PACKET_FORMAT_INFO[s.liveFormat].label}.`}
+          </div>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={s.liveFormatAuto}
+          aria-label="Formato do pacote automático"
+          className="switch"
+          disabled={busy || s.liveFormatAuto}
+          title={s.liveFormatAuto ? 'Para fixar um formato, abra “Avançado”.' : undefined}
+          onClick={() => patch({ liveFormatAuto: true }, 'Formato automático ligado.')}
+        >
+          <span className="switch-knob" />
+        </button>
       </div>
 
       <div className="a-setting-row a-mt">
         <div>
           <strong>Gravar sessões brutas</strong>
           <div className="dim a-small">
-            Guarda todo pacote (~20 KB/s) para reprocessar depois e baixar o .gt7rec.
+            Guarda todo pacote (~20 KB/s) para reprocessar depois e baixar o .gt7rec. Ocupa espaço
+            em disco; deixe desligado se não precisar.
           </div>
         </div>
         <button
@@ -197,6 +152,75 @@ function ConsoleSection({ status, onChange }: { status: ApiStatus; onChange: () 
           ))}
         </fieldset>
       </div>
+
+      <details className="a-advanced a-mt">
+        <summary>Avançado: formato do pacote</summary>
+        <p className="dim a-small">
+          Só mexa nisto se o modo automático não funcionar. Ao escolher um formato, o app para de
+          trocar sozinho; para voltar, ligue o interruptor “Formato do pacote: automático”.
+        </p>
+        <div className="a-format-grid">
+          <fieldset className="a-fieldset">
+            <legend>Formato ao vivo</legend>
+            <label className="a-radio">
+              <input
+                type="radio"
+                name="liveFormat"
+                checked={s.liveFormatAuto}
+                disabled={busy}
+                onChange={() => patch({ liveFormatAuto: true }, 'Formato automático ligado.')}
+              />
+              <span>
+                <strong>Automático (recomendado)</strong>
+                <span className="dim a-small">
+                  Testa ~, depois B e A, e guarda o que funcionar.
+                </span>
+              </span>
+            </label>
+            {PACKET_FORMATS.map((f) => (
+              <label key={f} className="a-radio">
+                <input
+                  type="radio"
+                  name="liveFormat"
+                  checked={!s.liveFormatAuto && s.liveFormat === f}
+                  disabled={busy}
+                  onChange={() =>
+                    patch({ liveFormat: f }, `Trocando para o formato ${f} (até ~15 s).`)
+                  }
+                />
+                <span>
+                  <strong>{PACKET_FORMAT_INFO[f].label}</strong>
+                  <span className="dim a-small">{PACKET_FORMAT_INFO[f].text}</span>
+                </span>
+              </label>
+            ))}
+          </fieldset>
+          <fieldset className="a-fieldset">
+            <legend>Formato da captura de replay</legend>
+            {PACKET_FORMATS.map((f) => (
+              <label key={f} className="a-radio">
+                <input
+                  type="radio"
+                  name="captureFormat"
+                  checked={s.captureFormat === f}
+                  disabled={busy}
+                  onChange={() => patch({ captureFormat: f }, `Capturas usarão o formato ${f}.`)}
+                />
+                <span>
+                  <strong>
+                    {f === 'B' ? 'B (recomendado para replay)' : PACKET_FORMAT_INFO[f].label}
+                  </strong>
+                  {f === '~' && <span className="dim a-small">Não funciona em replay.</span>}
+                </span>
+              </label>
+            ))}
+            <p className="dim a-small">
+              O jogo só manda <strong>~</strong> ao vivo; em replay use <strong>B</strong>. A troca
+              de formato espera ~15 s (o console precisa parar de receber o pedido anterior).
+            </p>
+          </fieldset>
+        </div>
+      </details>
     </Card>
   );
 }
@@ -208,7 +232,7 @@ function LanSection({ status, onChange }: { status: ApiStatus; onChange: () => v
   const { busy, run } = useSave();
   const fw = status.firewall;
   return (
-    <Card title="Abrir no celular" id="lan">
+    <Card title="Celular" id="celular">
       <div className="a-lan">
         <div className="a-lan-urls">
           {lan.error ? (
@@ -221,7 +245,10 @@ function LanSection({ status, onChange }: { status: ApiStatus; onChange: () => v
             </p>
           ) : (
             <>
-              <p>Abra no navegador do celular (mesma rede Wi-Fi):</p>
+              <p>
+                Para pilotar olhando o celular, aponte a câmera para o QR code ou abra este endereço
+                no navegador dele (mesmo Wi-Fi do PC):
+              </p>
               <ul className="a-url-list">
                 {lan.data.urls.map((u) => (
                   <li key={u}>
@@ -321,13 +348,15 @@ function DevicesSection() {
   const { busy, run } = useSave();
   const list = (devices.data ?? []).slice().sort((a, b) => Number(b.online) - Number(a.online));
   return (
-    <Card title="Dispositivos" id="dispositivos">
+    <Card title="Aparelhos conectados" id="dispositivos">
       {devices.error && !devices.data ? (
         <ErrorBox error={devices.error} compact />
       ) : !devices.data ? (
         <Loading />
       ) : list.length === 0 ? (
-        <p className="dim">Nenhum painel conectado ainda. Abra a URL da rede local no celular.</p>
+        <p className="dim">
+          Nenhum painel conectado ainda. Abra o endereço da seção “Celular” no celular.
+        </p>
       ) : (
         <div className="a-table-wrap">
           <table className="a-table">
@@ -336,7 +365,7 @@ function DevicesSection() {
                 <th>Aparelho</th>
                 <th>Situação</th>
                 <th>Tela atual</th>
-                <th>Controle remoto</th>
+                <th>Mostrar no aparelho</th>
               </tr>
             </thead>
             <tbody>
@@ -416,17 +445,17 @@ function McpSection({ status }: { status: ApiStatus }) {
   const lanUrl = i?.http.lanUrls[0] ?? null;
   const localUrl = i?.http.localUrl ?? `http://localhost:${status.httpPort}/mcp`;
   return (
-    <Card title="IA no Claude Desktop / Claude Code (MCP)" id="mcp">
+    <Card title="Integração com IA (Claude Desktop / Claude Code)" id="mcp">
       <p>
-        As mesmas ferramentas do coach (comparar voltas, curvas, consistência, evolução, gráficos)
-        ficam disponíveis para o Claude pelo protocolo MCP. Os comandos abaixo já usam os caminhos
-        reais desta instalação.
+        Opcional. Permite que o Claude (no seu PC) consulte suas voltas e análises. Copie o trecho
+        que combina com o seu programa; os caminhos já são os desta instalação.
       </p>
-      <h3 className="a-h3">HTTP (com o app rodando — inclui o estado ao vivo)</h3>
+      <h3 className="a-h3">Claude Code (com o app aberto — inclui o estado ao vivo)</h3>
+      {i && <CodeBlock label="Cole no terminal" code={i.claudeCode.http} />}
       <ul className="a-url-list">
         <li>
           <span className="num">{localUrl}</span> <CopyButton text={localUrl} />
-          <span className="dim a-small"> neste PC</span>
+          <span className="dim a-small"> endereço neste PC</span>
         </li>
         {lanUrl && (
           <li>
@@ -435,30 +464,30 @@ function McpSection({ status }: { status: ApiStatus }) {
           </li>
         )}
       </ul>
-      {i && <CodeBlock label="Claude Code" code={i.claudeCode.http} />}
-      <h3 className="a-h3">stdio (Claude Desktop lê os dados gravados, mesmo com o app fechado)</h3>
+      <h3 className="a-h3">Claude Desktop (lê os dados salvos, mesmo com o app fechado)</h3>
       {info.error && !i && <ErrorBox error={info.error} compact onRetry={info.reload} />}
       {!i && !info.error && <Loading />}
       {i && (
-        <>
+        <CodeBlock
+          label={`Cole em ${DESKTOP_CONFIG_PATH} e reinicie o Claude Desktop`}
+          code={JSON.stringify(i.claudeDesktopConfig, null, 2)}
+        />
+      )}
+      {i && (
+        <details className="a-advanced">
+          <summary>Avançado: outras formas de conectar</summary>
           <p className="dim a-small">
             Pasta do repositório: <span className="num">{i.repoRoot}</span>
-            <br />
-            Pasta de dados: <span className="num">{i.dataDir}</span>
           </p>
-          <CodeBlock
-            label={DESKTOP_CONFIG_PATH}
-            code={JSON.stringify(i.claudeDesktopConfig, null, 2)}
-          />
-          <CodeBlock label="Claude Code (stdio)" code={i.claudeCode.stdio} />
-          <CodeBlock label="Linha de comando (stdio)" code={i.stdio.commandLine} />
+          <CodeBlock label="Claude Code (lê os dados salvos)" code={i.claudeCode.stdio} />
+          <CodeBlock label="Linha de comando" code={i.stdio.commandLine} />
           <CodeBlock label="Dentro da pasta do repositório" code={i.stdio.npmCommandLine} />
-        </>
+          <p className="dim a-small">
+            O <code>--import</code> precisa ser uma URL <code>file:///</code> absoluta. Detalhes em{' '}
+            <code>packages/mcp/README.md</code>.
+          </p>
+        </details>
       )}
-      <p className="dim a-small">
-        O <code>--import</code> precisa ser uma URL <code>file:///</code> absoluta. Detalhes em{' '}
-        <code>packages/mcp/README.md</code>.
-      </p>
     </Card>
   );
 }
@@ -569,45 +598,52 @@ function CoachSection() {
               </select>
               <span className="a-help">{c.models.find((m) => m.id === c.model)?.description}</span>
             </label>
-            <label>
-              Esforço
-              <select
-                value={c.effort}
-                disabled={busy}
-                onChange={(e) => apply({ effort: e.target.value as CoachEffort }, 'Esforço salvo.')}
-              >
-                {(Object.keys(EFFORT_LABELS) as CoachEffort[]).map((k) => (
-                  <option key={k} value={k}>
-                    {EFFORT_LABELS[k]}
-                  </option>
-                ))}
-              </select>
-              <span className="a-help">
-                Até {c.maxToolIterations} rodadas de ferramentas por pedido.
-              </span>
-            </label>
-            <label>
-              Relatórios guardados
-              <select
-                value={c.maxReports}
-                disabled={busy}
-                onChange={(e) =>
-                  apply({ maxReports: Number(e.target.value) }, 'Limite de relatórios salvo.')
-                }
-              >
-                {[...new Set([10, 25, 50, 100, 200, c.maxReports])]
-                  .sort((x, y) => x - y)
-                  .map((n) => (
-                    <option key={n} value={n}>
-                      {n}
+          </div>
+          <details className="a-advanced a-mt">
+            <summary>Avançado: esforço e relatórios guardados</summary>
+            <div className="a-format-grid a-mt">
+              <label>
+                Esforço
+                <select
+                  value={c.effort}
+                  disabled={busy}
+                  onChange={(e) =>
+                    apply({ effort: e.target.value as CoachEffort }, 'Esforço salvo.')
+                  }
+                >
+                  {(Object.keys(EFFORT_LABELS) as CoachEffort[]).map((k) => (
+                    <option key={k} value={k}>
+                      {EFFORT_LABELS[k]}
                     </option>
                   ))}
-              </select>
-              <span className="a-help">
-                Os mais antigos são apagados ao terminar um novo (cada um guarda os gráficos).
-              </span>
-            </label>
-          </div>
+                </select>
+                <span className="a-help">
+                  Até {c.maxToolIterations} rodadas de ferramentas por pedido.
+                </span>
+              </label>
+              <label>
+                Relatórios guardados
+                <select
+                  value={c.maxReports}
+                  disabled={busy}
+                  onChange={(e) =>
+                    apply({ maxReports: Number(e.target.value) }, 'Limite de relatórios salvo.')
+                  }
+                >
+                  {[...new Set([10, 25, 50, 100, 200, c.maxReports])]
+                    .sort((x, y) => x - y)
+                    .map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                </select>
+                <span className="a-help">
+                  Os mais antigos são apagados ao terminar um novo (cada um guarda os gráficos).
+                </span>
+              </label>
+            </div>
+          </details>
         </>
       )}
     </Card>
@@ -616,10 +652,88 @@ function CoachSection() {
 
 // ---------------------------------------------------------------------------------------------
 
+function DataSection({ status }: { status: ApiStatus }) {
+  const info = useFetch('mcpinfo', () => api.mcpInfo());
+  const dir = info.data?.dataDir ?? null;
+  return (
+    <Card title="Seus dados" id="dados">
+      <p>
+        Suas sessões, voltas e gravações ficam <strong>só neste PC</strong>, nesta pasta:
+      </p>
+      {info.error && !dir ? (
+        <ErrorBox error={info.error} compact onRetry={info.reload} />
+      ) : !dir ? (
+        <Loading />
+      ) : (
+        <p className="a-datapath">
+          <span className="num">{dir}</span> <CopyButton text={dir} label="Copiar caminho" />
+        </p>
+      )}
+      <p className="dim a-small">
+        Para fazer uma cópia de segurança, feche o app e copie essa pasta inteira. Ela fica fora da
+        pasta do programa, então atualizar ou reinstalar o app não apaga nada.
+      </p>
+      {status.simulator && (
+        <p className="a-note">
+          <Tag tone="warn">Demo</Tag> Você está no modo demonstração: estes dados são de um piloto
+          simulado e ficam numa subpasta separada (<code>demo</code>), sem misturar com os reais.
+        </p>
+      )}
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------
+
+function AboutSection({ status }: { status: ApiStatus }) {
+  return (
+    <Card title="Sobre" id="sobre">
+      <div className="a-setting-row">
+        <div>
+          <strong>GT7 Engenheiro</strong>
+          <div className="dim a-small">
+            Versão <span className="num">{status.serverVersion}</span> · porta{' '}
+            <span className="num">{status.httpPort}</span>
+            {status.tokenRequired ? ' · acesso com senha (token)' : ''}
+          </div>
+        </div>
+      </div>
+      <div className="a-setting-row a-mt">
+        <div>
+          <strong>Assistente de boas-vindas</strong>
+          <div className="dim a-small">
+            Mostra de novo os primeiros passos (achar o PS5, celular).
+          </div>
+        </div>
+        <button
+          type="button"
+          className="a-btn a-btn-ghost"
+          onClick={() => {
+            saveString(ONBOARDING_KEY, '0');
+            useUi.setState({ onboarding: 'active' });
+          }}
+        >
+          Rever o assistente
+        </button>
+      </div>
+      <p className="dim a-small a-mt">
+        Projeto pessoal, sem relação com a Polyphony Digital. O protocolo de telemetria do GT7 não
+        tem documentação oficial; vem de engenharia reversa da comunidade.
+      </p>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------
+
+/** Old section anchors (links in the README / other pages) → current ids. */
+const SECTION_ALIASES: Record<string, string> = { console: 'conexao', lan: 'celular' };
+
 export function ConfigPage({ route }: { route: Route }) {
   useTitle('Configurações');
   const status = useFetch('status', () => api.status(), 10000);
-  const section = route.query.s;
+  const requested = route.query.s;
+  const section = requested ? (SECTION_ALIASES[requested] ?? requested) : undefined;
   // biome-ignore lint/correctness/useExhaustiveDependencies: scroll once the content is there
   useEffect(() => {
     if (section && status.data)
@@ -628,20 +742,15 @@ export function ConfigPage({ route }: { route: Route }) {
 
   return (
     <>
-      <PageHead
-        title="Configurações"
-        sub={
-          status.data
-            ? `Servidor ${status.data.serverVersion} · porta ${status.data.httpPort}${status.data.tokenRequired ? ' · com token' : ''}`
-            : undefined
-        }
-      />
+      <PageHead title="Configurações" sub="Tudo se ajusta aqui: nada de arquivo de configuração." />
       <nav className="a-toc" aria-label="Seções">
-        <a href="#/config?s=console">Console</a>
-        <a href="#/config?s=lan">Celular e firewall</a>
-        <a href="#/config?s=dispositivos">Dispositivos</a>
-        <a href="#/config?s=mcp">MCP</a>
+        <a href="#/config?s=conexao">Conexão</a>
+        <a href="#/config?s=celular">Celular</a>
+        <a href="#/config?s=dispositivos">Aparelhos</a>
         <a href="#/config?s=coach">Coach IA</a>
+        <a href="#/config?s=dados">Dados</a>
+        <a href="#/config?s=mcp">Integração com IA</a>
+        <a href="#/config?s=sobre">Sobre</a>
       </nav>
       {status.error && !status.data ? (
         <ErrorBox error={status.error} onRetry={status.reload} />
@@ -649,11 +758,13 @@ export function ConfigPage({ route }: { route: Route }) {
         <Loading />
       ) : (
         <div className="a-config">
-          <ConsoleSection status={status.data} onChange={status.reload} />
+          <ConnectionSection status={status.data} onChange={status.reload} />
           <LanSection status={status.data} onChange={status.reload} />
           <DevicesSection />
-          <McpSection status={status.data} />
           <CoachSection />
+          <DataSection status={status.data} />
+          <McpSection status={status.data} />
+          <AboutSection status={status.data} />
         </div>
       )}
     </>

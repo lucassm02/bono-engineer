@@ -129,7 +129,7 @@ function EmptyHome({ hiddenDemo, onShowDemo }: { hiddenDemo: boolean; onShowDemo
       {!hiddenDemo && (
         <p className="dim">
           Ainda não ligou o console?{' '}
-          <a href={routes.config('console')}>Configure o IP do PlayStation</a>.
+          <a href={routes.config('conexao')}>Veja a conexão com o PlayStation</a>.
         </p>
       )}
       <div className="a-actions a-actions-center">

@@ -20,4 +20,11 @@ export { HttpError } from './http.ts';
 export { type HubOptions, type HubSocket, WsHub } from './hub.ts';
 export { LanResolver, lanAddresses } from './lan.ts';
 export type { RouteContext, RouteModule } from './routes/index.ts';
+export {
+  type RunningServer,
+  StartServerError,
+  type StartServerErrorKind,
+  type StartServerOptions,
+  startServer,
+} from './run.ts';
 export { DemoConsole } from './sim.ts';

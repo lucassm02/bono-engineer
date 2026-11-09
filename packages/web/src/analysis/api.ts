@@ -7,6 +7,7 @@
 import type {
   ApiComparison,
   ApiConsistency,
+  ApiDiscoveryScanResult,
   ApiErrorBody,
   ApiEvolution,
   ApiLapAnalysis,
@@ -136,6 +137,8 @@ export const api = {
   status: () => get<ApiStatus>('/api/status'),
   settings: () => get<ApiSettings>('/api/settings'),
   patchSettings: (p: ApiSettingsPatch) => request<ApiSettings>('PATCH', '/api/settings', p),
+  /** Restarts the console search ('Procurar de novo'). */
+  discoveryScan: () => request<ApiDiscoveryScanResult>('POST', '/api/discovery/scan'),
   firewallCheck: () => request<FirewallStatus>('POST', '/api/firewall/check'),
   lan: () => get<LanInfo>('/api/lan'),
   devices: () => get<DeviceInfo[]>('/api/devices'),

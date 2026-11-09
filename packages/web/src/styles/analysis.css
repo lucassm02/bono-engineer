@@ -1486,3 +1486,38 @@ textarea.a-input {
 .a-corner-edit .a-input {
   min-width: 110px;
 }
+
+/* Settings: advanced blocks and the data folder */
+.a-advanced {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 12px;
+}
+.a-advanced > summary {
+  cursor: pointer;
+  padding: 10px 0;
+  color: var(--dim);
+  font-weight: 600;
+}
+.a-advanced[open] > summary {
+  color: var(--text);
+}
+.a-advanced[open] {
+  padding-bottom: 12px;
+}
+.a-datapath {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 8px 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+.a-setting-row > div:first-child {
+  flex: 1 1 260px;
+  min-width: 0;
+}

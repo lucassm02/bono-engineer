@@ -13,9 +13,9 @@
 
 import { type ChildProcess, spawn, spawnSync } from 'node:child_process';
 import { join } from 'node:path';
-import { defaultDataDir, type Gt7RuntimeOptions, migrateLegacyData } from '@gt7/core';
+import { defaultDataDir, migrateLegacyData } from '@gt7/core';
 import type { ConsoleLinkState } from '@gt7/shared';
-import { createApp, type Gt7Server, SERVER_VERSION } from './app.ts';
+import { type Gt7Server, SERVER_VERSION } from './app.ts';
 import { renderBanner, renderFirewall } from './banner.ts';
 import {
   ConfigError,
@@ -26,8 +26,8 @@ import {
   type ServerConfig,
   webDistExists,
 } from './config.ts';
-import { DemoConsole } from './sim.ts';
-import { buildWeb, npmCliPath, pickPort, webNeedsBuild } from './startup.ts';
+import { type RunningServer, StartServerError, startServer } from './run.ts';
+import { buildWeb, npmCliPath, webNeedsBuild } from './startup.ts';
 
 const VITE_URL = 'http://localhost:5173/';
 
@@ -77,26 +77,6 @@ function killTree(child: ChildProcess | null): void {
   } else {
     child.kill('SIGTERM');
   }
-}
-
-function runtimeOptions(cfg: ServerConfig): Omit<Gt7RuntimeOptions, 'statusExtras'> {
-  const opts: Omit<Gt7RuntimeOptions, 'statusExtras'> = { dataDir: cfg.dataDir };
-  if (cfg.sim) {
-    opts.consoleIp = '127.0.0.1';
-    opts.simulator = true;
-    opts.persistConsoleIp = false; // the fake console's 127.0.0.1 never becomes a saved setting
-    opts.ingestor = {
-      bindAddress: '127.0.0.1',
-      bindPort: cfg.sim.clientPort,
-      consolePort: cfg.sim.consolePort,
-      discovery: false,
-    };
-  } else if (cfg.consoleIp) {
-    opts.consoleIp = cfg.consoleIp;
-  }
-  if (cfg.liveFormat) opts.liveFormat = cfg.liveFormat;
-  if (cfg.record === false) opts.record = false;
-  return opts;
 }
 
 /** The dashboard is built on demand: the first run (or after an update) just takes a bit longer. */
@@ -161,65 +141,37 @@ async function main(): Promise<void> {
     }
   }
 
-  // Port: reuse the running instance, or the first free port from the default one.
-  let portNote: string | null = null;
-  if (!cfg.dev) {
-    const choice = await pickPort(cfg.port, cfg.host, cfg.sim ? 'demo' : 'real', cfg.portExplicit);
-    if (choice.kind === 'existing') {
-      const url = withToken(`http://localhost:${choice.port}/`, cfg.token);
-      console.log(`  O GT7 Race Engineer já está aberto em http://localhost:${choice.port}/.`);
-      if (cfg.open) {
-        console.log('  Abrindo o navegador nele.');
-        openBrowser(url);
-        await new Promise((r) => setTimeout(r, 400));
-      }
-      process.exit(0);
-    }
-    if (choice.kind === 'busy') {
-      console.error(
-        cfg.portExplicit
-          ? `Erro: a porta ${choice.port} já está em uso por outro programa. Use --port com outro número.`
-          : `Erro: nenhuma porta livre a partir da ${cfg.port}. Feche algum programa ou use --port.`,
-      );
-      process.exit(1);
-    }
-    if (choice.skipped.length) {
-      portNote = `a porta ${choice.skipped[0]} estava ocupada por outro programa; usando a ${choice.port}`;
-    }
-    cfg = { ...cfg, port: choice.port };
-  }
-
-  const webBuilt = await ensureWeb(cfg);
-  let server: Gt7Server;
+  let webBuilt = false;
+  let running: RunningServer;
   try {
-    server = await createApp({
-      runtime: runtimeOptions(cfg),
-      port: cfg.port,
-      host: cfg.host,
-      webDist: cfg.webDist,
-      token: cfg.token,
-      simulator: !!cfg.sim,
-      logger: cfg.verbose,
+    running = await startServer({
+      config: cfg,
+      prepare: async (picked) => {
+        webBuilt = await ensureWeb(picked);
+      },
     });
   } catch (e) {
-    console.error(`Erro ao abrir os dados em ${cfg.dataDir}: ${(e as Error).message}`);
-    process.exit(1);
+    if (e instanceof StartServerError) {
+      console.error(`Erro: ${e.message}`);
+      process.exit(1);
+    }
+    throw e;
   }
+  cfg = running.config;
 
-  try {
-    await server.app.listen({ port: cfg.port, host: cfg.host });
-  } catch (e) {
-    const code = (e as NodeJS.ErrnoException).code;
-    console.error(
-      code === 'EADDRINUSE'
-        ? `Erro: a porta ${cfg.port} já está em uso (o app já está aberto?). Use --port para outra.`
-        : `Erro ao escutar em ${cfg.host}:${cfg.port}: ${(e as Error).message}`,
-    );
-    await server.close();
-    process.exit(1);
+  if (running.attached) {
+    const url = withToken(running.url, cfg.token);
+    console.log(`  O GT7 Race Engineer já está aberto em ${running.url}.`);
+    if (cfg.open) {
+      console.log('  Abrindo o navegador nele.');
+      openBrowser(url);
+      await new Promise((r) => setTimeout(r, 400));
+    }
+    process.exit(0);
   }
+  const server = running.server as Gt7Server;
+  const { portNote } = running;
 
-  const demo = cfg.sim ? new DemoConsole(cfg.sim) : null;
   let vite: ChildProcess | null = null;
   let stopping = false;
   const shutdown = async () => {
@@ -232,8 +184,7 @@ async function main(): Promise<void> {
     setTimeout(() => process.exit(1), 8000).unref();
     killTree(vite);
     try {
-      await server.close();
-      await demo?.stop();
+      await running.stop();
     } catch (e) {
       console.error(`  Erro ao encerrar: ${(e as Error).message}`);
     }
@@ -243,26 +194,7 @@ async function main(): Promise<void> {
     process.on(sig, () => void shutdown());
   }
 
-  if (demo) {
-    try {
-      await demo.start();
-    } catch (e) {
-      console.error(`  [sim] falha ao iniciar o console falso: ${(e as Error).message}`);
-    }
-  }
-  try {
-    await server.runtime.start();
-  } catch (e) {
-    const code = (e as NodeJS.ErrnoException).code;
-    console.error(
-      code === 'EADDRINUSE'
-        ? '  Aviso: a porta UDP 33740 já está em uso (SimHub ou outro app de telemetria aberto?). ' +
-            'O painel e o histórico funcionam, mas sem dados ao vivo.'
-        : `  Aviso: a telemetria não iniciou: ${(e as Error).message}`,
-    );
-  }
-
-  await server.firewall.check().catch(() => null);
+  for (const w of running.warnings) console.error(`  Aviso: ${w}`);
   if (cfg.dev) vite = spawnVite(() => stopping);
 
   const { lan, runtime } = server;

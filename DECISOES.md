@@ -1152,3 +1152,216 @@ pasta de dados deixam de ser coisas que o usuário decide.
   IP vazio = automático, e `liveFormatAuto`; o README já os descreve.
 - Redes /16 grandes: só o /24 do IP local é varrido (limite pedido); console em outra faixa do mesmo /16 não é achado
   sem fixar o IP.
+
+
+## Onda 7a — conexão, onboarding e ajustes
+
+Objetivo: o app 100% gráfico, "só abrir e usar". A web passa a consumir o que a Onda 6a expõe
+(`ServerStatus.consoleConnection`, `POST /api/discovery/scan`, `PATCH /api/settings` com `consoleIp`/`liveFormatAuto`).
+
+### Indicador e painel de conexão
+
+- **Lógica pura** em `web/src/lib/consoleLink.ts` (testada): `describeLink(ConsoleConnection | null)` devolve
+  `{ tone, title, short, detail, busy }`. Estados → texto/cor: `searching` = âmbar pulsando, "Procurando o PS5 na
+  rede…" (+ "N endereços testados"); `found` = âmbar, "Console encontrado (IP) — abra o Gran Turismo 7 e entre numa
+  pista"; `receiving` = verde, "Recebendo telemetria"; `lost` = amarelo, "Sinal perdido — reconectando…"; `idle` =
+  vermelho, "Telemetria parada" (usa o `hint` do servidor); `null` (servidor sem o campo) = amarelo neutro. O `hint` do
+  servidor tem prioridade sobre o texto padrão quando existe. `isValidIpv4` é estrito (4 octetos 0–255, sem zero à
+  esquerda, rejeita 0.0.0.0 e 255.255.255.255). `ipSourceLabel`: "encontrado automaticamente" / "fixado por você".
+- **Onde aparece:** painel ao vivo = `ConsoleChip` dentro de `.badges` (canto inferior esquerdo, longe do carrossel,
+  `data-no-gesture`, então tocar nele não aciona os gestos). Enquanto **recebe telemetria vira só um ponto verde** (alvo
+  de toque de ~28 px); nos demais estados mostra o texto curto. Área de análise = o mesmo chip no rodapé da barra
+  lateral e no topo no celular (substituiu o "pill" que mostrava só Na pista/No menu). A tela cheia "sem console" do
+  painel (`StatusLayer`) agora usa o estado real ("Procurando…", "Sinal perdido…"), com os botões "Procurar de novo" e
+  "Detalhes" e sem mandar o usuário "informar o IP no servidor".
+- **Painel de detalhes** (`components/ConsoleLink.tsx`, modal aberto por `openConnectionPanel()` no `uiStore`; os gestos
+  e as setas do painel ficam travados enquanto ele está aberto): status, IP + origem, redes verificadas, hosts testados
+  (só procurando), "último sinal" e "última busca" (relativos), **Procurar de novo** (`POST /api/discovery/scan`; já mostra
+  o estado devolvido sem esperar o próximo status), **Usar outro IP** (campo opcional, validação IPv4 com mensagem, texto
+  de onde achar o IP no PS5) e **Voltar ao automático** (só aparece com IP `manual`; `PATCH consoleIp: null`). O mesmo
+  `ConnectionDetails` é usado inline em Configurações.
+- As ações ficam em `net/consoleActions.ts` (usam `analysis/api.ts`, que é minúsculo e não carrega a área de análise).
+  Em `?mock=1` elas só avisam que é demonstração.
+
+### Onboarding (primeira abertura)
+
+- **Regras** em `web/src/lib/onboarding.ts` (testadas): `decideOnboarding` mostra só se **não** foi concluído, a fonte é
+  um servidor real (não `?mock=1`, não console simulado), **o histórico está vazio** (`GET /api/sessions?limit=1`) e o
+  estado do console é `searching`. `found/receiving/lost` = já achou, pula; `idle` = pula (porta ocupada, o assistente não
+  resolveria); espera o primeiro status + a contagem de sessões por até 4 s e, sem resposta, pula (erro ao ler o histórico
+  também pula: não incomodar). A decisão é tomada **uma vez** (`useOnboardingGate` em `main.tsx`) e fica travada até o
+  usuário terminar. `?onboarding=1` força (para ver/testar); Configurações › Sobre › "Rever o assistente" reabre.
+- **Persistência:** `localStorage["gt7.onboardingDone"] = "1"` ao terminar **ou pular** (pular também conta como
+  concluído: não reaparece). Cada aparelho decide sozinho (o celular tem outro localStorage; ele só mostra o assistente se
+  o histórico estiver vazio e o console ainda não tiver sido achado).
+- **Passos** (`components/Onboarding.tsx`, carregado sob demanda): (1) "Vamos achar o seu PS5" com radar animado e o
+  status ao vivo + hosts testados; muda **sozinho** para (2) quando o console é achado ("PS5 encontrado ✓", IP/origem,
+  QR de `/api/lan` + endereço copiável para pilotar no celular, "Continuar"); (3) "Tudo pronto!" com 4 dicas e o botão que
+  vai ao painel ao vivo. "Pular" e `Esc` em qualquer passo. Passando de **40 s** sem achar aparece o checklist de ajuda
+  (PS5 ligado/mesma rede, jogo numa pista, firewall com a mensagem e os comandos que o servidor já fornece em
+  `status.firewall`, nenhum outro programa de telemetria) com "Procurar de novo" e, só como último recurso, "informar o IP".
+- Respeita `prefers-reduced-motion`. O texto de status do passo 2 acompanha o estado: "Aguardando o jogo" (`found`),
+  "Recebendo telemetria", "Sinal perdido…".
+
+### Configurações (`#/config`)
+
+Seções em linguagem simples, âncoras `conexao`, `celular`, `dispositivos`, `coach`, `dados`, `mcp`, `sobre` (os antigos
+`console` e `lan` continuam funcionando como alias). Avançado fica em `<details>`:
+- **Conexão com o PS5:** painel de conexão (item acima), "Formato do pacote: automático (recomendado)" ligado a
+  `liveFormatAuto` (o interruptor só liga: para fixar um formato abre-se "Avançado", onde o rádio "Automático" volta),
+  gravar sessões brutas e referência padrão do delta (mantidos); **Avançado:** fixar formato ao vivo e formato da captura.
+  Sumiu o campo permanente "IP do PlayStation" (vive em "Usar outro IP").
+- **Celular:** QR + endereços copiáveis + firewall (inalterado). **Aparelhos conectados:** o antigo "Dispositivos".
+- **Coach IA:** chave e modelo como antes; esforço e nº de relatórios foram para "Avançado".
+- **Seus dados:** caminho real da pasta (de `/api/mcp/info.dataDir`) com botão copiar, aviso de backup e, no modo
+  demonstração, a explicação da subpasta `demo`.
+- **Integração com IA (MCP):** trechos prontos para copiar; HTTP/Claude Code e Claude Desktop primeiro, o resto em
+  "Avançado".
+- **Sobre:** versão, porta, token, "Rever o assistente" e o aviso de que não há relação com a Polyphony.
+- **Não existe no backend:** tamanho da pasta de dados e "excluir dados de demonstração" (não há endpoint). Por isso essas
+  duas coisas **não** foram feitas (nada de botão que não funciona). Pedido ao backend: `GET /api/data/info`
+  (`{ dir, bytes, simulator }`) e `DELETE /api/demo-data`.
+
+### Demonstração no navegador (`?mock=1`)
+
+`consoleConnection` simulado: `?mockConn=searching|found|receiving|lost|idle|cycle` (padrão `receiving`; `cycle` percorre
+searching → found → receiving → lost a cada 6 s). Fica em `uiStore.mockConnection`, atualizado a 1 Hz por `startMockLink`.
+`?mock=1&onboarding=1` mostra o assistente sobre a demonstração.
+
+### MCP stdio
+
+`packages/mcp/src/data-dir.ts` (`dataDirFromArgs`) substitui a função de `stdio.ts`: `--data`/`--data=` > `GT7_DATA` /
+`GT7_DATA_DIR` > `resolveDataDir()` de `@gt7/core` (a mesma pasta do app). Foi para um módulo próprio porque `stdio.ts`
+abre o banco ao ser importado, o que impossibilita testá-lo. `data-dir.test.ts` cobre a prioridade. README do mcp: `--data`
+virou opcional e os exemplos não passam mais `<repo>\data`. O backend ainda gera os trechos de `/api/mcp/info` com
+`--data <pasta>` explícito (continua válido, só é redundante).
+
+### Verificado e não verificado
+
+- Verificado no navegador embutido (Vite dev + servidor real com pasta de dados temporária e o **PS5 real** na rede,
+  que foi achado sozinho): chip nos estados `searching/found/receiving/lost`, painel (validação do IP, "Procurar de novo"
+  real), tela cheia "sinal perdido", Configurações completas, assistente (passo 1 em mock, passo 2 com QR real, checklist
+  após 40 s), 375 px sem overflow horizontal no painel ao vivo.
+- **Não verificado:** o disparo automático do assistente contra um servidor realmente em `searching` (o PS5 do teste
+  respondia na hora; a regra está coberta só por teste unitário); "Voltar ao automático" e "Usar outro IP" contra o
+  servidor real (só a validação); celular real/PWA; leitor de tela.
+- Limitação conhecida: o chip do painel ao vivo divide a linha com o selo "Demonstração" e, em telas bem estreitas, encosta
+  nos pontinhos de paginação.
+
+
+## Onda 7b — app desktop (Electron)
+
+Meta: depois do `npm start`, um aplicativo que o usuário só abre. Pacote novo `packages/desktop` (`@gt7/desktop`);
+o servidor ganhou uma função programática e o `main.ts` virou uma CLI fina em cima dela.
+
+### Electron, não Tauri
+
+O backend é Node (UDP, `node:sqlite`, Fastify, MCP). Tauri exigiria reescrever tudo em Rust ou embutir e supervisionar
+um Node à parte (mais peças, mais uma fonte de erro). Com Electron o servidor roda **no próprio processo principal**,
+com o mesmo código do `npm start`. O custo é o tamanho (~110 MB por instalador), aceito.
+
+### Viabilidade (verificada, não presumida)
+
+- **Electron 45.2.3** (a estável mais recente em 2026-11) embute **Node 24.22.2** (Chromium 156) e `require('node:sqlite')`
+  funciona **sem flag** no processo principal (SQLite 3.53.4, `journal_mode=wal`, UDP `dgram` também). Testado instalando o
+  Electron e rodando um script mínimo; depois confirmado de ponta a ponta no app empacotado (o banco abre em
+  `%APPDATA%\GT7 Race Engineer` com `-wal`/`-shm`). Por isso **não** foi preciso o plano B (servidor como processo filho
+  com outro Node). Se uma versão futura do Electron voltar a embutir um Node sem `node:sqlite`, o plano B é
+  `utilityProcess`/`child_process` com o Node do sistema; a API `startServer` já isola o servidor para isso.
+- A versão do Electron está **fixa** (`45.2.3`, sem `^`): o electron-builder exige versão exata, e um Electron novo
+  pode trocar o Node embutido.
+- **Sem `tsx` em produção:** `scripts/build.ts` gera **um bundle CJS** (`dist/main.cjs`, ~5 MB) com esbuild, juntando o
+  processo principal, `@gt7/server` e todos os pacotes do workspace (que exportam `.ts`). `import.meta.url` (usado só em
+  `config.ts` para achar a raiz do repositório, irrelevante no app) é trocado por um shim. esbuild é JS puro, sem
+  compilação nativa. O painel (`packages/web/dist`, compilado se faltar/estiver velho, com a mesma regra do `npm start`)
+  é copiado para `dist/web`, e o servidor o serve de dentro do `app.asar` (testado).
+- **Dependência nativa única: `@resvg/resvg-js`** (PNG dos gráficos do MCP; binário pré-compilado por plataforma, aqui
+  `@resvg/resvg-js-win32-x64-msvc`). Decisões: (1) fica **fora** do bundle e `asarUnpack: **/node_modules/@resvg/**`
+  o entrega em `app.asar.unpacked` (um `.node` não carrega de dentro do asar); (2) o import é trocado por
+  `src/resvg-lazy.ts`, que só carrega o módulo real no 1º uso — se ele não carregar numa máquina, só o gráfico PNG do
+  MCP falha (erro normal da ferramenta), o app abre. Verificado: no `.exe` empacotado (modo `ELECTRON_RUN_AS_NODE`)
+  `createRequire(<asar>/dist/main.cjs)('@resvg/resvg-js')` carrega e renderiza um PNG. Limite: o pacote é só
+  **win32-x64** (o pacote de plataforma é uma `optionalDependency` instalada só para a máquina atual).
+
+### `startServer` (servidor)
+
+- `packages/server/src/run.ts` (novo): `startServer({ config, prepare?, startRuntime?, runtimeOverrides?, appOverrides? })` faz
+  o que o `npm start` fazia sem o terminal: escolhe a porta (`pickPort`) **ou anexa** a uma instância do mesmo modo que
+  já responde, cria o app, escuta, sobe o console falso (demo) e o runtime UDP, checa o firewall. Devolve
+  `{ attached, config, port, url, portNote, server, demo, warnings, stop() }` (`stop` idempotente). Falhas →
+  `StartServerError` (`kind`: `port-busy` | `data` | `listen`) com mensagem em pt-BR. Exportada de `@gt7/server`.
+- `main.ts` agora só: lê a config, migra dados antigos, passa `prepare` (compilar o painel, só quando vai subir um
+  servidor de verdade), imprime banner/avisos, trata sinais, Vite e navegador. Comportamento do `npm start`/`demo`/`dev`
+  mantido (testado à mão: demo sobe, segunda abertura "já está aberto" e sai com 0, porta explícita ocupada sai com 1). Mudanças
+  de texto: as mensagens de erro de inicialização saem como `Erro: <mensagem>` (antes havia três redações próprias).
+- Teste de rede `server/src/run.test.ts` (portas 49900+): sobe e responde com o cabeçalho de identidade, `stop`
+  idempotente, pula porta ocupada e explica, **anexa** a instância existente sem chamar `prepare`, erro amigável com
+  porta explícita ocupada.
+
+### O app (`packages/desktop`)
+
+- **Instância única** (`requestSingleInstanceLock`): a 2ª abertura sai e a 1ª só mostra/foca a janela. **Anexar**: se um
+  `npm start` (mesmo modo `real`) já ocupa a porta, o app usa esse servidor; "Sair" não o encerra. É o único jeito seguro:
+  dois servidores brigariam pela UDP 33740 e pelo mesmo banco. O app **não** é "demo".
+- **Dados na pasta do usuário** (`defaultDataDir()` de `@gt7/core`, a mesma do CLI); a pasta `userData` do Electron foi
+  movida para `%LOCALAPPDATA%\GT7 Race Engineer` (mac: `… Desktop`, Linux: `~/.config/gt7-race-engineer-desktop`) para que
+  nenhum cache do Chromium caia na pasta de dados. Como o servidor usa `parseConfig`, `GT7_DATA`/`GT7_PORT`/`GT7_PS_IP`/
+  `GT7_TOKEN`… continuam valendo (útil para testar com dados isolados).
+- **Janela:** `BrowserWindow` sem menu (`removeMenu`, atalhos F5/Ctrl+R/F11/zoom tratados à mão), título fixo "GT7 Race
+  Engineer" (o `<title>` do painel não o troca), tamanho/posição/maximizado salvos (`desktop-state.json`, regra pura em
+  `window-state.ts`: sem posição se o monitor sumiu, tamanho limitado à maior tela). Abre na hora a tela "Iniciando…"
+  (HTML local, sem script/rede) e troca pelo painel quando o servidor responde; falha → página de erro em pt-BR
+  com **Tentar de novo** / **Fechar o app** (links `gt7-app://retry|quit`, interceptados no `will-navigate`, sem preload).
+  Endereço aberto: `http://127.0.0.1:<porta>/` (a porta que o servidor escolheu). Efeito colateral: o `localStorage` do
+  painel é por origem (inclui a porta); se a porta mudar entre execuções, as preferências visuais locais recomeçam.
+- **Bandeja:** fechar a janela só a esconde (aviso único "continua em segundo plano"); menu: *Abrir*, *Copiar endereço do
+  celular* (`lan.preferredUrl()`, ou `lanUrls[0]` de `/api/status` quando anexado; atualiza a cada 30 s), *Iniciar com o
+  Windows* e *Sair*. "Sair" para o servidor (UDP, banco) com limite de 6 s e termina o processo. **Iniciar com o Windows**:
+  desligado por padrão, `setLoginItemSettings` com `--hidden` (abre só na bandeja); no pacote portátil registra o caminho
+  real do `.exe` (`PORTABLE_EXECUTABLE_FILE`, não a pasta temporária); desabilitado no modo de desenvolvimento.
+- **Segurança:** `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`, **sem preload**; `will-navigate` só
+  admite o próprio servidor (loopback + porta exatos, `isInternalUrl`), todo o resto cancela e, se for http(s), abre no
+  navegador do sistema (`shell.openExternal`, nunca `file:`/`javascript:`/protocolos exóticos); `window.open` negado
+  (idem); `webview` bloqueado; permissões negadas exceto tela cheia e escrita na área de transferência, e só para o
+  próprio servidor. O guarda de origem do servidor (mesmo host na `Origin` e no `Host`) continua válido: a janela e o
+  servidor usam `127.0.0.1`. Service workers e cache storage são limpos a cada abertura (o painel registra um SW de PWA
+  para o celular; no app só arriscaria servir uma versão antiga após atualizar).
+- **Ícone:** gerado por `scripts/icons.ts` (SVG de velocímetro nas cores do painel → `@resvg` → `icon.png` 512,
+  `tray.png` 32 e `icon.ico` 16…256 com entradas PNG, montado à mão). O `.ico` é embutido no `.exe` (verificado: ícone,
+  nome de produto e versão corretos).
+- **Log:** `%LOCALAPPDATA%\GT7 Race Engineer\logs\desktop.log` (1 MB, rotaciona para `.old`), pois o app empacotado não
+  tem console. Exceções soltas são registradas e ignoradas, como no CLI.
+
+### Empacotamento
+
+- `npm run desktop` (dev: compila e abre o Electron), `npm run desktop:build` (só o bundle), `npm run desktop:dist`
+  (electron-builder). O `desktop`/`desktop:dist` baixam o binário do Electron se o `npm install` o pulou (aconteceu aqui:
+  `node node_modules/electron/install.js` resolve, e os scripts já fazem isso).
+- **Alvos:** NSIS "um clique", **por usuário** (`perMachine: false`, `allowElevation: false`: sem UAC), e `portable`. Sem
+  assinatura de código (`CSC_IDENTITY_AUTO_DISCOVERY=false`): o SmartScreen avisa na 1ª vez. O electron-builder 26 empacotou sem
+  precisar do `winCodeSign` (que falha sem privilégio de symlink no Windows), ou seja, **funciona sem modo desenvolvedor**.
+  `deleteAppDataOnUninstall: false`: desinstalar nunca apaga o histórico.
+- Tamanhos medidos (gerados nesta máquina): instalador **~110 MB** (115,2 milhões de bytes), portátil **~100 MB**, `win-unpacked` ~330 MB
+  (Electron 238 MB + asar ~6 MB). `electronLanguages` reduzido a pt-BR/en-US.
+- O pacote portátil leva ~15–25 s na primeira abertura (extrai ~330 MB para a pasta temporária); o instalador é a
+  forma recomendada.
+
+### Testes e verificação
+
+- Vitest (unitários, sem Electron): `desktop/src/{paths,window-state,pages,state-file}.test.ts` (pastas por plataforma,
+  endereço, `isInternalUrl` com sósias de domínio/esquemas, ações da página de erro, janela fora da tela, HTML escapado, arquivo de estado
+  corrompido) + `server/src/run.test.ts` (rede).
+- **Verificado manualmente** (Electron em modo dev **e** o `.exe` empacotado, com `GT7_DATA`/`LOCALAPPDATA`/`APPDATA`
+  isolados, controlado por DevTools Protocol em `--remote-debugging-port`): servidor sobe e `/api/status` responde; janela
+  abre no painel (captura de tela conferida); `process`/`require` indefinidos na página; título fixo; fechar (WM_CLOSE) esconde e o
+  servidor continua; 2ª instância sai e traz a janela; porta ocupada por outro programa → página de erro, **Tentar de
+  novo** repete, **Fechar o app** encerra; anexar a instância existente; "Sair" encerra o servidor e o processo; dados caem em
+  `%APPDATA%\GT7 Race Engineer`; `@resvg` carrega do `app.asar.unpacked`; `npm run demo`/`npm start` seguem como antes.
+- **Não verificado:** o ícone e o menu da **bandeja** (não há como enxergá-la sem controle da tela; o código só foi
+  exercitado até a criação do `Tray`), o balão de notificação, *Copiar endereço*, *Iniciar com o Windows* (registro de login),
+  a instalação/desinstalação do instalador NSIS (não instalei para não alterar o sistema do usuário), o ícone do atalho
+  instalado, a abertura em outras plataformas (mac/Linux: o código evita o que é só-Windows, mas só há alvo Windows), o
+  comportamento com o console real (o app só empacota o que já existia), SmartScreen real, antivírus.
+- **Pendência/risco:** o servidor roda no processo principal do Electron (que também cuida das janelas); sob carga
+  extrema do servidor, mover para `utilityProcess` isolaria a interface (a API `startServer` permite). Atualização
+  automática não existe (reinstalar por cima).

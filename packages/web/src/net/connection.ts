@@ -6,6 +6,7 @@
  */
 
 import { type ClientMessage, type ServerMessage, WS_PATH, WS_PROTOCOL_VERSION } from '@gt7/shared';
+import { mockConsoleConnection, parseMockConn } from '../lib/consoleLink.ts';
 import { reconcileProfiles } from '../lib/profile.ts';
 import { live } from '../live/liveStore.ts';
 import { MockSession } from '../live/mock.ts';
@@ -19,6 +20,7 @@ import { WsClient, wsUrlFor } from './wsClient.ts';
 let ws: WsClient | null = null;
 let mockTimer: ReturnType<typeof setInterval> | null = null;
 let mock: MockSession | null = null;
+let mockLinkTimer: ReturnType<typeof setInterval> | null = null;
 
 /** Failed attempts before the dev build falls back to the mock automatically. */
 const AUTO_MOCK_AFTER_ATTEMPTS = 2;
@@ -86,6 +88,7 @@ export function startMock(auto: boolean): void {
   setSessionId('mock', false);
   useUi.setState({ source: 'mock', mockAuto: auto });
   setSender(handleMockClientMessage);
+  startMockLink(params.get('mockConn'));
   let last = performance.now();
   mockTimer = setInterval(() => {
     const now = performance.now();
@@ -106,7 +109,22 @@ export function startMock(auto: boolean): void {
   }, 1000 / 60);
 }
 
+/** Simulated console link for the demo: `?mockConn=searching|found|receiving|lost|idle|cycle`. */
+function startMockLink(param: string | null): void {
+  const mode = parseMockConn(param);
+  const t0 = Date.now();
+  const tick = () =>
+    useUi.setState({ mockConnection: mockConsoleConnection(mode, Date.now() - t0) });
+  tick();
+  if (mockLinkTimer) clearInterval(mockLinkTimer);
+  // Only the cycle (and the searching counter) change over time.
+  mockLinkTimer = setInterval(tick, 1000);
+}
+
 export function stopMock(): void {
+  if (mockLinkTimer) clearInterval(mockLinkTimer);
+  mockLinkTimer = null;
+  useUi.setState({ mockConnection: null });
   if (mockTimer) clearInterval(mockTimer);
   mockTimer = null;
   mock = null;

@@ -8,6 +8,7 @@ import {
   OverlayHeader,
   SourceBadge,
 } from './components/Chrome.tsx';
+import { ConsolePanelHost } from './components/ConsoleLink.tsx';
 import { LapPopup } from './components/LapPopup.tsx';
 import { LayoutEditor } from './components/LayoutEditor.tsx';
 import { StatusLayer } from './components/StatusLayer.tsx';
@@ -27,7 +28,7 @@ import { useUi } from './state/uiStore.ts';
 
 function onGesture(g: GestureOutput): void {
   const s = useUi.getState();
-  if (s.pickerOpen || s.layoutEditorOpen || s.profile.locked) return;
+  if (s.pickerOpen || s.layoutEditorOpen || s.profile.locked || s.connectionPanelOpen) return;
   if (g === 'tap') showOverlay();
   else if (g === 'doubleTap') {
     if (!handleDoubleTapOverride()) cycleDeltaReference();
@@ -42,7 +43,8 @@ function onKey(e: KeyboardEvent): void {
     else if (s.pickerOpen) closePicker();
     return;
   }
-  if (s.pickerOpen || s.layoutEditorOpen) return;
+  if (s.pickerOpen || s.layoutEditorOpen || s.connectionPanelOpen || s.onboarding === 'active')
+    return;
   if (e.key.toLowerCase() === 'l') {
     setLocked(!s.profile.locked);
     return;
@@ -78,6 +80,7 @@ export function App() {
       <Notices />
       <ViewPicker />
       <LayoutEditor />
+      <ConsolePanelHost />
     </div>
   );
 }

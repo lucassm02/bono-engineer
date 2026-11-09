@@ -6,6 +6,7 @@ import { CONNECTION_STATE_LABELS, DELTA_REFERENCE_LABELS, VIEW_LABELS } from '..
 import { goToView, setLocked } from '../state/actions.ts';
 import { addNotice, dismissNotice, useUi } from '../state/uiStore.ts';
 import { animateStep } from './Carousel.tsx';
+import { ConsoleChip } from './ConsoleLink.tsx';
 
 export function OverlayHeader() {
   const visible = useUi((s) => s.overlayVisible);
@@ -171,6 +172,7 @@ export function SourceBadge() {
   const state = useUi((s) => s.liveState);
   return (
     <div className="badges" aria-live="polite">
+      <ConsoleChip variant="live" />
       {source === 'mock' && (
         <span className="badge badge-demo">
           {auto ? 'Demonstração (sem servidor)' : 'Demonstração'}

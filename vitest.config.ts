@@ -8,6 +8,7 @@ const NETWORK_TESTS = [
   'packages/protocol/src/discovery.integration.test.ts',
   'packages/server/src/app.test.ts',
   'packages/server/src/startup.test.ts',
+  'packages/server/src/run.test.ts',
 ];
 
 export default defineConfig({

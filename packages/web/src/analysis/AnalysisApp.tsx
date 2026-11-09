@@ -4,7 +4,7 @@
  */
 
 import { Component, type ReactNode, useEffect } from 'react';
-import { CONNECTION_STATE_LABELS } from '../lib/labels.ts';
+import { ConsoleChip, ConsolePanelHost } from '../components/ConsoleLink.tsx';
 import type { Route } from '../lib/route.ts';
 import { routes } from '../lib/route.ts';
 import { dismissNotice, useUi } from '../state/uiStore.ts';
@@ -144,31 +144,18 @@ class PageBoundary extends Component<
   }
 }
 
+/** Server + console link in one clickable indicator (details panel on click). */
 function ConnectionPill() {
   const ws = useUi((s) => s.wsStatus);
   const source = useUi((s) => s.source);
-  const status = useUi((s) => s.serverStatus);
-  const live = useUi((s) => s.liveState);
-  if (source === 'mock') {
-    return (
-      <span className="a-pill" data-state="warn" title="O painel está em modo demonstração">
-        Demonstração
-      </span>
-    );
-  }
-  if (ws !== 'open') {
+  if (source !== 'mock' && ws !== 'open') {
     return (
       <span className="a-pill" data-state="bad">
         Sem servidor
       </span>
     );
   }
-  const conn = live ?? status?.connection ?? null;
-  return (
-    <span className="a-pill" data-state={conn === 'onTrack' || conn === 'replay' ? 'ok' : 'idle'}>
-      {conn ? CONNECTION_STATE_LABELS[conn] : 'Servidor conectado'}
-    </span>
-  );
+  return <ConsoleChip variant="bar" />;
 }
 
 function Toasts() {
@@ -278,6 +265,7 @@ export default function AnalysisApp({ route }: { route: Route }) {
         </PageBoundary>
       </main>
       <Toasts />
+      <ConsolePanelHost />
     </div>
   );
 }
