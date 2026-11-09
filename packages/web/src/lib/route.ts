@@ -11,6 +11,7 @@
  *   #/captura                         reference capture
  *   #/config                          settings
  *   #/coach[/:reportId]?session=&lap=&ref=&corner=   AI coach
+ *   #/guia?q=&classe=&topico=         driving guide (coach knowledge base)
  */
 
 export type RouteName =
@@ -23,6 +24,7 @@ export type RouteName =
   | 'capture'
   | 'config'
   | 'coach'
+  | 'guide'
   | 'notFound';
 
 export interface Route {
@@ -85,6 +87,7 @@ export function parseRoute(hash: string): Route {
   }
   if (a === 'captura' && segs.length === 1) return r('capture');
   if (a === 'config' && segs.length === 1) return r('config');
+  if (a === 'guia' && segs.length === 1) return r('guide');
   if (a === 'coach') {
     if (segs.length === 1) return r('coach');
     if (b && segs.length === 2) return r('coach', { id: b });
@@ -125,6 +128,8 @@ export const routes = {
   track: (id: string, q: { session?: string; tab?: string } = {}) =>
     href(`/analise/pista/${encodeURIComponent(id)}`, { session: q.session, tab: q.tab }),
   capture: () => href('/captura'),
+  guide: (q: { q?: string; classe?: string; topico?: string } = {}) =>
+    href('/guia', { q: q.q, classe: q.classe, topico: q.topico }),
   config: (section?: string) => href('/config', { s: section }),
   coach: (q: { id?: string; session?: string; lap?: string; ref?: string; corner?: string } = {}) =>
     href(q.id ? `/coach/${encodeURIComponent(q.id)}` : '/coach', {

@@ -1409,7 +1409,7 @@ FakeConsole).
   horas "aberta"). Agora `LiveEngine.tick(now)` roda a cada 5 s (timer do runtime, `unref`, parado no `stop()`) e fecha a
   sessão quando o silêncio passa de 10 min, com fim no último pacote; as voltas completas já eram salvas a cada volta.
   Reconexão depois de horas (contador de pacotes recomeça) abre sessão nova sem travar (testado com FakeConsole).
-- **Replay (g):** não cria sessão de piloto **como antes**: durante a captura de referência o motor está em modo replay
+- **Replay (g) — a detecção abaixo foi substituída na Onda 9a (o app agora detecta o replay sozinho):** não cria sessão de piloto **como antes**: durante a captura de referência o motor está em modo replay
   (sessão `replayCapture`, voltas marcadas `replay`, fora dos recordes pessoais). **O app não detecta replay sozinho** (o
   jogo não o sinaliza de forma que eu possa verificar sem console): um replay assistido sem captura continua parecendo uma
   sessão normal. Decisão: não inventar uma heurística que possa jogar fora corridas reais. O estado `replay` do chip só
@@ -1541,3 +1541,323 @@ Objetivo: nunca mais procurar "Carro 1234": lista completa de carros do GT7 por 
   ao vivo não renderiza lá; só typecheck), toque real/rolagem fluida em celular de verdade, leitor de tela, o `carCode` real do
   console, e a aparência de cada um dos 36 logos em tamanho pequeno (vistos só alguns). Nome em português dos carros não existe
   na fonte (só inglês).
+
+
+## Onda 9a — replay real
+
+Problema medido no PS5 do usuário (formato `~` e também `B`): **durante um replay** o jogo manda os dados do carro (velocidade,
+rpm, marcha, pedais, posição x/y/z coerente com a velocidade, G, pneus) a ~60 Hz em tempo real, **mas** `carOnTrack` é falso (os
+flags só trazem `inGear`/`revLimiterAlert`), `currentLapMs` = 0, `lastLapMs`/`bestLapMs` vazios e `lapCount` fica em 0 (parado) ou 1
+(rodando) sem avançar; o formato `B` entrega o mesmo. Efeito no app: o motor classificava tudo como `menu` (o painel dizia "No
+menu") e a captura de referência **nunca começava** (esperava voltas completas do motor). A Onda 8a tinha decidido "não detectar
+replay sozinho"; com o quadro real medido, a decisão mudou. Código: `core/src/live/live-engine.ts`,
+`core/src/capture/reference-capture.ts`, `core/src/runtime/runtime.ts`, `protocol/.../synthetic/session.ts`,
+`server/src/routes/capture.ts`, arquivos pontuais em `web/`.
+
+### 1. Detecção de replay no motor
+
+- Um pacote é "dado de carro de replay" (`carData`) se: `carOnTrack` falso, não está carregando nem pausado, `carCode != 0` e a
+  posição não é (0,0,0). É **replay em reprodução** (`ReplayKind 'playing'`) se, além disso, `speed > 2 m/s` e a posição **muda**
+  (menos de 4 pacotes seguidos com a mesma posição). Estado de conexão `replay` (já existia no tipo `ConnectionState`).
+- Efeitos: **nenhuma sessão de piloto é aberta**, o tempo de pista não conta, nada é gravado nas voltas do piloto (a volta cronometrada
+  em andamento, se houver sessão aberta, é descartada como `leftTrack`; ao voltar à pista começa uma volta nova). Os frames ao vivo
+  seguem normalmente (velocidade, pedais, mapa) com `state: 'replay'`.
+- **Pausa/rebobinar/avanço do replay** (a posição para ou salta): o replay fica `stalled` por até 3 s (o estado não pisca) e depois
+  cai para `menu`; para a captura, ver abaixo. **Menu/garagem** (pacotes zerados, `carCode` 0) continua `menu`; o **quadro congelado
+  com `carOnTrack` ligado** (8a) continua sendo pausa. Carro parado antes do replay começar (speed 0, posição constante) é `menu`.
+- Novo evento `LiveEngine 'packet'` (`EnginePacketInfo`: pacote, `receivedAt`, `dPk`, `recvGap`, `carData`, `replay`, `samePosition`,
+  `msPerPacket`, g) montado só se alguém escuta; é por onde a captura segue o fluxo bruto. `captureInfo.replay` agora é "replay
+  detectado ou modo replay legado"; `setReplayMode` continua existindo (testes de ciclo de vida), mas **a captura não o usa mais**.
+- `sessionCapture.state === 'replay'` (chip) agora aparece **sozinho** durante qualquer replay, com a dica "Replay detectado — não
+  conta como sessão." (e, com captura armada, "…captura de referência em andamento…").
+
+### 2. Captura de referência por geometria (reescrita)
+
+Não depende mais de `lapCount`, `currentLapMs`, `carOnTrack` nem de voltas do motor.
+- **Pista:** `trackId` opcional no `POST /api/capture/start` (validado: 400 se não existe) ou descoberta pela posição: para cada
+  pista conhecida (com linha central) mede-se a distância do carro à linha central (busca completa, 1 de cada 3 pacotes em
+  movimento); trava quando ≥ 90 % das últimas ≥ 30 medidas ficam a ≤ 20 m; se várias, a de **menor distância média**. Sem
+  nenhuma após ~60 medidas (≈ 3 s em movimento) ou sem pistas: `waiting: 'unknownTrack'` + dica "Pista desconhecida — dirija essa
+  pista ao vivo primeiro…". Longe (> 100 m) da pista travada por 1 s: destrava (ou `track`, se a pista foi escolhida).
+- **Linha de largada/chegada:** a origem da linha central (s = 0) é o 1º ponto da volta que criou a pista, ou seja, a linha. O
+  progresso do carro é projetado na linha (janela local, desenrolado) e a cada passagem por um múltiplo do comprimento há um
+  cruzamento; o instante é **interpolado entre os dois pacotes** (fração do `packetId` e do `receivedAt`). Um replay que começa
+  logo depois da linha (≤ 1,5 pacote de percurso, > 36 km/h) também vale (cruzamento estimado por distância/velocidade).
+  Observação: o tempo de volta = diferença entre dois cruzamentos **do mesmo ponto**, então um pequeno deslocamento da origem
+  (até ~1 pacote) não muda o tempo.
+- **Tempo:** `(packetId_fim − packetId_início) × msPerPacket` com pontas fracionárias; `msPerPacket` é o do motor (nominal 16,667,
+  calibrado pelas voltas ao vivo). Nunca o relógio do jogo. Medido em testes com jitter de ±4 ms no `receivedAt`: erro ≤ 2 ms na
+  geração sintética (o teste exige < 25 ms). No console real o erro esperado é ±1–2 pacotes (≈ ±30 ms) por perda/quantização.
+- **Validade:** do cruzamento de largada ao de chegada **sem** pausa (≥ 4 pacotes com a mesma posição ou silêncio > 0,5 s com
+  poucos `packetId`), salto (deslocamento > 15 m + 2,5× o alcance pela velocidade), volta atrás ou perda de pacotes enorme (> 1,5 s)
+  — essas quebras **descartam a volta em andamento** (`invalid` com `paused`/`discontinuity`) e a captura espera o próximo
+  cruzamento. Ao fechar: comprimento ±2 % da pista, perda < 0,5 % e nenhum buraco > 6 pacotes, carro esperado, **velocidade 1×**
+  (nova verificação `notRealtime`: velocidade implícita × reportada fora de 0,85–1,15 ou tempo por pacotes × relógio de parede
+  com diferença > max(400 ms, 2 %)) e, se digitado, tempo do ranking ±300 ms (`timeMismatch`). Volta inválida **não é gravada**
+  (antes ficava como volta de replay comum); a próxima começa no mesmo cruzamento.
+- **Tempo do ranking × medido:** o status traz `measuredLapMs`, `rankingTimeMs` e `diffMs` (medido − digitado) mesmo quando
+  rejeitada. Se foi digitado e bateu, a volta é salva **com o tempo do ranking** (o oficial, exato) e a coluna de tempo do
+  trace é reescalada por `ranking / medido`; `ReferenceMeta.timeSource = 'ranking'`. Sem tempo digitado: aceita e salva o
+  medido, `timeSource = 'packets'` ("medido por pacotes"). Em ambos `ReferenceMeta.measuredTimeMs` guarda o medido.
+- **Gravação:** sessão própria `replayCapture` (1 volta, `trackTimeMs` 0) + volta `flags: ['replay']`, `isReference` +
+  `ReferenceMeta`, com o **mesmo trace** das voltas ao vivo (mesmos canais; `distanceM` alinhado à linha central; forças G do
+  estimador do motor; setores por `computeSectorTimes`), então comparação, análise, delta ao vivo ("Top capturado") e MCP
+  funcionam. O motor recarrega a referência "melhor da pista" ao fim (`LiveEngine.refreshReference`). Combustível `null`.
+- Status (`ReferenceCaptureStatus`, campos novos **opcionais**): `waiting` (`replay | track | unknownTrack | startLine`),
+  `replayDetected`, `trackId`, `trackName`, `recordingMs`, `lapFraction`, `measuredLapMs`, `rankingTimeMs`, `diffMs`,
+  `timeSource`, `hint` (pt-BR). Códigos de `issues` novos: `notRealtime`, `interrupted` (replay acabou antes de fechar a volta).
+  `state` mantém os mesmos valores (`switchingFormat` só aparece com o gancho opcional).
+
+### 3. Sem troca de formato
+
+A captura **não troca mais o formato do pacote** (antes: `B`, espera de ~15 s, restauração). O gancho `enter`/`exit` de
+`ReferenceCapture` continua opcional; o runtime só o liga com a opção `switchFormatOnCapture: true` (padrão `false`).
+`captureFormat` (configuração/`PATCH /api/settings`) continua existindo mas só vale nesse modo; a UI de Configurações perdeu
+o grupo "Formato da captura de replay" (virou uma frase). Também some a dependência do formato `B`, indisponível no Sport Mode
+online segundo relatos. Com isso o ciclo automático de formatos já não é pausado durante a captura.
+
+### 4. Interface (pontual)
+
+- Painel ao vivo, estado `replay`: selo **REPLAY** (já existia como "Replay") e um aviso discreto (`ReplayNotice`, acima das
+  etiquetas, 2 linhas) com o botão **Capturar esta volta como referência** → `#/captura` (com captura armada mostra a dica
+  dela e "Ver a captura"). Os widgets seguem com os dados do replay. (O texto "Volta inválida"/"Volta 1" do cabeçalho do painel
+  continua aparecendo no replay: não mexi nos widgets.)
+- Chip (`CaptureStatus` + `captureStatus.ts`): "Replay detectado — não conta como sessão" e, com captura armada, "Capturando ·
+  aguardando o replay / identificando a pista / pista desconhecida / aguardando linha de largada / gravando volta 0:45 /
+  validando" (na análise é link para `#/captura`).
+- `#/captura`: três passos curtos (abrir o replay, deixar tocar sem pausar/voltar/avançar a 1×, digitar o tempo do ranking),
+  campo opcional **Pista** (lista das pistas conhecidas), progresso (aguardando › linha › gravando 0:45 + barra › validando),
+  aviso claro de pista desconhecida e resultado com **medido × digitado × diferença** e a origem do tempo salvo.
+
+### 5. Simulador e testes
+
+- `generateLaps/SyntheticSession` com `replay: true` (e `--sim-replay`) emite agora **como o console real**: `carOnTrack` falso
+  (flags só `inGear`/`revLimiterAlert`), `lapCount` fixo em 1, `currentLapMs` 0, `lastLapMs`/`bestLapMs` vazios; com menu, os
+  pacotes são zerados (speed 0, posição 0, `carCode` 0, flags 0). `generateLaps` agora corta pelo contador interno da sessão.
+- Testes novos/atualizados: `core/src/live/replay-detection.test.ts` (replay × menu × quadro real × parado × congelado × pausa
+  × sessão do piloto intacta × evento `packet`), `core/src/capture/reference-capture.test.ts` (reescrito: volta completa com
+  erro < 25 ms sem sessão de piloto, tempo digitado aceito/rejeitado + diferença, início no meio da volta, pausa → volta
+  descartada e próxima capturada, pausa sem volta limpa depois, rebobinar, não-1×, pista desconhecida, layout diferente,
+  `trackId` explícito, replay depois de dirigir), `runtime/capture.test.ts` (runtime: replay detectado + captura sem trocar
+  formato), `runtime/runtime.test.ts` (UDP/FakeConsole com gravação de replay: sem `switchingFormat`), `web` (`captureStatus`),
+  `server/app.test.ts` (`trackId` inexistente → 400), `analysis/src/test-utils.ts` (as fixtures de replay pegam o número da volta
+  de uma sessão gêmea sem replay, pois num replay real o `lapCount` não avança).
+- Migração SQLite **v4** (`reference_meta.time_source`, `reference_meta.measured_time_ms`, ambas nulas nas referências
+  antigas). Aditiva, mas uma versão **antiga** do app não abre um banco já migrado ("schema mais novo").
+
+### Não verificado com o console real
+
+- Nenhum fluxo foi visto com um PS5: tudo usa o gerador sintético (agora com o formato real dos flags), um quadro real isolado
+  (classificado como `replay` em teste) e o FakeConsole local. Não sei: como o replay real **pausa/rebobina/avança** (pacotes
+  parados? silêncio? `speed` zerado?) — a detecção cobre posição repetida, silêncio e salto, mas é hipótese; se o replay real
+  de Time Trial **começa parado antes da linha** ou **começa exatamente na linha** (o 1º cruzamento pode ser perdido; vale a
+  volta seguinte); se `receivedAt` no PC real tem jitter que dispare `notRealtime` (limite 400 ms/2 %); a precisão do tempo por
+  pacotes em ~60 Hz reais (±1–2 pacotes esperado); a distância de 20 m na identificação da pista (linha central aprendida de
+  uma volta ao vivo vs. a linha do replay do top); se o jogo manda o replay a 60 Hz também em Sport Mode/online.
+- A origem da linha central é o 1º pacote de uma volta de piloto; o erro da posição dessa "linha" não afeta o tempo (cruzamentos
+  do mesmo ponto), só o início/fim exatos do trecho gravado (≤ ~1,5 m).
+
+
+## Onda 9c — base de conhecimento de pilotagem
+
+Objetivo: o coach (chat do app e MCP) sugerir ações específicas à **classe do carro** e ao **diagnóstico** medido, com fonte e
+honestidade sobre incerteza. Não existe base aberta pronta (confirmado em `docs/pesquisa/frenagem-referencias-e-conhecimento.md`):
+tudo foi escrito aqui, resumindo com palavras próprias.
+
+### Estrutura (`packages/shared/src/knowledge/`, TS puro, sem rede, isomórfico)
+
+- `types.ts`, `sources.ts` (16 fontes: URL, editor, data de consulta 2026-11-09, **como foi acessada**), `general.ts` (11 tópicos de
+  princípios + conselho por tipo de curva `hairpin/slow/medium/fast/kink/chicane` + regras do coach), `classes.ts` (Gr.1, Gr.2, Gr.3,
+  Gr.4, Gr.B, N, X), `diagnostics.ts` (23 códigos), `setup.ts` (regras + 9 sintomas → direção do ajuste), `glossary.ts` (29 termos
+  pt-BR/inglês), `index.ts` (`knowledgeFor`, `knowledgeBrief`, `knowledgeIndex`, `knowledgeTopic`, `searchKnowledge`, `knowledgeStats`).
+- Tamanho: **46 tópicos**, 131 afirmações com selo de base, 102 textos "por classe" nos diagnósticos; ~84 KB de fonte TS ≈ 70 KB de
+  Markdown se tudo fosse impresso. O resumo que vai ao modelo é pequeno: padrão **≤ 6.000 caracteres** (≈ 1.500 tokens), medido em
+  3,4 KB no pior caso (23 códigos) e ~2,8 KB só com a classe.
+- **Cada afirmação tem um selo** (`basis`): `regra-geral` (princípio de pilotagem/física, não validado no GT7 por este app),
+  `depende-do-carro`, `fonte` (resumo de fonte citada) ou `baixa-evidencia`. Contagem das afirmações: 61 regra geral, 28 depende do carro,
+  25 de fonte, 17 pouca evidência; nos diagnósticos, 22 de 23 são regra geral e 1 depende do carro (`gearChoice`).
+- **Evidência por classe**: Gr.1, Gr.3 e Gr.4 têm um guia público (Coach Dave) + DG-EDGE (física 1.49, balanço de freio): "média".
+  **Gr.2 (9 carros), Gr.B (12), N (289) e X (93) não têm fonte de qualidade**: o texto é síntese de princípios gerais e vem marcado
+  "pouca evidência" (no guia, na página da classe e no resumo do coach). O catálogo mostra que o grupo "3" também tem GT1/GT500 antigos
+  e que "X" mistura Vision GT, clássicos, Super Formula e kart: por isso X não tem receita de classe.
+- **Sem pontos de frenagem absolutos**: a base só tem princípios e limiares do próprio app (5 m, 3 km/h, 8 m…). Um teste varre o
+  texto todo contra "curva Tn + distância" e "N m antes da curva". O resumo sempre carrega a regra "NUNCA invente pontos de frenagem".
+- `knowledgeFor({ carGroup?, carCode?, diagnosticCodes?, trackId?, cornerKind?, maxChars? })`: grupo vem de `carGroup` ou do catálogo
+  de carros (`carCode`); grupo desconhecido → só os princípios gerais e aviso. Até 6 diagnósticos (os mais custosos primeiro). Se não
+  couber, degrada em 3 níveis (tira causas/treino, depois princípios, depois fontes) e, em último caso, corta numa quebra de linha
+  mantendo as regras de uso. `maxChars` tem piso de 1.200. `trackId` só vira um aviso (não há dados por pista).
+- Exportação: `@gt7/shared` reexporta só a API (e os tipos) para não poluir o espaço de nomes; os dados ficam no módulo.
+
+### Cobertura de diagnósticos (falha se faltar texto)
+
+- `DIAGNOSTICS` é `Record<CornerFinding['kind'] | LapIssueKind, …>`: **código novo sem entrada = erro de compilação**. Além disso
+  `packages/analysis/src/knowledge-coverage.test.ts` lê o código-fonte (`kind: '…'` em `findings.ts` e `validity.ts`) e as uniões de
+  tipos de `shared/analysis.ts` e exige texto para cada um. Incluí as 17 findings (inclusive `earlyThrottle`, declarado mas ainda
+  **não gerado** pelo app; o texto avisa) e os 6 `LapIssueKind` (dados da volta; sem variação por classe).
+- Os diagnósticos de pilotagem têm variação por classe para Gr.1, 2, 3, 4, B e N (teste); X cai no texto geral.
+
+### Coach (servidor)
+
+- **Ferramenta `get_knowledge`** (MCP, logo também do coach: a ponte já expõe toda ferramenta somente leitura). O coach recebe:
+  1) no **prompt do sistema** (estático, cabe no prefixo em cache): `COACH_KNOWLEDGE_RULES` = como/quando chamar `get_knowledge` +
+  `COACH_RULES` (citar números, adaptar à classe, dizer "regra geral" × "depende do carro", nunca inventar pontos de frenagem
+  absolutos, **uma** ação principal por curva e exercício de 5 voltas, avisar se a referência é de outro carro/classe, afinação só como
+  hipótese). Nada por requisição no prefixo.
+  2) na **mensagem da tarefa** (`debriefTask`/`cornerFocusTask`/`trainingPlanTask`, usados pelo coach e pelos prompts MCP): um resumo
+  da classe do carro de ≤ 3.500 caracteres + o passo "get_knowledge(car_code, diagnostics = plan[].code)".
+  Decisão: não pré-computar os diagnósticos no servidor para injetá-los no prompt; o modelo já chama `compare_laps` e a resposta passou
+  a trazer `plan[].code` (campo novo e aditivo no MCP), então uma chamada `get_knowledge` traz exatamente os diagnósticos presentes.
+- `COACH_PERSONA` ganhou as 3 regras (classe, sem pontos absolutos, afinação como hipótese). Rótulo de progresso na UI do coach:
+  "Consultando a base de pilotagem".
+
+### MCP
+
+- Ferramenta `get_knowledge` (`topic`, `car_code`, `car_group`, `diagnostics[]`, `corner_kind`, `track_id`, `max_chars` 1.200–8.000):
+  sem argumentos usa o carro da sessão mais recente; `topic` ("indice", "gr4", "brakeEarlier", "afinacao", "glossario", "fonte"…)
+  devolve a página inteira; tópico desconhecido → erro com o índice.
+- Recursos `gt7://knowledge` (índice) e `gt7://knowledge/{+topic}` (template com `+`, porque os ids têm `/`; lista todos os tópicos).
+- Prompts `debrief_sessao`, `foco_curva` e `plano_treino` usam a base (passo novo + resumo da classe). README do MCP atualizado.
+
+### UI (`packages/web`)
+
+- Rota `#/guia` (`?q=&classe=&topico=`), página `GuidePage` + `lib/guide.ts` (filtro puro, testado) + `styles/guide.css`. Busca sem
+  acento, abas por tipo, filtro de classe (corta as variações dos diagnósticos para a classe e mostra só a ficha dela), bloco "O que o
+  coach recebe sobre a classe X" (o mesmo resumo, com o tamanho), fontes com link (`target=_blank`, `noopener`). Aviso fixo sobre
+  "regra geral não é lei" e sobre a falta de pontos de frenagem por pista. Reaproveita `Markdown` (sem `innerHTML`).
+- Mudança pontual em `AnalysisApp.tsx` (item "Guia" no menu, ícone, `case 'guide'`) e `route.ts`. A barra inferior do celular passou
+  de 6 para **7 colunas** (regra em `guide.css`, mais específica que a de `home.css`; itens de 52 px a 375 px, fonte 10,5 px).
+  Uma linha em `labels.ts` (rótulo da ferramenta). Verificado no navegador embutido (`?mock=1`, porta 5175; o servidor real não foi
+  tocado): 375 px sem rolagem horizontal, filtro por classe, busca, deep-link por hash, links externos. A largura >900 px (barra lateral)
+  não foi vista: o painel embutido tinha 658 px.
+
+### Testes
+
+`shared/src/knowledge/knowledge.test.ts` (limite de tamanho no pior caso, classe, grupo desconhecido, índice, busca, fontes e links,
+exemplos de carros existem no catálogo e pertencem ao grupo, guarda contra pontos absolutos), `analysis/src/knowledge-coverage.test.ts`,
+`mcp/src/knowledge.test.ts` (ferramenta, recursos, `plan[].code`, prompts), `server/src/coach/knowledge.test.ts` (prompt do sistema
+estático, tarefa com a base, ponte do coach), `web/src/analysis/lib/guide.test.ts`.
+
+### Não validado / limites
+
+- **Nada disso foi validado em pista nem com o console**: são resumos de guias públicos (lidos pelo pesquisador em 2026-11-09, não
+  reabertos agora) e princípios gerais. As fontes `gt-apex` e `gtplanet-forum` só foram vistas por resultado de busca (a primeira é
+  renderizada por JS e a outra bloqueou a leitura): marcadas assim em `sources.ts` e a UI manda confirmar à mão.
+- Sem fonte para Gr.2, N-classes (o catálogo só tem "N", não N100…N1000), Gr.X e pouca para Gr.B; sem dados de desgaste por composto.
+- A direção dos ajustes de afinação vem de Coach Dave/Traxion e do rascunho da pesquisa; não foi testada. O app não lê o setup do carro.
+- O modelo pode ignorar a base: nada força a chamada de `get_knowledge` além das instruções (não medi taxa de uso com a API real).
+- Caso de teste do usuário (Huracán Gr.4 em Trial Mountain): usado só para conferir a formatação do resumo (Gr.4, `brakeEarlier`,
+  `noTrailBraking`…); nenhum dado da sessão real foi embarcado.
+
+## Onda 9b — acervo de pistas
+
+Objetivo: o app reconhecer a pista sozinho (o pacote de telemetria não tem id de pista) e ter os dados oficiais de cada
+layout. Base: `docs/pesquisa/pistas-e-corridas-diarias.md` e `docs/pesquisa/frenagem-referencias-e-conhecimento.md`.
+
+### Dados (fontes, licenças, coleta)
+
+- **Coletado em 2026-11-09**, três fontes livres, commits fixos no script `packages/shared/scripts/gen-tracks.mjs`
+  (`--from <pasta>` para trabalhar offline; recusa dado inconsistente):
+  - `ddm999/gt7info` (**MIT-0**), commit `2648c847f1021be69b67430e65e2246098383e66`: `_data/db/course.csv` e `country.csv`.
+    URL conferida: `https://raw.githubusercontent.com/ddm999/gt7info/<commit>/_data/db/course.csv` (o espelho
+    `https://ddm999.github.io/gt7info/data/db/course.csv` devolve o mesmo arquivo, 122 linhas). O arquivo mudou pela última vez em
+    29/05/2026 (commit `bbc542490ab300518f279efa2786d0e13b28ac97`).
+  - `jbhoorasingh/gt7-datalogger-track-data` (**CC0-1.0** nos dados), commit `637aaa379e7b225e53034b9864b6f04f8bf2724e`
+    (08/11/2026): `index.json` (122 layouts oficiais, ids hexadecimais, com SUGO) e `signatures.json` (81 linhas a cada 20 m,
+    36 gêmeas reversas).
+  - `zetetos/gt-telemetry` (**MIT**), commit `96007fc0a1f25ab4bcefe7007e4dca81166667a1` (15/10/2026, jogo 1.72):
+    `pkg/circuits/inventory/*.json` (85 circuitos: linha de largada e polilinhas em grade de 16 m).
+  - DG EDGE (`sitemaps/tracks.xml`): só as URLs, para **linkar** à página da pista (42 locais). Nenhum conteúdo copiado.
+- **Chave do layout = id hexadecimal oficial** (único, 122). O id numérico do gt7info (`courseId`) é campo auxiliar: o
+  `course.csv` não tem SUGO (entrou no jogo na 1.72; **id 1340** vem do nome da imagem do DG EDGE, `Track1340.webp`, e é
+  marcado no dado com a flag 16), usa ids **fictícios** 2001–2004 para Eiger, Yas Marina e Gilles-Villeneuve (autor no commit:
+  "a dummy course id"; flag 8, ignorados por `findTrackLayoutByCourseId`) e uma linha só para *Nürburgring Endurance* e
+  *Endurance II* (a segunda fica com `courseId` nulo). As duas linhas "Special Stage Route X 400/1000" do gt7info não são
+  layouts da lista oficial e ficaram de fora (122 = lista oficial). Mapeamento csv ↔ oficial por **nome normalizado** e
+  conferência de comprimento (0,5 %) e de curvas: sem divergência.
+- Campos por layout: id, courseId, local, layout, nome oficial, país (código + nome pt-BR), comprimento oficial, curvas,
+  desnível, maior reta, oval, reverso (e de qual layout é o reverso), fictício/real (`type` do index; csv `original` quando
+  faltava), ponto de largada. Nada foi inventado: o que faltava ficou `null`.
+- **Geometria** (`geometry.ts`): por layout, a linha de corrida **simplificada** (Douglas-Peucker fechado, tolerância de
+  1,5 m, subindo até caber em ≤ 200 pontos; mediana de 89 pontos, máximo 298), inteiros em metros com deltas (58 KB). Fonte
+  preferida: `signatures.json` (27 de levantamento, 51 de captura); onde não há caminho, a polilinha do gt-telemetry (7).
+  **121 de 122** layouts têm linha (os 36 reversos reusam a do normal percorrida ao contrário); *Nürburgring Endurance II* não.
+  7 linhas são **capturas truncadas** (medido/oficial < 0,93: Autopolis Short, Barcelona Rallycross, Spa 24h, Fuji Short,
+  Nordschleife Tourist, Nürburgring Sprint, Suzuka East) e 9 vêm sinalizadas pela própria fonte (comprimento diverge do
+  catálogo): servem de candidato, **nunca** de nome automático. A geometria **não vai para o pacote do navegador** (verificado:
+  tree-shaking; só o servidor/core a usam).
+- **Não foi embarcado:** nomes de curva (não há fonte aberta), apex das 162 curvas do gt7-datalogger (fica para quando houver
+  detecção para comparar), nada do site oficial nem do DG EDGE além de links.
+
+### Verificação do sistema de coordenadas (gravação real)
+
+Sessão real do usuário (`real-session.gt7rec`, cópia só leitura; Trial Mountain, Huracán Gr.4, carro 3253; voltas 1 e 2 completas,
+a volta 0 saiu do box). Comparação **direta, sem transformação**:
+
+| Linha de referência | volta 1: ref→dirigida média / p95 / máx | volta 1: dirigida→ref média / p95 / máx | volta 2: ref→dirigida | volta 2: dirigida→ref |
+|---|---|---|---|---|
+| `signatures.json` (levantamento, 20 m) | 2,45 / 7,0 / 13,4 m | 2,96 / 8,4 / 17,3 m | 2,42 / 6,0 / 11,2 m | 3,54 / 8,9 / 14,9 m |
+| gt-telemetry (grade de 16 m) | 8,5 / 18,5 / 30,7 m | 7,2 / 15,4 / 23,0 m | 8,5 / 18,1 / 31,7 m | 7,1 / 15,7 / 23,0 m |
+
+Espelhar x dá erro médio de 86 m, espelhar z 70 m, trocar x/z 305 m: **o sistema é o mesmo** (translação, rotação, espelho e
+escala não são necessários). A caixa da gravação (x −962…952, z −397…368) bate com a da assinatura (−976…954, −402…379); o cruzamento
+da linha de chegada (145, −16, 303) fica a 17 m do `startLine` do gt-telemetry (128, −14, 304), dentro da grade de 16 m. O gt-telemetry
+é mais grosseiro (erro médio 8,5 m contra 2,4 m), por isso o custo é normalizado pela qualidade da fonte (fator 1,8 para "grade").
+
+### Reconhecedor (`packages/shared/src/tracks/match.ts`)
+
+- `matchKnownTrack(volta)`: filtra por comprimento (razão medido/oficial entre 0,93 e 1,03), reamostra a volta a ~8 m e mede, para
+  cada candidato, a distância **simétrica** volta→linha e linha(12 m)→volta (média, p95, p99; tolera offset lateral de poucos metros,
+  e uma chicane que falta aparece na distância inversa), o **sentido** (avanço líquido da projeção ao longo da linha; separa o
+  layout do seu reverso e Tokyo CW/CCW) e a janela de comprimento. Custo = (média + 0,5·p95 + 0,25·p99) ÷ ruído da fonte.
+  Confiança *alta* = custo ≤ 15, média ≤ 6,5 m, sentido ≥ 0,8, comprimento na janela, linha completa e não sinalizada.
+- **Nome automático só** com confiança alta **e** o segundo candidato com custo ≥ máx(2× o melhor, melhor + 8 m). Empates (custos
+  a 10 %) desempatam pela distância à linha de largada. Candidatos abaixo de *alta* só viram sugestão com um clique.
+- **Ponto de integração:** `identifyOrCreateTrack` (`core/src/track/fingerprint.ts`), onde nascia "Pista desconhecida N": quando
+  reconhecida, a pista nasce com `name` = local, `layout` = rótulo do layout e `source: 'builtin'` (e `IdentifyResult.recognized`).
+  Isso já cobre `LiveContext`, `StoreContext` e `EphemeralContext`: **nenhum gancho novo no LiveEngine/captura é necessário** (só rodam
+  quando uma pista nova é criada; custo medido 20–60 ms, uma vez). O `needsName` do servidor continua por "auto + Pista desconhecida".
+- **Servidor:** `GET /api/tracks/:id/recognition` → `recognizeTrack` (candidatos pelo traçado da linha central guardada; sem linha ou
+  sem resultado, pela janela de comprimento). Não renomeia nada.
+- **Nome salvo:** o local oficial (`Trial Mountain Circuit`, `Autodromo Nazionale Monza`) e o rótulo do layout em inglês (sem repetir
+  "Full Course" quando o local só tem um layout; reverso termina em "(Reverse)"). Pistas salvas pela lista antiga (layout "Completo")
+  ainda acham a ficha: `findTrackLayout` cai para o layout do local mais próximo em comprimento.
+- **Comprimento (janela assimétrica):** `LENGTH_WINDOW` = −4 % … +1,5 % do oficial (`lengthCompatible`, `suggestLayoutsByLength`),
+  ordenado pela distância a −0,95 % (a mediana medida). Dos 81 layouts medidos: ±1,5 % cobria 56, a janela nova 74 (um teste fixa os
+  81 números). Reverso tem o mesmo comprimento: `lookAlikes()` lista reverso e layouts do mesmo local a ≤ 1,5 % (Tokyo, Monza, Fuji,
+  Nordschleife/Tourist) e a UI avisa para confirmar. Só pelo comprimento vários layouts competem (5361 m → Alsace 5423 m,
+  Watkins Glen Long 5423 m, Trial Mountain...), então o traçado é o que resolve.
+
+### UI
+
+- `web/src/data/gt7Tracks.ts` passou a derivar do catálogo (122 layouts); `lib/trackSuggest.ts` usa a janela nova e a busca do catálogo
+  (aceita nome oficial, sem acento). `NewTrackPrompt` busca `/recognition` (cai no comprimento se o servidor for antigo); chips "traçado
+  confere" / "é essa", dica com desvio médio, comprimento oficial, curvas e parecidas; aviso quando há empate ou só tamanho.
+- **Ficha da pista** (`TrackFicha.tsx`, aba Melhores voltas): país, tipo fictícia/real, layout (+ oval/reverso), comprimento oficial ×
+  medido (e %), curvas oficiais × detectadas (com nota), desnível, maior reta, links (lista oficial do jogo; DG EDGE do local). CSS em
+  `styles/tracks.css`.
+
+### Testes e verificação
+
+- `shared/src/tracks/catalog.test.ts` (122 ids/nomes únicos, números plausíveis, courseId únicos e fictícios sinalizados, reversos,
+  SUGO, fontes/licenças, janela nos limites, os 81 comprimentos medidos, `lookAlikes`, busca, `findTrackLayout`, links),
+  `match.test.ts` (coordenadas × volta real, reconhecimento da volta real com `fixtures/trial-mountain-real-lap.json` (434 pontos, só
+  posição), offset lateral, reverso por sentido, 121 layouts a partir da própria linha, Monza com/sem chicane não nomeia sozinho, pista
+  desconhecida, entradas inválidas, `recognizeTrack`), `core/src/track/known-track.test.ts` (nome automático vs "Pista desconhecida"),
+  `server/src/tracks-recognition.test.ts` (rota), `web/.../history.test.ts` (sugestões atualizadas).
+- **Avaliação do reconhecedor** (script de pesquisa, fora do repositório; consultas = as 114 linhas de 20 m de `signatures.json`,
+  78 normais e 36 reversas, com offset lateral senoidal e início sorteado): limpas: 108 certas em 1º lugar, 6 sem candidato (a própria
+  linha tem comprimento > 5 % fora do oficial: Lago Maggiore Centre e Centre Reverse, Northern Isle, Spa 24h, Streets of Willow e
+  reverso), **105 nomeadas sozinhas, 0 erradas**; offset 4 m: 108 certas, 100 automáticas, 0 erradas, 1 ambígua; offset 8 m + início
+  aleatório: 109 certas, 98 automáticas, 0 erradas, 3 ambíguas. Os únicos pares confundíveis (7) são os esperados: Fuji × Fuji Short, Le
+  Mans com/sem chicane, Monza com/sem chicane, Barcelona GP com/sem chicane: ficam como sugestão. **Sessão real (Trial Mountain):
+  nomeada sozinha**, custo 7,9–8,6, sentido +1,00, comprimento −1,0 %/−1,3 %, nenhum outro candidato. As linhas do gt-telemetry não servem
+  de consulta (a grade de 16 m alonga a polilinha em ~20 %).
+- **Verificado no navegador embutido** (servidor de demonstração em outra porta, pasta temporária, a linha real como pista sem nome): o
+  aviso mostra "Trial Mountain Circuit — traçado confere", um clique salva, a ficha aparece com os números e links; 480 px de largura.
+- **Não verificado:** voltas reais de outras pistas (só Trial Mountain tem gravação: as demais linhas valem pela fonte e pelos
+  testes sintéticos, e o desvio em pistas largas ou com muito "corte de curva" pode passar de 6,5 m); a linha de um **reverso** com
+  console real (reaproveita a do normal ao contrário, como o gt7-datalogger); se o jogo usa o mesmo sistema de coordenadas em todos os
+  layouts e modos (supõe-se); a captura de replay (o reconhecimento roda quando a pista nasce de uma volta ao vivo; replay não cria pista);
+  pistas novas do jogo (Autumn Ring) até as fontes atualizarem; o `courseId` 1340 de SUGO (DG EDGE) e o tipo fictício/real de
+  *Nürburgring Endurance II* (vem do csv). Atualizar a cada versão do jogo: `node packages/shared/scripts/gen-tracks.mjs` e conferir a
+  lista oficial (`https://www.gran-turismo.com/gb/gt7/tracklist/`) à mão.

@@ -195,3 +195,43 @@ html[data-area="analysis"] .cs-toast {
     animation: none !important;
   }
 }
+
+/* Live panel during a replay: REPLAY seal + discreet notice (Onda 9a). It sits just above the badge
+   row (bottom-left), small, at most two lines of text. */
+.replay-notice {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 6px);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
+  width: max-content;
+  max-width: min(86vw, 360px);
+  padding: 4px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(61, 139, 255, 0.4);
+  background: rgba(12, 17, 21, 0.78);
+  color: var(--dim);
+  font-size: 11px;
+  line-height: 1.3;
+  pointer-events: auto;
+}
+.replay-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1 1 140px;
+}
+.replay-link {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+}
+.replay-link:hover,
+.replay-link:focus-visible {
+  color: var(--accent);
+}

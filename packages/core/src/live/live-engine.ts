@@ -14,6 +14,12 @@
  * - Sectors (track gates, default 3 equal), live delta vs a selectable reference, delta rate,
  *   predicted lap, fuel per lap, slip, g-forces, next-corner hints.
  *
+ * Replay (Onda 9a): the real console plays a replay with car data but `carOnTrack` false, no lap
+ * clock and a lapCount that does not advance. A packet with a car (carCode != 0), not on track, not
+ * paused/loading, moving (> 2 m/s) with the position changing is a "replay playing": connection
+ * state 'replay', no session, no track time, nothing written to the driver's laps. The live frames
+ * keep flowing; `'packet'` carries every packet to the reference capture (see capture/).
+ *
  * Session policy (automatic capture, no "start" button):
  * - A session opens by itself at the first packet with the car on a track and not paused.
  * - It stays open through pauses, menus, garage, restarts and short silences (same car, same
@@ -88,6 +94,35 @@ const FROZEN_MIN_SPEED_MPS = 2;
 const FROZEN_MIN_MS = 1000;
 /** A frozen stream this long means the driver left the track: the session is closed. */
 const FROZEN_END_MS = 30_000;
+
+/** Replay detection: a car faster than this (m/s) with a changing position is "playing". */
+const REPLAY_MIN_SPEED_MPS = 2;
+/** Identical positions for this many packets while "moving" = the replay is stalled (paused). */
+const REPLAY_STALL_PACKETS = 4;
+/** A stalled/slow replay still counts as a replay for this long after it last played (ms). */
+const REPLAY_GRACE_MS = 3000;
+
+/** What the replay detector made of a packet. */
+export type ReplayKind = 'playing' | 'stalled' | 'none';
+
+/** Every packet the engine processed, for consumers that follow the raw stream (reference capture). */
+export interface EnginePacketInfo {
+  packet: TelemetryPacket;
+  receivedAt: number;
+  /** Packets since the previous one (packetId delta, 1 for the first). */
+  dPk: number;
+  /** ms since the previous packet was received (0 for the first). */
+  recvGap: number;
+  /** The packetId counter restarted (or jumped far): the stream is not continuous with the last. */
+  streamReset: boolean;
+  /** Car data is present and the car is NOT on a track (replay screen candidate; see ReplayKind). */
+  carData: boolean;
+  replay: ReplayKind;
+  /** The previous packet had exactly the same position. */
+  samePosition: boolean;
+  msPerPacket: number;
+  g: LiveGForce;
+}
 
 export interface LiveEngineOptions {
   context?: LiveEngineContext;
@@ -190,6 +225,8 @@ export interface LiveEngineEvents {
   sessionEnded: [Session, SessionEndInfo];
   trackChanged: [LiveTrackInfo | null];
   stateChanged: [ConnectionState, ConnectionState];
+  /** Every accepted packet (only built while someone listens). */
+  packet: [EnginePacketInfo];
 }
 
 interface LapState {
@@ -230,7 +267,7 @@ interface CornerPass {
   lastPassDeltaMs: number | null;
 }
 
-function sectorBoundaries(track: Track | null): number[] | null {
+export function sectorBoundaries(track: Track | null): number[] | null {
   if (!track) return null;
   const gates = [...track.sectorGates].sort((a, b) => a.distanceM - b.distanceM);
   if (gates.length === 0) return [track.lengthM / 3, (2 * track.lengthM) / 3];
@@ -315,6 +352,11 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   #lastActiveAt: number | null = null;
   #onTrackNow = false;
   #pausedNow = false;
+  #replayKind: ReplayKind = 'none';
+  /** Consecutive packets with the very same position (any state). */
+  #samePosPk = 0;
+  /** Epoch ms of the last 'playing' replay packet. */
+  #replayPlayingAt: number | null = null;
   /** receivedAt of the previous running packet, for the "time on track" clock. */
   #runningSince: number | null = null;
   #trackTimeMs = 0;
@@ -470,8 +512,13 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       trackTimeMs: Math.round(this.#trackTimeMs),
       onTrack: this.#onTrackNow,
       paused: this.#pausedNow,
-      replay: this.#replayMode,
+      replay: this.#replayMode || this.#replayKind !== 'none',
     };
+  }
+
+  /** A replay is playing (detected from the packets), or the legacy replay mode is on. */
+  get replayDetected(): boolean {
+    return this.#replayKind !== 'none';
   }
 
   /** Replay (reference capture) mode. Changing it ends the current session. */
@@ -522,6 +569,14 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     Object.assign(this.#session, patch);
     this.#ctx.saveSession({ ...this.#session });
     this.emit('sessionUpdated', { ...this.#session });
+  }
+
+  /**
+   * Re-reads the delta reference when it is a "best reference of the track" (a reference lap was
+   * just saved by the capture). Other kinds are left alone so the lap in progress is not touched.
+   */
+  refreshReference(): void {
+    if (this.#deltaKind === 'reference' && !this.#deltaLapId) this.#reloadReference();
   }
 
   /** Re-reads the active track from the context (after renames, corner/sector edits). */
@@ -602,6 +657,39 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     return true;
   }
 
+  /**
+   * Replay detector (see the class doc). `carData`: there is a car (carCode != 0, a real position)
+   * and the game does not say it is on a track, paused or loading. 'playing' needs speed and a
+   * position that changes; a replay that stalls (pause, rewind) stays 'stalled' for a few seconds
+   * so the state does not flicker, and falls back to the menu after that.
+   */
+  #classifyReplay(
+    p: TelemetryPacket,
+    carData: boolean,
+    dPk: number,
+    receivedAtMs: number,
+  ): { kind: ReplayKind; same: boolean } {
+    const prev = this.#lastPacket;
+    const same =
+      prev !== null &&
+      p.position.x === prev.position.x &&
+      p.position.y === prev.position.y &&
+      p.position.z === prev.position.z;
+    this.#samePosPk = same ? this.#samePosPk + dPk : 0;
+    if (!carData) {
+      this.#replayPlayingAt = null;
+      return { kind: 'none', same };
+    }
+    if (p.speedMps > REPLAY_MIN_SPEED_MPS && this.#samePosPk < REPLAY_STALL_PACKETS) {
+      this.#replayPlayingAt = receivedAtMs;
+      return { kind: 'playing', same };
+    }
+    if (this.#replayPlayingAt !== null && receivedAtMs - this.#replayPlayingAt <= REPLAY_GRACE_MS) {
+      return { kind: 'stalled', same };
+    }
+    return { kind: 'none', same };
+  }
+
   /** Forgets the active track (not on a known one any more); no-op without one. */
   #clearActiveTrack(): void {
     if (this.#track) {
@@ -650,9 +738,25 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     // (When the game itself says "paused" its data is frozen too; that keeps the normal pause rules.)
     const frozen = this.#updateFrozen(p, onTrack && !f.paused, dPk, receivedAtMs);
     const paused = f.paused || frozen;
+    const carData =
+      !f.carOnTrack &&
+      !f.loadingOrProcessing &&
+      !f.paused &&
+      p.carCode !== 0 &&
+      (p.position.x !== 0 || p.position.y !== 0 || p.position.z !== 0);
+    const replay = this.#classifyReplay(p, carData, dPk, receivedAtMs);
+    this.#replayKind = replay.kind;
     this.#onTrackNow = onTrack;
     this.#pausedNow = paused;
-    this.#state = !onTrack ? 'menu' : paused ? 'paused' : this.#replayMode ? 'replay' : 'onTrack';
+    this.#state = !onTrack
+      ? replay.kind !== 'none'
+        ? 'replay'
+        : 'menu'
+      : paused
+        ? 'paused'
+        : this.#replayMode
+          ? 'replay'
+          : 'onTrack';
 
     // out of the track / paused for too long (checked before the clocks below are reset)
     if (
@@ -705,7 +809,30 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     this.#g = this.#gforce.update(p, (dPk * this.#msPerPacket) / 1000);
 
     if (this.#pending) this.#tryFinalize(p);
-    if (this.#session) this.#handleLap(p, receivedAtMs, dPk, streamReset, onTrack, paused, recvGap);
+    if (this.#session && replay.kind !== 'none') {
+      // watching a replay: the driver's lap in progress (if any) is over and nothing of the replay
+      // reaches the driver's laps; the next on-track packet starts a fresh lap
+      if (this.#lap?.timed) this.#discard(this.#lap, 'leftTrack');
+      this.#lap = null;
+      this.#lastLapCount = null;
+    } else if (this.#session) {
+      this.#handleLap(p, receivedAtMs, dPk, streamReset, onTrack, paused, recvGap);
+    }
+
+    if (this.listenerCount('packet') > 0) {
+      this.emit('packet', {
+        packet: p,
+        receivedAt: receivedAtMs,
+        dPk,
+        recvGap,
+        streamReset,
+        carData,
+        replay: replay.kind,
+        samePosition: replay.same,
+        msPerPacket: this.#msPerPacket,
+        g: { ...this.#g },
+      });
+    }
 
     this.#lastPacket = p;
     const changed = this.#composeState() !== stateBefore;

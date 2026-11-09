@@ -13,6 +13,7 @@ import { CapturePage } from './pages/CapturePage.tsx';
 import { CoachPage } from './pages/CoachPage.tsx';
 import { ComparePage } from './pages/ComparePage.tsx';
 import { ConfigPage } from './pages/ConfigPage.tsx';
+import { GuidePage } from './pages/GuidePage.tsx';
 import { HomePage } from './pages/HomePage.tsx';
 import { SessionPage } from './pages/SessionPage.tsx';
 import { SessionsPage } from './pages/SessionsPage.tsx';
@@ -20,8 +21,9 @@ import { TrackPage } from './pages/TrackPage.tsx';
 import '../styles/analysis.css';
 import '../styles/home.css';
 import '../styles/cars.css';
+import '../styles/tracks.css';
 
-type IconName = 'live' | 'home' | 'compare' | 'capture' | 'coach' | 'config';
+type IconName = 'live' | 'home' | 'compare' | 'capture' | 'coach' | 'guide' | 'config';
 
 interface NavItem {
   icon: IconName;
@@ -57,6 +59,13 @@ const NAV: NavItem[] = [
     short: 'Captura',
   },
   { icon: 'coach', names: ['coach'], href: routes.coach(), label: 'Coach IA', short: 'Coach' },
+  {
+    icon: 'guide',
+    names: ['guide'],
+    href: routes.guide(),
+    label: 'Guia de pilotagem',
+    short: 'Guia',
+  },
   {
     icon: 'config',
     names: ['config'],
@@ -106,6 +115,12 @@ function NavIcon({ name }: { name: IconName }) {
         <>
           <path {...p} d="M5 6h14v9H11l-4 3v-3H5z" />
           <path {...p} d="M9 10h6" />
+        </>
+      )}
+      {name === 'guide' && (
+        <>
+          <path {...p} d="M5 5.5C5 4.7 5.7 4 6.5 4H19v13H6.5A1.5 1.5 0 0 0 5 18.5z" />
+          <path {...p} d="M5 18.5A1.5 1.5 0 0 0 6.5 20H19v-3M9 8h6" />
         </>
       )}
       {name === 'config' && (
@@ -215,6 +230,8 @@ function page(route: Route): ReactNode {
       return <ConfigPage route={route} />;
     case 'coach':
       return <CoachPage route={route} />;
+    case 'guide':
+      return <GuidePage route={route} />;
     default:
       return <NotFound />;
   }

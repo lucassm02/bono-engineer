@@ -20,7 +20,7 @@ import {
   trendLabel,
   whenLabel,
 } from './history.ts';
-import { LENGTH_TOLERANCE, resolveTyped, searchCatalog, suggestByLength } from './trackSuggest.ts';
+import { LENGTH_WINDOW, resolveTyped, searchCatalog, suggestByLength } from './trackSuggest.ts';
 
 const local = (y: number, m: number, d: number, h = 12, min = 0) =>
   new Date(y, m - 1, d, h, min).getTime();
@@ -163,39 +163,47 @@ describe('history: days', () => {
 });
 
 describe('track naming suggestions', () => {
-  it('suggests by length within 1.5 % and orders by closeness', () => {
-    const s = suggestByLength(5807 * 1.004);
+  it('suggests by length in the asymmetric window and orders by the typical −0.95 %', () => {
+    const s = suggestByLength(5807 * 0.99);
     expect(s[0]!.track.name).toBe('Suzuka Circuit');
-    expect(s.every((x) => Math.abs(x.errorRel) <= LENGTH_TOLERANCE)).toBe(true);
-    // Monza (5793) and Suzuka (5807) are 0.24 % apart: both are candidates, closest first.
-    const both = suggestByLength(5800);
+    expect(
+      s.every((x) => x.errorRel >= LENGTH_WINDOW.minRel && x.errorRel <= LENGTH_WINDOW.maxRel),
+    ).toBe(true);
+    // Monza (5793) and Suzuka (5807) are 0.24 % apart: both are candidates
+    const both = suggestByLength(5800, GT7_TRACKS, LENGTH_WINDOW, 10);
     expect(both.map((x) => x.track.name)).toEqual(
       expect.arrayContaining(['Autodromo Nazionale Monza', 'Suzuka Circuit']),
     );
-    expect(Math.abs(both[0]!.errorRel)).toBeLessThanOrEqual(Math.abs(both[1]!.errorRel));
   });
 
-  it('respects the tolerance edges and ignores entries without length', () => {
-    expect(
-      suggestByLength(4309 * 1.016, GT7_TRACKS).some((x) => x.track.name.includes('Interlagos')),
-    ).toBe(false);
-    expect(suggestByLength(4309 * 1.014).some((x) => x.track.name.includes('Interlagos'))).toBe(
-      true,
-    );
+  it('respects the window edges (−4 % … +1.5 %), not ±1.5 %', () => {
+    const inter = (m: number) =>
+      suggestByLength(m, GT7_TRACKS, LENGTH_WINDOW, 500).some((x) =>
+        x.track.name.includes('Interlagos'),
+      );
+    expect(inter(4309 * 1.016)).toBe(false);
+    expect(inter(4309 * 1.014)).toBe(true);
+    // a lap measured 2.8 % short (p10 of the survey) used to be rejected by ±1.5 %
+    expect(inter(4309 * (1 - 0.028))).toBe(true);
+    expect(inter(4309 * (1 - 0.041))).toBe(false);
     expect(suggestByLength(0)).toEqual([]);
     expect(suggestByLength(Number.NaN)).toEqual([]);
-    expect(suggestByLength(3000)).toEqual([]);
-    for (const s of suggestByLength(5793)) expect(s.track.lengthM).toBeTypeOf('number');
+    expect(suggestByLength(300)).toEqual([]);
+  });
+
+  it('the real Trial Mountain lap (5361 m, −1.3 %) is suggested', () => {
+    // by length alone several layouts compete (Alsace Village 5423 m, Watkins Glen Long 5423 m…)
+    const names = suggestByLength(5361, GT7_TRACKS, LENGTH_WINDOW, 12).map((s) => s.track.name);
+    expect(names).toContain('Trial Mountain Circuit');
   });
 
   it('autocomplete matches every word, accent-insensitive', () => {
-    expect(searchCatalog('nurb nord')[0]).toMatchObject({
-      name: 'Nürburgring',
-      layout: 'Nordschleife',
-    });
+    expect(searchCatalog('nurb nord')[0]).toMatchObject({ name: 'Nürburgring' });
+    expect(searchCatalog('nurb nord')[0]!.layout).toMatch(/Nordschleife/);
     expect(searchCatalog('monza').length).toBe(2);
     expect(searchCatalog('zzzz')).toEqual([]);
     expect(searchCatalog('')).toHaveLength(8);
+    expect(searchCatalog('sugo')[0]?.name).toBe('Sportsland SUGO');
   });
 
   it('prefers the entry closest in length when ranking equals', () => {
@@ -204,21 +212,19 @@ describe('track naming suggestions', () => {
   });
 
   it('resolves a typed display name back to name + layout', () => {
-    expect(resolveTyped(trackDisplayName({ name: 'Suzuka Circuit', layout: 'Completo' }))).toEqual({
-      name: 'Suzuka Circuit',
-      layout: 'Completo',
-    });
+    expect(
+      resolveTyped(trackDisplayName({ name: 'Suzuka Circuit', layout: 'East Course' })),
+    ).toEqual({ name: 'Suzuka Circuit', layout: 'East Course' });
     expect(resolveTyped('  Meu autódromo ')).toEqual({ name: 'Meu autódromo', layout: null });
   });
 
-  it('catalogue sanity: unique names and plausible lengths', () => {
+  it('is derived from the official catalogue: 122 layouts, unique names, plausible lengths', () => {
+    expect(GT7_TRACKS).toHaveLength(122);
     const names = GT7_TRACKS.map(trackDisplayName);
     expect(new Set(names).size).toBe(names.length);
     for (const t of GT7_TRACKS) {
-      if (t.lengthM !== undefined) {
-        expect(t.lengthM).toBeGreaterThan(1000);
-        expect(t.lengthM).toBeLessThan(25_000);
-      }
+      expect(t.lengthM).toBeGreaterThan(500);
+      expect(t.lengthM).toBeLessThan(40_000);
     }
   });
 });

@@ -32,6 +32,7 @@ import type {
   SessionDetail,
   StartCaptureRequest,
   Track,
+  TrackRecognition,
   ViewId,
 } from '@gt7/shared';
 import type { TracksOverview } from './lib/history.ts';
@@ -184,6 +185,8 @@ export const api = {
   nameTrack: (id: string, name: string, layout: string | null) =>
     request<Track>('PATCH', `/api/tracks/${enc(id)}`, { name, layout }),
   tracksOverview: () => get<TracksOverview>('/api/tracks/overview'),
+  /** Official layouts that look like this track (driving line first, length as fallback). */
+  trackRecognition: (id: string) => get<TrackRecognition>(`/api/tracks/${enc(id)}/recognition`),
   patchCorner: (
     trackId: string,
     cornerId: string,

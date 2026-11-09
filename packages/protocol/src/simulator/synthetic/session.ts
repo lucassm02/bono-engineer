@@ -45,8 +45,11 @@ export interface SyntheticOptions {
   /** Out lap distance before the start line in meters (default 600). */
   outLapM?: number;
   /**
-   * Mimic a replay capture: smoothed inputs, no fuel consumption, no raw pedal channel.
-   * Default false.
+   * Mimic what a real PS5 sends while a REPLAY plays (measured, Onda 9a): car data in real time
+   * but `carOnTrack` false (flags carry only inGear / revLimiterAlert), no lap clock
+   * (currentLapMs 0, lastLapMs / bestLapMs empty), a lapCount that stays at 1 and never advances,
+   * and zeroed packets (speed 0, position 0,0,0, carCode 0) in the "menu" stretch. Inputs are
+   * smoothed and fuel is not consumed. Default false.
    */
   replay?: boolean;
   /** First packetId (default derived from seed). */
@@ -278,6 +281,26 @@ export class SyntheticSession {
 
   #menuPacket(): TelemetryPacket {
     const p = this.#basePacket();
+    if (this.options.replay) {
+      // a real console sends all-zero packets in menus / garage
+      this.#phaseT += this.#dt;
+      if (this.#phaseT >= (this.#phase === 'menu' ? this.options.menuS : this.options.loadingS)) {
+        this.#phase = this.#phase === 'menu' ? 'loading' : 'outLap';
+        this.#phaseT = 0;
+      }
+      return {
+        ...p,
+        position: { x: 0, y: 0, z: 0 },
+        engineRpm: 0,
+        speedMps: 0,
+        carCode: 0,
+        flags: 0,
+        lapCount: 0,
+        bestLapMs: -1,
+        lastLapMs: -1,
+        currentLapMs: 0,
+      };
+    }
     const start = sampleTrackAt(this.track, this.track.lengthM - this.options.outLapM);
     p.position = { x: start.x, y: start.y, z: start.z };
     p.rotation = { x: 0, y: Math.sin(start.heading / 2), z: 0 };
@@ -520,14 +543,16 @@ export class SyntheticSession {
     p.speedMps = v;
     p.boost = boost;
     p.oilPressure = oilPressure;
-    p.flags = encodeFlags({
-      carOnTrack: true,
-      inGear: true,
-      hasTurbo: true,
-      revLimiterAlert: rpm >= CAR.rpmAlertMax,
-      tcsActive: tcs,
-      asmActive: prof.name === 'amateur' && cp.mistake && inCorner && latRatio > 0.8,
-    });
+    p.flags = replay
+      ? encodeFlags({ inGear: true, revLimiterAlert: rpm >= CAR.rpmAlertMax })
+      : encodeFlags({
+          carOnTrack: true,
+          inGear: true,
+          hasTurbo: true,
+          revLimiterAlert: rpm >= CAR.rpmAlertMax,
+          tcsActive: tcs,
+          asmActive: prof.name === 'amateur' && cp.mistake && inCorner && latRatio > 0.8,
+        });
     p.gear = this.#gear;
     p.suggestedGear = suggested ?? SUGGESTED_GEAR_NONE;
     p.throttle = Math.round(throttle * 255);
@@ -545,7 +570,14 @@ export class SyntheticSession {
     p.surge = lonG * G;
     p.throttleRaw = Math.round(throttleTarget * 255);
     p.brakeRaw = Math.round(brakeTarget * 255);
-    p.currentLapMs = this.#phase === 'lap' ? Math.round(this.#tau * 1000) : 0;
+    p.currentLapMs = this.#phase === 'lap' && !replay ? Math.round(this.#tau * 1000) : 0;
+    if (replay) {
+      // what the console really sends in a replay: no lap clock, lapCount stuck at 1, car not
+      // "on track" as far as the flags go
+      p.lapCount = 1;
+      p.bestLapMs = -1;
+      p.lastLapMs = -1;
+    }
     p.wheelSteerAngle = [delta, delta];
     const offTrack = Math.abs(offset) > 5;
     p.surfaceTypes = offTrack

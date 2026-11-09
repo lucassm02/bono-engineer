@@ -2,6 +2,7 @@
 
 import {
   type CaptureState,
+  type CaptureWaiting,
   type ComparisonReferenceKind,
   type CornerKind,
   carName,
@@ -55,10 +56,27 @@ export const REFERENCE_KIND_LABELS: Record<ComparisonReferenceKind | 'lap', stri
 
 export const CAPTURE_STATE_LABELS: Record<CaptureState, string> = {
   idle: 'Parado',
-  switchingFormat: 'Trocando o formato do pacote (até ~15 s)…',
-  waitingLapStart: 'Aguardando o início da volta: deixe o replay cruzar a linha de chegada',
+  switchingFormat: 'Preparando a captura…',
+  waitingLapStart: 'Aguardando a linha de largada',
   recording: 'Gravando a volta…',
   validating: 'Validando a volta…',
+};
+
+/** Short headline for the same states. */
+export const CAPTURE_WAITING_TITLES: Record<CaptureWaiting, string> = {
+  replay: 'Aguardando o replay',
+  track: 'Identificando a pista',
+  unknownTrack: 'Pista desconhecida',
+  startLine: 'Aguardando a linha de largada',
+};
+
+/** What a capture in `waitingLapStart` is waiting for (ReferenceCaptureStatus.waiting). */
+export const CAPTURE_WAITING_LABELS: Record<CaptureWaiting, string> = {
+  replay: 'Aguardando o replay: abra o replay da volta no jogo e dê play.',
+  track: 'Replay detectado — identificando a pista…',
+  unknownTrack:
+    'Pista desconhecida — dirija essa pista ao vivo primeiro (uma volta completa) e depois capture o replay.',
+  startLine: 'Replay detectado — aguardando o carro cruzar a linha de largada.',
 };
 
 /** Validation issue codes of the reference capture (core/capture/reference-capture.ts). */
@@ -67,9 +85,12 @@ export const CAPTURE_ISSUE_LABELS: Record<string, string> = {
   discontinuity: 'Houve um salto no replay (avanço, retrocesso ou troca de câmera/carro).',
   packetGaps: 'Pacotes perdidos demais (Wi-Fi instável?): a volta ficou com buracos.',
   lengthMismatch: 'O comprimento da volta não bate com a pista (volta incompleta ou pista errada).',
-  timeMismatch: 'O tempo medido não bate com o tempo do ranking informado (±0,3 s).',
+  timeMismatch:
+    'O tempo medido pelos pacotes não bate com o tempo do ranking digitado (tolerância ±0,3 s).',
   carMismatch: 'O carro do replay é diferente do carro esperado.',
-  enterFailed: 'Não foi possível entrar no modo de captura (troca de formato falhou).',
+  notRealtime: 'O replay não estava em velocidade 1× (use a velocidade normal, sem câmera lenta).',
+  interrupted: 'O replay foi interrompido antes de a volta fechar.',
+  enterFailed: 'Não foi possível preparar a captura.',
 };
 
 export function captureIssueLabel(code: string): string {
@@ -83,11 +104,11 @@ export const PACKET_FORMAT_INFO: Record<PacketFormat, { label: string; text: str
   },
   B: {
     label: 'B',
-    text: 'Acrescenta volante e forças G. Funciona em replays: é o formato da captura de referência.',
+    text: 'Acrescenta volante e forças G.',
   },
   '~': {
     label: '~ (recomendado ao vivo)',
-    text: 'O mais completo ao vivo (acelerador/freio crus, volante). Não funciona em replays.',
+    text: 'O mais completo (acelerador/freio crus, volante). Também entrega os dados do replay.',
   },
   C: {
     label: 'C (experimental)',
@@ -111,6 +132,7 @@ export const COACH_TOOL_LABELS: Record<string, string> = {
   get_evolution: 'Consultando a evolução',
   render_comparison_chart: 'Gerando o gráfico',
   get_live_state: 'Lendo o estado ao vivo',
+  get_knowledge: 'Consultando a base de pilotagem',
 };
 
 export function coachToolLabel(name: string): string {

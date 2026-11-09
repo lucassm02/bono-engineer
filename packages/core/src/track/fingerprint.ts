@@ -3,7 +3,16 @@
  * closed-loop length, bounding box and a coarse heading signature (shape v1).
  */
 
-import type { Id, SectorGate, Track, TrackCenterline, TrackFingerprint, Vec2 } from '@gt7/shared';
+import {
+  type Id,
+  type KnownTrackCandidate,
+  matchKnownTrack,
+  type SectorGate,
+  type Track,
+  type TrackCenterline,
+  type TrackFingerprint,
+  type Vec2,
+} from '@gt7/shared';
 import { wrapAngle } from '../util/math.ts';
 import { Polyline } from '../util/polyline.ts';
 
@@ -213,6 +222,19 @@ export function matchTrackByStart(
   return best;
 }
 
+/**
+ * The catalogue layout whose shipped driving line matches this lap strongly and unambiguously, or
+ * null (unknown track, look-alike layouts, partial lines…): only then may a name be applied
+ * without asking the user.
+ */
+export function recognizeKnownLayout(line: Polyline): KnownTrackCandidate | null {
+  try {
+    return matchKnownTrack({ x: line.x, z: line.z }).auto;
+  } catch {
+    return null;
+  }
+}
+
 /** Equal-length sector gates. */
 export function equalSectorGates(lengthM: number, count = DEFAULT_SECTOR_COUNT): SectorGate[] {
   return Array.from({ length: count }, (_, i) => ({ index: i, distanceM: (lengthM * i) / count }));
@@ -240,11 +262,19 @@ export interface IdentifyResult {
   track: Track;
   created: boolean;
   comparison: FingerprintComparison | null;
+  /**
+   * Set when a NEW track was named from the shipped catalogue because its driving line matched a
+   * known layout strongly and unambiguously (see `matchKnownTrack`); the track then has the
+   * official name and layout and `source: 'builtin'`.
+   */
+  recognized?: KnownTrackCandidate | null;
 }
 
 /**
- * Matches a lap against the stored tracks; when nothing matches creates "Pista desconhecida N"
- * with this lap as the centerline and 3 equal sectors.
+ * Matches a lap against the stored tracks; when nothing matches creates a new track with this lap
+ * as the centerline and 3 equal sectors. The new track is named after the official GT7 layout only
+ * when the lap's line is a strong, unambiguous match for one of the shipped driving lines;
+ * otherwise it is "Pista desconhecida N" (the UI then suggests candidates, one click to confirm).
  */
 export function identifyOrCreateTrack(
   repo: TrackRepository,
@@ -262,20 +292,21 @@ export function identifyOrCreateTrack(
   const m = matchTrack(fp, tracks, input.tolerances);
   if (m) return { track: m.track, created: false, comparison: m.comparison };
   const id = input.newId();
+  const known = recognizeKnownLayout(input.line);
   const track: Track = {
     id,
-    name: nextUnknownTrackName(tracks),
-    layout: null,
+    name: known ? known.layout.venue : nextUnknownTrackName(tracks),
+    layout: known ? known.layout.layoutLabel : null,
     fingerprint: fp,
     lengthM: fp.lengthM,
     centerline: { sourceLapId: input.sourceLapId, file: null, stepM: CENTERLINE_STEP_M },
     sectorGates: equalSectorGates(fp.lengthM),
     corners: [],
-    source: 'auto',
+    source: known ? 'builtin' : 'auto',
     createdAt: input.now,
     updatedAt: input.now,
   };
   repo.insertTrack(track);
   repo.saveCenterline(buildCenterline(id, input.sourceLapId, input.line, input.y));
-  return { track, created: true, comparison: null };
+  return { track, created: true, comparison: null, recognized: known };
 }

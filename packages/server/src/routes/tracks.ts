@@ -1,7 +1,13 @@
-/** /api/tracks: list/get, rename, corner names, sector gates, centerline. */
+/** /api/tracks: list/get, rename, recognition candidates, corner names, sector gates, centerline. */
 
 import { equalSectorGates } from '@gt7/core';
-import type { SectorGate, Track, Vec2 } from '@gt7/shared';
+import {
+  recognizeTrack,
+  type SectorGate,
+  type Track,
+  type TrackRecognition,
+  type Vec2,
+} from '@gt7/shared';
 import type { FastifyInstance } from 'fastify';
 import {
   badRequest,
@@ -115,6 +121,18 @@ export function trackRoutes(app: FastifyInstance, ctx: RouteContext): void {
     const c = store.getCenterline(id);
     if (!c) throw notFound('Esta pista ainda não tem linha de referência.', 'noCenterline');
     return c;
+  });
+
+  /**
+   * Candidates for naming a track: the stored centerline compared with the shipped driving lines of
+   * the 122 official layouts (falls back to the length window when there is no line). Never renames
+   * anything: the UI asks the user to confirm.
+   */
+  app.get('/tracks/:id/recognition', async (req): Promise<TrackRecognition> => {
+    const id = trackId(req.params);
+    const t = getTrack(id);
+    const c = store.getCenterline(id);
+    return recognizeTrack(t.lengthM, c ? { x: c.x, z: c.z } : null);
   });
 
   app.get('/tracks/:id/laps', async (req) => {

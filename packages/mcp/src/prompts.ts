@@ -5,7 +5,7 @@
  */
 
 import type { Gt7Store } from '@gt7/core';
-import { carLabel } from '@gt7/shared';
+import { carLabel, knowledgeFor } from '@gt7/shared';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { latestDrivingSession } from './format.ts';
@@ -31,7 +31,26 @@ carros de distância depois do ponto atual").
 precisão de alguns metros e o formato dos pedais não é confiável; diferenças < ~10 m ou de \
 forma de pedal são indícios, não certezas. Diga isso quando relevante.
 - Se os carros forem diferentes, avise que frenagens, V-mín e marchas não são comparáveis 1:1.
+- Use a base de conhecimento de pilotagem (ferramenta get_knowledge e o resumo do contexto): adapte o \
+conselho à CLASSE do carro (Gr.1, Gr.2, Gr.3, Gr.4, Gr.B, N, X), diga quando algo é "regra geral" ou \n"depende do carro" e não afirme o que a base marca como pouca evidência (Gr.2, N, X, Gr.B).
+- NUNCA invente pontos de frenagem absolutos (distâncias de placas, marcos ou números de pista que o \
+app não mediu): o app só conhece os pontos medidos nas voltas do piloto e nas referências capturadas.
+- Afinação só como hipótese, uma mudança por vez, e só depois de a técnica estar estável; o app não lê o setup.
 - Responda em português do Brasil, direto, sem enrolação, com tabelas curtas quando ajudar.`;
+
+/** Max size of the class briefing embedded in the task texts (the rest comes from get_knowledge). */
+const KNOWLEDGE_CONTEXT_CHARS = 3500;
+
+/** Class briefing (pt-BR Markdown) of the car, embedded in the task so the first answer already uses it. */
+function knowledgeContext(
+  carCode: number | null | undefined,
+  trackId: string | null | undefined,
+): string {
+  if (carCode === null || carCode === undefined) return '';
+  const md = knowledgeFor({ carCode, trackId, maxChars: KNOWLEDGE_CONTEXT_CHARS });
+  return `\n\nBASE DE CONHECIMENTO DE PILOTAGEM (resumo da classe do carro; detalhes de cada diagnóstico com \
+get_knowledge):\n${md}`;
+}
 
 function text(t: string) {
   return { messages: [{ role: 'user' as const, content: { type: 'text' as const, text: t } }] };
@@ -125,6 +144,9 @@ os setores e se a referência é replay (refReplay) e se o carro é o mesmo (sam
 confirmar a causa (perfil de freio, retomada, V-mín, traçado). Opcional: render_comparison_chart com a \
 curva para "ver" o traçado e os pedais.
 4. get_consistency(session_id) → separe o que é técnica (erro sempre igual) do que é inconsistência.
+5. get_knowledge(car_code${session ? `=${session.carCode}` : ''}, diagnostics=[plan[].code das curvas escolhidas]) → \
+significado, causa, ação, exercício e a variação para a CLASSE do carro. Uma chamada basta. Use-a para \
+adaptar a ação (Gr.1 ≠ Gr.4 ≠ carro de rua) e diga quando a recomendação é "regra geral".
 
 Formato da resposta:
 - **Resumo** (2 linhas): tempo × referência, delta, onde está o grosso da perda (setor/curvas × retas).
@@ -134,7 +156,8 @@ Formato da resposta:
 - **Consistência**: 1–2 destaques (ex.: "frenagem da T6 varia 15 m: escolha uma referência visual").
 - **Plano para o próximo stint**: no máximo 3 itens, em ordem de prioridade, cada um verificável \
 ("T1: frear no ponto X; meta V-mín ≥ 62 km/h").
-Não liste todas as curvas; foque no que dá mais tempo.`;
+Não liste todas as curvas; foque no que dá mais tempo. Nunca cite pontos de frenagem absolutos que não \
+vieram das ferramentas.${knowledgeContext(session?.carCode, session?.trackId)}`;
 }
 
 /** Task text (without the persona) of the `foco_curva` prompt; also used by the in-app coach. */
@@ -164,13 +187,15 @@ Passos:
 saída, reta seguinte) e os findings dela.
 4. render_comparison_chart(lap_id, reference, corner="${curva}") para ver pedais, velocidade e traçado.
 5. Se houver várias voltas suas, get_consistency(lap_ids) para ver a variação nesta curva.
+6. get_knowledge(car_code${session ? `=${session.carCode}` : ''}, diagnostics=[plan[].code desta curva], corner_kind=<tipo da curva>) → \
+ação, exercício e variação por classe de carro. Diga se a recomendação é "regra geral" ou "depende do carro".
 
 Responda com:
 - **O que acontece na curva** (fase a fase: frenagem → entrada/rotação → ápice → saída), com números.
 - **Onde está o tempo** (qual fase custa mais, em segundos).
 - **Causa provável** (técnica × consistência) — seja honesto sobre a precisão de replay.
 - **UMA ação principal** + **um exercício** de treino para 5 voltas (ex.: "frear 10 m mais tarde a cada \
-volta até a V-mín cair; pare quando passar do ápice") com critério de sucesso medível pelo app.`;
+volta até a V-mín cair; pare quando passar do ápice") com critério de sucesso medível pelo app.${knowledgeContext(session?.carCode, session?.trackId)}`;
 }
 
 /** Task text (without the persona) of the `plano_treino` prompt; also used by the in-app coach. */
@@ -180,6 +205,11 @@ export function trainingPlanTask(
 ): string {
   const trackId = track_id ?? latestDrivingSession(store)?.trackId ?? null;
   const track = trackId ? store.getTrack(trackId) : null;
+  const latest = latestDrivingSession(store);
+  const carNum =
+    car_code !== undefined && Number.isInteger(Number(car_code))
+      ? Number(car_code)
+      : latest?.carCode;
   const ctx = track
     ? `Pista: ${track.name} (${track.id}).`
     : 'Pista: descubra com list_tracks (escolha a mais treinada).';
@@ -200,5 +230,7 @@ Responda com:
 - **Plano para as próximas 3 sessões**: cada sessão com 1 foco principal (no máximo 2 curvas), \
 um exercício e uma meta numérica verificável no app (ex.: "T1: V-mín ≥ 62 km/h em 4 de 5 voltas"; \
 "desvio-padrão do ponto de frenagem da T6 < 5 m").
-- **Assistências** (TCS/ASM) se os dados sugerirem (patinagem/TCS ativo), sugerindo reduzir aos poucos.`;
+- **Assistências** (TCS/ASM) se os dados sugerirem (patinagem/TCS ativo), sugerindo reduzir aos poucos.
+
+Para os exercícios e as metas, use a base de pilotagem: get_knowledge(topic="geral/como-treinar") e, para \ncada foco, get_knowledge(car_code, diagnostics=[código]) com a variação para a classe do carro. Marque o que \né "regra geral" e não prometa ganhos de tempo que o app não mediu.${knowledgeContext(carNum, trackId)}`;
 }

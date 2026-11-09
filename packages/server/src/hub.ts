@@ -519,6 +519,10 @@ export class WsHub {
             carName: typeof msg.carName === 'string' ? msg.carName.slice(0, 80) : null,
             rankingTimeMs: ranking,
             notes: typeof msg.notes === 'string' ? msg.notes.slice(0, 500) : null,
+            trackId:
+              typeof msg.trackId === 'string' && this.runtime.store.getTrack(msg.trackId)
+                ? msg.trackId
+                : null,
             ...(fmt ? { format: fmt } : {}),
           })
           .catch((e: Error) =>

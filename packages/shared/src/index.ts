@@ -10,7 +10,33 @@ export * from './api.ts';
 export * from './cars/index.ts';
 export * from './coach.ts';
 export * from './domain.ts';
+export {
+  ALL_DIAGNOSTIC_CODES,
+  type CarClassKnowledge,
+  COACH_RULES,
+  DIAGNOSTICS,
+  type DiagnosticCode,
+  type DiagnosticKnowledge,
+  diagnosticFor,
+  KNOWLEDGE_MAX_CHARS,
+  KNOWLEDGE_SOURCES,
+  type KnowledgeBrief,
+  type KnowledgeQuery,
+  type KnowledgeSource,
+  knowledgeBrief,
+  knowledgeFor,
+  knowledgeFullMarkdown,
+  knowledgeIndex,
+  knowledgeIndexMarkdown,
+  knowledgeStats,
+  knowledgeTopic,
+  parseCarGroup,
+  resolveTopicId,
+  searchKnowledge,
+  type TopicRef,
+} from './knowledge/index.ts';
 export * from './live.ts';
 export * from './telemetry.ts';
+export * from './tracks/index.ts';
 export * from './ui.ts';
 export * from './ws.ts';

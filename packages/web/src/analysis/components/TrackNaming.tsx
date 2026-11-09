@@ -1,15 +1,19 @@
 /**
  * Naming of tracks without work: an autocomplete field over the built-in GT7 circuit list, the
  * click-to-edit title, and the discreet "Nova pista detectada — qual é?" prompt with candidates by
- * lap length. Nothing is ever named without a click/Enter from the user.
+ * the recognized layouts (by the driven line, falling back to the lap length). Nothing is ever
+ * named here without a click/Enter from the user (the server only names a track by itself for a
+ * strong and unambiguous geometric match).
  */
 
+import type { TrackRecognitionCandidate } from '@gt7/shared';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { type Gt7Track, trackDisplayName } from '../../data/gt7Tracks.ts';
 import { addNotice } from '../../state/uiStore.ts';
 import { api } from '../api.ts';
 import { formatKm } from '../lib/history.ts';
 import { resolveTyped, searchCatalog, suggestByLength } from '../lib/trackSuggest.ts';
+import { useFetch } from '../useFetch.ts';
 
 /** Saves the name (and layout, when it comes from the list) of a track. */
 export async function saveTrackName(
@@ -229,9 +233,38 @@ export function NewTrackPrompt({
   onLater?: () => void;
   variant?: 'banner' | 'inline';
 }) {
-  const suggestions = useMemo(() => suggestByLength(lengthM), [lengthM]);
+  // The server compares the stored driving line with the official layouts. If it cannot answer
+  // (old server, no line), the length window still gives candidates.
+  const recognition = useFetch(`recog:${trackId}`, () => api.trackRecognition(trackId));
+  const suggestions: TrackRecognitionCandidate[] = useMemo(() => {
+    if (recognition.data) return recognition.data.candidates.slice(0, 3);
+    if (!recognition.error) return [];
+    return suggestByLength(lengthM).map((s) => ({
+      id: s.track.id,
+      name: s.track.name,
+      layout: s.track.layout ?? null,
+      displayName: trackDisplayName(s.track),
+      officialLengthM: s.track.lengthM,
+      turns: 0,
+      lengthErrRel: s.errorRel,
+      basis: 'length' as const,
+      confidence: 'low' as const,
+      meanDevM: null,
+      lookAlikes: [],
+    }));
+  }, [recognition.data, recognition.error, lengthM]);
   const [busy, setBusy] = useState(false);
-  const [typing, setTyping] = useState(suggestions.length === 0);
+  const [typing, setTyping] = useState(false);
+  const loadingSuggestions = recognition.loading && !recognition.data && !recognition.error;
+  const showTyping = typing || (!loadingSuggestions && suggestions.length === 0);
+  const byGeometry = suggestions.some((s) => s.basis === 'geometry');
+  // A strong geometric match already tells the reverse layout apart (driving direction), so the
+  // warning is for length-only suggestions, similar lines and ties.
+  const needsCare =
+    !!recognition.data?.ambiguous ||
+    suggestions.some(
+      (s) => s.lookAlikes.length > 0 && !(s.basis === 'geometry' && s.confidence === 'high'),
+    );
 
   const save = async (name: string, layout: string | null) => {
     setBusy(true);
@@ -251,32 +284,38 @@ export function NewTrackPrompt({
       </div>
       {suggestions.length > 0 && (
         <div className="a-newtrack-sugg">
-          <span className="dim a-small">Parece ser:</span>
+          <span className="dim a-small">
+            {byGeometry ? 'O traçado se parece com:' : 'Parece ser (só pelo tamanho):'}
+          </span>
           {suggestions.map((s) => (
             <button
-              key={trackDisplayName(s.track)}
+              key={s.id}
               type="button"
               className="a-chip"
               disabled={busy}
-              title={`Comprimento da lista: ${formatKm(s.track.lengthM!)} (diferença de ${Math.abs(
-                s.errorRel * 100,
-              )
-                .toFixed(1)
-                .replace('.', ',')}%)`}
-              onClick={() => save(s.track.name, s.track.layout ?? null)}
+              title={candidateTitle(s)}
+              onClick={() => save(s.name, s.layout)}
             >
-              {trackDisplayName(s.track)}
-              <span className="a-chip-sub">é essa</span>
+              {s.displayName}
+              <span className="a-chip-sub">
+                {s.basis === 'geometry' && s.confidence === 'high' ? 'traçado confere' : 'é essa'}
+              </span>
             </button>
           ))}
-          {!typing && (
+          {!showTyping && (
             <button type="button" className="a-link-btn a-small" onClick={() => setTyping(true)}>
               Outra pista…
             </button>
           )}
         </div>
       )}
-      {typing && (
+      {suggestions.length > 0 && needsCare && (
+        <p className="dim a-small a-newtrack-note">
+          Há layouts parecidos (reverso, com ou sem chicane…): confira qual você correu antes de
+          confirmar.
+        </p>
+      )}
+      {showTyping && (
         <TrackNameField
           lengthM={lengthM}
           busy={busy}
@@ -292,4 +331,17 @@ export function NewTrackPrompt({
       )}
     </section>
   );
+}
+
+/** Tooltip of a suggestion: why the app thinks so. */
+function candidateTitle(c: TrackRecognitionCandidate): string {
+  const diff = `${(Math.abs(c.lengthErrRel) * 100).toFixed(1).replace('.', ',')}%`;
+  const len = `Comprimento oficial: ${formatKm(c.officialLengthM)} (a volta medida difere ${diff})`;
+  const turns = c.turns > 0 ? ` · ${c.turns} curvas` : '';
+  const geo =
+    c.basis === 'geometry' && c.meanDevM !== null
+      ? `Traçado: desvio médio de ${c.meanDevM.toFixed(1).replace('.', ',')} m. `
+      : '';
+  const alike = c.lookAlikes.length ? ` · Parecidas: ${c.lookAlikes.join('; ')}` : '';
+  return `${geo}${len}${turns}${alike}`;
 }

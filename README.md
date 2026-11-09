@@ -222,8 +222,8 @@ console ficar ~15 s sem receber pedidos, por isso o app avisa que "a troca leva 
 
 | Formato | Para que serve | Observação |
 |---|---|---|
-| `~` | **Ao vivo (padrão).** Mais completo: acelerador/freio "crus", volante, forças G, energia | Relatado como indisponível em replay |
-| `B` | **Replay / captura de referência.** Volante e forças G | O app troca sozinho para `B` na captura e volta depois |
+| `~` | **Ao vivo (padrão).** Mais completo: acelerador/freio "crus", volante, forças G, energia | Também entrega os dados do replay (medido no PS5) |
+| `B` | Volante e forças G | Não é mais usado na captura de referência (ver *Capturar a volta de um piloto do top*) |
 | `A` | Básico, o mais compatível | Sem volante: alguns diagnósticos ficam indisponíveis |
 | `C` | Experimental: acrescenta tipo de superfície (asfalto/zebra/grama) e tempo da volta atual | Layout e criptografia ainda não verificados |
 
@@ -335,14 +335,18 @@ sozinho, olhando só os dados que o jogo envia.
 
 **O que não vira histórico**
 - Sessão que termina **sem nenhuma volta completa** é descartada (com a gravação bruta): não polui a lista.
-- **Replay** não cria sessão de piloto: só a captura de referência (explícita) grava replays, marcados como tal e fora
-  dos recordes. O app não consegue detectar um replay sozinho; ele só sabe que é replay durante uma captura de referência.
+- **Replay** não cria sessão de piloto. O app **detecta o replay sozinho**: o PS5 manda os dados do carro (velocidade,
+  pedais, posição, pneus) mas com o flag "carro na pista" desligado, sem cronômetro e sem avanço de volta; um carro nessas
+  condições, em movimento e com a posição avançando, é "replay em reprodução" (estado *Replay*, selo **REPLAY** no
+  painel). Não abre sessão, não conta tempo de pista e não grava nada nas suas voltas. Só a captura de referência
+  (explícita) grava replays, marcados como tal e fora dos recordes. Menu/garagem (pacotes zerados) continua *No menu*.
 - Interruptor **Configurações › Captura › Gravar sessões automaticamente** (padrão ligado). Desligado, o painel segue
   mostrando tudo ao vivo (delta, setores, voltas), mas **nada é salvo**: nenhuma sessão, volta ou pista nova.
 
 **O que você vê:** um chip discreto ao lado do indicador do PS5 (no painel ao vivo e na análise): *Aguardando pista*,
 *Gravando · 4 voltas* (ponto verde pulsando; na análise vira link para a sessão), *Pausado*, *Fora da pista*, *Sem
-sinal*, *Replay · não grava* ou *Gravação desligada*. Ao encerrar uma sessão com voltas aparece um aviso sem exigir
+sinal*, *Replay detectado — não conta como sessão* ou *Gravação desligada*. Com uma captura de referência armada, o chip
+mostra o andamento dela (*Capturando · aguardando linha de largada* › *gravando volta 0:45* › *validando*). Ao encerrar uma sessão com voltas aparece um aviso sem exigir
 clique: "Sessão salva: Pista X, 5 voltas, melhor 1:23,456 — ver". O mesmo estado está em `/api/status`
 (`sessionCapture`) e na mensagem WebSocket `status`.
 
@@ -369,22 +373,45 @@ para de gravar após 30 min; a gravação bruta (`.gt7rec`) guarda poucos pacote
 
 ### (b) Capturar a volta de um piloto do top (replay) e comparar
 
-1. Abra `#/captura` (menu **Captura** da área de análise). Preencha **Piloto** (obrigatório), carro, **tempo do
-   ranking** (`m:ss.mmm`, opcional mas ajuda a validar) e notas. Clique **Iniciar captura**.
-2. No jogo: **Time Trial** da pista › **ranking** › escolha o replay do piloto. Inicie a captura no app
-   **antes** de dar play (a troca para o formato `B` leva até ~15 s).
-3. Assista em **velocidade 1×**, do começo ao fim da volta. **Não pule, não avance, não pause.** Qualquer salto
-   invalida a volta. Mantenha a câmera no carro do piloto.
-4. Quando a volta fecha, o app valida (comprimento ±2% da pista, tempo ±0,3 s do ranking, pacotes perdidos,
-   carro esperado) e **salva como referência**, voltando ao formato ao vivo. Se for rejeitada, ele grava a
-   próxima volta do replay; os motivos aparecem em português na tela.
+**Como funciona de verdade.** No replay o PS5 manda os dados do carro a ~60 Hz em tempo real, mas o jogo **não** informa
+volta nenhuma (sem cronômetro, sem tempo da última volta, contador de voltas parado, flag "carro na pista" desligado).
+Por isso a captura ignora tudo que o jogo diz sobre voltas e trabalha pela **geometria**:
+
+- **Pista:** descoberta pela posição do carro (a pista conhecida cuja linha central o carro acompanha; se várias, a mais
+  próxima) ou escolhida por você no formulário. Uma pista que o app **nunca viu** aparece como *Pista desconhecida —
+  dirija essa pista ao vivo primeiro*: complete uma volta ao vivo nela (o app aprende o traçado) e capture depois.
+- **Volta:** começa e termina quando o carro cruza a **linha de largada/chegada** da pista; o instante do cruzamento é
+  interpolado entre dois pacotes. O replay pode começar no meio da volta: a volta parcial é ignorada e a próxima volta
+  completa é gravada.
+- **Tempo:** contado pelos **pacotes** (número do pacote × período calibrado), nunca pelo jogo. Erro típico de 1–2 pacotes
+  (≈ ±30 ms). Se você digitar o **tempo do ranking**, o app compara com o medido (tolerância ±0,3 s), mostra a diferença e
+  guarda o tempo do ranking como o da volta (`timeSource: ranking`); sem tempo digitado a volta vale o tempo medido
+  (*medido por pacotes*).
+- **Validade:** só vale a volta de uma passagem pela linha até a seguinte, **sem pausa, volta ou avanço** (a posição
+  parar ou saltar descarta a volta), com poucos pacotes perdidos, comprimento ±2% da pista, velocidade 1× e o carro
+  esperado. Volta descartada não é salva; o app espera a próxima passagem pela linha.
+- O formato do pacote **não é trocado** (antes o app mudava para `B` e esperava ~15 s): o formato ao vivo já entrega o
+  replay, e o `B` nem existe no Sport Mode online.
+
+**Passo a passo**
+
+1. Abra `#/captura` (menu **Captura** da área de análise) — ou toque em **Capturar esta volta como referência** no aviso
+   que o painel ao vivo mostra durante um replay. Preencha **Piloto** (obrigatório), carro, **tempo do ranking**
+   (`m:ss.mmm`, opcional mas ajuda a validar), a **pista** (opcional) e notas. Clique **Iniciar captura**.
+2. No jogo: abra o **replay da volta do piloto** (Time Trial › ranking › replay).
+3. Deixe **reproduzir normalmente, em velocidade 1×**: **não pause, não volte e não avance**. Mantenha a câmera no carro.
+4. O status mostra o andamento: aguardando o replay › aguardando a linha de largada › gravando a volta (0:45) › validando.
+   Ao fechar a volta o app valida e **salva como referência**, mostrando o tempo **medido × digitado**. Se for descartada,
+   os motivos aparecem em português e ele grava a próxima volta do replay.
 5. Compare: o botão **Comparar com o seu melhor** abre a comparação com a sua melhor volta válida do mesmo
    carro. No painel ao vivo, toque duplo até **Top capturado** para ter o delta contra ele.
 6. **Use o mesmo carro** (o app avisa se o `carCode` for diferente) e, de preferência, o mesmo acerto e pneu.
 
-Limite honesto: dados de replay são **suavizados**. Pontos de frenagem e traçado têm precisão de **alguns
-metros**: ótimo para aprender, não para contar milésimos. O app rebaixa a confiança dos diagnósticos que
-dependem de forma de pedal/volante quando a referência é de replay.
+**Limites.** Replay a 1× e sem pausar (câmera lenta, avanço ou rebobinar invalidam a volta). Só captura pistas que o app já
+conhece. O tempo medido tem ±1–2 pacotes de erro. Dados de replay são **suavizados**: pontos de frenagem e traçado têm
+precisão de **alguns metros**, ótimo para aprender, não para contar milésimos; o app rebaixa a confiança dos diagnósticos
+que dependem de forma de pedal/volante quando a referência é de replay. Se o replay começa exatamente na linha, a 1ª volta
+só é capturada se o primeiro pacote cair a ~1 pacote depois dela; senão vale a volta seguinte.
 
 ### (c) Análise pós-sessão
 
@@ -467,6 +494,11 @@ do app mostra trechos prontos (eles já trazem o caminho real da pasta em uso, o
 Depois, peça em linguagem natural ("faça o debrief da minha última sessão"), ou use os prompts prontos
 `debrief_sessao`, `foco_curva` e `plano_treino`. Lista de ferramentas e detalhes:
 [packages/mcp/README.md](packages/mcp/README.md).
+
+O coach (no app e via MCP) usa uma **base de conhecimento de pilotagem em pt-BR** por classe de carro (Gr.1, Gr.2, Gr.3,
+Gr.4, Gr.B, N, X) e por diagnóstico, com fontes citadas e a indicação de quando algo é regra geral. Ela também está na
+página **Guia de pilotagem** (`#/guia`, item "Guia" do menu) e na ferramenta MCP `get_knowledge`. A base não traz pontos de
+frenagem por pista: só os medidos nas suas voltas.
 
 ## Comandos e flags
 
@@ -565,8 +597,9 @@ mantida). Dentro da pasta:
 | **Painel diz "Sem conexão com o servidor"** | O servidor caiu ou o celular está em outra rede. Ele tenta reconectar sozinho (botão "Tentar agora") |
 | **iPhone apaga a tela** | Ajustes › Tela e Brilho › Bloqueio automático › Nunca. O truque do vídeo pode não funcionar no iOS; veja o roteiro de testes |
 | **Formato `~` sem dados** | No modo automático o app cai sozinho para `B` e depois `A` (leva ~20 s por tentativa) e avisa. Se você fixou um formato, escolha outro em Configurações › Formato ao vivo. Em `B`/`A` perde-se o acelerador/freio "crus" |
-| **Replay não mostra dados (captura)** | O replay não envia `~`: a captura usa `B` (troca de até ~15 s). Inicie a captura **antes** do play e aguarde "Aguardando o replay cruzar a linha de chegada" |
-| **Captura rejeitada** | Leia o motivo: pausa, salto, pacotes perdidos, comprimento da pista, tempo diferente do ranking (±0,3 s) ou carro diferente. Assista de novo a 1×, sem pular |
+| **Captura fica em "Aguardando o replay" / "Aguardando a linha de largada"** | O app só enxerga o replay quando ele está **tocando** (carro em movimento, posição avançando). Dê play em 1×; a volta só começa quando o carro cruza a linha de largada da pista |
+| **"Pista desconhecida — dirija essa pista ao vivo primeiro"** | A captura só reconhece pistas que o app já aprendeu com uma volta sua. Complete uma volta ao vivo nessa pista (ou escolha a pista no formulário, se já existir) |
+| **Captura rejeitada** | Leia o motivo: pausa, salto (voltar/avançar), pacotes perdidos, comprimento da pista, velocidade diferente de 1×, tempo medido diferente do ranking digitado (±0,3 s) ou carro diferente. Assista de novo a 1×, sem pausar |
 | **Delta/setores não aparecem** | Precisa da 1ª volta completa e válida na pista (e de uma referência). Volta 0 (saída) não conta |
 | **Mapa vazio** | Antes do primeiro laço fechado ele mostra o caminho parcial; depois usa a linha gravada da pista |
 | **Muitas voltas "inválidas"** | Pausa, perda de pacotes (Wi-Fi) ou teletransporte. Melhore a rede do PS5 |
@@ -576,7 +609,7 @@ mantida). Dentro da pasta:
 
 - **Nada foi validado com um console real ainda** (veja [docs/primeiro-teste-com-ps5.md](docs/primeiro-teste-com-ps5.md)).
   Itens incertos: cadência mínima do heartbeat, XOR e layout do pacote C, comportamento em replay (carro
-  focado, suavização), codificação de ré/neutro, sinais do volante/rotação das rodas, orientação (espelhamento)
+  focado, suavização; a captura por geometria foi testada só com dados sintéticos e frames reais isolados), codificação de ré/neutro, sinais do volante/rotação das rodas, orientação (espelhamento)
   do mapa, unidades de sway/heave/surge e de `energyRecovery`, tempo da volta no pacote de troca de volta.
 - **Replay é suavizado**: referências do top valem para coaching (metros, km/h), não para milésimos.
 - O GT7 **não envia** dados de outros carros, nome/ID da pista, setores, desgaste de pneu, temperatura de freio
@@ -614,6 +647,45 @@ gt7/
   docs/         guias e gráficos de exemplo
   (seus dados ficam na pasta do usuário, fora do projeto)
 ```
+
+## Pistas, layouts e reconhecimento automático
+
+O pacote de telemetria **não traz o id da pista**. O app traz embutido o acervo oficial dos **122 layouts** do jogo
+(id, nome oficial em inglês, país, comprimento, nº de curvas, desnível, maior reta, oval/reverso, fictícia/real) e, para
+121 deles, a **linha de corrida** no sistema de coordenadas do próprio jogo. Ao fechar a primeira volta de uma pista
+nova, o app compara a linha dirigida com essas linhas:
+
+- **Correspondência forte e inequívoca** (traçado praticamente igual, sentido da volta igual, comprimento compatível e
+  um candidato muito melhor que o segundo): a pista já nasce com o nome oficial (ex.: *Trial Mountain Circuit*).
+- **Qualquer dúvida** (layouts parecidos: com/sem chicane, Fuji e Fuji Short, Monza, Le Mans, Barcelona; traçado só
+  parecido; linha publicada truncada): continua *Pista desconhecida N* e o aviso "Nova pista detectada — qual é?" mostra
+  os candidatos com um clique para confirmar. Nunca se nomeia sozinho nesses casos.
+- **Sem traçado conhecido** (pista nova do jogo, ex.: Autumn Ring em dezembro): cai no casamento por comprimento, com
+  janela assimétrica de −4 % a +1,5 % do comprimento oficial (a linha dirigida é, em mediana, 0,95 % menor que a medida
+  oficial; a janela antiga de ±1,5 % reprovava 25 dos 81 layouts medidos, a nova reprova 7), ou você digita o nome.
+- Na página da pista, a **Ficha da pista** mostra país, comprimento oficial × medido, curvas oficiais × detectadas,
+  desnível, maior reta, layout, fictícia/real e links (lista oficial do jogo e DG EDGE; só links, nada copiado).
+
+Verificado com uma sessão real (Trial Mountain, Huracán Gr.4): o x/z do app é o **mesmo sistema de coordenadas** das
+linhas publicadas (sem rotação, espelho nem escala): desvio médio de 2,4 m e máximo de 11 m contra a linha de levantamento
+de 20 m. O reverso reaproveita a linha do normal percorrida ao contrário (não verificado com o console real).
+
+- **Fontes** (todas com licença livre; o app **nunca** baixa nada em tempo de execução):
+  [ddm999/gt7info](https://github.com/ddm999/gt7info) (**MIT-0**, `course.csv`, `country.csv`, commit
+  `2648c847f1021be69b67430e65e2246098383e66`: id numérico do jogo, comprimento, curvas, desnível, maior reta, oval);
+  [jbhoorasingh/gt7-datalogger-track-data](https://github.com/jbhoorasingh/gt7-datalogger-track-data) (**CC0-1.0**,
+  `index.json` e `signatures.json`, commit `637aaa379e7b225e53034b9864b6f04f8bf2724e`: os 122 layouts oficiais com id
+  hexadecimal, inclusive **Sportsland SUGO** (jogo 1.72), e as linhas de corrida a cada 20 m);
+  [zetetos/gt-telemetry](https://github.com/zetetos/gt-telemetry) (**MIT**, `pkg/circuits/inventory`, commit
+  `96007fc0a1f25ab4bcefe7007e4dca81166667a1`: linha de largada e as linhas em grade de 16 m usadas onde a anterior não tem
+  traçado; 7 layouts). Coletado em 09/11/2026. Os links do DG EDGE vêm do `sitemaps/tracks.xml` (só as URLs).
+- **Arquivos:** `packages/shared/src/tracks/data.ts` (layouts, ~21 KB) e `geometry.ts` (linhas simplificadas, ~58 KB,
+  fora do pacote do navegador), gerados por `node packages/shared/scripts/gen-tracks.mjs` (opções `--from <pasta>`) e
+  depois `npx biome format --write packages/shared/src/tracks`. Funções puras em `catalog.ts` (busca, janela de
+  comprimento, links) e `match.ts` (reconhecedor).
+- **Lacunas conhecidas:** o gt7info ainda não tem SUGO (id 1340 vem do DG EDGE, marcado no dado) nem ids reais de Eiger,
+  Yas Marina e Gilles-Villeneuve (os ids 2001–2004 são fictícios, sinalizados); *Nürburgring Endurance II* não tem linha
+  publicada; 7 linhas são capturas truncadas (nunca nomeiam sozinhas). Autumn Ring (dezembro) ainda não existe nas fontes.
 
 ## Carros, marcas e logos
 

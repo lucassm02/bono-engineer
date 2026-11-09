@@ -30,6 +30,7 @@ import {
   r,
   roundDeep,
 } from './format.ts';
+import { registerKnowledge } from './knowledge.ts';
 import { registerPrompts } from './prompts.ts';
 
 export const MCP_SERVER_NAME = 'gt7-race-engineer';
@@ -45,7 +46,8 @@ export interface McpDeps {
 
 const INSTRUCTIONS = `Servidor de telemetria do Gran Turismo 7 (GT7 Race Engineer).
 Fluxo típico: list_sessions → list_laps → compare_laps(lap_id, reference="auto") → \
-get_corner_detail / render_comparison_chart nas curvas que mais custam.
+get_corner_detail / render_comparison_chart nas curvas que mais custam; depois \
+get_knowledge(car_code, diagnostics = os plan[].code) para a base de pilotagem da classe do carro.
 Convenções: distâncias em metros ao longo da volta; delta e tempo perdido positivos = você mais lento; \
 pares [você, referência]. Referências capturadas de replay têm precisão de alguns metros.
 Use só os números retornados; diga quando um dado não existe.`;
@@ -416,6 +418,7 @@ export function createGt7McpServer(deps: McpDeps): McpServer {
           })),
           plan: (c.keyFindings ?? []).map((f) => ({
             c: f.cornerId ?? null,
+            code: f.kind,
             cost_s: r((f.costMs ?? 0) / 1000, 2),
             conf: f.confidence ?? null,
             action: f.action ?? f.kind,
@@ -987,6 +990,7 @@ export function createGt7McpServer(deps: McpDeps): McpServer {
     },
   );
 
+  registerKnowledge(server, { store });
   registerPrompts(server, { store, analysis, runtime });
   return server;
 }

@@ -25,7 +25,8 @@ import type {
  * - menu: packets arriving but car not on track (menus, loading).
  * - onTrack: driving.
  * - paused: on track but paused.
- * - replay: receiving data while the app is in reference (replay) capture mode.
+ * - replay: a replay is playing (car data with `carOnTrack` false, moving, position advancing — the
+ *   game's replay screen) or the app is in the legacy replay mode. It is not a driving session.
  */
 export type ConnectionState =
   | 'disconnected'

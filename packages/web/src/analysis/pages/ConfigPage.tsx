@@ -195,30 +195,10 @@ function ConnectionSection({ status, onChange }: { status: ApiStatus; onChange: 
               </label>
             ))}
           </fieldset>
-          <fieldset className="a-fieldset">
-            <legend>Formato da captura de replay</legend>
-            {PACKET_FORMATS.map((f) => (
-              <label key={f} className="a-radio">
-                <input
-                  type="radio"
-                  name="captureFormat"
-                  checked={s.captureFormat === f}
-                  disabled={busy}
-                  onChange={() => patch({ captureFormat: f }, `Capturas usarão o formato ${f}.`)}
-                />
-                <span>
-                  <strong>
-                    {f === 'B' ? 'B (recomendado para replay)' : PACKET_FORMAT_INFO[f].label}
-                  </strong>
-                  {f === '~' && <span className="dim a-small">Não funciona em replay.</span>}
-                </span>
-              </label>
-            ))}
-            <p className="dim a-small">
-              O jogo só manda <strong>~</strong> ao vivo; em replay use <strong>B</strong>. A troca
-              de formato espera ~15 s (o console precisa parar de receber o pedido anterior).
-            </p>
-          </fieldset>
+          <p className="dim a-small">
+            A captura de referência (replay) usa o formato acima: ela não troca mais o formato do
+            pacote, porque o formato atual já entrega os dados do replay.
+          </p>
         </div>
       </details>
     </Card>

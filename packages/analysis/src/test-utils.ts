@@ -170,6 +170,17 @@ export function syntheticFixture(
   const hit = cache.get(key);
   if (hit) return hit;
   const session = generateLaps({ profile, laps, seed, replay, format: replay ? 'B' : 'C' });
+  if (replay) {
+    // A real replay never advances lapCount (it stays at 1). Here the traces are still cut by lap,
+    // so borrow the lap numbers from the same session without replay (identical packet timing).
+    const twin = generateLaps({ profile, laps, seed, format: 'B' });
+    if (twin.packets.length === session.packets.length) {
+      session.packets = session.packets.map((p, i) => ({
+        ...p,
+        lapCount: twin.packets[i]!.lapCount,
+      }));
+    }
+  }
   const fx: SyntheticFixture = {
     session,
     traces: packetsToLapTraces(session.packets, `${profile}${replay ? 'R' : ''}${seed}`),

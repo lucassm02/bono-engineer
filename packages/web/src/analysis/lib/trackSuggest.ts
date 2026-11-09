@@ -1,14 +1,24 @@
 /**
- * Naming help for tracks discovered by geometry: autocomplete over the built-in GT7 list and
+ * Naming help for tracks discovered by geometry: autocomplete over the official GT7 layouts and
  * "looks like X" suggestions by lap length. Suggestions are only candidates: the UI always asks for
- * a click to confirm and nothing is named automatically.
+ * a click to confirm (the automatic naming, for a strong and unambiguous geometric match, happens in
+ * the server when the track is created, see `@gt7/core` `identifyOrCreateTrack`).
+ *
+ * Length: the line the car drives is shorter than the official length (median −0.95 %, p10 −2.8 %),
+ * so the window is asymmetric: −4 % … +1.5 % of the official length (see `LENGTH_WINDOW`).
  */
 
+import {
+  LENGTH_TYPICAL_REL,
+  LENGTH_WINDOW,
+  lengthCompatible,
+  lengthErrorRel,
+  searchTrackLayouts,
+} from '@gt7/shared';
 import { GT7_TRACKS, type Gt7Track, trackDisplayName } from '../../data/gt7Tracks.ts';
 import { normalizeText } from './history.ts';
 
-/** Relative length tolerance for a suggestion (1.5 %). */
-export const LENGTH_TOLERANCE = 0.015;
+export { LENGTH_WINDOW };
 
 export interface TrackSuggestion {
   track: Gt7Track;
@@ -16,25 +26,32 @@ export interface TrackSuggestion {
   errorRel: number;
 }
 
-/** Catalogue entries whose length is within `tolerance` of the measured one, closest first. */
+/**
+ * Catalogue entries whose official length is compatible with the measured one (asymmetric window),
+ * ordered by how far the error is from the typical −0.95 %, forward layouts before their reverse.
+ */
 export function suggestByLength(
   lengthM: number,
   catalog: readonly Gt7Track[] = GT7_TRACKS,
-  tolerance = LENGTH_TOLERANCE,
+  window: { minRel: number; maxRel: number } = LENGTH_WINDOW,
   max = 3,
 ): TrackSuggestion[] {
   if (!Number.isFinite(lengthM) || lengthM <= 0) return [];
   return catalog
-    .filter((t): t is Gt7Track & { lengthM: number } => typeof t.lengthM === 'number')
-    .map((t) => ({ track: t, errorRel: (lengthM - t.lengthM) / t.lengthM }))
-    .filter((s) => Math.abs(s.errorRel) <= tolerance)
-    .sort((a, b) => Math.abs(a.errorRel) - Math.abs(b.errorRel))
+    .filter((t) => lengthCompatible(lengthM, t.lengthM, window))
+    .map((t) => ({ track: t, errorRel: lengthErrorRel(lengthM, t.lengthM) }))
+    .sort(
+      (a, b) =>
+        Math.abs(a.errorRel - LENGTH_TYPICAL_REL) - Math.abs(b.errorRel - LENGTH_TYPICAL_REL) ||
+        Number(/Reverse/.test(a.track.layout ?? '')) - Number(/Reverse/.test(b.track.layout ?? '')),
+    )
     .slice(0, max);
 }
 
 /**
- * Autocomplete: every word typed must appear in "name layout" (accent/case-insensitive); entries
- * starting with the text rank first, then shorter lengths difference when `lengthM` is given.
+ * Autocomplete: every word typed must appear in "name layout official name" (accent/case-
+ * insensitive); entries starting with the text rank first, then the closest length when `lengthM`
+ * is given.
  */
 export function searchCatalog(
   query: string,
@@ -42,21 +59,11 @@ export function searchCatalog(
   catalog: readonly Gt7Track[] = GT7_TRACKS,
   max = 8,
 ): Gt7Track[] {
-  const words = normalizeText(query).split(' ').filter(Boolean);
-  const scored = catalog
-    .map((t) => {
-      const text = normalizeText(trackDisplayName(t));
-      return { t, text };
-    })
-    .filter(({ text }) => words.every((w) => text.includes(w)))
-    .map(({ t, text }) => {
-      const starts = words.length > 0 && text.startsWith(words[0]!) ? 0 : 1;
-      const dist =
-        lengthM && t.lengthM ? Math.abs(lengthM - t.lengthM) / t.lengthM : Number.POSITIVE_INFINITY;
-      return { t, starts, dist };
-    });
-  scored.sort((a, b) => a.starts - b.starts || a.dist - b.dist);
-  return scored.slice(0, max).map((s) => s.t);
+  const byId = new Map(catalog.map((t) => [t.id, t]));
+  return searchTrackLayouts(query, lengthM, 500)
+    .map((l) => byId.get(l.id))
+    .filter((t): t is Gt7Track => t !== undefined)
+    .slice(0, max);
 }
 
 /** Splits a typed "Name – Layout" back (when it matches a catalogue entry) for saving. */

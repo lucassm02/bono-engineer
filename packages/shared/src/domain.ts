@@ -129,6 +129,14 @@ export interface ReferenceMeta {
   carName?: string | null;
   notes?: string | null;
   capturedAt: number;
+  /**
+   * Where the lap time comes from (Onda 9a): 'ranking' = the ranking time typed by the user (the
+   * measured one agreed within tolerance), 'packets' = measured by counting telemetry packets
+   * (±1–2 packets of error). Absent in references captured before.
+   */
+  timeSource?: 'ranking' | 'packets';
+  /** Lap time measured from the packets (ms), even when the typed ranking time was kept. */
+  measuredTimeMs?: number | null;
 }
 
 export interface Lap {

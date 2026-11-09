@@ -13,8 +13,10 @@
  * of heartbeating, it tries 'B' and then 'A' (one round; each switch honours the ingestor's
  * cooldown), saves the first format that delivers packets, and after a session ends on a fallback
  * format it goes back to '~'. A format pinned by the user (`setPacketFormat`, option
- * `liveFormat`) is never changed automatically. Reference capture switches to `captureFormat`
- * ('B': '~' does not work in replays) and restores the live format afterwards.
+ * `liveFormat`) is never changed automatically. Reference capture (Onda 9a) does NOT change the
+ * packet format any more: the live format already delivers the replay's car data, and the capture
+ * times laps by geometry + packet counting (see capture/reference-capture.ts). The old switch to
+ * `captureFormat` survives only behind the option `switchFormatOnCapture` (default false).
  *
  * Automatic session capture: sessions open and close by themselves (see LiveEngine). The runtime
  * adds what needs IO: the raw recording per session (size-capped; paused packets throttled), the
@@ -45,7 +47,11 @@ import {
 } from '@gt7/shared';
 import { AnalysisService } from '../analysis-service/analysis-service.ts';
 import { AnalysisCornerHintProvider } from '../analysis-service/corner-hints.ts';
-import { ReferenceCapture, type ReferenceCaptureMeta } from '../capture/reference-capture.ts';
+import {
+  captureIssueText,
+  ReferenceCapture,
+  type ReferenceCaptureMeta,
+} from '../capture/reference-capture.ts';
 import type { CornerHintProvider } from '../live/corner-hints.ts';
 import {
   type CompletedLap,
@@ -107,8 +113,15 @@ export interface Gt7RuntimeOptions {
   autoFormatTimeoutMs?: number;
   /** After the packets stop on a fallback format, go back to '~' after this long (default 10000 ms). */
   autoFormatHealDelayMs?: number;
-  /** Capture packet format (default 'B'). */
+  /** Capture packet format used only with `switchFormatOnCapture` (default 'B'). */
   captureFormat?: PacketFormat;
+  /**
+   * Switch the ingestor to `captureFormat` while a reference capture runs and restore the live
+   * format afterwards (the pre-Onda 9a behaviour). Default false: the live format is kept.
+   */
+  switchFormatOnCapture?: boolean;
+  /** Reference capture rejects replays not played at 1x by the wall clock (default true; tests off). */
+  captureRealtimeCheck?: boolean;
   /** Deprecated: `null` disables the automatic format round (same as `autoFormat: false`). */
   formatFallback?: PacketFormat | null;
   /** Record raw sessions to data/recordings (overrides the persisted setting; default true). */
@@ -244,8 +257,10 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
     this.capture = new ReferenceCapture({
       engine: this.engine,
       store: s,
-      enter: () => this.#enterCapture(),
-      exit: () => this.#exitCapture(),
+      ...(opts.captureRealtimeCheck === false ? { checkRealtime: false } : {}),
+      ...(opts.switchFormatOnCapture
+        ? { enter: () => this.#enterCapture(), exit: () => this.#exitCapture() }
+        : {}),
     });
     this.engine.setPersistence(this.#autoCapture);
     this.#wireEngine();
@@ -402,7 +417,9 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
       return {
         ...base,
         state: 'replay',
-        hint: 'Replay (captura de referência) — não conta como sessão.',
+        hint: this.capture.active
+          ? 'Replay detectado — captura de referência em andamento; não conta como sessão.'
+          : 'Replay detectado — não conta como sessão.',
       };
     }
     if (!enabled) {
@@ -479,7 +496,7 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
       ...this.options.ingestor,
       ...(ip ? { consoleIp: ip } : {}),
       discovery: this.options.ingestor?.discovery ?? !this.options.simulator,
-      format: this.capture.active ? this.#activeCaptureFormat : this.#liveFormat,
+      format: this.#switchesFormat() ? this.#activeCaptureFormat : this.#liveFormat,
     });
     ing.on('packet', (ip2) => {
       this.#onPacketFormat(ing);
@@ -631,7 +648,7 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
     }
     this.#attemptsLeft = AUTO_FORMAT_ORDER.length;
     this.#emitStatus();
-    if (this.capture.active) return;
+    if (this.#switchesFormat()) return;
     this.#liveFormat = '~';
     await this.#switchFormat('~', true);
     this.#armAttempt();
@@ -673,8 +690,10 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
   }
 
   /**
-   * Starts a reference capture (switches to the capture format and replay mode). `format`
-   * overrides the configured capture format for this capture only (prefer setCaptureFormat).
+   * Arms a reference capture: it waits for a replay, finds the track from the position (or uses
+   * `meta.trackId`) and records the next complete lap between two start-line crossings. The packet
+   * format is not changed (unless `switchFormatOnCapture`, where `format` overrides
+   * `captureFormat` for this capture only).
    */
   async startReferenceCapture(
     meta: ReferenceCaptureMeta & { format?: PacketFormat },
@@ -737,8 +756,13 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
       !this.options.simulator &&
       this.options.autoFormat !== false &&
       this.options.formatFallback !== null &&
-      !this.capture.active
+      !this.#switchesFormat()
     );
+  }
+
+  /** A capture is running and it changed the packet format (legacy option). */
+  #switchesFormat(): boolean {
+    return this.options.switchFormatOnCapture === true && this.capture.active;
   }
 
   #clearFormatTimers(): void {
@@ -875,7 +899,8 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
       this.emit('captureStatus', st);
       this.#emitStatus();
     });
-    this.capture.on('captured', (_c, lap) => {
+    this.capture.on('captured', (c, lap) => {
+      this.#analyzeLap(c);
       this.#notice(
         'info',
         'captureSaved',
@@ -887,7 +912,7 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
       this.#notice(
         'warn',
         'captureInvalid',
-        `Volta capturada inválida: ${issues.join(', ')}. Aguardando a próxima.`,
+        `Volta do replay descartada: ${issues.map(captureIssueText).join('; ')}. Aguardando a próxima.`,
         8000,
       );
     });

@@ -47,7 +47,7 @@ Os tipos de requisição/resposta ficam em `@gt7/shared` (`ws.ts`, `api.ts`, `co
 | PUT | `/api/tracks/:id/sectors` | `Track` (`{ count }` ou `{ gates }`) |
 | POST | `/api/tracks/:id/redetect-corners` | `ApiRedetectCornersResult` (força nova detecção; nomes são mantidos por proximidade do ápice) |
 | GET / PUT / DELETE | `/api/devices`, `/api/devices/:id`; POST `/api/devices/:id/show-view` | `DeviceInfo[]`, perfis |
-| GET / POST | `/api/capture`, `/api/capture/start`, `/api/capture/stop` | `ReferenceCaptureStatus` (202) |
+| GET / POST | `/api/capture`, `/api/capture/start`, `/api/capture/stop` | `ReferenceCaptureStatus` (202). `start`: `driverName`, opcionais `carName`, `notes`, `rankingTimeMs`, `expectedCarCode`, `trackId` (400 se a pista não existe; sem ele a pista é descoberta pela posição do replay). `format` é aceito mas ignorado: o formato do pacote não é trocado |
 | GET | `/api/recordings/:sessionId` | arquivo `.gt7rec` |
 
 ### Análise (`/api/analysis`)

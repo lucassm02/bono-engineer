@@ -6,8 +6,20 @@
 
 import type { Gt7Store } from '@gt7/core';
 import { COACH_PERSONA, cornerFocusTask, debriefTask } from '@gt7/mcp';
-import { carLabel, type Lap, type Session, type Track } from '@gt7/shared';
+import { COACH_RULES, carLabel, type Lap, type Session, type Track } from '@gt7/shared';
 import { MAX_TOOL_ITERATIONS } from './config.ts';
+
+/**
+ * Rules for using the driving knowledge base (packages/shared/src/knowledge). Static text: it lives
+ * in the cached system prefix, so it must never carry per-request data (the class briefing of the
+ * car goes in the task message, see `debriefTask`/`cornerFocusTask`).
+ */
+export const COACH_KNOWLEDGE_RULES = `Base de conhecimento de pilotagem (pt-BR), por classe de carro e por diagnóstico:
+- O contexto traz um resumo da classe do carro. Depois de compare_laps, chame get_knowledge UMA vez com \
+car_code e diagnostics = os códigos de plan[].code das curvas escolhidas, para obter significado, causa, \
+ação, exercício e a variação da classe. Use topic="afinacao" só se o piloto perguntar de ajustes do carro \
+e topic="indice" para ver os tópicos.
+${COACH_RULES.map((r) => `- ${r}`).join('\n')}`;
 
 /** Stable system prompt (cached prefix: never put per-request data here). */
 export const COACH_SYSTEM_PROMPT = `${COACH_PERSONA}
@@ -28,7 +40,9 @@ compare_laps; peça get_corner_detail ou render_comparison_chart só quando muda
 - Formato: Markdown com títulos curtos (##), listas e tabelas pequenas. Não descreva as \
 ferramentas que usou nem repita JSON cru. Não use emojis.
 - Em perguntas de acompanhamento, responda direto ao que foi perguntado, com números das \
-ferramentas quando necessário.`;
+ferramentas quando necessário.
+
+${COACH_KNOWLEDGE_RULES}`;
 
 export interface CoachTarget {
   session: Session | null;

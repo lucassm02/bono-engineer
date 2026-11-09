@@ -94,10 +94,22 @@ ferramentas** (cliente MCP em memória) e os mesmos textos dos prompts (`COACH_P
 | `get_trace` | Canais reamostrados por distância (passo ≥ 2 m, ≤ 500 pontos) |
 | `get_evolution` | Histórico por dia: melhor volta, gap para o top, tendências por curva |
 | `render_comparison_chart` | **Imagem PNG**: velocidade/acelerador/freio/marcha/volante/delta + mapa colorido pelo delta; `corner` dá zoom com os dois traçados e pontos de frenagem |
+| `get_knowledge` | **Base de pilotagem (pt-BR)** por classe de carro (Gr.1, Gr.2, Gr.3, Gr.4, Gr.B, N, X) e por diagnóstico: significado, causa provável, ação, exercício e variação por classe, além de princípios gerais, mapa de afinação, glossário e fontes. Use depois de `compare_laps`, com `car_code` e `diagnostics` = os `plan[].code`. Sem argumentos: resumo do carro da sessão mais recente. `topic` (`indice`, `gr4`, `brakeEarlier`, `afinacao`, `glossario`, `fonte`…) devolve a página inteira; `max_chars` limita o resumo (padrão 6000) |
 | `get_live_state` | Estado ao vivo (só via HTTP) |
 | `rename_corner` / `rename_track` | Dá nome a curvas/pistas (mantido em nova detecção) |
 
-Recursos: `gt7://tracks` e `gt7://tracks/{trackId}`.
+Recursos: `gt7://tracks` e `gt7://tracks/{trackId}`; **base de pilotagem:** `gt7://knowledge` (índice) e
+`gt7://knowledge/{topic}` (ex.: `gt7://knowledge/classe/gr4`, `gt7://knowledge/diagnostico/brakeEarlier`,
+`gt7://knowledge/afinacao`).
+
+### Base de conhecimento de pilotagem
+
+Texto em pt-BR escrito para este app (resumos com palavras próprias, **com a fonte citada**: DG-EDGE, Coach Dave Academy,
+guia oficial Beyond the Apex, etc.; lista completa em `gt7://knowledge/fonte`). Cada afirmação traz a base: *regra geral*,
+*depende do carro*, *segundo uma fonte* ou *pouca evidência* (Gr.2, Gr.B, N e X quase não têm fonte publicada).
+**A base não tem pontos de frenagem por pista** (não existe base aberta): só princípios; os pontos de frenagem são
+sempre os medidos nas suas voltas. A mesma base alimenta o coach do app e a página **Guia de pilotagem** (`#/guia`).
+O código fica em `packages/shared/src/knowledge/` (`knowledgeFor`, `knowledgeIndex`, `knowledgeTopic`).
 
 Exemplo de gráfico: [`docs/exemplo-grafico.png`](../../docs/exemplo-grafico.png) (volta inteira) e
 [`docs/exemplo-grafico-curva.png`](../../docs/exemplo-grafico-curva.png) (zoom na curva). Gere de novo
@@ -111,8 +123,10 @@ com `npm run mcp:sample-chart` (dados sintéticos).
 | `foco_curva` | `curva`, `voltas?`, `session_id?` | Análise profunda de uma curva entre voltas + exercício de treino |
 | `plano_treino` | `track_id?`, `car_code?` | Plano das próximas sessões a partir do histórico de evolução e da consistência |
 
-Os prompts instruem o modelo a usar só os números das ferramentas, dar uma instrução por curva e
-considerar a imprecisão de referências capturadas de replay (alguns metros).
+Os prompts instruem o modelo a usar só os números das ferramentas, dar uma instrução por curva,
+considerar a imprecisão de referências capturadas de replay (alguns metros) e **usar a base de pilotagem**:
+cada prompt já traz o resumo da classe do carro e manda chamar `get_knowledge` com os códigos dos diagnósticos,
+adaptando a ação à classe e dizendo quando algo é regra geral.
 
 ## Dicas
 

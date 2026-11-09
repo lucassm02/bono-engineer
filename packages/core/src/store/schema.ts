@@ -107,6 +107,12 @@ export const MIGRATIONS: readonly string[] = [
   `
   ALTER TABLE sessions ADD COLUMN track_time_ms INTEGER;
   `,
+  // v4 — where a reference lap's time comes from (typed ranking time or packet counting) and the
+  // time measured from the packets (replay capture by geometry, Onda 9a)
+  `
+  ALTER TABLE reference_meta ADD COLUMN time_source TEXT;
+  ALTER TABLE reference_meta ADD COLUMN measured_time_ms INTEGER;
+  `,
 ];
 
 export const SCHEMA_VERSION = MIGRATIONS.length;

@@ -26,13 +26,45 @@ export type CaptureState =
   | 'recording'
   | 'validating';
 
+/**
+ * What a capture in `waitingLapStart` is waiting for (Onda 9a):
+ * - replay: no replay is playing (the game must be playing the lap's replay at 1x).
+ * - track: a replay is playing, the track is being identified from the position.
+ * - unknownTrack: the replay is on a track the app does not know ("drive it live first").
+ * - startLine: track known, waiting for the car to cross the start/finish line.
+ */
+export type CaptureWaiting = 'replay' | 'track' | 'unknownTrack' | 'startLine';
+
 export interface ReferenceCaptureStatus {
   state: CaptureState;
   driverName: string | null;
   /** Lap id once a lap was captured and saved. */
   lapId: Id | null;
-  /** Validation problems (pt-BR strings may be produced by the UI from these codes). */
+  /**
+   * Validation problems of the last rejected lap (codes: paused, discontinuity, packetGaps,
+   * lengthMismatch, timeMismatch, carMismatch, notRealtime, interrupted).
+   */
   issues: string[];
+  /** Only in `waitingLapStart`: what the capture is waiting for. (core, additive) */
+  waiting?: CaptureWaiting | null;
+  /** A replay is playing right now (car data, not on the track, position advancing). (core, additive) */
+  replayDetected?: boolean;
+  /** Track the capture locked onto (typed by the user or found from the position). (core, additive) */
+  trackId?: Id | null;
+  trackName?: string | null;
+  /** While recording: lap time so far (counted from packets) and fraction of the lap. (core, additive) */
+  recordingMs?: number | null;
+  lapFraction?: number | null;
+  /** Result of the last lap that reached validation (valid or not). (core, additive) */
+  measuredLapMs?: number | null;
+  /** Ranking time typed by the user for this capture, if any. */
+  rankingTimeMs?: number | null;
+  /** measuredLapMs − rankingTimeMs (ms), null without a typed time. */
+  diffMs?: number | null;
+  /** Where the saved lap's time comes from: the typed ranking time or packet counting. */
+  timeSource?: 'ranking' | 'packets' | null;
+  /** pt-BR sentence telling the user what to do / what is happening. (core, additive) */
+  hint?: string | null;
 }
 
 /**
@@ -272,7 +304,15 @@ export interface StartReferenceCaptureMessage {
   /** Ranking lap time for validation. */
   rankingTimeMs?: number;
   notes?: string;
-  /** Format used for the capture (default 'B': '~' does not work in replays). */
+  /**
+   * Track of the replay. Optional: without it the app finds the track from the car's position
+   * (Onda 9a); with it the identification is skipped.
+   */
+  trackId?: string;
+  /**
+   * Deprecated since Onda 9a: the capture no longer changes the packet format (the live format
+   * already carries the replay's car data). Only used if the server runs with `switchFormatOnCapture`.
+   */
   format?: PacketFormat;
 }
 

@@ -1,0 +1,42 @@
+/* Ficha da pista (catálogo oficial de layouts) e nota do aviso "Nova pista detectada". */
+
+.a-ficha {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px 20px;
+  margin: 0;
+}
+.a-ficha > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.a-ficha dt {
+  font-size: 12px;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.a-ficha dd {
+  margin: 0;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+.a-ficha-links {
+  margin: 12px 0 0;
+  line-height: 1.6;
+}
+.a-ficha-links a {
+  color: var(--accent);
+}
+.a-newtrack-note {
+  margin: 4px 0 0;
+}
+
+@media (max-width: 520px) {
+  .a-ficha {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 14px;
+  }
+}

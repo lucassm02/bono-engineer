@@ -88,6 +88,47 @@ describe('sessionCapture status', () => {
   });
 });
 
+describe('replay (Onda 9a)', () => {
+  const replayGen = (laps: number, seed: number) =>
+    generateLaps({ profile: 'pro', seed, laps, format: '~', replay: true, outLapM: 300 });
+
+  it('shows "replay detectado" without opening a session, and captures a reference by geometry', async () => {
+    const { rt, dir, feed } = makeRuntime();
+    // the app learns the track from a live lap first
+    feed(generateLaps({ profile: 'amateur', seed: 3, laps: 1, format: '~', outLapM: 300 }).packets);
+    rt.engine.endSession();
+    await settle(rt);
+    const sessionsBefore = rt.store.listSessions().length;
+
+    const rep = replayGen(2, 21);
+    const states: string[] = [];
+    rt.on('status', (st) => states.push(st.connection));
+    feed(rep.packets.slice(0, 200)); // a replay playing, nobody asked for a capture
+    expect(rt.getStatus().connection).toBe('replay');
+    expect(rt.getStatus().sessionCapture).toMatchObject({ state: 'replay', sessionId: null });
+    expect(rt.getStatus().sessionCapture!.hint).toBe('Replay detectado — não conta como sessão.');
+    expect(rt.session).toBeNull();
+    expect(rt.store.listSessions()).toHaveLength(sessionsBefore);
+
+    const notices: string[] = [];
+    rt.on('notice', (n) => notices.push(n.code));
+    const st0 = await rt.startReferenceCapture({ driverName: 'Top 1', rankingTimeMs: null });
+    expect(st0.state).toBe('waitingLapStart');
+    expect(rt.getSettings().liveFormat).toBe('~'); // no format switch
+    feed(rep.packets.slice(200));
+    await settle(rt);
+    const st = rt.capture.status;
+    expect(st.state).toBe('idle');
+    expect(st.lapId).not.toBeNull();
+    expect(notices).toContain('captureSaved');
+    const lap = rt.store.getLap(st.lapId!)!;
+    expect(lap.isReference).toBe(true);
+    expect(Math.abs(lap.timeMs - rep.laps[0]!.timeMs)).toBeLessThan(25);
+    expect(rt.store.listSessions().filter((x) => x.mode === 'live')).toHaveLength(sessionsBefore);
+    void dir;
+  });
+});
+
 describe('end of a session', () => {
   it('announces a session with laps as saved, with track, laps and best time', async () => {
     const { rt, saved, feed } = makeRuntime();

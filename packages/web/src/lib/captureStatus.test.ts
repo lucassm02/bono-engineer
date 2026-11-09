@@ -1,6 +1,11 @@
-import type { SessionCaptureStatus } from '@gt7/shared';
+import type { ReferenceCaptureStatus, SessionCaptureStatus } from '@gt7/shared';
 import { describe, expect, it } from 'vitest';
-import { describeCapture, savedToastText } from './captureStatus.ts';
+import {
+  clockText,
+  describeCapture,
+  describeReferenceCapture,
+  savedToastText,
+} from './captureStatus.ts';
 
 const base: SessionCaptureStatus = {
   state: 'waiting',
@@ -55,6 +60,7 @@ describe('describeCapture', () => {
   it('replay and switched-off are explicit and never link', () => {
     expect(describeCapture({ ...base, state: 'replay' })).toMatchObject({
       tone: 'info',
+      label: 'Replay detectado — não conta como sessão',
       sessionId: null,
     });
     const off = describeCapture({ ...base, state: 'idle', enabled: false, sessionId: 'x' });
@@ -73,5 +79,48 @@ describe('savedToastText', () => {
     expect(savedToastText({ trackName: null, lapCount: 1, bestLapMs: null })).toBe(
       'Sessão salva: pista não identificada, 1 volta',
     );
+  });
+});
+
+describe('describeReferenceCapture (armed capture progress)', () => {
+  const ref: ReferenceCaptureStatus = {
+    state: 'waitingLapStart',
+    driverName: 'X',
+    lapId: null,
+    issues: [],
+    waiting: 'replay',
+    hint: 'Aguardando o replay.',
+  };
+
+  it('shows nothing when no capture is running', () => {
+    expect(describeReferenceCapture(null)).toBeNull();
+    expect(describeReferenceCapture({ ...ref, state: 'idle' })).toBeNull();
+  });
+
+  it('follows waiting for the replay → track → start line → recording → validating', () => {
+    expect(describeReferenceCapture(ref)).toMatchObject({
+      label: 'Capturando · aguardando o replay',
+      reference: true,
+      sessionId: null,
+    });
+    expect(describeReferenceCapture({ ...ref, waiting: 'track' })?.label).toMatch(/identificando/);
+    expect(describeReferenceCapture({ ...ref, waiting: 'startLine' })?.label).toBe(
+      'Capturando · aguardando linha de largada',
+    );
+    expect(describeReferenceCapture({ ...ref, waiting: 'unknownTrack' })).toMatchObject({
+      tone: 'warn',
+      label: 'Capturando · pista desconhecida',
+    });
+    expect(
+      describeReferenceCapture({ ...ref, state: 'recording', recordingMs: 45_300 }),
+    ).toMatchObject({ tone: 'ok', pulse: true, label: 'Capturando · gravando volta 0:45' });
+    expect(describeReferenceCapture({ ...ref, state: 'validating' })?.label).toBe(
+      'Capturando · validando',
+    );
+  });
+
+  it('formats short spans as m:ss', () => {
+    expect(clockText(0)).toBe('0:00');
+    expect(clockText(65_900)).toBe('1:05');
   });
 });

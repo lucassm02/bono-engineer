@@ -392,6 +392,9 @@ describe('server app (Fastify + WS hub + REST) over a FakeConsole', () => {
     const cap = await api<{ state: string }>('GET', '/api/capture');
     expect(cap.body.state).toBe('idle');
     expect((await api('POST', '/api/capture/start', {})).status).toBe(400);
+    expect(
+      (await api('POST', '/api/capture/start', { driverName: 'X', trackId: 'nao-existe' })).status,
+    ).toBe(400);
 
     const rec = await fetch(`${BASE}/api/recordings/${sid}`);
     expect(rec.status).toBe(200);

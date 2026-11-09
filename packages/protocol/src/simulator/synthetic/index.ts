@@ -36,7 +36,8 @@ export interface GeneratedSession {
 
 /**
  * Pure function: generates an out lap followed by `laps` complete laps as packets at 60 Hz.
- * The last packet is the first one after the final lap closed (lapCount = laps + 1).
+ * The last packet is the first one after the final lap closed (lapCount = laps + 1; with
+ * `replay: true` the packets keep lapCount 1, like the real console in a replay).
  */
 export function generateLaps(opts: GenerateLapsOptions = {}): GeneratedSession {
   const laps = opts.laps ?? 3;
@@ -47,7 +48,7 @@ export function generateLaps(opts: GenerateLapsOptions = {}): GeneratedSession {
   while (packets.length < cap) {
     const p = session.next();
     packets.push(p);
-    if (p.lapCount > laps) break;
+    if (session.lapCount > laps) break; // (a replay's packets keep lapCount at 1)
   }
   return { packets, laps: [...session.completedLaps], track: session.track };
 }

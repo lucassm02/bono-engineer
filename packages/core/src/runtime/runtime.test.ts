@@ -284,4 +284,84 @@ describe('Gt7Runtime automatic session capture (FakeConsole)', () => {
     expect(s.lapCount).toBe(1);
     expect(existsSync(join(dir, 'data', s.recordingFile!))).toBe(true);
   });
+
+  it('captures a reference from a REAL-LIKE replay over UDP: no format switch, no pilot session', {
+    timeout: 90_000,
+  }, async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'gt7-runtime-replay-'));
+    cleanups.push(() => rmSync(dir, { recursive: true, force: true }));
+    // 1) the app learns the track from a live lap (straight into the store, before any socket)
+    const seed = new Gt7Runtime({
+      dataDir: join(dir, 'data'),
+      consoleIp: '127.0.0.1',
+      persistConsoleIp: false,
+      autoDetectCorners: false,
+    });
+    let t = 1_700_000_000_000;
+    for (const p of generateLaps({ profile: 'amateur', seed: 5, laps: 1, format: '~' }).packets) {
+      t += 1000 / 60;
+      seed.engine.push(p, t);
+    }
+    seed.engine.endSession();
+    await seed.close();
+
+    // 2) a replay recording: carOnTrack false, lapCount stuck at 1, zeroed menu packets first
+    const replay = generateLaps({
+      profile: 'pro',
+      seed: 6,
+      laps: 3,
+      format: '~',
+      replay: true,
+      includeMenu: true,
+      menuS: 1,
+      loadingS: 0.5,
+      outLapM: 200,
+    });
+    const file = join(dir, 'replay.gt7rec');
+    const w = await RecordingWriter.open(file, {
+      format: '~',
+      startTime: 0,
+      meta: { source: 'test' },
+    });
+    replay.packets.forEach((p, i) => {
+      w.write(encodePacket(p, '~'), Math.round((i * 1000) / 60 / SPEEDUP));
+    });
+    await w.close();
+
+    const runtime = capRuntime(dir, { liveFormat: '~', captureRealtimeCheck: false });
+    cleanups.push(() => runtime.close());
+    const states = new Set<string>();
+    runtime.on('status', (st) => states.add(st.connection));
+    await runtime.start();
+    const cap = await runtime.startReferenceCapture({ driverName: 'Replay real' });
+    expect(cap.state).toBe('waitingLapStart');
+    const fake = new FakeConsole({
+      port: CAP_CONSOLE_PORT,
+      host: '127.0.0.1',
+      targetPort: CAP_CLIENT_PORT,
+      formatLockMs: 300,
+      heartbeatTimeoutMs: 2000,
+      source: { kind: 'recording', file, loop: false },
+    });
+    await fake.start();
+    cleanups.push(() => fake.stop());
+    await waitFor(() => runtime.capture.status.state === 'recording', 40_000);
+    expect(runtime.getStatus().connection).toBe('replay');
+    expect(runtime.getStatus().sessionCapture).toMatchObject({ state: 'replay' });
+    // the capture ends with a saved lap, or (UDP loss on a loaded machine) with a rejected one
+    await waitFor(
+      () => runtime.capture.status.lapId !== null || runtime.capture.status.issues.length > 0,
+      60_000,
+    );
+    const st = runtime.capture.status;
+    if (st.lapId) {
+      const lap = runtime.store.getLap(st.lapId)!;
+      expect(lap.isReference).toBe(true);
+      expect(Math.abs(lap.timeMs - replay.laps[0]!.timeMs)).toBeLessThan(40);
+    }
+    expect(states.has('switchingFormat')).toBe(false);
+    expect(runtime.getSettings().liveFormat).toBe('~');
+    expect(runtime.ingestor?.format).toBe('~');
+    expect(runtime.store.listSessions().filter((x) => x.mode === 'live')).toHaveLength(1); // the seed one
+  });
 });

@@ -7,7 +7,7 @@
 
 import type { SessionSavedMessage } from '@gt7/shared';
 import { create } from 'zustand';
-import { describeCapture, savedToastText } from '../lib/captureStatus.ts';
+import { describeCapture, describeReferenceCapture, savedToastText } from '../lib/captureStatus.ts';
 import { routes } from '../lib/route.ts';
 import { useUi } from '../state/uiStore.ts';
 import '../styles/capture-status.css';
@@ -47,7 +47,9 @@ export function showSessionSaved(m: SessionSavedMessage): void {
 export function CaptureStatus({ variant }: { variant: 'live' | 'bar' }) {
   const mock = useUi((s) => s.source === 'mock');
   const capture = useUi((s) => s.serverStatus?.sessionCapture ?? null);
-  const view = describeCapture(capture);
+  const reference = useUi((s) => s.serverStatus?.capture ?? null);
+  // an armed reference capture is what the driver is waiting on: it takes the chip over
+  const view = describeReferenceCapture(reference) ?? describeCapture(capture);
   if (mock) {
     return (
       <span
@@ -74,6 +76,20 @@ export function CaptureStatus({ variant }: { variant: 'live' | 'bar' }) {
       <span className="cs-text">{view.label}</span>
     </>
   );
+  if (view.reference && variant === 'bar') {
+    return (
+      <a
+        className="cs-chip"
+        data-variant={variant}
+        data-tone={view.tone}
+        data-no-gesture
+        href={routes.capture()}
+        title={`${view.title} Abrir a captura de referência.`}
+      >
+        {inner}
+      </a>
+    );
+  }
   if (view.sessionId && variant === 'bar') {
     return (
       <a

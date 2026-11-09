@@ -1,10 +1,13 @@
 /**
- * #/captura — guided reference capture from a Time Trial ranking replay (PLANO §4): form, steps,
- * start/stop, live state (WS `status.capture`, REST polling as fallback), result + next step.
+ * #/captura — guided reference capture from a Time Trial ranking replay (PLANO §4, Onda 9a): form
+ * (with an optional track), three short steps, start/stop, live progress (WS `status.capture`, REST
+ * polling as fallback: waiting for the replay → start line → recording → validating) and the result
+ * with measured vs typed time + next step. The packet format is not changed any more.
  */
 
-import type { Lap, ReferenceCaptureStatus } from '@gt7/shared';
+import type { Lap, ReferenceCaptureStatus, Track } from '@gt7/shared';
 import { useEffect, useRef, useState } from 'react';
+import { clockText } from '../../lib/captureStatus.ts';
 import { formatLapTime } from '../../lib/format.ts';
 import { CONNECTION_STATE_LABELS } from '../../lib/labels.ts';
 import { routes } from '../../lib/route.ts';
@@ -12,7 +15,12 @@ import { useUi } from '../../state/uiStore.ts';
 import { api } from '../api.ts';
 import { CarName } from '../components/CarName.tsx';
 import { Card, ErrorBox, PageHead, Tag, useTitle } from '../components/ui.tsx';
-import { CAPTURE_STATE_LABELS, captureIssueLabel } from '../lib/labels.ts';
+import {
+  CAPTURE_STATE_LABELS,
+  CAPTURE_WAITING_LABELS,
+  CAPTURE_WAITING_TITLES,
+  captureIssueLabel,
+} from '../lib/labels.ts';
 import { parseLapTime } from '../lib/lapTime.ts';
 
 const FORM_KEY = 'gt7.captureForm';
@@ -22,29 +30,77 @@ interface FormState {
   carName: string;
   rankingTime: string;
   notes: string;
+  /** '' = the app finds the track from the replay's position. */
+  trackId: string;
 }
+
+const EMPTY_FORM: FormState = {
+  driverName: '',
+  carName: '',
+  rankingTime: '',
+  notes: '',
+  trackId: '',
+};
 
 function loadForm(): FormState {
   try {
     const raw = localStorage.getItem(FORM_KEY);
-    if (raw) return { driverName: '', carName: '', rankingTime: '', notes: '', ...JSON.parse(raw) };
+    if (raw) return { ...EMPTY_FORM, ...JSON.parse(raw) };
   } catch {
     // ignore
   }
-  return { driverName: '', carName: '', rankingTime: '', notes: '' };
+  return { ...EMPTY_FORM };
 }
 
 type Phase = 'form' | 'running' | 'saved' | 'stopped';
 
-const STEPS: { state: ReferenceCaptureStatus['state'][]; text: string }[] = [
-  {
-    state: ['switchingFormat'],
-    text: 'Trocando o formato do pacote para B (replays não enviam o ~)',
-  },
-  { state: ['waitingLapStart'], text: 'Aguardando o replay cruzar a linha de chegada' },
-  { state: ['recording'], text: 'Gravando a volta inteira' },
-  { state: ['validating'], text: 'Validando distância, pacotes e tempo' },
-];
+/** Progress steps shown while a capture is armed (index = how far it got). */
+const STEPS = [
+  'Aguardando o replay e a pista',
+  'Aguardando a linha de largada',
+  'Gravando a volta',
+  'Validando distância, pacotes e tempo',
+] as const;
+
+function stepOf(s: ReferenceCaptureStatus): number {
+  switch (s.state) {
+    case 'recording':
+      return 2;
+    case 'validating':
+      return 3;
+    case 'waitingLapStart':
+      return s.waiting === 'startLine' ? 1 : 0;
+    default:
+      return 0;
+  }
+}
+
+const signedMs = (ms: number) => `${ms > 0 ? '+' : ms < 0 ? '−' : ''}${Math.abs(ms)} ms`;
+
+/** Measured (packets) vs typed (ranking) time of the last lap that reached validation. */
+function TimeCheck({ status }: { status: ReferenceCaptureStatus }) {
+  if (status.measuredLapMs == null) return null;
+  return (
+    <dl className="a-timecheck num">
+      <div>
+        <dt>Medido pelos pacotes</dt>
+        <dd>{formatLapTime(status.measuredLapMs)}</dd>
+      </div>
+      {status.rankingTimeMs != null && (
+        <>
+          <div>
+            <dt>Digitado (ranking)</dt>
+            <dd>{formatLapTime(status.rankingTimeMs)}</dd>
+          </div>
+          <div>
+            <dt>Diferença</dt>
+            <dd>{status.diffMs != null ? signedMs(status.diffMs) : '—'}</dd>
+          </div>
+        </>
+      )}
+    </dl>
+  );
+}
 
 export function CapturePage() {
   useTitle('Captura de referência');
@@ -57,12 +113,24 @@ export function CapturePage() {
   const [polled, setPolled] = useState<ReferenceCaptureStatus | null>(null);
   const [savedLap, setSavedLap] = useState<Lap | null>(null);
   const [myBest, setMyBest] = useState<Lap | null>(null);
+  const [tracks, setTracks] = useState<Track[]>([]);
   const seenActive = useRef(false);
 
   // Live status: WebSocket when connected, else REST polling (also right after a command).
   const status: ReferenceCaptureStatus | null =
     wsStatus === 'open' && serverStatus ? serverStatus.capture : polled;
   const connection = serverStatus?.connection ?? null;
+
+  useEffect(() => {
+    let alive = true;
+    api
+      .tracks()
+      .then((t) => alive && setTracks(t))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -156,6 +224,7 @@ export function CapturePage() {
         driverName: form.driverName.trim(),
         ...(form.carName.trim() ? { carName: form.carName.trim() } : {}),
         ...(rankingMs ? { rankingTimeMs: rankingMs } : {}),
+        ...(form.trackId ? { trackId: form.trackId } : {}),
         ...(form.notes.trim() ? { notes: form.notes.trim() } : {}),
       });
       setPolled(s);
@@ -183,14 +252,14 @@ export function CapturePage() {
   };
 
   const active = !!status && status.state !== 'idle';
-  const stepIndex = status ? STEPS.findIndex((s) => s.state.includes(status.state)) : -1;
+  const stepIndex = status ? stepOf(status) : -1;
   const rejected = active && status!.issues.length > 0;
 
   return (
     <>
       <PageHead
         title="Captura de referência"
-        sub="Grave a volta de um piloto do topo do ranking assistindo ao replay dele no Time Trial. A volta vira referência para o delta ao vivo, a comparação e o coach."
+        sub="Grave a volta de um piloto do topo do ranking assistindo ao replay dele no jogo. A volta vira referência para o delta ao vivo, a comparação e o coach."
       />
       <div className="a-capture-grid">
         <Card title="1. Dados da volta">
@@ -238,8 +307,28 @@ export function CapturePage() {
                 {rankingInvalid
                   ? 'Formato: m:ss.mmm'
                   : rankingMs
-                    ? `= ${formatLapTime(rankingMs)} — a volta gravada precisa bater (±0,3 s)`
-                    : 'Opcional, mas ajuda a validar a volta.'}
+                    ? `= ${formatLapTime(rankingMs)} — o tempo medido pelos pacotes precisa bater (±0,3 s)`
+                    : 'Opcional, mas ajuda a validar a volta. Sem ele, vale o tempo medido pelos pacotes.'}
+              </span>
+            </label>
+            <label>
+              Pista
+              <select
+                className="a-input"
+                value={form.trackId}
+                disabled={active}
+                onChange={(e) => setForm({ ...form, trackId: e.target.value })}
+              >
+                <option value="">Descobrir sozinho (pela posição do carro)</option>
+                {tracks.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                    {t.layout ? ` — ${t.layout}` : ''}
+                  </option>
+                ))}
+              </select>
+              <span className="a-help">
+                Opcional. O app só reconhece pistas em que você já completou uma volta ao vivo.
               </span>
             </label>
             <label>
@@ -287,26 +376,22 @@ export function CapturePage() {
         <Card title="2. No jogo">
           <ol className="a-steps-howto">
             <li>
-              Abra o <strong>Time Trial</strong> da pista, vá ao <strong>ranking</strong> e escolha
-              o replay do piloto.
+              Abra o <strong>replay da volta do piloto</strong> (Time Trial → ranking → replay) e
+              inicie a captura aqui.
             </li>
             <li>
-              Inicie a captura aqui <em>antes</em> de dar play (a troca de formato leva até ~15 s).
+              Deixe <strong>reproduzir normalmente</strong>, em velocidade 1×:{' '}
+              <strong>não pause, não volte e não avance</strong>. Qualquer salto descarta a volta.
             </li>
             <li>
-              Assista em <strong>velocidade 1×</strong>, do começo ao fim da volta.{' '}
-              <strong>Não pule, não avance e não pause</strong>: qualquer salto invalida a volta.
-            </li>
-            <li>Mantenha a câmera no carro do piloto (no Time Trial só há um carro).</li>
-            <li>
-              Quando a volta fechar o app valida e salva sozinho; se for rejeitada, ele grava a
-              próxima.
+              Digite o <strong>tempo do ranking</strong> ao lado para validar a volta (opcional).
             </li>
           </ol>
           <p className="dim a-small">
-            Replays são suavizados: pontos de frenagem e traçado ficam com precisão de alguns metros
-            — ótimo para aprender, não para contar milésimos. Compare com o mesmo carro sempre que
-            possível.
+            O app mede a volta pelos pacotes entre duas passagens pela linha de largada. Se o replay
+            começar no meio da volta, a volta parcial é ignorada e a próxima volta completa é
+            gravada. A pista precisa ser uma em que você já completou uma volta ao vivo. Replays são
+            suavizados: ótimo para aprender frenagens e traçado, não para contar milésimos.
           </p>
         </Card>
 
@@ -323,35 +408,59 @@ export function CapturePage() {
                 {status
                   ? phase === 'running' && !active
                     ? 'Iniciando a captura…'
-                    : CAPTURE_STATE_LABELS[status.state]
+                    : status.state === 'waitingLapStart' && status.waiting
+                      ? CAPTURE_WAITING_TITLES[status.waiting]
+                      : CAPTURE_STATE_LABELS[status.state]
                   : '—'}
               </p>
               {connection && (
                 <p className="dim a-small">
                   Console: {CONNECTION_STATE_LABELS[connection]}
-                  {connection === 'replay' && ' (modo captura)'}
+                  {status?.replayDetected ? ' · replay detectado' : ''}
+                  {status?.trackName ? ` · pista: ${status.trackName}` : ''}
                 </p>
               )}
-              {active && (
-                <ol className="a-steps">
-                  {STEPS.map((s, i) => (
-                    <li
-                      key={s.text}
-                      data-step={i < stepIndex ? 'done' : i === stepIndex ? 'now' : 'todo'}
+              {active && status && (
+                <>
+                  <ol className="a-steps">
+                    {STEPS.map((text, i) => (
+                      <li
+                        key={text}
+                        data-step={i < stepIndex ? 'done' : i === stepIndex ? 'now' : 'todo'}
+                      >
+                        {i === 2 && status.state === 'recording' && status.recordingMs != null
+                          ? `Gravando a volta ${clockText(status.recordingMs)}`
+                          : text}
+                      </li>
+                    ))}
+                  </ol>
+                  {status.state === 'recording' && status.lapFraction != null && (
+                    <progress
+                      className="a-progress"
+                      max={1}
+                      value={status.lapFraction}
+                      aria-label="Progresso da volta"
+                    />
+                  )}
+                  {status.state === 'waitingLapStart' && status.waiting && (
+                    <p
+                      className={status.waiting === 'unknownTrack' ? 'a-form-error' : 'dim'}
+                      role="status"
                     >
-                      {s.text}
-                    </li>
-                  ))}
-                </ol>
+                      {CAPTURE_WAITING_LABELS[status.waiting]}
+                    </p>
+                  )}
+                </>
               )}
               {rejected && (
                 <div className="a-rejected" role="alert">
-                  <strong>Volta rejeitada</strong> — continuamos gravando a próxima volta:
+                  <strong>Volta descartada</strong> — o app espera a próxima passagem pela linha:
                   <ul>
                     {status!.issues.map((i) => (
                       <li key={i}>{captureIssueLabel(i)}</li>
                     ))}
                   </ul>
+                  <TimeCheck status={status!} />
                 </div>
               )}
               {!active && status && status.issues.length > 0 && phase !== 'saved' && (
@@ -362,6 +471,7 @@ export function CapturePage() {
                       <li key={i}>{captureIssueLabel(i)}</li>
                     ))}
                   </ul>
+                  <TimeCheck status={status} />
                 </div>
               )}
               {phase === 'saved' && (
@@ -381,6 +491,14 @@ export function CapturePage() {
                       </>
                     )}
                   </p>
+                  {status && <TimeCheck status={status} />}
+                  {status?.timeSource && (
+                    <p className="dim a-small">
+                      {status.timeSource === 'ranking'
+                        ? 'Tempo salvo: o do ranking que você digitou (o medido pelos pacotes confere).'
+                        : 'Tempo salvo: medido pelos pacotes (±1–2 pacotes, cerca de ±30 ms), pois nenhum tempo do ranking foi digitado.'}
+                    </p>
+                  )}
                   <div className="a-actions">
                     {savedLap && myBest ? (
                       <a

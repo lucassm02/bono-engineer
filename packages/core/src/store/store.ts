@@ -459,7 +459,7 @@ export class Gt7Store {
 
   static readonly #LAP_SELECT =
     `SELECT l.*, m.driver_name, m.source AS ref_source, m.ranking_time_ms,
-      m.car_name, m.notes AS ref_notes, m.captured_at
+      m.car_name, m.notes AS ref_notes, m.captured_at, m.time_source, m.measured_time_ms
     FROM laps l LEFT JOIN reference_meta m ON m.lap_id = l.id`;
 
   #lap(r: Row): Lap {
@@ -472,6 +472,12 @@ export class Gt7Store {
             carName: strOrNull(r.car_name),
             notes: strOrNull(r.ref_notes),
             capturedAt: num(r.captured_at),
+            ...(r.time_source === 'ranking' || r.time_source === 'packets'
+              ? { timeSource: r.time_source as 'ranking' | 'packets' }
+              : {}),
+            ...(r.measured_time_ms !== null && r.measured_time_ms !== undefined
+              ? { measuredTimeMs: num(r.measured_time_ms) }
+              : {}),
           }
         : null;
     return {
@@ -613,11 +619,13 @@ export class Gt7Store {
   #saveMeta(lapId: Id, m: ReferenceMeta): void {
     this.db
       .prepare(
-        `INSERT INTO reference_meta (lap_id, driver_name, source, ranking_time_ms, car_name, notes, captured_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `INSERT INTO reference_meta (lap_id, driver_name, source, ranking_time_ms, car_name, notes, captured_at,
+          time_source, measured_time_ms)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(lap_id) DO UPDATE SET driver_name = excluded.driver_name, source = excluded.source,
           ranking_time_ms = excluded.ranking_time_ms, car_name = excluded.car_name,
-          notes = excluded.notes, captured_at = excluded.captured_at`,
+          notes = excluded.notes, captured_at = excluded.captured_at,
+          time_source = excluded.time_source, measured_time_ms = excluded.measured_time_ms`,
       )
       .run(
         lapId,
@@ -627,6 +635,8 @@ export class Gt7Store {
         m.carName ?? null,
         m.notes ?? null,
         m.capturedAt,
+        m.timeSource ?? null,
+        m.measuredTimeMs ?? null,
       );
   }
 

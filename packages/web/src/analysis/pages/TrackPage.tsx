@@ -24,6 +24,7 @@ import { CarFilterChips, CarFilterField } from '../components/CarPicker.tsx';
 import { CompareMap } from '../components/CompareMap.tsx';
 import { LapQuickActions } from '../components/LapActions.tsx';
 import { MiniChart, type MiniSeries } from '../components/MiniChart.tsx';
+import { TrackFicha } from '../components/TrackFicha.tsx';
 import { EditableTrackName, NewTrackPrompt } from '../components/TrackNaming.tsx';
 import {
   Card,
@@ -730,7 +731,10 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
       </nav>
 
       {tab === 'melhores' && (
-        <BestLapsTab trackId={id} hasTopReference={!!data?.references.length} />
+        <>
+          <BestLapsTab trackId={id} hasTopReference={!!data?.references.length} />
+          <TrackFicha track={track} />
+        </>
       )}
 
       {tab === 'sessoes' &&

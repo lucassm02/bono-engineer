@@ -8,6 +8,7 @@ import { addNotice, dismissNotice, useUi } from '../state/uiStore.ts';
 import { CaptureStatus, SessionSavedToast } from './CaptureStatus.tsx';
 import { animateStep } from './Carousel.tsx';
 import { ConsoleChip } from './ConsoleLink.tsx';
+import { ReplayNotice } from './ReplayNotice.tsx';
 
 export function OverlayHeader() {
   const visible = useUi((s) => s.overlayVisible);
@@ -181,7 +182,8 @@ export function SourceBadge() {
           {auto ? 'Demonstração (sem servidor)' : 'Demonstração'}
         </span>
       )}
-      {state === 'replay' && <span className="badge badge-replay">Replay</span>}
+      {state === 'replay' && <span className="badge badge-replay">REPLAY</span>}
+      <ReplayNotice />
     </div>
   );
 }

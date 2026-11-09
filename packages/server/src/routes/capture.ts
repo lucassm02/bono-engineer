@@ -13,8 +13,12 @@ export function captureRoutes(app: FastifyInstance, ctx: RouteContext): void {
   app.get('/capture', async (): Promise<ReferenceCaptureStatus> => runtime.capture.status);
 
   /**
-   * Starts a capture. Answers 202 right away: switching the packet format waits for the ingestor
-   * cooldown (~15 s); progress is pushed as `status` / `notice` over the WebSocket.
+   * Arms a capture (Onda 9a) and answers 202 right away; progress (waiting for the replay, track,
+   * start line, recording, validation) is pushed as `status` / `notice` over the WebSocket and is
+   * in `GET /api/capture`. Body: `driverName` (required), optional `carName`, `notes`,
+   * `rankingTimeMs` (validation), `expectedCarCode` and `trackId` (skips the identification of
+   * the track from the replay's position; 400 if it does not exist). `format` is accepted but the
+   * packet format is not changed any more.
    */
   app.post('/capture/start', async (req, reply) => {
     const b = bodyObject(req.body);
@@ -26,6 +30,10 @@ export function captureRoutes(app: FastifyInstance, ctx: RouteContext): void {
       max: 3_600_000,
     });
     const expectedCarCode = optNumber(b, 'expectedCarCode', 'expectedCarCode', { integer: true });
+    const trackId = optString(b, 'trackId', 'trackId', 80);
+    if (trackId && !runtime.store.getTrack(trackId)) {
+      throw badRequest('Pista não encontrada. Escolha uma pista que o app já conhece.');
+    }
     if (b.format !== undefined && !isPacketFormat(b.format)) {
       throw badRequest('O campo "format" deve ser A, B, ~ ou C.');
     }
@@ -39,6 +47,7 @@ export function captureRoutes(app: FastifyInstance, ctx: RouteContext): void {
         notes: notes ?? null,
         rankingTimeMs: rankingTimeMs ?? null,
         expectedCarCode: expectedCarCode ?? null,
+        trackId: trackId || null,
         ...(format ? { format } : {}),
       })
       .catch(fail('Falha ao iniciar a captura'));
