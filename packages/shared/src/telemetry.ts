@@ -195,11 +195,11 @@ export interface TelemetryPacket {
   steeringAngle?: number;
   /** 0x12C steering angular velocity in rad/s. */
   steeringAngularVelocity?: number;
-  /** 0x130 sway, lateral acceleration (unit unverified; synthetic emits g, + = left). */
+  /** 0x130 sway, lateral acceleration in m/s², + = RIGHT (verified on a real PS5 session). */
   sway?: number;
-  /** 0x134 heave, vertical acceleration (unit unverified; synthetic emits g). */
+  /** 0x134 heave, vertical acceleration in m/s² (unit verified; sign unverified). */
   heave?: number;
-  /** 0x138 surge, longitudinal acceleration (unit unverified; synthetic emits g, + = forward). */
+  /** 0x138 surge, longitudinal acceleration in m/s², + = forward (verified). */
   surge?: number;
 
   // ---- Packet ~ extras (0x13C..0x157) ----

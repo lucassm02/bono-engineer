@@ -539,9 +539,10 @@ export class SyntheticSession {
     p.rpmClutchToGearbox = rpm;
     p.steeringAngle = steer;
     p.steeringAngularVelocity = steerRate;
-    p.sway = latG;
-    p.heave = clamp(heave, -3, 3);
-    p.surge = lonG;
+    // Real-console units (verified): m/s², sway + = right (latG here is + = left), surge + = forward.
+    p.sway = -latG * G;
+    p.heave = clamp(heave, -3, 3) * G;
+    p.surge = lonG * G;
     p.throttleRaw = Math.round(throttleTarget * 255);
     p.brakeRaw = Math.round(brakeTarget * 255);
     p.currentLapMs = this.#phase === 'lap' ? Math.round(this.#tau * 1000) : 0;

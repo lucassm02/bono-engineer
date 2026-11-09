@@ -86,10 +86,11 @@ export function packetsToLapTrace(
     set('steeringRad', p.steeringAngle ?? Number.NaN);
     set('throttleRaw', p.throttleRaw !== undefined ? pedalToUnit(p.throttleRaw) : Number.NaN);
     set('yawRate', p.angularVelocity.y);
-    set('latG', p.sway ?? (v * p.angularVelocity.y) / G);
+    // Packet sway/surge/heave are m/s² (sway + = right); the lap channels are g (lat + = left).
+    set('latG', p.sway !== undefined ? -p.sway / G : (v * p.angularVelocity.y) / G);
     const dv = prev ? ((p.speedMps - prev.speedMps) * rateHz) / G : 0;
-    set('lonG', p.surge ?? dv);
-    set('vertG', p.heave ?? Number.NaN);
+    set('lonG', p.surge !== undefined ? p.surge / G : dv);
+    set('vertG', p.heave !== undefined ? p.heave / G : Number.NaN);
     set('slipFL', slips[0]);
     set('slipFR', slips[1]);
     set('slipRL', slips[2]);

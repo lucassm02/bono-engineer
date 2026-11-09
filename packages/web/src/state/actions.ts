@@ -75,6 +75,19 @@ export function cycleDeltaReference(): void {
   addNotice('info', `Delta contra: ${DELTA_REFERENCE_LABELS[kind]}`, 1800);
 }
 
+// The "top reference" can be selected (double tap) on a track that has none: frames then carry an
+// empty delta. Fall back to the personal best once, with a notice (throttled: frames keep arriving
+// with the old kind until the server applies the change).
+let lastRefFallbackAt = 0;
+derived.onReferenceMissing = () => {
+  const now = Date.now();
+  if (now - lastRefFallbackAt < 4000) return;
+  lastRefFallbackAt = now;
+  dispatchProfile({ type: 'setDeltaReference', kind: 'personalBest' });
+  send({ type: 'setDeltaReference', kind: 'personalBest' });
+  addNotice('info', 'Sem referência do top para esta pista: usando sua melhor volta.', 3000);
+};
+
 export function setLocked(locked: boolean): void {
   dispatchProfile({ type: 'setLocked', locked });
   vibrate(locked ? 30 : 15);

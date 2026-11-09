@@ -75,6 +75,8 @@ class Derived {
   readonly trail = new PositionTrail();
   readonly corners = new CornerPassTracker();
   readonly refAvail = new ReferenceAvailability();
+  /** Called (per frame) while the selected "top" reference has no lap on this track. */
+  onReferenceMissing: (() => void) | null = null;
   /** Latest completed pass (any corner) and the last pass per corner. */
   lastPass: PassRecord | null = null;
   readonly passes = new Map<string, PassRecord>();
@@ -95,6 +97,11 @@ class Derived {
     const driving = f.state === 'onTrack' || f.state === 'replay';
     const d = f.lap.delta;
     this.refAvail.observe(trackId ?? '?', d.reference, d.referenceLapId, f.state === 'onTrack');
+    // "Top reference" selected but none exists for this track: the delta would stay empty, so the
+    // owner (state/actions.ts) switches back to the personal best.
+    if (d.reference === 'reference' && d.referenceLapId === null && f.state === 'onTrack') {
+      this.onReferenceMissing?.();
+    }
     if (d.reference === 'personalBest' && f.lap.referenceLapMs != null) {
       if (f.lap.referenceLapMs !== this.lastPbMs) {
         this.lastPbMs = f.lap.referenceLapMs;

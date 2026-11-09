@@ -1,8 +1,8 @@
 /**
  * G-force estimation in the car frame (lateral + = left, longitudinal + = accelerating).
  *
- * - B+ formats: uses the packet's sway/surge/heave directly (unit assumed g, unverified on the
- *   real console; the synthetic generator emits g).
+ * - B+ formats: uses the packet's sway/surge/heave (m/s², verified on the real console; sway is
+ *   + = right, so it is negated here), divided by g.
  * - Otherwise: derivative of the world velocity rotated into the car frame (forward vector from
  *   the rotation quaternion, falling back to the velocity direction), exponentially smoothed.
  */
@@ -58,11 +58,17 @@ export class GForceEstimator {
   /** Updates with a packet; dtS = time since the previous packet (from packetId deltas). */
   update(p: TelemetryPacket, dtS: number): LiveGForce {
     if (p.sway !== undefined && p.surge !== undefined) {
+      // Verified on a real PS5 session (Nov 2026, vs. the velocity derivative, corr² = slope):
+      // the fields are accelerations in m/s², sway + = RIGHT, surge + = forward.
       this.#prevV = p.velocity;
-      this.#lat = p.sway;
-      this.#lon = p.surge;
-      this.#vert = p.heave ?? 0;
-      return { lateral: this.#lat, longitudinal: this.#lon, vertical: p.heave ?? null };
+      this.#lat = -p.sway / G0;
+      this.#lon = p.surge / G0;
+      this.#vert = (p.heave ?? 0) / G0;
+      return {
+        lateral: this.#lat,
+        longitudinal: this.#lon,
+        vertical: p.heave === undefined ? null : this.#vert,
+      };
     }
     const prev = this.#prevV;
     this.#prevV = p.velocity;
