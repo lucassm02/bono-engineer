@@ -22,6 +22,10 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Updated the Windows title bar to match the app theme and added matching scrollbars.
 - Synchronized the desktop package and the server's reported version with the release version in the root package manifest.
 
+### Fixed
+
+- Included the track-name lookup in source checkouts so a clean checkout can build the dashboard.
+
 ## [0.1.1] - 2026-11-10
 
 ### Added
