@@ -64,6 +64,12 @@ export interface ServerConfig {
   record: boolean | null;
   verbose: boolean;
   help: boolean;
+  /**
+   * Bundled MCP stdio server (`mcp-stdio.cjs`) to hand to MCP clients instead of the repo's
+   * `packages/mcp/src/stdio.ts`. Set only by the desktop app, whose executable runs it as Node with
+   * ELECTRON_RUN_AS_NODE=1 (the installed app has no repo, no tsx and no .ts sources).
+   */
+  mcpStdioScript?: string | null;
 }
 
 export class ConfigError extends Error {}
@@ -75,7 +81,7 @@ Uso normal: npm start   (sem nenhuma opção; npm run demo = demonstração, npm
 Tudo abaixo é opcional, para usuários avançados:
   --port N          porta HTTP/WebSocket (padrão 8770; se estiver ocupada usa a próxima livre; env GT7_PORT)
   --host ADDR       endereço de escuta (padrão 0.0.0.0 = toda a rede; env GT7_HOST)
-  --data DIR        pasta de dados (padrão: %APPDATA%GT7 Race Engineer, e a subpasta demo com --sim; env GT7_DATA ou GT7_DATA_DIR)
+  --data DIR        pasta de dados (padrão: pasta do usuário do Bono Engineer, com subpasta demo em --sim; env GT7_DATA ou GT7_DATA_DIR)
   --ps-ip IP        fixa o IP do PlayStation (padrão: o app encontra sozinho; env GT7_PS_IP)
   --format F        fixa o formato do pacote ao vivo: A | B | ~ | C (padrão: automático; env GT7_FORMAT)
   --token T         exige este token na API e no WebSocket (env GT7_TOKEN)

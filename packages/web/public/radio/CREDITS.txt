@@ -1,4 +1,4 @@
-Clipes de rádio em português do Brasil gerados para o GT7 Engenheiro.
+Clipes de rádio em português do Brasil gerados para o Bono Engineer.
 
 Modelo: Kokoro-82M v1.0, de hexgrad, Apache-2.0
 https://huggingface.co/hexgrad/Kokoro-82M

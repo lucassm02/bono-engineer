@@ -407,7 +407,7 @@ export interface ReferenceGroup {
 export function timeOriginLabel(meta: ReferenceMeta | null | undefined): string {
   if (!meta) return '—';
   if (meta.timeSource === 'ranking') return 'tempo do ranking';
-  if (meta.timeSource === 'packets') return 'medido pelos pacotes (±30 ms)';
+  if (meta.timeSource === 'packets') return 'estimado pela telemetria';
   if (meta.source === 'replayCapture') return meta.rankingTimeMs ? 'tempo do ranking' : 'replay';
   return meta.source === 'import' ? 'importada' : 'volta própria';
 }

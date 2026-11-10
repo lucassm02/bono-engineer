@@ -10,10 +10,10 @@
  *    known track whose centerline the car stays on (mean distance, nearest wins). A replay on a track
  *    the app never saw is reported as "unknown track: drive it live first".
  * 2. **Laps**: the car's progress along the centerline is tracked (windowed projection, unwrapped).
- *    Each time it crosses the start/finish line (the centerline origin) a lap starts / ends; the
- *    instant of the crossing is interpolated between the two packets around it.
+ *    A fixed gate through the centerline origin defines start/finish. The packets on either side
+ *    of the gate are interpolated to get the crossing time and the trace endpoints.
  * 3. **Time**: counted from packets, `(packetId_end − packetId_start) × msPerPacket` with fractional
- *    packet ids at both ends (so ±1–2 packets of error at most, and dropped packets still count).
+ *    packet ids at both ends. Dropped packets still count, but the result is an estimate.
  *    The game's clock is never used. When the user typed the ranking time it is compared with the
  *    measured one (tolerance 300 ms); the difference is reported either way.
  * 4. **Validity**: a lap is valid only if it runs from one crossing to the next without a pause,
@@ -37,6 +37,7 @@ import {
   type Id,
   type Lap,
   type LapCompletedEvent,
+  type LapSample,
   type LapTrace,
   pedalToUnit,
   type ReferenceCaptureStatus,
@@ -54,10 +55,10 @@ import {
   type LiveEngine,
   sectorBoundaries,
 } from '../live/live-engine.ts';
-import { TraceBuilder } from '../trace/channels.ts';
+import { LAP_SAMPLE_CHANNELS, TraceBuilder } from '../trace/channels.ts';
 import { centerlinePolyline, lapPolyline } from '../track/fingerprint.ts';
 import { newId } from '../util/ids.ts';
-import { alignToLine, type Polyline } from '../util/polyline.ts';
+import type { Polyline } from '../util/polyline.ts';
 
 export interface ReferenceCaptureMeta {
   driverName: string;
@@ -199,6 +200,8 @@ const FREEZE_RECV_MS = 500;
 const HUGE_GAP_PACKETS = 90;
 /** Moving at least this fast (m/s) for a line crossing to count. */
 const CROSSING_MIN_SPEED_MPS = 1;
+/** Only look for a gate crossing on the part of the course near start/finish. */
+const CROSSING_WINDOW_M = 40;
 /** Replay speed check: implied vs reported speed, and wall clock vs packet time. */
 const SPEED_RATIO_MIN = 0.85;
 const SPEED_RATIO_MAX = 1.15;
@@ -217,14 +220,14 @@ interface Recording {
   startPk: number;
   startRecv: number;
   startU: number;
+  msPerPacket: number;
   builder: TraceBuilder;
   carCode: number;
   format: TelemetryPacket['format'];
   lastPk: number;
-  lastRecv: number;
   lastU: number;
   lost: number;
-  maxGap: number;
+  startGap: number;
   pathLen: number;
   speedLen: number;
   lastX: number;
@@ -232,9 +235,95 @@ interface Recording {
   samples: number;
 }
 
+interface TimingGate {
+  x: number;
+  z: number;
+  dx: number;
+  dz: number;
+}
+
+interface Crossing {
+  pk: number;
+  recv: number;
+  u: number;
+  gap: number;
+  sample: LapSample;
+}
+
+/** Use the course on both sides of the line so a single resampled segment cannot tilt the gate. */
+function timingGate(line: Polyline): TimingGate {
+  const origin = line.pointAt(0);
+  const before = line.pointAt(-8);
+  const after = line.pointAt(8);
+  const dx = after.x - before.x;
+  const dz = after.z - before.z;
+  const length = Math.hypot(dx, dz);
+  return length > 0
+    ? { x: origin.x, z: origin.z, dx: dx / length, dz: dz / length }
+    : { x: origin.x, z: origin.z, dx: Math.sin(origin.heading), dz: Math.cos(origin.heading) };
+}
+
+function gateOffset(gate: TimingGate, { x, z }: TelemetryPacket['position']): number {
+  return (x - gate.x) * gate.dx + (z - gate.z) * gate.dz;
+}
+
+function replaySample(info: EnginePacketInfo): LapSample {
+  const p = info.packet;
+  const slip = wheelSlipRatios(p);
+  const g = info.g;
+  return {
+    tMs: 0,
+    distanceM: 0,
+    packetId: p.packetId,
+    x: p.position.x,
+    y: p.position.y,
+    z: p.position.z,
+    speedKmh: p.speedMps * 3.6,
+    rpm: p.engineRpm,
+    gear: p.gear,
+    throttle: pedalToUnit(p.throttle),
+    brake: pedalToUnit(p.brake),
+    clutch: p.clutchPedal,
+    steeringRad: p.steeringAngle ?? Number.NaN,
+    throttleRaw: p.throttleRaw !== undefined ? pedalToUnit(p.throttleRaw) : Number.NaN,
+    yawRate: p.angularVelocity.y,
+    latG: g.lateral,
+    lonG: g.longitudinal,
+    vertG: g.vertical ?? Number.NaN,
+    slipFL: slip[0],
+    slipFR: slip[1],
+    slipRL: slip[2],
+    slipRR: slip[3],
+    tyreTempFL: p.tyreTemp[0],
+    tyreTempFR: p.tyreTemp[1],
+    tyreTempRL: p.tyreTemp[2],
+    tyreTempRR: p.tyreTemp[3],
+    suspFL: p.suspensionHeight[0],
+    suspFR: p.suspensionHeight[1],
+    suspRL: p.suspensionHeight[2],
+    suspRR: p.suspensionHeight[3],
+    fuelL: p.fuelLevel,
+    flags: p.flags,
+  };
+}
+
+function crossingSample(before: EnginePacketInfo, after: EnginePacketInfo, f: number): LapSample {
+  if (f === 1) return replaySample(after);
+  const a = replaySample(before);
+  const b = replaySample(after);
+  const sample = { ...a };
+  for (const channel of LAP_SAMPLE_CHANNELS) {
+    sample[channel] =
+      channel === 'flags' || channel === 'gear' || channel === 'packetId'
+        ? (f < 0.5 ? a : b)[channel]
+        : a[channel] + f * (b[channel] - a[channel]);
+  }
+  return sample;
+}
+
 function fmtTime(ms: number): string {
-  const s = Math.max(0, Math.round(ms / 1000));
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  const s = Math.floor(ms / 1000);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}.${String(ms % 1000).padStart(3, '0')}`;
 }
 
 export class ReferenceCapture extends EventEmitter<ReferenceCaptureEvents> {
@@ -258,14 +347,12 @@ export class ReferenceCapture extends EventEmitter<ReferenceCaptureEvents> {
   #identEvals = 0;
   #track: Track | null = null;
   #line: Polyline | null = null;
+  #gate: TimingGate | null = null;
   #far = 0;
 
   // stream
   #prevU: number | null = null;
-  #prevPk = 0;
-  #prevRecv = 0;
-  #prevX = 0;
-  #prevZ = 0;
+  #prevInfo: EnginePacketInfo | null = null;
   #stillPk = 0;
   #rec: Recording | null = null;
   #lastStatusAt = 0;
@@ -295,7 +382,7 @@ export class ReferenceCapture extends EventEmitter<ReferenceCaptureEvents> {
       trackName: this.#track?.name ?? null,
       recordingMs:
         rec && this.#state === 'recording'
-          ? Math.max(0, Math.round((rec.lastPk - rec.startPk) * this.options.engine.msPerPacket))
+          ? Math.max(0, Math.round((rec.lastPk - rec.startPk) * rec.msPerPacket))
           : null,
       lapFraction:
         rec && L > 0 && this.#state === 'recording'
@@ -390,6 +477,7 @@ export class ReferenceCapture extends EventEmitter<ReferenceCaptureEvents> {
 
   #resetStream(): void {
     this.#prevU = null;
+    this.#prevInfo = null;
     this.#stillPk = 0;
     this.#rec = null;
     this.#far = 0;
@@ -401,6 +489,7 @@ export class ReferenceCapture extends EventEmitter<ReferenceCaptureEvents> {
     this.#identEvals = 0;
     this.#track = null;
     this.#line = null;
+    this.#gate = null;
   }
 
   #lineOf(trackId: Id): Polyline | null {
@@ -422,6 +511,7 @@ export class ReferenceCapture extends EventEmitter<ReferenceCaptureEvents> {
     if (track && line) {
       this.#track = track;
       this.#line = line;
+      this.#gate = timingGate(line);
       this.#candidates = [];
     } else {
       this.#loadCandidates(); // unknown id: fall back to the automatic identification
@@ -431,6 +521,7 @@ export class ReferenceCapture extends EventEmitter<ReferenceCaptureEvents> {
   #lock(c: Candidate): void {
     this.#track = c.track;
     this.#line = c.line;
+    this.#gate = timingGate(c.line);
     this.#candidates = [];
     this.#prevU = null;
     this.#far = 0;
@@ -465,8 +556,9 @@ export class ReferenceCapture extends EventEmitter<ReferenceCaptureEvents> {
     if (this.#stillPk >= STALL_PACKETS && this.#rec) {
       this.#breakStream('paused');
     }
-    if (this.#prevU !== null && !info.samePosition) {
-      const jump = Math.hypot(p.position.x - this.#prevX, p.position.z - this.#prevZ);
+    const previousPosition = this.#prevInfo?.packet.position;
+    if (previousPosition && !info.samePosition) {
+      const jump = Math.hypot(p.position.x - previousPosition.x, p.position.z - previousPosition.z);
       const reach = p.speedMps * ((info.dPk * mpp) / 1000);
       if (jump > 15 + 2.5 * reach) this.#breakStream('discontinuity');
     }
@@ -503,36 +595,16 @@ export class ReferenceCapture extends EventEmitter<ReferenceCaptureEvents> {
       this.#far = 0;
     }
 
-    const L = this.#line.length;
-    const prevU = this.#prevU;
-    let crossing: { pk: number; recv: number } | null = null;
-    if (prevU === null) {
-      // first fix on the line: if the car has just crossed it, estimate when
-      const uMod = ((u % L) + L) % L;
-      const v = p.speedMps;
-      if (!info.samePosition && v > 10 && uMod <= v * (mpp / 1000) * 1.5) {
-        const back = uMod / (v * (mpp / 1000));
-        crossing = { pk: p.packetId - back, recv: info.receivedAt - back * mpp };
-      }
-    } else {
-      const kPrev = Math.floor(prevU / L);
-      const kNow = Math.floor(u / L);
-      if (kNow > kPrev && p.speedMps >= CROSSING_MIN_SPEED_MPS && u > prevU) {
-        const f = (kNow * L - prevU) / (u - prevU);
-        crossing = {
-          pk: this.#prevPk + f * (p.packetId - this.#prevPk),
-          recv: this.#prevRecv + f * (info.receivedAt - this.#prevRecv),
-        };
-      } else if (kNow < kPrev && this.#rec) {
-        this.#breakStream('discontinuity');
-      }
-    }
-
-    if (crossing) {
+    const crossing = dist <= CROSSING_WINDOW_M ? this.#crossing(info, u) : null;
+    if (crossing && (!this.#rec || crossing.u > this.#rec.startU)) {
       if (this.#rec) {
-        if (this.#finishLap(info, crossing)) return; // captured: done
+        if (Math.round((crossing.u - this.#rec.startU) / this.#line.length) !== 1) {
+          this.#breakStream('discontinuity');
+        } else if (this.#finishLap(crossing)) {
+          return;
+        }
       }
-      this.#startLap(info, crossing, u);
+      this.#startLap(info, crossing);
     }
     if (this.#rec) this.#addSample(info, u);
     this.#remember(info, u);
@@ -541,10 +613,51 @@ export class ReferenceCapture extends EventEmitter<ReferenceCaptureEvents> {
 
   #remember(info: EnginePacketInfo, u: number | null): void {
     this.#prevU = u;
-    this.#prevPk = info.packet.packetId;
-    this.#prevRecv = info.receivedAt;
-    this.#prevX = info.packet.position.x;
-    this.#prevZ = info.packet.position.z;
+    this.#prevInfo = u === null ? null : info;
+  }
+
+  #crossing(info: EnginePacketInfo, u: number): Crossing | null {
+    const line = this.#line!;
+    const gate = this.#gate!;
+    const lineU = Math.round(u / line.length) * line.length;
+    const p = info.packet;
+    if (Math.abs(u - lineU) > CROSSING_WINDOW_M || p.speedMps < CROSSING_MIN_SPEED_MPS) {
+      return null;
+    }
+
+    const offset = gateOffset(gate, p.position);
+    const prev = this.#prevInfo;
+    const prevU = this.#prevU;
+    if (!prev || prevU === null) {
+      // A replay can open on the first frame after the line. Allow up to 1.5 packets.
+      const forwardMps = p.velocity.x * gate.dx + p.velocity.z * gate.dz;
+      const metresPerPacket = (forwardMps * info.msPerPacket) / 1000;
+      if (info.samePosition || forwardMps <= 10 || offset < 0 || offset > 1.5 * metresPerPacket) {
+        return null;
+      }
+      const back = offset / metresPerPacket;
+      const sample = replaySample(info);
+      sample.x -= offset * gate.dx;
+      sample.z -= offset * gate.dz;
+      return {
+        pk: p.packetId - back,
+        recv: info.receivedAt - back * info.msPerPacket,
+        u: lineU,
+        gap: 0,
+        sample,
+      };
+    }
+    if (Math.abs(prevU - lineU) > CROSSING_WINDOW_M) return null;
+    const before = gateOffset(gate, prev.packet.position);
+    if (before >= 0 || offset < 0) return null;
+    const f = -before / (offset - before);
+    return {
+      pk: prev.packet.packetId + f * (p.packetId - prev.packet.packetId),
+      recv: prev.receivedAt + f * (info.receivedAt - prev.receivedAt),
+      u: lineU,
+      gap: info.dPk - 1,
+      sample: crossingSample(prev, info, f),
+    };
   }
 
   /** Progress along the locked line, unwrapped (continuous across laps). */
@@ -612,22 +725,22 @@ export class ReferenceCapture extends EventEmitter<ReferenceCaptureEvents> {
   // Laps
   // -----------------------------------------------------------------------------------------------
 
-  #startLap(info: EnginePacketInfo, crossing: { pk: number; recv: number }, u: number): void {
+  #startLap(info: EnginePacketInfo, crossing: Crossing): void {
     const p = info.packet;
-    const L = this.#line!.length;
-    const startU = u - (((u % L) + L) % L); // unwrapped progress of the line just crossed
+    const builder = new TraceBuilder(6000);
+    builder.push(crossing.sample);
     this.#rec = {
       startPk: crossing.pk,
       startRecv: crossing.recv,
-      startU,
-      builder: new TraceBuilder(6000),
+      startU: crossing.u,
+      msPerPacket: info.msPerPacket,
+      builder,
       carCode: p.carCode,
       format: p.format,
       lastPk: crossing.pk,
-      lastRecv: crossing.recv,
-      lastU: startU,
+      lastU: crossing.u,
       lost: 0,
-      maxGap: 0,
+      startGap: crossing.gap,
       pathLen: 0,
       speedLen: 0,
       lastX: p.position.x,
@@ -642,59 +755,23 @@ export class ReferenceCapture extends EventEmitter<ReferenceCaptureEvents> {
   #addSample(info: EnginePacketInfo, u: number): void {
     const rec = this.#rec!;
     const p = info.packet;
-    const mpp = info.msPerPacket;
+    const mpp = rec.msPerPacket;
     if (rec.samples > 0) {
-      const gap = info.dPk - 1;
-      if (gap > 0) {
-        rec.lost += gap;
-        rec.maxGap = Math.max(rec.maxGap, gap);
-      }
+      rec.lost += Math.max(0, info.dPk - 1);
       rec.pathLen += Math.hypot(p.position.x - rec.lastX, p.position.z - rec.lastZ);
       rec.speedLen += (p.speedMps * info.dPk * mpp) / 1000;
     }
     rec.lastX = p.position.x;
     rec.lastZ = p.position.z;
     rec.lastPk = p.packetId;
-    rec.lastRecv = info.receivedAt;
     rec.lastU = u;
     rec.samples++;
     // hard cap: a replay left running on a track that never closes the lap
-    if (rec.builder.length >= 108_000) return;
-    const slip = wheelSlipRatios(p);
-    const g = info.g;
+    if (rec.builder.length >= 108_000 || p.packetId <= rec.startPk) return;
     rec.builder.push({
+      ...replaySample(info),
       tMs: (p.packetId - rec.startPk) * mpp,
-      distanceM: u - rec.startU,
-      packetId: p.packetId,
-      x: p.position.x,
-      y: p.position.y,
-      z: p.position.z,
-      speedKmh: p.speedMps * 3.6,
-      rpm: p.engineRpm,
-      gear: p.gear,
-      throttle: pedalToUnit(p.throttle),
-      brake: pedalToUnit(p.brake),
-      clutch: p.clutchPedal,
-      steeringRad: p.steeringAngle ?? Number.NaN,
-      throttleRaw: p.throttleRaw !== undefined ? pedalToUnit(p.throttleRaw) : Number.NaN,
-      yawRate: p.angularVelocity.y,
-      latG: g.lateral,
-      lonG: g.longitudinal,
-      vertG: g.vertical ?? Number.NaN,
-      slipFL: slip[0],
-      slipFR: slip[1],
-      slipRL: slip[2],
-      slipRR: slip[3],
-      tyreTempFL: p.tyreTemp[0],
-      tyreTempFR: p.tyreTemp[1],
-      tyreTempRL: p.tyreTemp[2],
-      tyreTempRR: p.tyreTemp[3],
-      suspFL: p.suspensionHeight[0],
-      suspFR: p.suspensionHeight[1],
-      suspRL: p.suspensionHeight[2],
-      suspRR: p.suspensionHeight[3],
-      fuelL: p.fuelLevel,
-      flags: p.flags,
+      distanceM: Math.max(0, Math.min(this.#line!.length, u - rec.startU)),
     });
   }
 
@@ -702,6 +779,7 @@ export class ReferenceCapture extends EventEmitter<ReferenceCaptureEvents> {
   #breakStream(code: string): void {
     const had = this.#rec;
     this.#prevU = null;
+    this.#prevInfo = null;
     this.#stillPk = 0;
     this.#far = 0;
     if (!had) return;
@@ -718,19 +796,19 @@ export class ReferenceCapture extends EventEmitter<ReferenceCaptureEvents> {
   }
 
   /** Closes the lap at a crossing. Returns true when it was valid and saved (capture done). */
-  #finishLap(info: EnginePacketInfo, crossing: { pk: number; recv: number }): boolean {
+  #finishLap(crossing: Crossing): boolean {
     const rec = this.#rec!;
     const meta = this.#meta!;
     const track = this.#track!;
     const line = this.#line!;
-    const mpp = info.msPerPacket;
     const rankingMs = meta.rankingTimeMs ?? null;
     this.#rec = null;
     this.#state = 'validating';
     this.#hint = 'Validando a volta…';
     this.#publish();
 
-    const measuredMs = Math.round((crossing.pk - rec.startPk) * mpp);
+    const elapsedMs = (crossing.pk - rec.startPk) * rec.msPerPacket;
+    const measuredMs = Math.round(elapsedMs);
     const wallMs = crossing.recv - rec.startRecv;
     const extra: string[] = [];
     const speedRatio = rec.pathLen > 0 ? rec.speedLen / rec.pathLen : 1;
@@ -746,10 +824,8 @@ export class ReferenceCapture extends EventEmitter<ReferenceCaptureEvents> {
 
     const lapId = this.#newId();
     const sessionId = this.#newId();
+    rec.builder.push({ ...crossing.sample, tMs: elapsedMs, distanceM: line.length });
     const trace = rec.builder.build(lapId, 60);
-    const xs = trace.channels.x;
-    const zs = trace.channels.z;
-    trace.channels.distanceM = trace.length ? alignToLine(line, xs, zs) : new Float64Array(0);
     const draft = this.#buildCompleted({
       rec,
       track,
@@ -762,6 +838,12 @@ export class ReferenceCapture extends EventEmitter<ReferenceCaptureEvents> {
     });
     this.#lastCapture = draft;
     const issues = [...extra, ...validateReferenceLap(draft, meta, this.options)];
+    if (
+      Math.max(rec.startGap, crossing.gap) > (this.options.maxGapPackets ?? 6) &&
+      !issues.includes('packetGaps')
+    ) {
+      issues.push('packetGaps');
+    }
     this.#measured = measuredMs;
     this.#diff = rankingMs ? measuredMs - rankingMs : null;
 
@@ -777,11 +859,10 @@ export class ReferenceCapture extends EventEmitter<ReferenceCaptureEvents> {
     // ---- accepted ----
     const useRanking = rankingMs !== null;
     const timeMs = useRanking ? rankingMs : measuredMs;
-    if (useRanking && measuredMs > 0) {
-      const k = timeMs / measuredMs;
-      const t = trace.channels.tMs as Float64Array;
-      for (let i = 0; i < t.length; i++) t[i] = t[i]! * k;
-    }
+    const k = timeMs / elapsedMs;
+    const t = trace.channels.tMs;
+    for (let i = 0; i < t.length - 1; i++) t[i] = t[i]! * k;
+    t[t.length - 1] = timeMs;
     const final = this.#buildCompleted({
       rec,
       track,
@@ -819,7 +900,7 @@ export class ReferenceCapture extends EventEmitter<ReferenceCaptureEvents> {
     this.#waiting = null;
     this.#hint = useRanking
       ? `Volta salva: ${fmtTime(timeMs)} (tempo do ranking; medido pelos pacotes: diferença de ${Math.abs(this.#diff ?? 0)} ms).`
-      : `Volta salva: ${fmtTime(timeMs)} (tempo medido pelos pacotes, ±30 ms).`;
+      : `Volta salva: ${fmtTime(timeMs)} (tempo estimado pela telemetria).`;
     this.#publish();
     this.options.engine.refreshReference();
     this.emit('captured', final, lap);

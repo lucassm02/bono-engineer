@@ -20,10 +20,10 @@
 .live-menu-btn:hover,
 .live-menu-btn[aria-expanded="true"] {
   opacity: 1;
-  border-color: var(--accent);
+  border-color: var(--brand-signal);
 }
 .live-menu-btn:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--brand-signal);
   outline-offset: 2px;
 }
 .live-menu-glyph {
@@ -48,10 +48,11 @@
   max-height: 100%;
   overflow-y: auto;
   padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
-  background: #0b1014;
+  background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 16px 16px 0 0;
   color: var(--text, #e8edf1);
+  scrollbar-color: #526873 var(--panel);
 }
 @media (min-width: 700px) {
   .live-menu-backdrop {
@@ -68,6 +69,8 @@
   flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
 }
 .live-menu-list {
   list-style: none;
@@ -85,7 +88,7 @@
   text-align: left;
   border-radius: 12px;
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--panel-2);
   color: inherit;
   cursor: pointer;
   overflow-wrap: anywhere;
@@ -97,7 +100,7 @@
 .live-menu-item:hover,
 .live-menu-item:focus-visible {
   border-color: var(--accent);
-  outline: none;
+  background: color-mix(in srgb, var(--accent) 7%, var(--panel-2));
 }
 .live-menu-item-alt {
   border-style: dashed;

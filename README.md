@@ -88,8 +88,8 @@ celular**, um **QR code**, o console, a pasta de dados e o estado do **firewall*
 WebSocket e banco com segurança; um segundo `Ctrl+C` força a saída). O terminal é só um log: tudo se vê e se
 configura no painel.
 
-- **Dados:** ficam na pasta do usuário (`%APPDATA%\GT7 Race Engineer` no Windows; `~/Library/Application Support/GT7 Race Engineer`
-  no macOS; `$XDG_DATA_HOME/gt7-race-engineer` ou `~/.local/share/gt7-race-engineer` no Linux), criada sozinha. Se existir uma pasta
+- **Dados:** ficam na pasta do usuário (`%APPDATA%\Bono Engineer` no Windows; `~/Library/Application Support/Bono Engineer`
+  no macOS; `$XDG_DATA_HOME/bono-engineer` ou `~/.local/share/bono-engineer` no Linux), criada sozinha. Se existir uma pasta
   `data/` antiga dentro do projeto (versões anteriores) e a nova ainda não existir, ela é **copiada uma vez**
   (a antiga é mantida; pode apagá-la depois de conferir).
 - **Porta:** a 8770. Se outro programa a estiver usando, o app escolhe a próxima livre (8771…) e mostra no
@@ -168,15 +168,15 @@ experimentar sem empacotar: `npm run desktop` (compila o necessário e abre o ap
 
 ### O que muda em relação ao `npm start`
 
-- **Os dados são os mesmos**: `%APPDATA%\GT7 Race Engineer` (histórico, voltas, configurações, chave do coach).
+- **Os dados são os mesmos**: `%APPDATA%\Bono Engineer` (histórico, voltas, configurações, chave do coach).
   Você pode alternar entre o app e `npm start` sem perder nada. Os arquivos do Chromium (cache, janela, log
-  `logs\desktop.log`) ficam à parte, em `%LOCALAPPDATA%\GT7 Race Engineer`.
+  `logs\desktop.log`) ficam à parte, em `%LOCALAPPDATA%\Bono Engineer`.
 - **Não rode os dois ao mesmo tempo**: se o `npm start` já estiver aberto, o app **usa o servidor que já existe**
   (a janela só o mostra; *Sair* não o encerra). Dois servidores disputariam a mesma porta UDP 33740 e o mesmo banco.
 - O app **não usa `tsx` nem `npm`**: o servidor vai compilado num único arquivo (esbuild) e o painel já vem pronto
   dentro do pacote. Para atualizar, gere o pacote de novo e reinstale por cima (os dados ficam).
 - Se o servidor não subir, a janela mostra uma página de erro em português com **Tentar de novo**; os detalhes
-  técnicos ficam em `%LOCALAPPDATA%\GT7 Race Engineer\logs\desktop.log`.
+  técnicos ficam em `%LOCALAPPDATA%\Bono Engineer\logs\desktop.log`.
 - O servidor MCP para o Claude Desktop/Claude Code continua sendo o `npm run mcp` (ou o endereço `/mcp` do app
   aberto); o app de desktop não instala o `stdio` do MCP.
 
@@ -241,15 +241,15 @@ O app **só verifica** o firewall; ele nunca o altera. Se faltar regra, o termin
 mostram os comandos exatos. Abra o **PowerShell como Administrador** e rode:
 
 ```powershell
-New-NetFirewallRule -DisplayName "GT7 Race Engineer (TCP 8770)" -Direction Inbound -Protocol TCP -LocalPort 8770 -Action Allow -Profile Private
-New-NetFirewallRule -DisplayName "GT7 Race Engineer (UDP 33740)" -Direction Inbound -Protocol UDP -LocalPort 33740 -Action Allow -Profile Private
+New-NetFirewallRule -DisplayName "Bono Engineer (TCP 8770)" -Direction Inbound -Protocol TCP -LocalPort 8770 -Action Allow -Profile Private
+New-NetFirewallRule -DisplayName "Bono Engineer (UDP 33740)" -Direction Inbound -Protocol UDP -LocalPort 33740 -Action Allow -Profile Private
 ```
 
 Alternativa em prompt de administrador:
 
 ```bat
-netsh advfirewall firewall add rule name="GT7 Race Engineer (TCP 8770)" dir=in action=allow protocol=TCP localport=8770 profile=private
-netsh advfirewall firewall add rule name="GT7 Race Engineer (UDP 33740)" dir=in action=allow protocol=UDP localport=33740 profile=private
+netsh advfirewall firewall add rule name="Bono Engineer (TCP 8770)" dir=in action=allow protocol=TCP localport=8770 profile=private
+netsh advfirewall firewall add rule name="Bono Engineer (UDP 33740)" dir=in action=allow protocol=UDP localport=33740 profile=private
 ```
 
 - TCP 8770 = painel no celular. UDP 33740 = telemetria do console. Se você mudar a porta com `--port`, o
@@ -468,9 +468,9 @@ Use `--scope user` para valer em todos os projetos. Sem `--data`, o MCP lê a me
 **Claude Code, HTTP** (app rodando):
 
 ```powershell
-claude mcp add --transport http gt7-live http://localhost:8770/mcp
+claude mcp add --transport http bono-live http://localhost:8770/mcp
 # com --token no servidor:
-claude mcp add --transport http gt7-live http://localhost:8770/mcp --header "Authorization: Bearer SEU_TOKEN"
+claude mcp add --transport http bono-live http://localhost:8770/mcp --header "Authorization: Bearer SEU_TOKEN"
 ```
 
 **Claude Desktop (stdio)**: edite `%APPDATA%\Claude\claude_desktop_config.json` e reinicie o Claude Desktop:
@@ -478,7 +478,7 @@ claude mcp add --transport http gt7-live http://localhost:8770/mcp --header "Aut
 ```json
 {
   "mcpServers": {
-    "gt7": {
+    "bono": {
       "command": "node",
       "args": [
         "--disable-warning=ExperimentalWarning",
@@ -571,9 +571,9 @@ Na **pasta do usuário** (criada sozinha; a subpasta `demo` é da demonstração
 
 | Sistema | Pasta |
 |---|---|
-| Windows | `%APPDATA%\GT7 Race Engineer` (ex.: `C:\Users\voce\AppData\Roaming\GT7 Race Engineer`) |
-| macOS | `~/Library/Application Support/GT7 Race Engineer` |
-| Linux | `$XDG_DATA_HOME/gt7-race-engineer` (padrão `~/.local/share/gt7-race-engineer`) |
+| Windows | `%APPDATA%\Bono Engineer` (ex.: `C:\Users\voce\AppData\Roaming\Bono Engineer`) |
+| macOS | `~/Library/Application Support/Bono Engineer` |
+| Linux | `$XDG_DATA_HOME/bono-engineer` (padrão `~/.local/share/bono-engineer`) |
 
 `--data DIR` ou `GT7_DATA` trocam a pasta. Em Configurações › Integração com IA aparece o caminho real em uso. Versões
 antigas guardavam em `<projeto>/data`: se essa pasta existir e a nova não, o app **copia uma vez** (a antiga é

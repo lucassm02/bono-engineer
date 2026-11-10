@@ -361,7 +361,7 @@
   offline na LAN). Layouts por `@container (orientation)`, tamanhos em `cqw/cqh`.
 - Escala de temperatura dos pneus em `src/config.ts` (50 frio / 70–95 ideal / 115 quente), assim como
   limites de patinagem, faixa da suspensão, escala da barra de delta e tempos dos gestos.
-- PWA "GT7 Engenheiro": `display: fullscreen`, paisagem, tema preto, ícones gerados (SVG desenhado à mão
+- PWA "Bono Engineer": `display: fullscreen`, paisagem, tema preto, ícones gerados (SVG desenhado à mão
   + PNG via `@resvg/resvg-js`, em `public/`). O service worker só faz precache dos estáticos;
   `/ws`, `/api` e `/mcp` ficam fora do fallback de navegação e não há cache em runtime.
 - **Tela ligada:** Wake Lock API quando há contexto seguro; senão (http na LAN) um `<video>` mudo,
@@ -550,7 +550,7 @@
   virtuais (vEthernet/WSL/VirtualBox/VMware/Docker/VPN) por último. QR em SVG (data URL) só para a
   URL preferida.
 - Firewall do Windows: **só leitura** (`netsh advfirewall firewall show rule name=...`; código 0 =
-  existe, 1 = não existe). Regras esperadas "GT7 Race Engineer (TCP <porta>)" e "(UDP 33740)". Se
+  existe, 1 = não existe). Regras esperadas "Bono Engineer (TCP <porta>)" e "(UDP 33740)". Se
   faltarem, o banner e o `/api/status` trazem os comandos `New-NetFirewallRule` / `netsh` com
   `-Profile Private` para o usuário rodar como administrador. Uma liberação do `node.exe` feita
   pelo prompt do Windows não é detectada (a mensagem avisa).
@@ -1020,8 +1020,8 @@ pasta de dados deixam de ser coisas que o usuário decide.
 
 ### Dados na pasta do usuário
 
-- Padrão: Windows `%APPDATA%\GT7 Race Engineer`; macOS `~/Library/Application Support/GT7 Race Engineer`; Linux
-  `$XDG_DATA_HOME/gt7-race-engineer` (senão `~/.local/share/gt7-race-engineer`). `--sim` usa a subpasta `demo`.
+- Padrão: Windows `%APPDATA%\Bono Engineer`; macOS `~/Library/Application Support/Bono Engineer`; Linux
+  `$XDG_DATA_HOME/bono-engineer` (senão `~/.local/share/bono-engineer`). `--sim` usa a subpasta `demo`.
   Lógica em `core/src/util/data-dir.ts` (`defaultDataDir`, `resolveDataDir`, `migrateLegacyData`), exportada de
   `@gt7/core` para o servidor e o MCP usarem a mesma regra. Override continua: `--data` > `GT7_DATA` >
   `GT7_DATA_DIR`.
@@ -1038,7 +1038,7 @@ pasta de dados deixam de ser coisas que o usuário decide.
 
 ### Porta e instância única
 
-- Toda resposta HTTP leva `x-gt7-race-engineer: real|demo` (`identity.ts`, hook `onRequest` registrado antes do guarda
+- Toda resposta HTTP leva `x-bono-engineer: real|demo` (`identity.ts`, hook `onRequest` registrado antes do guarda
   de origem e do token, então até o 401 leva o cabeçalho). Não precisa de endpoint novo nem de token.
 - `pickPort` (`startup.ts`), a partir de 8770: instância nossa **do mesmo modo** respondendo → abre o navegador nela e
   sai com código 0; porta livre → usa; outro programa → tenta a próxima (até 20). `--port`/`GT7_PORT` explícito ocupado
@@ -1265,7 +1265,7 @@ com o mesmo código do `npm start`. O custo é o tamanho (~110 MB por instalador
 - **Electron 45.2.3** (a estável mais recente em 2026-11) embute **Node 24.22.2** (Chromium 156) e `require('node:sqlite')`
   funciona **sem flag** no processo principal (SQLite 3.53.4, `journal_mode=wal`, UDP `dgram` também). Testado instalando o
   Electron e rodando um script mínimo; depois confirmado de ponta a ponta no app empacotado (o banco abre em
-  `%APPDATA%\GT7 Race Engineer` com `-wal`/`-shm`). Por isso **não** foi preciso o plano B (servidor como processo filho
+  `%APPDATA%\Bono Engineer` com `-wal`/`-shm`). Por isso **não** foi preciso o plano B (servidor como processo filho
   com outro Node). Se uma versão futura do Electron voltar a embutir um Node sem `node:sqlite`, o plano B é
   `utilityProcess`/`child_process` com o Node do sistema; a API `startServer` já isola o servidor para isso.
 - A versão do Electron está **fixa** (`45.2.3`, sem `^`): o electron-builder exige versão exata, e um Electron novo
@@ -1304,14 +1304,14 @@ com o mesmo código do `npm start`. O custo é o tamanho (~110 MB por instalador
   `npm start` (mesmo modo `real`) já ocupa a porta, o app usa esse servidor; "Sair" não o encerra. É o único jeito seguro:
   dois servidores brigariam pela UDP 33740 e pelo mesmo banco. O app **não** é "demo".
 - **Dados na pasta do usuário** (`defaultDataDir()` de `@gt7/core`, a mesma do CLI); a pasta `userData` do Electron foi
-  movida para `%LOCALAPPDATA%\GT7 Race Engineer` (mac: `… Desktop`, Linux: `~/.config/gt7-race-engineer-desktop`) para que
+  movida para `%LOCALAPPDATA%\Bono Engineer` (mac: `… Desktop`, Linux: `~/.config/bono-engineer-desktop`) para que
   nenhum cache do Chromium caia na pasta de dados. Como o servidor usa `parseConfig`, `GT7_DATA`/`GT7_PORT`/`GT7_PS_IP`/
   `GT7_TOKEN`… continuam valendo (útil para testar com dados isolados).
 - **Janela:** `BrowserWindow` sem menu (`removeMenu`, atalhos F5/Ctrl+R/F11/zoom tratados à mão), título fixo "GT7 Race
   Engineer" (o `<title>` do painel não o troca), tamanho/posição/maximizado salvos (`desktop-state.json`, regra pura em
   `window-state.ts`: sem posição se o monitor sumiu, tamanho limitado à maior tela). Abre na hora a tela "Iniciando…"
   (HTML local, sem script/rede) e troca pelo painel quando o servidor responde; falha → página de erro em pt-BR
-  com **Tentar de novo** / **Fechar o app** (links `gt7-app://retry|quit`, interceptados no `will-navigate`, sem preload).
+  com **Tentar de novo** / **Fechar o app** (links `bono-app://retry|quit`, interceptados no `will-navigate`, sem preload).
   Endereço aberto: `http://127.0.0.1:<porta>/` (a porta que o servidor escolheu). Efeito colateral: o `localStorage` do
   painel é por origem (inclui a porta); se a porta mudar entre execuções, as preferências visuais locais recomeçam.
 - **Bandeja:** fechar a janela só a esconde (aviso único "continua em segundo plano"); menu: *Abrir*, *Copiar endereço do
@@ -1329,7 +1329,7 @@ com o mesmo código do `npm start`. O custo é o tamanho (~110 MB por instalador
 - **Ícone:** gerado por `scripts/icons.ts` (SVG de velocímetro nas cores do painel → `@resvg` → `icon.png` 512,
   `tray.png` 32 e `icon.ico` 16…256 com entradas PNG, montado à mão). O `.ico` é embutido no `.exe` (verificado: ícone,
   nome de produto e versão corretos).
-- **Log:** `%LOCALAPPDATA%\GT7 Race Engineer\logs\desktop.log` (1 MB, rotaciona para `.old`), pois o app empacotado não
+- **Log:** `%LOCALAPPDATA%\Bono Engineer\logs\desktop.log` (1 MB, rotaciona para `.old`), pois o app empacotado não
   tem console. Exceções soltas são registradas e ignoradas, como no CLI.
 
 ### Empacotamento
@@ -1356,7 +1356,7 @@ com o mesmo código do `npm start`. O custo é o tamanho (~110 MB por instalador
   abre no painel (captura de tela conferida); `process`/`require` indefinidos na página; título fixo; fechar (WM_CLOSE) esconde e o
   servidor continua; 2ª instância sai e traz a janela; porta ocupada por outro programa → página de erro, **Tentar de
   novo** repete, **Fechar o app** encerra; anexar a instância existente; "Sair" encerra o servidor e o processo; dados caem em
-  `%APPDATA%\GT7 Race Engineer`; `@resvg` carrega do `app.asar.unpacked`; `npm run demo`/`npm start` seguem como antes.
+  `%APPDATA%\Bono Engineer`; `@resvg` carrega do `app.asar.unpacked`; `npm run demo`/`npm start` seguem como antes.
 - **Não verificado:** o ícone e o menu da **bandeja** (não há como enxergá-la sem controle da tela; o código só foi
   exercitado até a criação do `Tray`), o balão de notificação, *Copiar endereço*, *Iniciar com o Windows* (registro de login),
   a instalação/desinstalação do instalador NSIS (não instalei para não alterar o sistema do usuário), o ícone do atalho

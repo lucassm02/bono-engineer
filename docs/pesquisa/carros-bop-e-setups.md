@@ -1,7 +1,7 @@
 # Pesquisa: carros, categorias, BoP, setups e afinação (GT7)
 
 Data da pesquisa: 09/11/2026 (jogo na versão 1.72, lançada em 15/10/2026 segundo a GT-Engine).
-Escopo: enriquecer o GT7 Race Engineer com dados externos sobre **carros, categorias (Gr.1/2/3/4/B, N), BoP, setups e afinação**, pneus/combustível e APIs gratuitas.
+Escopo: enriquecer o Bono Engineer com dados externos sobre **carros, categorias (Gr.1/2/3/4/B, N), BoP, setups e afinação**, pneus/combustível e APIs gratuitas.
 
 > Método e limites: li de fato as páginas e os arquivos citados (via leitura de URL e da API pública do GitHub). Alguns sites bloquearam a leitura automatizada (GTPlanet devolve 403; Fandom devolve 402; `gran-turismo.com/.../carlist` e o manual online são renderizados por JavaScript e vieram vazios). Onde não consegui confirmar, está marcado como **não verificado**. Nada aqui é aconselhamento jurídico: a coluna de risco é uma leitura prática dos termos que consegui ler.
 

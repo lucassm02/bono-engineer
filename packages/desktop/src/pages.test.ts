@@ -17,8 +17,8 @@ describe('pages', () => {
       logFile: 'C:\\Users\\a & b\\desktop.log',
     });
     expect(html).toContain('Tentar de novo');
-    expect(html).toContain('gt7-app://retry');
-    expect(html).toContain('gt7-app://quit');
+    expect(html).toContain('bono-app://retry');
+    expect(html).toContain('bono-app://quit');
     expect(html).not.toContain('<b>8770</b>');
     expect(html).not.toContain('<img');
     expect(html).toContain('&lt;img src=x onerror=alert(1)&gt;');

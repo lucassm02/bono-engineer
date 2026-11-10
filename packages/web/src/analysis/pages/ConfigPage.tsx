@@ -477,7 +477,7 @@ function McpSection({ status }: { status: ApiStatus }) {
   const localUrl = i?.http.localUrl ?? `http://localhost:${status.httpPort}/mcp`;
   const tokenRequired = i?.http.tokenRequired ?? status.tokenRequired;
   const codexConfig = [
-    '[mcp_servers.gt7]',
+    '[mcp_servers.bono]',
     `url = ${JSON.stringify(localUrl)}`,
     ...(tokenRequired ? ['bearer_token_env_var = "GT7_TOKEN"'] : []),
   ].join('\n');
@@ -520,15 +520,28 @@ function McpSection({ status }: { status: ApiStatus }) {
       {i && (
         <details className="a-advanced">
           <summary>Avançado: outras formas de conectar</summary>
-          <p className="dim a-small">
-            Pasta do repositório: <span className="num">{i.repoRoot}</span>
-          </p>
+          {i.repoRoot && (
+            <p className="dim a-small">
+              Pasta do repositório: <span className="num">{i.repoRoot}</span>
+            </p>
+          )}
           <CodeBlock label="Claude Code (lê os dados salvos)" code={i.claudeCode.stdio} />
           <CodeBlock label="Linha de comando" code={i.stdio.commandLine} />
-          <CodeBlock label="Dentro da pasta do repositório" code={i.stdio.npmCommandLine} />
+          {i.stdio.npmCommandLine && (
+            <CodeBlock label="Dentro da pasta do repositório" code={i.stdio.npmCommandLine} />
+          )}
           <p className="dim a-small">
-            O <code>--import</code> precisa ser uma URL <code>file:///</code> absoluta. Detalhes em{' '}
-            <code>packages/mcp/README.md</code>.
+            {i.repoRoot ? (
+              <>
+                O <code>--import</code> precisa ser uma URL <code>file:///</code> absoluta.
+              </>
+            ) : (
+              <>
+                O executável do app roda o servidor MCP como Node graças a{' '}
+                <code>ELECTRON_RUN_AS_NODE=1</code>; não precisa instalar nada.
+              </>
+            )}{' '}
+            Detalhes em <code>packages/mcp/README.md</code>.
           </p>
         </details>
       )}

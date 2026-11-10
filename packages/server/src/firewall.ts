@@ -6,7 +6,7 @@
 import { execFile } from 'node:child_process';
 import { type FirewallRuleStatus, type FirewallStatus, GT7_CLIENT_PORT } from '@gt7/shared';
 
-export const RULE_PREFIX = 'GT7 Race Engineer';
+export const RULE_PREFIX = 'Bono Engineer';
 
 export interface FirewallRuleSpec {
   name: string;

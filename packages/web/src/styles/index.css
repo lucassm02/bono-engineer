@@ -1,8 +1,7 @@
 /*
  * Bono Engineer — dashboard styles.
- * Pure black base (OLED phones in a mount: max contrast, min battery). Pit-board amber is the only
- * UI-chrome accent; green/red/purple/yellow are reserved for racing semantics (delta, sectors,
- * tyres, shift lights). One condensed DIN-like family carries every number.
+ * Pure black and pit-board amber for live telemetry. Graphite and cyan for the live menu and
+ * analysis. Green/red/purple/yellow mark racing states (delta, sectors, tyres, shift lights).
  */
 
 :root {
@@ -30,6 +29,16 @@
   --safe-b: max(env(safe-area-inset-bottom), 8px);
   --safe-l: max(env(safe-area-inset-left), 12px);
   color-scheme: dark;
+}
+
+html[data-area="analysis"],
+.live-menu {
+  --bg: #070b10;
+  --panel: var(--brand-surface);
+  --panel-2: #141e27;
+  --line: #24343f;
+  --dim: #a0aebc;
+  --accent: var(--brand-signal);
 }
 
 .product-brand {

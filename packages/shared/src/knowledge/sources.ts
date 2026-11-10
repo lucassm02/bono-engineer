@@ -160,7 +160,7 @@ export const KNOWLEDGE_SOURCES: readonly KnowledgeSource[] = [
   {
     id: 'sintese-propria',
     title: 'Síntese própria do projeto',
-    publisher: 'GT7 Race Engineer',
+    publisher: 'Bono Engineer',
     url: null,
     consultedAt: CONSULTED,
     access: 'sem-fonte-externa',

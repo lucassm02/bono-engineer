@@ -161,7 +161,7 @@ describe('Windows Firewall check', () => {
     expect(st.state).toBe('missing');
     expect(st.rules.map((r) => r.present)).toEqual([true, false]);
     expect(st.powershellCommands).toEqual([
-      'New-NetFirewallRule -DisplayName "GT7 Race Engineer (UDP 33740)" -Direction Inbound -Protocol UDP -LocalPort 33740 -Action Allow -Profile Private',
+      'New-NetFirewallRule -DisplayName "Bono Engineer (UDP 33740)" -Direction Inbound -Protocol UDP -LocalPort 33740 -Action Allow -Profile Private',
     ]);
     expect(st.netshCommands[0]).toContain('protocol=UDP localport=33740');
 

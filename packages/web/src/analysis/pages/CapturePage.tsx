@@ -184,7 +184,7 @@ function SavedCard({
       {measured != null && (
         <dl className="a-timecheck num">
           <div>
-            <dt>Medido pelos pacotes</dt>
+            <dt>Estimado pela telemetria</dt>
             <dd>{formatLapTime(measured)}</dd>
           </div>
           {typed != null && (
@@ -203,7 +203,7 @@ function SavedCard({
       )}
       {typed == null && measured != null && (
         <p className="dim a-small">
-          Sem o tempo do ranking, vale o medido pelos pacotes (erro de cerca de ±30 ms).
+          O tempo salvo é uma estimativa entre as duas passagens pela linha de chegada.
         </p>
       )}
       <div className="a-actions">
@@ -529,8 +529,8 @@ export function CapturePage() {
                 {ranking.kind === 'invalid'
                   ? ranking.message
                   : ranking.kind === 'ok'
-                    ? `Entendi ${ranking.shown}. O tempo medido pelos pacotes precisa bater com ele (diferença de até 0,3 s).`
-                    : 'Copie do ranking do jogo (ex.: 1:30.960). Ajuda a validar a volta; sem ele vale o tempo medido.'}
+                    ? `Vamos salvar ${ranking.shown} se a estimativa da telemetria ficar a até 0,3 s desse tempo.`
+                    : 'Copie o tempo oficial do jogo (ex.: 1:30.960). Se deixar em branco, salvamos a estimativa da telemetria.'}
               </span>
             </label>
 

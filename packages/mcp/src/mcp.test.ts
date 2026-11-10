@@ -253,7 +253,7 @@ describe('transports', () => {
     });
     const c = new Client({ name: 'stdio-test', version: '0' });
     await c.connect(transport);
-    expect(c.getServerVersion()?.name).toBe('gt7-race-engineer');
+    expect(c.getServerVersion()?.name).toBe('bono-engineer');
     const { tools } = await c.listTools();
     expect(tools.length).toBeGreaterThanOrEqual(16);
     const res = (await c.callTool({ name: 'list_tracks', arguments: {} })) as CallToolResult;
@@ -270,7 +270,7 @@ describe('transports', () => {
       const port = typeof addr === 'object' && addr ? addr.port : 0;
       const c = new Client({ name: 'http-test', version: '0' });
       await c.connect(new StreamableHTTPClientTransport(new URL(`http://127.0.0.1:${port}/mcp`)));
-      expect(c.getServerVersion()?.name).toBe('gt7-race-engineer');
+      expect(c.getServerVersion()?.name).toBe('bono-engineer');
       const { tools } = await c.listTools();
       expect(tools.map((t) => t.name)).toContain('compare_laps');
       const res = (await c.callTool({

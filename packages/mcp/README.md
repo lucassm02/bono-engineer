@@ -1,4 +1,4 @@
-# @gt7/mcp — servidor MCP do GT7 Race Engineer
+# @gt7/mcp — servidor MCP do Bono Engineer
 
 Expõe suas sessões, voltas, comparações curva a curva, consistência, microssetores, traces,
 histórico de evolução e **gráficos em imagem (PNG)** para qualquer cliente MCP (Codex, Claude Desktop,
@@ -12,6 +12,33 @@ Dois transportes:
 | **stdio** (`packages/mcp/src/stdio.ts`) | Claude Desktop/Code iniciam o processo, que lê o mesmo banco SQLite do app (pasta de dados do usuário) | não (só dados gravados) |
 | **Streamable HTTP** (`http://localhost:8770/mcp`) | com o app rodando (`npm start`), montado no servidor | sim |
 
+## App instalado (Bono Engineer.exe)
+
+O jeito mais fácil: abra o app em **Configurações → Integração com IA** e copie o trecho, que já vem
+com os caminhos desta instalação. O app instalado não tem o repositório nem o `tsx`: o servidor stdio
+vai empacotado como `resources\app.asar\dist\mcp-stdio.cjs` e o próprio executável o roda como Node
+graças a `ELECTRON_RUN_AS_NODE=1` (sem essa variável o .exe abriria outra janela do app):
+
+```json
+{
+  "mcpServers": {
+    "bono": {
+      "command": "C:\\Users\\<você>\\AppData\\Local\\Programs\\@gt7desktop\\Bono Engineer.exe",
+      "args": [
+        "C:\\Users\\<você>\\AppData\\Local\\Programs\\@gt7desktop\\resources\\app.asar\\dist\\mcp-stdio.cjs",
+        "--data",
+        "C:\\Users\\<você>\\AppData\\Roaming\\Bono Engineer"
+      ],
+      "env": { "ELECTRON_RUN_AS_NODE": "1" }
+    }
+  }
+}
+```
+
+No Claude Code: `claude mcp add bono -e ELECTRON_RUN_AS_NODE=1 -- "<exe>" "<...>\mcp-stdio.cjs" --data "<pasta de dados>"`.
+
+## A partir do repositório
+
 Os exemplos abaixo usam o repositório em `C:\Users\lucas\Projects\gt7`; troque pelo seu caminho.
 
 ## Claude Desktop (stdio)
@@ -21,7 +48,7 @@ Edite `%APPDATA%\Claude\claude_desktop_config.json` (Windows) e reinicie o Claud
 ```json
 {
   "mcpServers": {
-    "gt7": {
+    "bono": {
       "command": "node",
       "args": [
         "--disable-warning=ExperimentalWarning",
@@ -36,17 +63,17 @@ Edite `%APPDATA%\Claude\claude_desktop_config.json` (Windows) e reinicie o Claud
 
 - O `--import` precisa ser uma **URL `file:///`** absoluta (no Windows, `C:\...` não é aceito
   ali), porque o Claude Desktop inicia o processo em outra pasta.
-- **`--data` é opcional.** Sem ele, o servidor abre a mesma pasta de dados do app (`%APPDATA%\GT7 Race Engineer` no
-  Windows; macOS/Linux em `~/Library/Application Support/GT7 Race Engineer` / `~/.local/share/gt7-race-engineer`).
+- **`--data` é opcional.** Sem ele, o servidor abre a mesma pasta de dados do app (`%APPDATA%\Bono Engineer` no
+  Windows; macOS/Linux em `~/Library/Application Support/Bono Engineer` / `~/.local/share/bono-engineer`).
   Ordem de prioridade: `--data` > variável `GT7_DATA` / `GT7_DATA_DIR` > pasta padrão do app. Use `--data` só
-  para apontar para outra pasta (por exemplo `%APPDATA%\GT7 Race Engineer\demo`, os dados da demonstração).
+  para apontar para outra pasta (por exemplo `%APPDATA%\Bono Engineer\demo`, os dados da demonstração).
 - `node` precisa estar no PATH (Node ≥ 24). Se não estiver, use o caminho completo, ex.
   `"command": "C:\\Program Files\\nodejs\\node.exe"`.
 
 ## Claude Code (stdio)
 
 ```powershell
-claude mcp add gt7 -- node --disable-warning=ExperimentalWarning --import file:///C:/Users/lucas/Projects/gt7/node_modules/tsx/dist/loader.mjs C:\Users\lucas\Projects\gt7\packages\mcp\src\stdio.ts
+claude mcp add bono -- node --disable-warning=ExperimentalWarning --import file:///C:/Users/lucas/Projects/gt7/node_modules/tsx/dist/loader.mjs C:\Users\lucas\Projects\gt7\packages\mcp\src\stdio.ts
 ```
 
 Use `--scope user` para ficar disponível em todos os projetos. Dentro do repositório também
@@ -59,7 +86,7 @@ Com o servidor do app rodando (porta padrão 8770), o endpoint é **`http://loca
 (Streamable HTTP, sem estado). É o único modo em que `get_live_state` funciona.
 
 ```powershell
-claude mcp add --transport http gt7-live http://localhost:8770/mcp
+claude mcp add --transport http bono-live http://localhost:8770/mcp
 ```
 
 No Claude Desktop, use um conector remoto/HTTP apontando para a mesma URL (ou o stdio acima para
@@ -71,7 +98,7 @@ mountMcpHttp(fastify, { store: runtime.store, analysis: runtime.analysis, runtim
 ```
 
 Se o servidor rodar com `--token <segredo>`, o `/mcp` também exige o token. Com o Claude Code:
-`claude mcp add --transport http gt7-live http://localhost:8770/mcp --header "Authorization: Bearer <segredo>"`.
+`claude mcp add --transport http bono-live http://localhost:8770/mcp --header "Authorization: Bearer <segredo>"`.
 
 O coach do próprio app ("Debrief com IA", `POST /api/coach/debrief`) usa **estas mesmas
 ferramentas** (cliente MCP em memória) e os mesmos textos dos prompts (`COACH_PERSONA`,
@@ -79,11 +106,11 @@ ferramentas** (cliente MCP em memória) e os mesmos textos dos prompts (`COACH_P
 
 ## Codex (Streamable HTTP)
 
-Mantenha o GT7 Race Engineer aberto. Adicione este bloco a `~/.codex/config.toml` e reinicie o Codex.
+Mantenha o Bono Engineer aberto. Adicione este bloco a `~/.codex/config.toml` e reinicie o Codex.
 Em **Configurações › Integração com IA**, o app oferece um bloco copiável com a porta desta instalação.
 
 ```toml
-[mcp_servers.gt7]
+[mcp_servers.bono]
 url = "http://localhost:8770/mcp"
 ```
 

@@ -1,7 +1,7 @@
 # Windows package. No code signing and no admin rights needed:
 #  - "nsis": one-click installer for the CURRENT user (%LOCALAPPDATA%\Programs), no UAC prompt;
 #  - "portable": a single .exe that runs from anywhere (extracts to a temp folder on each start).
-appId: com.lucas.gt7raceengineer
+appId: com.lucas.bonoengineer
 productName: Bono Engineer
 copyright: Projeto pessoal
 directories:
@@ -22,7 +22,6 @@ electronLanguages:
 npmRebuild: false
 buildDependenciesFromSource: false
 win:
-  executableName: GT7 Race Engineer # keep existing Windows shortcut and startup targets valid
   icon: build/icon.ico
   target:
     - target: nsis
@@ -30,10 +29,11 @@ win:
     - target: portable
       arch: x64
 nsis:
+  guid: 9d335344-a700-5f11-a862-c0085db2e32b # preserve the installed product's upgrade key
   oneClick: true
   perMachine: false
   allowElevation: false
-  deleteAppDataOnUninstall: false # the history lives in %APPDATA%\GT7 Race Engineer: never removed
+  deleteAppDataOnUninstall: false # the history lives in %APPDATA%\Bono Engineer: never removed
   createDesktopShortcut: true
   createStartMenuShortcut: true
   shortcutName: Bono Engineer

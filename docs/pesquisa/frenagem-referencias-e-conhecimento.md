@@ -1,6 +1,6 @@
 # Pesquisa: pontos de frenagem, voltas de referência, recordes e conhecimento de pilotagem
 
-Data da pesquisa: 2026-11-09. Autor: pesquisador técnico (subagente). Escopo: enriquecer o GT7 Race Engineer com dados
+Data da pesquisa: 2026-11-09. Autor: pesquisador técnico (subagente). Escopo: enriquecer o Bono Engineer com dados
 externos sobre frenagem, linhas, voltas de referência/recordes e conhecimento de pilotagem por pista e por categoria
 de carro (Gr.1, Gr.2, Gr.3, Gr.4, Gr.B, N-classes). Nenhum código do app foi alterado.
 
@@ -328,7 +328,7 @@ Exemplo (curto, valores ilustrativos):
   "format": "gt7-track-pack",
   "version": 1,
   "generatedAt": "2026-11-09T12:00:00Z",
-  "generator": { "app": "gt7-race-engineer", "version": "0.4.0" },
+  "generator": { "app": "bono-engineer", "version": "0.4.0" },
   "license": "CC0-1.0",
   "track": { "officialId": "<id do catálogo>", "name": "Suzuka Circuit", "layout": "Full Course",
              "lengthM": 5807, "turns": 18, "fingerprintHash": "sha1:ab12..." },

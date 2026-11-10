@@ -5,8 +5,8 @@
 
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-
-const LEGACY_PROFILE_NAME = 'GT7 Race Engineer';
+import { previousDataFolderName } from '@gt7/core';
+import { PRODUCT_NAME, PRODUCT_SLUG } from '@gt7/shared';
 
 export interface PathContext {
   platform?: NodeJS.Platform;
@@ -20,21 +20,31 @@ export interface PathContext {
  * uses (`defaultDataDir()` of @gt7/core), so both ways of running share it. The two names differ
  * on purpose so no Chromium cache ever lands inside the data folder.
  *
- *   Windows  %LOCALAPPDATA%\GT7 Race Engineer
- *   macOS    ~/Library/Application Support/GT7 Race Engineer Desktop
- *   Linux    $XDG_CONFIG_HOME/gt7-race-engineer-desktop  (default ~/.config)
+ *   Windows  %LOCALAPPDATA%\Bono Engineer
+ *   macOS    ~/Library/Application Support/Bono Engineer Desktop
+ *   Linux    $XDG_CONFIG_HOME/bono-engineer-desktop  (default ~/.config)
  */
-export function electronUserDataDir(ctx: PathContext = {}): string {
+export function electronUserDataDir(ctx: PathContext = {}, previous = false): string {
   const platform = ctx.platform ?? process.platform;
   const env = ctx.env ?? process.env;
   const home = ctx.home ?? homedir();
+  const profileName = previous ? previousDataFolderName(false) : PRODUCT_NAME;
   if (platform === 'win32') {
-    return join(env.LOCALAPPDATA || join(home, 'AppData', 'Local'), LEGACY_PROFILE_NAME);
+    return join(env.LOCALAPPDATA || join(home, 'AppData', 'Local'), profileName);
   }
   if (platform === 'darwin') {
-    return join(home, 'Library', 'Application Support', `${LEGACY_PROFILE_NAME} Desktop`);
+    return join(home, 'Library', 'Application Support', `${profileName} Desktop`);
   }
-  return join(env.XDG_CONFIG_HOME || join(home, '.config'), 'gt7-race-engineer-desktop');
+  const slug = previous ? previousDataFolderName(true) : PRODUCT_SLUG;
+  return join(env.XDG_CONFIG_HOME || join(home, '.config'), `${slug}-desktop`);
+}
+
+/** File name of the bundled MCP stdio server, next to main.cjs (built by scripts/build.ts). */
+export const MCP_STDIO_BUNDLE = 'mcp-stdio.cjs';
+
+/** The MCP stdio server bundled next to the main script (inside app.asar when packaged). */
+export function bundledMcpStdio(scriptDir: string): string {
+  return join(scriptDir, MCP_STDIO_BUNDLE);
 }
 
 /** The dashboard bundled next to the main script (`dist/web`, copied by scripts/build.ts). */
@@ -84,7 +94,7 @@ export function isOpenableExternally(url: string): boolean {
 }
 
 /** Internal actions of the error page (links with this scheme never leave the app). */
-export const ACTION_SCHEME = 'gt7-app:';
+export const ACTION_SCHEME = 'bono-app:';
 export type PageAction = 'retry' | 'quit';
 
 export function parsePageAction(url: string): PageAction | null {

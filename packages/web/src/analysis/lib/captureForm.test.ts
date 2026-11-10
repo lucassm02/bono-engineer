@@ -314,7 +314,7 @@ describe('references list', () => {
         ...p,
       }) as ReferenceMeta;
     expect(timeOriginLabel(m({ timeSource: 'ranking' }))).toBe('tempo do ranking');
-    expect(timeOriginLabel(m({ timeSource: 'packets' }))).toMatch(/pacotes/);
+    expect(timeOriginLabel(m({ timeSource: 'packets' }))).toBe('estimado pela telemetria');
     expect(timeOriginLabel(m({ rankingTimeMs: 90_000 }))).toBe('tempo do ranking');
     expect(timeOriginLabel(m({ source: 'own' }))).toBe('volta própria');
     expect(timeOriginLabel(null)).toBe('—');

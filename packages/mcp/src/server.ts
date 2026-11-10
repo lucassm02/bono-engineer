@@ -14,7 +14,13 @@ import {
   type Gt7Runtime,
   type Gt7Store,
 } from '@gt7/core';
-import { type CornerMetrics, type Lap, TRACE_CHANNELS } from '@gt7/shared';
+import {
+  type CornerMetrics,
+  type Lap,
+  PRODUCT_NAME,
+  PRODUCT_SLUG,
+  TRACE_CHANNELS,
+} from '@gt7/shared';
 import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
@@ -33,7 +39,7 @@ import {
 import { registerKnowledge } from './knowledge.ts';
 import { registerPrompts } from './prompts.ts';
 
-export const MCP_SERVER_NAME = 'gt7-race-engineer';
+export const MCP_SERVER_NAME = PRODUCT_SLUG;
 export const MCP_SERVER_VERSION = '0.1.0';
 
 export interface McpDeps {
@@ -44,7 +50,7 @@ export interface McpDeps {
   runtime?: Gt7Runtime | null;
 }
 
-const INSTRUCTIONS = `Servidor de telemetria do Gran Turismo 7 (GT7 Race Engineer).
+const INSTRUCTIONS = `Servidor de telemetria do ${PRODUCT_NAME}. Integração disponível: Gran Turismo 7.
 Fluxo típico: list_sessions → list_laps → compare_laps(lap_id, reference="auto") → \
 get_corner_detail / render_comparison_chart nas curvas que mais custam; depois \
 get_knowledge(car_code, diagnostics = os plan[].code) para a base de pilotagem da classe do carro.

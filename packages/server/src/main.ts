@@ -13,7 +13,7 @@
 
 import { type ChildProcess, spawn, spawnSync } from 'node:child_process';
 import { join } from 'node:path';
-import { defaultDataDir, migrateLegacyData } from '@gt7/core';
+import { defaultDataDir, migrateLegacyData, migratePreviousDataDir } from '@gt7/core';
 import { type ConsoleLinkState, PRODUCT_NAME } from '@gt7/shared';
 import { type Gt7Server, SERVER_VERSION } from './app.ts';
 import { renderBanner, renderFirewall } from './banner.ts';
@@ -132,7 +132,9 @@ async function main(): Promise<void> {
   // One-time move of the old <repo>/data to the user's folder (the old one is kept).
   let migratedFrom: string | null = null;
   if (!cfg.dataDirExplicit) {
-    const m = migrateLegacyData(LEGACY_DATA_DIR, defaultDataDir());
+    const target = defaultDataDir();
+    migratePreviousDataDir(target);
+    const m = migrateLegacyData(LEGACY_DATA_DIR, target);
     if (m.migrated) {
       migratedFrom = m.from;
       console.log(`  Seus dados foram copiados para ${m.to} (a pasta antiga foi mantida).`);

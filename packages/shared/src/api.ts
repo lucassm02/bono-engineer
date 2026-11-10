@@ -144,19 +144,21 @@ export interface ApiRedetectCornersResult {
  * (so the settings page needs no placeholder).
  */
 export interface ApiMcpInfo {
-  /** Absolute path of the repository (where `npm run mcp` works). */
-  repoRoot: string;
+  /** Absolute path of the repository (where `npm run mcp` works); null in the installed app. */
+  repoRoot: string | null;
   /** Absolute data directory of the running app (`sessions.db` + `traces/`). */
   dataDir: string;
-  /** Absolute path of the Node executable running the server. */
+  /** Absolute path of the Node executable running the server (the app's .exe when installed). */
   nodePath: string;
   stdio: {
     command: string;
     args: string[];
-    /** `command` + `args`, quoted for PowerShell / Git Bash. */
+    /** Extra environment (ELECTRON_RUN_AS_NODE=1 makes the installed app's .exe act as Node). */
+    env: Record<string, string>;
+    /** `env` + `command` + `args`, quoted for the current shell (PowerShell on Windows). */
     commandLine: string;
-    /** Alternative from the repo folder: `npm run -s mcp -- --data "<dir>"`. */
-    npmCommandLine: string;
+    /** Alternative from the repo folder: `npm run -s mcp -- --data "<dir>"`; null when installed. */
+    npmCommandLine: string | null;
   };
   http: {
     path: string;
@@ -165,6 +167,8 @@ export interface ApiMcpInfo {
     tokenRequired: boolean;
   };
   /** Content for `%APPDATA%\Claude\claude_desktop_config.json` (stdio). */
-  claudeDesktopConfig: { mcpServers: { gt7: { command: string; args: string[] } } };
+  claudeDesktopConfig: {
+    mcpServers: { bono: { command: string; args: string[]; env?: Record<string, string> } };
+  };
   claudeCode: { stdio: string; http: string };
 }

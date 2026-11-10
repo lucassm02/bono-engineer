@@ -6,7 +6,7 @@
   padding: 12px 14px;
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.035);
+  background: var(--panel-2);
 }
 
 .engineer-controls header,
@@ -41,7 +41,7 @@
   min-height: 36px;
   padding: 4px 8px;
   color: inherit;
-  background: #0b1014;
+  background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 6px;
 }

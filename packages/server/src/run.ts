@@ -43,7 +43,7 @@ export interface StartServerOptions {
 
 export interface RunningServer {
   /**
-   * True when a GT7 Race Engineer of the same mode was already answering on the chosen port: no
+   * True when a Bono Engineer of the same mode was already answering on the chosen port: no
    * new server was started, `server` is null and `stop()` does nothing.
    */
   attached: boolean;
@@ -138,6 +138,7 @@ export async function startServer(opts: StartServerOptions): Promise<RunningServ
       token: cfg.token,
       simulator: !!cfg.sim,
       logger: cfg.verbose,
+      mcpStdioScript: cfg.mcpStdioScript ?? null,
       ...opts.appOverrides,
     });
   } catch (e) {

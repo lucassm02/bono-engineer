@@ -37,7 +37,7 @@ if (values.help) {
 
 Options:
   --ps-ip IP            console IP (default: last saved, else automatic discovery)
-  --data DIR            data dir (default: the per-user GT7 Race Engineer folder)
+  --data DIR            data dir (default: the per-user Bono Engineer folder)
   --format F            packet format ~ | A | B | C (default: saved, else ~)
   --ref KIND            delta reference: personalBest | sessionBest | reference
   --ref-lap ID          reference lap id (with --ref reference)

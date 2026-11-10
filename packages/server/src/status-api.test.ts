@@ -37,7 +37,7 @@ describe('REST: console connection, discovery and format settings (no UDP)', () 
   it('GET /api/status carries consoleConnection next to the old connection field', async () => {
     const r = await call<ApiStatus>('GET', '/api/status');
     expect(r.status).toBe(200);
-    expect(r.headers['x-gt7-race-engineer']).toBe('real');
+    expect(r.headers['x-bono-engineer']).toBe('real');
     expect(r.body.telemetrySource).toBe('gt7');
     expect(typeof r.body.connection).toBe('string'); // ConnectionState, unchanged
     expect(r.body.consoleConnection).toMatchObject({

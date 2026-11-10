@@ -4,15 +4,6 @@
  * Signal cyan identifies analysis controls. Timing and alert colors retain their own roles.
  */
 
-html[data-area="analysis"] {
-  --bg: #070b10;
-  --panel: var(--brand-surface);
-  --panel-2: #141e27;
-  --line: #24343f;
-  --dim: #a0aebc;
-  --accent: var(--brand-signal);
-}
-
 html[data-area="analysis"],
 html[data-area="analysis"] body,
 html[data-area="analysis"] #root {

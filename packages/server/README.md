@@ -1,4 +1,4 @@
-# @gt7/server — servidor do GT7 Race Engineer
+# @gt7/server — servidor do Bono Engineer
 
 Servidor HTTP + WebSocket (Fastify) que liga a telemetria do GT7 (`@gt7/core`) ao painel
 (`@gt7/web`), à API REST, ao MCP por HTTP e ao coach com IA. Porta padrão **8770**, escuta em
@@ -111,7 +111,7 @@ adaptativo, cache de prompt e fallback do servidor em recusas.
 
 `POST /mcp` — Streamable HTTP sem estado (o mesmo servidor MCP do `npm run mcp`, mais o
 `get_live_state` com os dados ao vivo). Veja `packages/mcp/README.md` para configurar o Claude
-Desktop/Code (`claude mcp add --transport http gt7-live http://localhost:8770/mcp`).
+Desktop/Code (`claude mcp add --transport http bono-live http://localhost:8770/mcp`).
 
 ### WebSocket
 

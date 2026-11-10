@@ -17,23 +17,23 @@ describe('electronUserDataDir', () => {
       env: { LOCALAPPDATA: 'C:UsersaAppDataLocal', APPDATA: 'C:UsersaAppDataRoaming' },
       home: 'C:Usersa',
     });
-    expect(dir).toBe(join('C:UsersaAppDataLocal', 'GT7 Race Engineer'));
+    expect(dir).toBe(join('C:UsersaAppDataLocal', 'Bono Engineer'));
     expect(dir).not.toContain('Roaming');
   });
   it('falls back to <home>AppDataLocal', () => {
     expect(electronUserDataDir({ platform: 'win32', env: {}, home: 'C:Usersa' })).toBe(
-      join('C:Usersa', 'AppData', 'Local', 'GT7 Race Engineer'),
+      join('C:Usersa', 'AppData', 'Local', 'Bono Engineer'),
     );
   });
   it('differs from the data folder name on macOS and Linux', () => {
     expect(electronUserDataDir({ platform: 'darwin', env: {}, home: '/Users/a' })).toBe(
-      join('/Users/a', 'Library', 'Application Support', 'GT7 Race Engineer Desktop'),
+      join('/Users/a', 'Library', 'Application Support', 'Bono Engineer Desktop'),
     );
     expect(
       electronUserDataDir({ platform: 'linux', env: { XDG_CONFIG_HOME: '/x' }, home: '/h' }),
-    ).toBe(join('/x', 'gt7-race-engineer-desktop'));
+    ).toBe(join('/x', 'bono-engineer-desktop'));
     expect(electronUserDataDir({ platform: 'linux', env: {}, home: '/h' })).toBe(
-      join('/h', '.config', 'gt7-race-engineer-desktop'),
+      join('/h', '.config', 'bono-engineer-desktop'),
     );
   });
 });
@@ -91,9 +91,9 @@ describe('isOpenableExternally', () => {
 
 describe('parsePageAction', () => {
   it('recognizes the error page buttons and nothing else', () => {
-    expect(parsePageAction('gt7-app://retry')).toBe('retry');
-    expect(parsePageAction('gt7-app://quit/')).toBe('quit');
-    expect(parsePageAction('gt7-app://format-c')).toBeNull();
+    expect(parsePageAction('bono-app://retry')).toBe('retry');
+    expect(parsePageAction('bono-app://quit/')).toBe('quit');
+    expect(parsePageAction('bono-app://format-c')).toBeNull();
     expect(parsePageAction('http://127.0.0.1:8770/')).toBeNull();
   });
 });

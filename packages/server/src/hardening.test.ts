@@ -216,7 +216,7 @@ describe('/api/mcp/info', () => {
     expect(info.http.localUrl).toBe('http://localhost:46890/mcp');
     expect(info.stdio.args).toContain('--data');
     expect(info.stdio.args.at(-1)).toBe(info.dataDir);
-    expect(info.claudeDesktopConfig.mcpServers.gt7.command).toBe(info.nodePath);
+    expect(info.claudeDesktopConfig.mcpServers.bono.command).toBe(info.nodePath);
   });
 
   it('builds file:/// loader URLs and quotes spaces', () => {
@@ -232,11 +232,43 @@ describe('/api/mcp/info', () => {
     expect(info.stdio.args[2]).toMatch(/^file:\/\/\/.*Ana%20Maria.*loader\.mjs$/);
     expect(info.stdio.commandLine.startsWith('"C:\\Program Files\\nodejs\\node.exe"')).toBe(true);
     expect(info.stdio.commandLine).toContain('--data "C:\\Users\\Ana Maria\\Projects\\gt7\\data"');
-    expect(info.stdio.npmCommandLine.startsWith('npm.cmd run -s mcp -- --data "C:')).toBe(true);
+    expect(info.stdio.env).toEqual({});
+    expect(info.stdio.npmCommandLine?.startsWith('npm.cmd run -s mcp -- --data "C:')).toBe(true);
     expect(info.http.lanUrls).toEqual(['http://192.168.0.10:8770/mcp']);
     expect(info.claudeCode.http).toContain('Authorization: Bearer <seu-token>');
     expect(quoteArg('simple')).toBe('simple');
     expect(quoteArg('a b')).toBe('"a b"');
+  });
+
+  it('points the installed app at its bundled stdio server (no repo, no tsx)', () => {
+    const exe = 'C:\\Users\\Ana\\AppData\\Local\\Programs\\@gt7desktop\\Bono Engineer.exe';
+    const script =
+      'C:\\Users\\Ana\\AppData\\Local\\Programs\\@gt7desktop\\resources\\app.asar\\dist\\mcp-stdio.cjs';
+    const dataDir = 'C:\\Users\\Ana\\AppData\\Roaming\\Bono Engineer';
+    const info = buildMcpInfo({
+      repoRoot: 'C:\\Users\\Ana\\AppData\\Local\\Programs\\@gt7desktop',
+      dataDir,
+      nodePath: exe,
+      localUrl: 'http://localhost:8770/',
+      lanUrls: [],
+      tokenRequired: false,
+      bundledStdio: script,
+      platform: 'win32',
+    });
+    expect(info.stdio.args).toEqual([script, '--data', dataDir]);
+    expect(info.stdio.env).toEqual({ ELECTRON_RUN_AS_NODE: '1' });
+    expect(info.claudeDesktopConfig.mcpServers.bono).toEqual({
+      command: exe,
+      args: [script, '--data', dataDir],
+      env: { ELECTRON_RUN_AS_NODE: '1' },
+    });
+    expect(JSON.stringify(info)).not.toContain('tsx');
+    expect(info.repoRoot).toBeNull();
+    expect(info.stdio.npmCommandLine).toBeNull();
+    expect(info.stdio.commandLine.startsWith('$env:ELECTRON_RUN_AS_NODE="1"; & "C:')).toBe(true);
+    expect(
+      info.claudeCode.stdio.startsWith('claude mcp add bono -e ELECTRON_RUN_AS_NODE=1 -- "C:'),
+    ).toBe(true);
   });
 });
 

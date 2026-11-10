@@ -45,11 +45,12 @@ import {
   readTraceFileSync,
   TRACE_EXTENSION,
 } from '../trace/trace-file.ts';
+import { DB_FILE, migratePreviousDataDir } from '../util/data-dir.ts';
 import { getSchemaVersion, migrate } from './schema.ts';
 
 const gzipAsync = promisify(gzip);
 
-export const DB_FILE = 'sessions.db';
+export { DB_FILE } from '../util/data-dir.ts';
 export const TRACES_DIR = 'traces';
 export const RECORDINGS_DIR = 'recordings';
 
@@ -144,6 +145,7 @@ export class Gt7Store {
 
   /** Opens (creating if needed) the store in `dataDir` and applies migrations. */
   static open(dataDir = 'data'): Gt7Store {
+    migratePreviousDataDir(dataDir);
     return new Gt7Store(dataDir);
   }
 

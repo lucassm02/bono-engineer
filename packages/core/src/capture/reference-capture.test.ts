@@ -164,6 +164,9 @@ describe('ReferenceCapture by geometry', () => {
     // same channels as live laps → usable as delta reference (explicit id and "best of the track")
     const trace = store.loadTraceSync(lap.id)!;
     expect(trace.length).toBe(lap.sampleCount);
+    expect(trace.channels.tMs[0]).toBe(0);
+    expect(trace.channels.distanceM[0]).toBe(0);
+    expect(trace.channels.tMs[trace.length - 1]).toBe(lap.timeMs);
     expect(Number(trace.channels.distanceM[trace.length - 1])).toBeGreaterThan(
       store.getTrack(lap.trackId!)!.lengthM * 0.97,
     );
@@ -201,6 +204,8 @@ describe('ReferenceCapture by geometry', () => {
     expect(Math.abs(st.diffMs! + 90)).toBeLessThan(25);
     const lap = store.getLap(st.lapId!)!;
     expect(lap.timeMs).toBe(typed);
+    const trace = store.loadTraceSync(lap.id)!;
+    expect(trace.channels.tMs[trace.length - 1]).toBe(typed);
     expect(lap.referenceMeta).toMatchObject({ timeSource: 'ranking', rankingTimeMs: typed });
     expect(lap.referenceMeta!.measuredTimeMs).toBe(st.measuredLapMs);
   });

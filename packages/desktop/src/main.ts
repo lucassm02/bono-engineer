@@ -7,7 +7,9 @@
  * and links to anywhere else open in the system browser.
  */
 
+import { cpSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { publishMigratedFolder } from '@gt7/core';
 import { parseConfig, type RunningServer, StartServerError, startServer } from '@gt7/server';
 import { BRAND_SURFACE, PRODUCT_NAME } from '@gt7/shared';
 import {
@@ -26,6 +28,7 @@ import {
 import { initLog, log, logFilePath } from './log.ts';
 import { errorHtml, splashHtml, toDataUrl } from './pages.ts';
 import {
+  bundledMcpStdio,
   bundledWebDist,
   electronUserDataDir,
   isInternalUrl,
@@ -42,10 +45,26 @@ const START_HIDDEN = process.argv.includes('--hidden');
 
 // Own folder for Chromium's files; the history stays in the shared data folder (see paths.ts).
 app.setName(PRODUCT_NAME);
-app.setPath('userData', electronUserDataDir());
-app.setAppUserModelId('com.lucas.gt7raceengineer');
+const profileDir = electronUserDataDir();
+const previousProfile = electronUserDataDir({}, true);
+let profileMigrationError: unknown;
+try {
+  if (!existsSync(profileDir) && existsSync(previousProfile)) {
+    publishMigratedFolder(profileDir, (staging) => {
+      for (const entry of ['desktop-state.json', 'Local Storage']) {
+        const source = join(previousProfile, entry);
+        if (existsSync(source)) cpSync(source, join(staging, entry), { recursive: true });
+      }
+    });
+  }
+} catch (error) {
+  profileMigrationError = error;
+}
+app.setPath('userData', profileDir);
+app.setAppUserModelId('com.lucas.bonoengineer');
 const STATE_FILE = join(app.getPath('userData'), 'desktop-state.json');
 initLog(join(app.getPath('userData'), 'logs', 'desktop.log'));
+if (profileMigrationError) log(`falha ao copiar preferências anteriores: ${profileMigrationError}`);
 
 let win: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -296,7 +315,12 @@ async function boot(): Promise<void> {
 
     // Same code and same zero-config rules as `npm start`; the window is the "browser".
     const base = parseConfig(['--no-open'], process.env);
-    const cfg = { ...base, webDist: bundledWebDist(__dirname) };
+    const cfg = {
+      ...base,
+      webDist: bundledWebDist(__dirname),
+      // Installed app: MCP clients run this bundle with our own .exe (no repo, no tsx here).
+      mcpStdioScript: bundledMcpStdio(__dirname),
+    };
     const r = await startServer({ config: cfg });
     running = r;
     serverHost = r.config.host;

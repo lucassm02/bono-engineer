@@ -19,4 +19,6 @@ export interface RouteContext {
   simulator: boolean;
   /** In-app AI coach (Debrief com IA). */
   coach: CoachService;
+  /** Bundled MCP stdio server of the desktop app; null/missing = the repo's stdio.ts. */
+  mcpStdioScript?: string | null;
 }

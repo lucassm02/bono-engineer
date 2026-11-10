@@ -4,13 +4,15 @@
 
 ## Sinal de box
 
-O monograma usa dois pulsos angulares para desenhar o B. O painel de análise usa grafite (`#0b1118`), ciano (`#66e4f6`) nos controles e branco frio (`#edf7fa`) no símbolo. No painel ao vivo, o âmbar continua nos controles e as cores do delta, dos setores e das luzes de troca mantêm seu significado. Os tempos usam algarismos tabulares para facilitar a leitura de relance.
+O monograma desenha um B com uma curva fechada no topo, um arco mais aberto na base e uma faixa ciano de largada. A área de análise e o menu ao vivo usam grafite (`#0b1118`) e ciano (`#66e4f6`) nos controles. O traçado do símbolo usa marfim (`#f7f5ea`). Os tempos usam algarismos tabulares para facilitar a leitura de relance.
 
 O [símbolo vetorial](../packages/web/public/favicon.svg) é aplicado no web app, no desktop e na bandeja. O arquivo [brand.ts](../packages/shared/src/brand.ts) define o símbolo. Use `npm run brand:icons` para gerar os arquivos web e Windows.
 
 ## Integrações de telemetria
 
-Gran Turismo 7 no PlayStation é a integração disponível. A tela de conexão concentra a descoberta do console e as opções de pacote. O modo demonstração é identificado separadamente. O campo `telemetrySource` em `/api/status` distingue a fonte configurada do estado da conexão. As pastas de dados e preferências continuam nos caminhos usados pelas versões anteriores. O executável interno do Windows conserva o nome anterior para manter o destino dos atalhos e da inicialização automática.
+Gran Turismo 7 no PlayStation é a integração disponível. A tela de conexão concentra a descoberta do console e as opções de pacote. O modo demonstração é identificado separadamente. O campo `telemetrySource` em `/api/status` distingue a fonte configurada do estado da conexão.
+
+Antes de atualizar, feche o app anterior pela bandeja. Na primeira abertura, o Bono Engineer copia o histórico e as preferências locais para as novas pastas, preservando os arquivos de origem. Se usava a opção de iniciar com o Windows, confira a opção no menu da bandeja após a instalação.
 
 Para integrar o próximo simulador:
 

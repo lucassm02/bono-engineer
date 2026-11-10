@@ -46,6 +46,8 @@ export interface CreateAppOptions {
   extraRoutes?: RouteModule[];
   /** Mount the MCP server (Streamable HTTP) at /mcp (default true). */
   mcp?: boolean;
+  /** Bundled MCP stdio server of the desktop app (see ServerConfig.mcpStdioScript). */
+  mcpStdioScript?: string | null;
   /** In-app AI coach options (tests inject a fake Claude client factory). */
   coach?: CoachServiceOptions;
 }
@@ -115,6 +117,7 @@ export async function createApp(opts: CreateAppOptions = {}): Promise<Gt7Server>
       tokenRequired: !!token,
       simulator: !!opts.simulator,
       coach,
+      mcpStdioScript: opts.mcpStdioScript ?? null,
     };
     // Error/not-found handlers first: the /api child context inherits them at registration.
     await registerWeb(app, opts.webDist ?? null);

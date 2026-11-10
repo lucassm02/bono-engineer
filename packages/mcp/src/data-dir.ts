@@ -1,6 +1,6 @@
 /**
  * Data folder of the stdio MCP server: `--data <dir>` / `--data=<dir>` > GT7_DATA / GT7_DATA_DIR >
- * the same per-user folder the app uses (`resolveDataDir()` of @gt7/core, e.g. `%APPDATA%\GT7 Race Engineer`).
+ * the same per-user folder the app uses (`resolveDataDir()` of @gt7/core, e.g. `%APPDATA%\Bono Engineer`).
  */
 
 import { resolve } from 'node:path';

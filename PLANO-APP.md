@@ -1,4 +1,4 @@
-# Plano do app: GT7 Race Engineer
+# Plano do app: Bono Engineer
 
 > Objetivo principal: **evoluir a pilotagem**. Saber onde se perde tempo, por quê (frenagem, traçado,
 > aceleração) e o que fazer diferente. O painel ao vivo é o meio; a análise e o coach de IA são o fim.
@@ -253,6 +253,120 @@ métricas de piloto, curva a curva, como um engenheiro de pista faria.
   sobrepostos e zoom por curva.
 - **Tabela de curvas** com todas as métricas e diferenças.
 - **Volta teórica ideal:** soma dos melhores microssetores.
+
+### 5.4 Backlog — Eventos de pilotagem
+
+- [ ] **Detectar saída de frente, saída de traseira e travamento.** Cruzar volante, velocidade,
+  guinada (quanto o carro gira), pedais e trajetória. Para saída de frente, procurar resposta
+  de guinada menor que a esperada para o volante e a velocidade, junto com uma trajetória
+  que abre. Para saída de traseira, procurar rotação excessiva junto com deslocamento lateral
+  ou contravolante. Manter travamento na freada como evento separado, usando o sinal de
+  escorregamento longitudinal das rodas dianteiras. Guardar curva, trecho em metros, duração,
+  sinais observados e confiança. Se faltarem canais ou houver uma transição rápida, zebra ou
+  perda de amostras, exigir evidência adicional para classificar.
+- [ ] **Mostrar os eventos na revisão da volta.** Listar curva, diagnóstico e uma ação curta no
+  resumo. Exemplo: “T2 · provável saída de frente · abra a entrada da direita”. Ao selecionar o
+  evento, destacar o trecho e mostrar volante, pedais e guinada. O marcador no gráfico é opcional.
+  Exibir casos com evidência parcial como “prováveis”.
+- [ ] **Anunciar eventos claros no rádio ao vivo.** Usar o rádio existente para falar depois que
+  o carro endireitar, com no máximo uma chamada por passagem pela curva. Exemplo: “Curva dois,
+  a frente abriu. Na próxima, abra mais a entrada”. Reservar os casos prováveis para a revisão.
+
+**Ordem de implementação.** Validar o detector em voltas gravadas, ligar os eventos ao resumo e
+só depois habilitar o rádio. Em Trial Mountain com o Huracán Gr.4, usar a T2 da volta de
+**2:04,856** como caso de possível saída de frente e os sinais de travamento na T9 como caso de
+distinção. Para saída de traseira, validar com uma passagem confirmada em replay e comparar com
+uma passagem limpa antes de habilitar a chamada por voz.
+
+### 5.5 Backlog — Modos do engenheiro e alertas de corrida
+
+Consultar a [spec de implementação do engenheiro de rádio](docs/spec-engenheiro-de-radio.md)
+para os modos, as regras de decisão e os critérios de aceite.
+O catálogo, a reprodução offline e a migração estão na
+[spec de vozes neurais do Bono](docs/spec-vozes-neurais-bono.md).
+
+O modo define o que o engenheiro fala e em que momento. A referência é uma escolha separada.
+Reaproveitar o rádio, o seletor de referência e o treino de curvas existentes.
+
+**Execução ao vivo sem IA.** Usar regras determinísticas sobre a telemetria recebida, o estado da
+sessão e a volta de referência, quando houver. Cada regra define dados mínimos, limiar com
+tolerância, duração para confirmar o evento, prioridade, validade da chamada e intervalo de
+repetição. Usar frases prontas ou modelos com números preenchidos pelo app. Dada a mesma
+sequência de dados, referência e configuração, a seleção de eventos e chamadas deve ser a mesma.
+
+| Caso | Regra de decisão |
+|---|---|
+| **Aprender pista** | Calcular a distância até o ponto de freada medido na referência e usar a velocidade atual para escolher quando falar. Só mencionar uma placa quando o ponto tiver um marco cadastrado. |
+| **Ganhar tempo** | Alinhar as voltas por distância. Após a curva, comparar freio, volante, linha, velocidade e delta. Só apontar um erro quando a diferença superar a tolerância e houver indício de perda ou instabilidade. Para uma correção ao vivo, exigir também tempo útil para agir. |
+| **Resumo da volta** | Ordenar os ganhos e as perdas calculados, selecionar um destaque e uma ação elegível e preencher uma frase pronta. |
+| **Classificação e Corrida** | Avaliar condições como temperatura e autonomia diretamente dos dados disponíveis, confirmando que a condição persistiu antes de anunciar. |
+
+Se faltarem canais, dados estiverem desatualizados ou a referência for incompatível, suprimir a
+chamada dependente desses dados. Testar a seleção e o horário das chamadas reprocessando voltas
+gravadas, incluindo passagens limpas, ruído, dados ausentes e instruções que perderam a validade.
+
+| Modo | Para que serve | O que vai ao rádio |
+|---|---|---|
+| **Treino** | Aprender, ganhar tempo, repetir ritmo ou testar o carro | Selecionar um dos quatro perfis de treino abaixo. |
+| **Classificação** | Preparar o carro e executar a volta rápida com concentração | Na preparação, avisar se os pneus ainda estiverem frios. Na volta rápida, silêncio por padrão, com exceção de alertas críticos. Na linha, dar só o resultado. |
+| **Corrida** | Gerenciar o próprio carro e a estratégia durante a prova | Priorizar pneus, autonomia e estratégia de combustível. Deixar instruções de traçado e diagnóstico detalhado para a revisão. |
+
+**Perfis de Treino propostos.**
+
+- **Aprender pista:** antecipar uma instrução nas curvas escolhidas, como “Freio em 200 metros”,
+  usando o ponto medido numa volta compatível e considerando a velocidade atual para antecipar
+  a fala. Usar a melhor pessoal por padrão e permitir trocar por replay ou volta importada.
+  Sem referência, pedir uma primeira volta válida para montar a base.
+- **Ganhar tempo:** para quem já conhece a pista, usar uma volta de referência compatível
+  para detectar erros relevantes e dar uma correção por vez. Permitir escolher uma meta por
+  bloco, em até duas curvas. Sem erro relevante, ficar em silêncio por padrão.
+  - **Durante a passagem:** só dar um comando curto se ainda houver tempo para agir e o
+    diagnóstico tiver confiança alta. Exemplo: “Alivia o acelerador”, se o piloto ainda estiver
+    no gás numa aproximação em que o traço e a velocidade indicam que precisa aliviar.
+  - **Depois da passagem:** comentar excesso de freio, volante ou desvio de linha quando houver
+    evidência de perda, instabilidade ou comprometimento da próxima curva. Exemplo: “Na T4
+    você segurou o freio por mais tempo. Comece a soltar ao virar”. Priorizar o erro mais
+    importante e espaçar repetições. Usar a referência como comparação, com tolerância para
+    trajetórias e comandos diferentes que funcionem.
+  - **Resumo de fim de volta:** quando habilitado, falar na primeira janela livre após a linha.
+    Em uma volta válida, destacar um ganho em relação à base do treino e, se houver, a próxima
+    prioridade. Exemplo: “Boa volta. Você melhorou da T1 à T3. Agora, foque na soltura na T4”.
+    Sem mudança relevante, ficar quieto. Permitir configurar resumo a cada volta, a cada bloco
+    ou sob demanda, com o elogio genérico como opção separada.
+- **Consistência:** repetir um ritmo-alvo ou a mesma execução ao longo de várias voltas. Resumir o
+  bloco pelas voltas válidas, com foco na variação e na repetibilidade.
+- **Livre:** dar voltas e testar o carro com apenas os alertas essenciais. A análise fica
+  disponível ao fim da volta ou sob demanda.
+
+- [ ] **Pneus frios e aquecimento.** Usar a temperatura por roda e reaproveitar a escala configurável
+  do painel como ponto de partida. Validar a faixa por carro e composto quando conhecidos. Sem
+  uma faixa confiável, mostrar a temperatura sem anunciar que o pneu está pronto. Após sair dos
+  boxes ou iniciar a sessão, avisar uma vez se o estado frio persistir: “Pneus frios. Aqueça
+  progressivamente”. Confirmar “Pneus na faixa” uma vez, se a opção estiver ativa, só depois de
+  estabilizar. Testar saída de boxes, retorno à pista e oscilações próximas ao limite.
+- [ ] **Alertas com dados do próprio carro.** Reutilizar a estimativa de autonomia e consumo para
+  avisar sobre reserva ou combustível insuficiente até o fim, quando houver amostras e distância
+  restante confiáveis. Incluir aquecimento excessivo persistente, travamento recorrente e
+  perda de tração na saída como candidatos, com chamadas diferentes por modo. Mostrar no painel
+  condições que ainda não justificam interromper o piloto.
+- [ ] **Tráfego e incidentes online — pesquisa.** O feed que o Bono decodifica hoje não fornece
+  posição nem incidentes dos adversários. Para dizer “Carro fora da pista à frente”, validar uma
+  fonte adicional que informe o incidente e a posição com latência adequada. Testar em corrida
+  online real antes de habilitar a voz. Aplicar a mesma regra a bandeiras e tráfego lado a lado.
+- [ ] **Controlar quando o rádio fala.** Falar por mudança relevante de estado, com prioridade,
+  deduplicação e intervalo por tipo de alerta. Uma mensagem urgente pode substituir uma dica de
+  treino pendente. Descartar instruções atrasadas, e dar feedback de pilotagem em uma reta ou
+  no fim da volta. Manter volume, mudo e detalhe como ajustes separados do modo. Validar que o
+  rádio de Corrida funciona sem volta de referência e silencia quando perde o dado necessário.
+
+**Regra de fala por situação.** Em Aprender pista, avisar antes da curva escolhida e só se houver
+tempo para aplicar a instrução. Em Ganhar tempo, corrigir um erro relevante por vez e evitar
+repetir no resumo a correção que já foi dada naquela volta. Na Classificação, poupar a volta
+rápida. Na Corrida, anunciar mudanças que peçam uma decisão do piloto. Se a primeira curva
+vier logo após a linha, adiar ou omitir o resumo. Manter no painel o que for útil consultar depois.
+
+**Primeira entrega.** Modos, pneus frios e autonomia. Em seguida, treino com alvo mensurável e
+integração dos eventos da seção 5.4. Tráfego online fica condicionado à validação da fonte.
 
 ---
 

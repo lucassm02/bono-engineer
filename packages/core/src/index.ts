@@ -129,6 +129,9 @@ export {
   defaultDataDir,
   type MigrationResult,
   migrateLegacyData,
+  migratePreviousDataDir,
+  previousDataFolderName,
+  publishMigratedFolder,
   type ResolveDataDirOptions,
   resolveDataDir,
 } from './util/data-dir.ts';

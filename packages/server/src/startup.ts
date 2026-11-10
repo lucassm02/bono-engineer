@@ -14,7 +14,7 @@ export function probeHost(host: string): string {
 }
 
 /**
- * Is a GT7 Race Engineer of this `mode` answering on host:port? Any HTTP status counts (a token
+ * Is a Bono Engineer of this `mode` answering on host:port? Any HTTP status counts (a token
  * protected instance answers 401); what matters is the identity header.
  */
 export async function isGt7Instance(
