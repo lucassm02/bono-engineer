@@ -25,6 +25,7 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Fixed
 
 - Included the track-name lookup in source checkouts so a clean checkout can build the dashboard.
+- Made startup and coach coverage tests work with Windows port reservations and line endings.
 
 ## [0.1.1] - 2026-11-10
 

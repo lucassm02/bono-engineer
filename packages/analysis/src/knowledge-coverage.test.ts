@@ -12,7 +12,7 @@ import { ALL_DIAGNOSTIC_CODES, knowledgeFor, knowledgeTopic } from '@gt7/shared'
 import { describe, expect, it } from 'vitest';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const read = (p: string) => readFileSync(join(here, p), 'utf8');
+const read = (p: string) => readFileSync(join(here, p), 'utf8').replace(/\r\n/g, '\n');
 
 /** `kind: 'xyz'` occurrences (object literals that build findings / issues). */
 function producedKinds(src: string): string[] {

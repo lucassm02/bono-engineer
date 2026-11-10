@@ -1,5 +1,5 @@
 import { mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
-import { createServer, type Server, type Socket } from 'node:net';
+import { type AddressInfo, createServer, type Socket } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -7,23 +7,20 @@ import { createApp, type Gt7Server } from './app.ts';
 import { INSTANCE_HEADER } from './identity.ts';
 import { isGt7Instance, isPortFree, pickPort, webNeedsBuild } from './startup.ts';
 
-// Ports reserved for this test file (49870+, above the UDP test ports).
-const BASE = 49870;
-
 const closers: (() => Promise<void> | void)[] = [];
 afterEach(async () => {
   for (const c of closers.splice(0).reverse()) await c();
 });
 
-function squat(port: number): Promise<void> {
+function squat(): Promise<number> {
   return new Promise((resolve, reject) => {
     const sockets = new Set<Socket>();
-    const srv: Server = createServer((sock) => {
+    const srv = createServer((sock) => {
       sockets.add(sock); // accepts and never answers, like a foreign program
       sock.on('error', () => {});
     });
     srv.once('error', reject);
-    srv.listen({ port, host: '127.0.0.1' }, () => {
+    srv.listen({ port: 0, host: '127.0.0.1' }, () => {
       closers.push(
         () =>
           new Promise<void>((r) => {
@@ -31,15 +28,14 @@ function squat(port: number): Promise<void> {
             srv.close(() => r());
           }),
       );
-      resolve();
+      resolve((srv.address() as AddressInfo).port);
     });
   });
 }
 
-async function startApp(port: number, opts: { simulator?: boolean; token?: string } = {}) {
+async function startApp(opts: { simulator?: boolean; token?: string } = {}): Promise<number> {
   const dir = mkdtempSync(join(tmpdir(), 'gt7-startup-'));
   const server: Gt7Server = await createApp({
-    port,
     host: '127.0.0.1',
     webDist: null,
     firewall: { platform: 'linux' },
@@ -49,66 +45,59 @@ async function startApp(port: number, opts: { simulator?: boolean; token?: strin
     token: opts.token ?? null,
     runtime: { dataDir: dir, record: false },
   });
-  await server.app.listen({ port, host: '127.0.0.1' });
   closers.push(async () => {
     await server.close();
     rmSync(dir, { recursive: true, force: true });
   });
-  return server;
+  const url = await server.app.listen({ port: 0, host: '127.0.0.1' });
+  return Number(new URL(url).port);
 }
 
 describe('single instance / port selection', () => {
   it('recognises a running instance by its identity header, even behind a token', async () => {
-    await startApp(BASE);
-    expect(await isGt7Instance('0.0.0.0', BASE, 'real')).toBe(true);
-    expect(await isGt7Instance('127.0.0.1', BASE, 'demo')).toBe(false); // other mode
-    await startApp(BASE + 1, { token: 'segredo' });
-    const r = await fetch(`http://127.0.0.1:${BASE + 1}/api/status`);
+    const real = await startApp();
+    expect(await isGt7Instance('0.0.0.0', real, 'real')).toBe(true);
+    expect(await isGt7Instance('127.0.0.1', real, 'demo')).toBe(false);
+    const protectedPort = await startApp({ token: 'segredo' });
+    const r = await fetch(`http://127.0.0.1:${protectedPort}/api/status`);
     expect(r.status).toBe(401);
     expect(r.headers.get(INSTANCE_HEADER)).toBe('real');
-    expect(await isGt7Instance('127.0.0.1', BASE + 1, 'real')).toBe(true);
-    await startApp(BASE + 2, { simulator: true });
-    expect(await isGt7Instance('127.0.0.1', BASE + 2, 'demo')).toBe(true);
-    expect(await isGt7Instance('127.0.0.1', BASE + 2, 'real')).toBe(false);
+    expect(await isGt7Instance('127.0.0.1', protectedPort, 'real')).toBe(true);
+    const demo = await startApp({ simulator: true });
+    expect(await isGt7Instance('127.0.0.1', demo, 'demo')).toBe(true);
+    expect(await isGt7Instance('127.0.0.1', demo, 'real')).toBe(false);
   });
 
   it('does not take another program for an instance', async () => {
-    await squat(BASE + 3);
-    expect(await isGt7Instance('127.0.0.1', BASE + 3, 'real', 500)).toBe(false);
-    expect(await isPortFree(BASE + 3, '127.0.0.1')).toBe(false);
-    expect(await isPortFree(BASE + 4, '127.0.0.1')).toBe(true);
+    const port = await squat();
+    expect(await isGt7Instance('127.0.0.1', port, 'real', 500)).toBe(false);
+    expect(await isPortFree(port, '127.0.0.1')).toBe(false);
+    expect(await isPortFree(0, '127.0.0.1')).toBe(true);
   });
 
-  it('pickPort: our instance → existing; foreign program → next free port', async () => {
-    await startApp(BASE + 5);
-    expect(await pickPort(BASE + 5, '127.0.0.1', 'real', false)).toEqual({
-      kind: 'existing',
-      port: BASE + 5,
-    });
-    await squat(BASE + 6);
-    await squat(BASE + 7);
-    expect(await pickPort(BASE + 6, '127.0.0.1', 'real', false)).toEqual({
-      kind: 'run',
-      port: BASE + 8,
-      skipped: [BASE + 6, BASE + 7],
-    });
-    // a demo next to a real instance does not "reuse" it: the real one counts as a busy port
-    expect(await pickPort(BASE + 5, '127.0.0.1', 'demo', false)).toEqual({
-      kind: 'run',
-      port: BASE + 8,
-      skipped: [BASE + 5, BASE + 6, BASE + 7],
-    });
+  it('pickPort reuses a running instance in the same mode', async () => {
+    const port = await startApp();
+    expect(await pickPort(port, '127.0.0.1', 'real', false)).toEqual({ kind: 'existing', port });
+    expect(await pickPort(port, '127.0.0.1', 'demo', true)).toEqual({ kind: 'busy', port });
   });
 
-  it('pickPort: an explicit busy port is an error, a free one is used', async () => {
-    await squat(BASE + 10);
-    expect(await pickPort(BASE + 10, '127.0.0.1', 'real', true)).toEqual({
+  it('pickPort scans past busy ports unless the port was explicit', async () => {
+    const checks = {
+      isInstance: async () => false,
+      isFree: async (port: number) => port === 8772,
+    };
+    expect(await pickPort(8770, '127.0.0.1', 'real', false, 3, checks)).toEqual({
+      kind: 'run',
+      port: 8772,
+      skipped: [8770, 8771],
+    });
+    expect(await pickPort(8770, '127.0.0.1', 'real', true, 3, checks)).toEqual({
       kind: 'busy',
-      port: BASE + 10,
+      port: 8770,
     });
-    expect(await pickPort(BASE + 11, '127.0.0.1', 'real', true)).toEqual({
+    expect(await pickPort(8772, '127.0.0.1', 'real', true, 3, checks)).toEqual({
       kind: 'run',
-      port: BASE + 11,
+      port: 8772,
       skipped: [],
     });
   });
