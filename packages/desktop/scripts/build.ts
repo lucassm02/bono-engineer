@@ -64,6 +64,7 @@ export async function buildDesktop(): Promise<void> {
   // its path inside app.asar is what /api/mcp/info hands to Claude Desktop / Claude Code).
   for (const [entry, out] of [
     [join(DESKTOP_DIR, 'src', 'main.ts'), 'main.cjs'],
+    [join(DESKTOP_DIR, 'src', 'preload.ts'), 'preload.cjs'],
     [join(DESKTOP_DIR, 'src', 'mcp-stdio.ts'), MCP_STDIO_BUNDLE],
   ] as const) {
     const result = await build({
@@ -75,12 +76,16 @@ export async function buildDesktop(): Promise<void> {
       format: 'cjs',
       // electron is provided by the runtime; @resvg is a native addon, shipped unpacked and
       // reached only through the lazy stand-in below.
-      external: ['electron'],
+      external: ['electron', 'discord.js', '@discordjs/voice'],
       alias: { '@resvg/resvg-js': join(DESKTOP_DIR, 'src', 'resvg-lazy.ts') },
-      banner: {
-        js: "const __importMetaUrl = require('node:url').pathToFileURL(__filename).href;",
-      },
-      define: { 'import.meta.url': '__importMetaUrl' },
+      ...(out === 'preload.cjs'
+        ? {}
+        : {
+            banner: {
+              js: "const __importMetaUrl = require('node:url').pathToFileURL(__filename).href;",
+            },
+            define: { 'import.meta.url': '__importMetaUrl' },
+          }),
       legalComments: 'none',
       logLevel: 'warning',
     });

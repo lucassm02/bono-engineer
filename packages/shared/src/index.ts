@@ -44,3 +44,8 @@ export * from './telemetry.ts';
 export * from './tracks/index.ts';
 export * from './ui.ts';
 export * from './ws.ts';
+export type {
+  DesktopDiscordBridge,
+  DesktopDiscordSettings,
+  DesktopDiscordStatus,
+} from './desktop-discord.ts';

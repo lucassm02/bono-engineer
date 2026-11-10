@@ -3,7 +3,7 @@
  * dashboard in a window and keeps running in the tray, so the phone can keep using it.
  *
  * Security: the window runs the dashboard with contextIsolation, no Node integration, a sandboxed
- * renderer and NO preload script; it can only navigate to our own server (loopback + its port),
+ * renderer and a restricted preload for Discord settings. It can only navigate to our own server,
  * and links to anywhere else open in the system browser.
  */
 
@@ -11,10 +11,11 @@ import { cpSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { publishMigratedFolder } from '@gt7/core';
 import { parseConfig, type RunningServer, StartServerError, startServer } from '@gt7/server';
-import { BRAND_SURFACE, PRODUCT_NAME } from '@gt7/shared';
+import { BRAND_SURFACE, PRODUCT_NAME, WS_PATH } from '@gt7/shared';
 import {
   app,
   BrowserWindow,
+  ipcMain,
   clipboard,
   Menu,
   type MenuItemConstructorOptions,
@@ -25,6 +26,7 @@ import {
   shell,
   Tray,
 } from 'electron';
+import { DesktopDiscord } from './discord.ts';
 import { initLog, log, logFilePath } from './log.ts';
 import { errorHtml, splashHtml, toDataUrl } from './pages.ts';
 import {
@@ -88,6 +90,49 @@ function assetPath(name: string): string {
   return join(__dirname, name);
 }
 
+const discord = new DesktopDiscord(
+  join(app.getPath('userData'), 'discord-radio.json'),
+  join(bundledWebDist(__dirname), 'radio'),
+  () => {
+    if (!serverUrlNow) return null;
+    const url = new URL(serverUrlNow);
+    url.protocol = 'ws:';
+    url.pathname = WS_PATH;
+    url.hash = '';
+    return url;
+  },
+  (status) => {
+    if (win && !win.isDestroyed() && inServerPage(win.webContents.getURL()))
+      win.webContents.send('bono:discord:status', status);
+  },
+);
+
+function registerDiscordHandlers(): void {
+  const actions = {
+    get: () => discord.get(),
+    save: (settings: unknown) => discord.save(settings),
+    test: () => discord.test(),
+    'stop-test': () => discord.resume(),
+    remove: () => discord.remove(),
+  };
+  for (const [name, action] of Object.entries(actions)) {
+    ipcMain.handle(`bono:discord:${name}`, (event, input: unknown) => {
+      const frame = event.senderFrame;
+      if (
+        !win ||
+        event.sender !== win.webContents ||
+        !frame ||
+        frame.parent ||
+        !inServerPage(frame.url) ||
+        !serverUrlNow ||
+        frame.origin !== new URL(serverUrlNow).origin
+      )
+        throw new Error('Abra as configurações no aplicativo Bono.');
+      return action(input);
+    });
+  }
+}
+
 // ---------------------------------------------------------------------------------------------
 // Window
 // ---------------------------------------------------------------------------------------------
@@ -121,6 +166,19 @@ function inServerPage(url: string): boolean {
 
 function hardenWebContents(w: BrowserWindow): void {
   const wc = w.webContents;
+  async function setFullscreen(enabled: boolean): Promise<void> {
+    // Use the page's fullscreen state on the dashboard so the on-screen control tracks F11/Esc.
+    const url = wc.getURL();
+    if (inServerPage(url)) {
+      const command = enabled
+        ? 'document.documentElement.requestFullscreen().then(() => true)'
+        : 'document.fullscreenElement ? document.exitFullscreen().then(() => true) : false';
+      const handled = await wc.executeJavaScript(command, true).catch(() => false);
+      if (handled || w.isDestroyed() || wc.getURL() !== url) return;
+    }
+    w.setFullScreen(enabled);
+  }
+
   // Links that want a new window, and navigation away from our server, go to the system browser.
   wc.setWindowOpenHandler(({ url }) => {
     if (isOpenableExternally(url) && !inServerPage(url)) void shell.openExternal(url);
@@ -157,9 +215,10 @@ function hardenWebContents(w: BrowserWindow): void {
       wc.reload();
     } else if (input.key === 'F11') {
       event.preventDefault();
-      w.setFullScreen(!w.isFullScreen());
+      if (!input.isAutoRepeat) void setFullscreen(!w.isFullScreen());
     } else if (input.key === 'Escape' && w.isFullScreen()) {
-      w.setFullScreen(false);
+      event.preventDefault();
+      if (!input.isAutoRepeat) void setFullscreen(false);
     } else if (ctrl && (input.key === '=' || input.key === '+')) {
       event.preventDefault();
       wc.setZoomLevel(Math.min(wc.getZoomLevel() + 0.5, 4));
@@ -192,6 +251,7 @@ function createWindow(): BrowserWindow {
     autoHideMenuBar: true,
     show: false,
     webPreferences: {
+      preload: assetPath('preload.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
@@ -285,6 +345,7 @@ async function refreshPhoneUrl(): Promise<void> {
 }
 
 async function stopServer(): Promise<void> {
+  discord.stop();
   const r = running;
   running = null;
   serverUrlNow = null;
@@ -341,6 +402,7 @@ async function boot(): Promise<void> {
 
     serverUrlNow = serverUrl(serverHost, r.port, r.config.token);
     await win.loadURL(serverUrlNow);
+    discord.resume();
     if (!START_HIDDEN || !tray) win.show();
   } catch (e) {
     const msg = friendlyStartError(e);
@@ -481,6 +543,7 @@ if (!app.requestSingleInstanceLock()) {
   void app.whenReady().then(async () => {
     Menu.setApplicationMenu(null);
     lockdownSession();
+    registerDiscordHandlers();
     createTray();
     log(`iniciado (Electron ${process.versions.electron}, Node ${process.versions.node})`);
     await boot();

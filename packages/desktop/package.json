@@ -1,6 +1,6 @@
 {
   "name": "@gt7/desktop",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "description": "Bono Engineer: aplicativo de desktop (Electron) que embute o servidor",
@@ -10,7 +10,10 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@resvg/resvg-js": "^2.6.2"
+    "@discordjs/voice": "^0.19.2",
+    "@resvg/resvg-js": "^2.6.2",
+    "discord.js": "^14.26.4",
+    "opusscript": "^0.0.8"
   },
   "devDependencies": {
     "electron": "45.2.3",

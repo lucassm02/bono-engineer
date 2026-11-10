@@ -9,6 +9,7 @@ import { routes } from '../lib/route.ts';
 import { closeMenu, openPicker } from '../state/actions.ts';
 import { useUi } from '../state/uiStore.ts';
 import { EngineerControls } from './EngineerControls.tsx';
+import { FullscreenButton } from './FullscreenButton.tsx';
 import { ProductBrand } from './ProductBrand.tsx';
 
 interface Entry {
@@ -79,6 +80,7 @@ export function LiveMenuSheet() {
       <div className="live-menu" role="dialog" aria-modal="true" aria-label="Menu do app">
         <header className="live-menu-head">
           <ProductBrand />
+          <FullscreenButton className="btn btn-ghost" />
           <button type="button" className="btn btn-ghost" ref={closeRef} onClick={closeMenu}>
             Voltar ao painel
           </button>

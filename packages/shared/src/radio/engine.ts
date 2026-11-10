@@ -106,6 +106,7 @@ export class RadioEngine {
   #suspended: string | null = null;
   #note: RadioPanelNote | null = null;
   #summaryRequested = false;
+  #approachSpeedKmh = 0;
   #seenPasses = new Set<string>();
   #spoken: RadioDecision[] = [];
   #blockSeq = 0;
@@ -232,12 +233,20 @@ export class RadioEngine {
     const gap = discontinuity(frame, this.#previous);
     if (gap) {
       stop = this.#interrupt(gap, frame) || stop;
+      this.#approachSpeedKmh = frame.car.speedKmh;
       this.#previous = frame;
       return result(phaseOf(frame, this.#timedLapSeen), null, stop);
     }
 
     const previous = this.#previous;
     this.#previous = frame;
+    const speedWeight = previous ? Math.min(1, (t - previous.t) / 250) : 1;
+    this.#approachSpeedKmh += (frame.car.speedKmh - this.#approachSpeedKmh) * speedWeight;
+    const latency = env.outputLatencyMs;
+    const outputLatencyMs =
+      latency !== undefined && Number.isFinite(latency) && latency >= 0
+        ? latency + Math.max(0, env.sampleAgeMs ?? 0)
+        : 0;
     const lineCrossed = !!previous && frame.lap.lap > previous.lap.lap;
     const phase = phaseOf(frame, this.#timedLapSeen);
     if (frame.lap.currentLapValid) this.#timedLapSeen = true;
@@ -287,6 +296,8 @@ export class RadioEngine {
       cues,
       utteranceMs: this.#utteranceMs,
       audio,
+      outputLatencyMs,
+      approachSpeedKmh: this.#approachSpeedKmh,
       contextStartT: this.#contextStartT,
       lineCrossed,
       timedLapSeen: this.#timedLapSeen,
@@ -391,13 +402,14 @@ export class RadioEngine {
         this.#wait(item, 'rádio ocupado');
         continue;
       }
-      if (candidate.deadlineT !== undefined && t + durationMs > candidate.deadlineT) {
+      const timeToFinishMs = outputLatencyMs + durationMs;
+      if (candidate.deadlineT !== undefined && t + timeToFinishMs > candidate.deadlineT) {
         this.#wait(item, 'não cabe antes do ponto');
         continue;
       }
       if (candidate.needsFreeWindow) {
         window ??= freeWindowMs(frame, engineer?.status === 'ready' ? engineer.cues : []);
-        if (window < durationMs + WINDOW_MARGIN_MS) {
+        if (window < timeToFinishMs + WINDOW_MARGIN_MS) {
           this.#wait(item, 'sem janela livre');
           continue;
         }
@@ -411,7 +423,7 @@ export class RadioEngine {
       );
       this.#active = {
         decision,
-        endT: t + durationMs,
+        endT: t + timeToFinishMs,
         deadlineT: candidate.deadlineT,
         urgent: !!candidate.urgent,
       };

@@ -11,10 +11,10 @@ files:
   - dist/**/*
   - package.json
 asar: true
-# The only native addon (PNG charts of the MCP tool): the .node file cannot be loaded from inside
-# the asar archive, so it is shipped next to it (app.asar.unpacked).
+# Native addons for charts and Discord's voice encryption are loaded from app.asar.unpacked.
 asarUnpack:
   - "**/node_modules/@resvg/**"
+  - "**/node_modules/@snazzah/**"
 # Only the languages the app can show (saves ~40 MB of Chromium locale files).
 electronLanguages:
   - pt-BR

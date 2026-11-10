@@ -162,7 +162,9 @@ experimentar sem empacotar: `npm run desktop` (compila o necessário e abre o ap
   continua, então o celular segue conectado. Clique no ícone para reabrir.
 - **Menu da bandeja** (botão direito): *Abrir*, *Copiar endereço para acesso remoto*, *Iniciar com o Windows*
   (desligado por padrão; abre o app escondido na bandeja ao ligar o PC) e *Sair* (encerra de verdade).
-- **Atalhos:** `F11` tela cheia, `F5`/`Ctrl+R` recarrega, `Ctrl` + `+`/`-`/`0` zoom. A janela lembra tamanho e posição.
+- **Tela cheia** fica no menu do painel ao vivo e em **Configurações**. No app de PC, use também
+  `F11` para alternar e `Esc` para sair. A janela lembra tamanho e posição.
+- **Outros atalhos:** `F5`/`Ctrl+R` recarrega e `Ctrl` + `+`/`-`/`0` controla o zoom.
 - O app escuta na rede como o `npm start` (porta 8770 ou a próxima livre), então o **celular** abre o endereço
   que *Copiar endereço para acesso remoto* entrega, com as mesmas regras de firewall da seção abaixo.
 
@@ -718,6 +720,7 @@ Documentos:
 - [PLANO-APP.md](PLANO-APP.md): requisitos, arquitetura e decisões de produto.
 - [DECISOES.md](DECISOES.md): registro técnico por onda, pendências e suposições não verificadas.
 - [docs/primeiro-teste-com-ps5.md](docs/primeiro-teste-com-ps5.md): checklist da primeira sessão com o console.
+- [Rádio no Discord e no PS5](docs/radio-discord.md) — configuração do bot e calibração do atraso.
 - [docs/guia-de-pilotagem.md](docs/guia-de-pilotagem.md): o que cada métrica significa e como treinar.
 - READMEs dos pacotes: [server](packages/server/README.md), [mcp](packages/mcp/README.md),
   [protocol](packages/protocol/README.md).

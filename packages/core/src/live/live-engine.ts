@@ -1754,7 +1754,8 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       const offset = mark.atM - lap.dist;
       const aheadM = offset - Math.round(offset / length) * length;
       const span = mark.untilM === undefined ? 0 : mark.untilM - mark.atM;
-      if (aheadM > 310 || aheadM + span < -18) continue;
+      // Remote audio may need to send the 300 m call before the car reaches that mark.
+      if (aheadM > 510 || aheadM + span < -18) continue;
       cues.push({
         id: `${plan.id}|${i}`,
         cornerId: mark.cornerId,

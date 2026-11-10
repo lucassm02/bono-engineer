@@ -600,8 +600,8 @@ export const cornerCuesRule: RadioRule<CornerCuesState> = {
       const utterance = n ? [cornerSegment(n), gearSegment(gear)] : gearSegment(gear);
       const eta = (cue.aheadM / speed) * 1000;
       const budget = eta - REACTION_MS - ctx.config.anticipationMs;
-      if (eta > LEARN_GEAR_LEAD_MS) continue;
-      if (budget < estimate(utterance)) {
+      if (eta - ctx.outputLatencyMs > LEARN_GEAR_LEAD_MS) continue;
+      if (budget < estimate(utterance) + ctx.outputLatencyMs) {
         s.gearDone.add(key); // no longer fits: back to the brake call
         continue;
       }
@@ -627,6 +627,8 @@ export const cornerCuesRule: RadioRule<CornerCuesState> = {
         estimate,
         ctx.config.anticipationMs,
         ctx.config.learningBrakePercent,
+        ctx.outputLatencyMs,
+        ctx.approachSpeedKmh,
       );
       if (!call) continue;
       out.push({

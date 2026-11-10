@@ -70,6 +70,8 @@ export function engineerCall(
   estimate: (utterance: RadioUtterance, ms: number) => number,
   anticipationMs = 0,
   useBrakePercent = false,
+  outputLatencyMs = 0,
+  approachSpeedKmh = car.speedKmh,
 ): EngineerCall | null {
   const speed = car.speedKmh / 3.6;
   if (speed < 8 || cue.aheadM < 0) return null;
@@ -91,37 +93,42 @@ export function engineerCall(
 
   if (isBrakeCue(cue.kind)) {
     if (brake >= BRAKE_ON_THRESHOLD) return null;
+    // Match the spoken distance at playback, while keeping the deadline on the frame's clock.
+    const audibleAheadM = cue.aheadM - (approachSpeedKmh / 3.6) * (outputLatencyMs / 1000);
+    if (audibleAheadM <= 0) return null;
     const reserve = REACTION_MS + anticipationMs;
     const budget = eta - reserve;
     const percent = useBrakePercent ? brakeTargetPercent(cue) : null;
     if (percent !== null) {
       for (const [meters] of MARKS) {
-        if (cue.aheadM < meters - Math.max(4, speed * 0.13)) continue;
+        if (audibleAheadM < meters - Math.max(4, speed * 0.13)) continue;
         const utterance = detailedBrakeUtterance(percent, meters);
         const duration = estimate(utterance, 2500);
         if ((meters / speed) * 1000 < duration + reserve) continue;
-        if (cue.aheadM > meters) return null;
-        if (budget >= duration) return call(utterance, budget, true);
+        if (audibleAheadM > meters) return null;
+        if (budget >= duration + outputLatencyMs) return call(utterance, budget, true);
       }
     }
     for (const [meters, spoken] of MARKS) {
       const text = `${words.phrase} em ${spoken}.`;
       const duration = estimate(text, words.ms + spoken.length * 50 + 380);
       if (
-        cue.aheadM < meters - Math.max(4, speed * 0.13) ||
+        audibleAheadM < meters - Math.max(4, speed * 0.13) ||
         (meters / speed) * 1000 < duration + reserve
       )
         continue;
-      if (cue.aheadM > meters) break;
-      if (budget >= duration) {
+      if (audibleAheadM > meters) break;
+      if (budget >= duration + outputLatencyMs) {
         return call(text, budget, true);
       }
     }
     const text = BRAKE_NOW;
-    return eta <= 950 && eta - 150 >= estimate(text, 500) ? call(text, eta - 150, true) : null;
+    return eta - outputLatencyMs <= 950 && eta - 150 >= estimate(text, 500) + outputLatencyMs
+      ? call(text, eta - 150, true)
+      : null;
   }
 
-  if (eta > 750 + anticipationMs) return null;
+  if (eta - outputLatencyMs > 750 + anticipationMs) return null;
   const release = cue.kind === 'release' || cue.kind === 'releaseSmooth';
   if (release && brake < BRAKE_ON_THRESHOLD) return null;
   if (!release && throttle >= 0.1) return null;
@@ -130,7 +137,9 @@ export function engineerCall(
   const text = `${words.phrase}.`;
   // The verb comes first. Aim to start just before the point and finish during the action.
   const budget = cue.endAheadM === undefined ? eta + 750 : (cue.endAheadM / speed) * 1000;
-  return budget >= estimate(text, words.ms + 130) ? call(text, budget, false) : null;
+  return budget >= estimate(text, words.ms + 130) + outputLatencyMs
+    ? call(text, budget, false)
+    : null;
 }
 
 export function engineerDisplay(

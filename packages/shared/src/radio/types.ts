@@ -95,6 +95,10 @@ export interface RadioRuleContext {
   utteranceMs: (utterance: RadioUtterance) => number | null;
   /** True when this device can play audio now (the cue timing depends on it). */
   audio: boolean;
+  /** Time before dispatched audio is audible, including age of a remote frame. */
+  outputLatencyMs: number;
+  /** Smoothed approach speed for projecting position when remote audio starts. */
+  approachSpeedKmh: number;
   /** Frame time when the current context (session/track/car/mode) started. */
   contextStartT: number;
   /** A lap closed in this frame (lap counter advanced). */
@@ -213,6 +217,8 @@ export interface RadioStepEnv {
   audio: 'ready' | 'wait' | 'off';
   /** Age of the frame (ms) when it is evaluated; 0 or omitted in replays. */
   sampleAgeMs?: number;
+  /** Calibrated delay from dispatch to audible playback. Local audio defaults to zero. */
+  outputLatencyMs?: number;
   /** Corner training: only these corners get corner calls. */
   focusCornerIds?: readonly string[] | null;
   /** Aprender pista: corners where the help is always on (not reduced after repeated success). */

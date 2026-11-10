@@ -18,6 +18,7 @@ import {
 } from '@gt7/shared';
 import { useEffect, useState } from 'react';
 import { ConnectionDetails } from '../../components/ConsoleLink.tsx';
+import { FullscreenButton } from '../../components/FullscreenButton.tsx';
 import { GT7_INTEGRATION } from '../../lib/integrations.ts';
 import { DELTA_REFERENCE_LABELS, VIEW_LABELS } from '../../lib/labels.ts';
 import { ONBOARDING_KEY } from '../../lib/onboarding.ts';
@@ -25,6 +26,7 @@ import { type Route, routes } from '../../lib/route.ts';
 import { saveString } from '../../lib/storage.ts';
 import { addNotice, useUi } from '../../state/uiStore.ts';
 import { api } from '../api.ts';
+import { DiscordSettings } from '../components/DiscordSettings.tsx';
 import {
   Card,
   CodeBlock,
@@ -803,17 +805,23 @@ export function ConfigPage({ route }: { route: Route }) {
 
   return (
     <>
-      <PageHead title="Configurações" sub="Tudo se ajusta aqui: nada de arquivo de configuração." />
+      <PageHead
+        title="Configurações"
+        sub="Tudo se ajusta aqui: nada de arquivo de configuração."
+        actions={<FullscreenButton className="a-btn a-btn-ghost" />}
+      />
       <nav className="a-toc" aria-label="Seções">
         <a href="#/config?s=conexao">Conexão</a>
         <a href="#/config?s=captura">Captura</a>
         <a href={routes.config('acesso-remoto')}>Dispositivo remoto</a>
         <a href="#/config?s=dispositivos">Aparelhos</a>
+        {window.bonoDiscord && <a href="#/config?s=discord">Rádio no Discord</a>}
         <a href="#/config?s=coach">Coach IA</a>
         <a href="#/config?s=dados">Dados</a>
         <a href="#/config?s=mcp">Integração com IA</a>
         <a href="#/config?s=sobre">Sobre</a>
       </nav>
+      <DiscordSettings />
       {status.error && !status.data ? (
         <ErrorBox error={status.error} onRetry={status.reload} />
       ) : !status.data ? (
