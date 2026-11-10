@@ -3,7 +3,7 @@ import { isBrake } from '../../lib/engineerRadio.ts';
 import { formatDelta } from '../../lib/format.ts';
 import { routes } from '../../lib/route.ts';
 import { cornerLabel } from '../lib/chartData.ts';
-import { Card } from './ui.tsx';
+import { Panel } from './Panel.tsx';
 
 function pedalMetric(call: EngineerRadioCall, row?: CornerComparisonRow) {
   if (!row) return null;
@@ -38,16 +38,17 @@ export function EngineerRadioReview({
     (id) => id !== referenceId,
   );
   return (
-    <Card title="Chamadas do engenheiro" className="a-mt">
+    <Panel
+      title="Chamadas do engenheiro"
+      description={
+        calls.length > 0
+          ? 'As linhas azuis nos gráficos indicam onde o áudio começou. A posição dos pedais é comparada à referência. A diferença de tempo é da curva inteira.'
+          : undefined
+      }
+    >
       {calls.length > 0 && (
-        <p className="dim">
-          As linhas azuis nos gráficos indicam onde o áudio começou. A posição dos pedais é
-          comparada à referência. A diferença de tempo é da curva inteira.
-        </p>
-      )}
-      {calls.length > 0 && (
-        <div className="a-table-wrap">
-          <table className="a-table">
+        <div className="cmp-table-wrap">
+          <table className="cmp-table">
             <thead>
               <tr>
                 <th>Curva e chamada</th>
@@ -67,7 +68,9 @@ export function EngineerRadioReview({
                       {row && (
                         <button
                           type="button"
-                          className="a-btn a-btn-ghost a-btn-sm"
+                          className="ui-btn"
+                          data-variant="secondary"
+                          data-size="sm"
                           onClick={() => onCorner(row.corner.id)}
                         >
                           {cornerLabel(row.corner)}
@@ -92,12 +95,12 @@ export function EngineerRadioReview({
         </div>
       )}
       {otherReferences.map((id) => (
-        <p key={id}>
+        <p key={id} className="cmp-table-note">
           <a href={routes.compare({ lap: lapId, ref: id })}>
             Ver chamadas com a referência usada no rádio
           </a>
         </p>
       ))}
-    </Card>
+    </Panel>
   );
 }

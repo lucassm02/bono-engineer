@@ -1,24 +1,26 @@
-/** Discreet "Nova versão — atualizar" pill (see lib/swUpdate.ts). */
+/** Discreet "Nova versão — atualizar" toast (see lib/swUpdate.ts). */
 
 import { applySwUpdate, dismissSwUpdate, useSwUpdate } from '../lib/swUpdate.ts';
 import '../styles/update-notice.css';
+import { Icon } from './ui/Icon.tsx';
 
 export function UpdateNotice() {
   const show = useSwUpdate((s) => s.available && !s.dismissed);
   if (!show) return null;
   return (
-    <div className="update-notice" role="status">
+    <div className="ui-toast update-notice" role="status">
+      <Icon name="refresh" size={18} className="update-notice-icon" />
       <span>Nova versão disponível</span>
-      <button type="button" className="update-notice-go" onClick={applySwUpdate}>
+      <button type="button" className="ui-btn" data-size="sm" onClick={applySwUpdate}>
         Atualizar
       </button>
       <button
         type="button"
-        className="update-notice-x"
+        className="ui-icon-btn"
         onClick={dismissSwUpdate}
         aria-label="Dispensar o aviso de nova versão"
       >
-        <span aria-hidden="true">✕</span>
+        <Icon name="close" size={16} />
       </button>
     </div>
   );

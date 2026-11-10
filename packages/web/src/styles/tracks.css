@@ -1,9 +1,12 @@
 /* Ficha da pista (catálogo oficial de layouts) e nota do aviso "Nova pista detectada". */
 
+.a-ficha-card {
+  margin-top: var(--sp-5);
+}
 .a-ficha {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 10px 20px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: var(--sp-4) var(--sp-5);
   margin: 0;
 }
 .a-ficha > div {
@@ -13,30 +16,25 @@
   min-width: 0;
 }
 .a-ficha dt {
-  font-size: 12px;
-  color: var(--dim);
+  color: var(--text-3);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
   text-transform: uppercase;
-  letter-spacing: 0.03em;
 }
 .a-ficha dd {
   margin: 0;
-  font-size: 15px;
+  font-size: var(--fs-md);
   overflow-wrap: anywhere;
 }
 .a-ficha-links {
-  margin: 12px 0 0;
+  margin: var(--sp-4) 0 0;
   line-height: 1.6;
-}
-.a-ficha-links a {
-  color: var(--accent);
-}
-.a-newtrack-note {
-  margin: 4px 0 0;
 }
 
 @media (max-width: 520px) {
   .a-ficha {
     grid-template-columns: 1fr 1fr;
-    gap: 10px 14px;
+    gap: var(--sp-3) var(--sp-4);
   }
 }

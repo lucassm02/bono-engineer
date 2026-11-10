@@ -4,10 +4,17 @@ import 'uplot/dist/uPlot.min.css';
 import { TIMINGS } from '../config.ts';
 import { setAttr, setStyle, setText } from '../lib/dom.ts';
 import { clamp, formatInt } from '../lib/format.ts';
+import { THEME, withAlpha } from '../lib/theme.ts';
 import { live } from '../live/liveStore.ts';
 import { useLiveRender } from '../live/raf.ts';
 
-const CHART_COLORS = { throttle: '#22e07a', brake: '#ff3d4a', speed: '#e8edf1', grid: '#1b232a' };
+const CHART_COLORS = {
+  throttle: THEME.gain,
+  brake: THEME.loss,
+  speed: THEME.text,
+  axis: THEME.text3,
+  grid: THEME.line,
+};
 
 /** Steering text: degrees and side (+ = left in the shared convention). */
 export function steeringText(rad: number | null): string {
@@ -25,7 +32,7 @@ function InputsChart() {
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
-    const axisFont = '12px Bahnschrift, "DIN Alternate", "Roboto Condensed", system-ui, sans-serif';
+    const axisFont = `13px ${THEME.font}`;
     const opts: uPlot.Options = {
       width: Math.max(100, host.clientWidth),
       height: Math.max(80, host.clientHeight),
@@ -39,7 +46,7 @@ function InputsChart() {
       },
       axes: [
         {
-          stroke: '#7c8995',
+          stroke: CHART_COLORS.axis,
           font: axisFont,
           grid: { stroke: CHART_COLORS.grid, width: 1 },
           ticks: { show: false },
@@ -47,7 +54,7 @@ function InputsChart() {
         },
         {
           scale: 'pct',
-          stroke: '#7c8995',
+          stroke: CHART_COLORS.axis,
           font: axisFont,
           grid: { stroke: CHART_COLORS.grid, width: 1 },
           ticks: { show: false },
@@ -57,7 +64,7 @@ function InputsChart() {
         {
           scale: 'spd',
           side: 1,
-          stroke: '#7c8995',
+          stroke: CHART_COLORS.axis,
           font: axisFont,
           grid: { show: false },
           ticks: { show: false },
@@ -66,8 +73,18 @@ function InputsChart() {
       ],
       series: [
         {},
-        { scale: 'pct', stroke: CHART_COLORS.throttle, width: 2, fill: 'rgba(34,224,122,0.10)' },
-        { scale: 'pct', stroke: CHART_COLORS.brake, width: 2, fill: 'rgba(255,61,74,0.14)' },
+        {
+          scale: 'pct',
+          stroke: CHART_COLORS.throttle,
+          width: 2,
+          fill: withAlpha(CHART_COLORS.throttle, 0.1),
+        },
+        {
+          scale: 'pct',
+          stroke: CHART_COLORS.brake,
+          width: 2,
+          fill: withAlpha(CHART_COLORS.brake, 0.14),
+        },
         { scale: 'spd', stroke: CHART_COLORS.speed, width: 1.5, dash: [5, 4] },
       ],
     };

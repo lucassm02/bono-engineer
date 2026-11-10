@@ -11,6 +11,7 @@ import {
   useEngineerTraining,
 } from '../state/engineerTraining.ts';
 import { useUi } from '../state/uiStore.ts';
+import { Icon } from './ui/Icon.tsx';
 
 export function EngineerTraining({
   track,
@@ -59,104 +60,140 @@ export function EngineerTraining({
   }
 
   return (
-    <details className="engineer-training">
-      <summary>Treino por curvas{run && ` · ${run.laps.length}/${TRAINING_LAPS}`}</summary>
-      {run ? (
-        <>
-          <p>
-            {active ? `${run.laps.length} de ${TRAINING_LAPS} voltas válidas` : 'Treino concluído'}{' '}
-            · {run.corners.map((corner) => corner.name).join(' e ')}
-          </p>
-          {run.notice && <p role="status">{run.notice}</p>}
-          {run.laps.length > 0 && (
-            <ol className="engineer-training-results">
-              {run.laps.map((lap) => (
-                <li key={lap.id}>
-                  <a href={routes.compare({ lap: lap.id, ref: run.referenceId })}>
-                    Abrir comparação
-                  </a>
-                  <span>
-                    {lap.failed
-                      ? 'Análise indisponível'
-                      : lap.results
-                        ? run.corners
-                            .map(
-                              (corner) => `${corner.name} ${formatDelta(lap.results?.[corner.id])}`,
-                            )
-                            .join(' · ')
-                        : 'Analisando…'}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          )}
-          {!active &&
-            run.corners.map((corner) => {
-              const values = run.laps.flatMap((lap) => {
-                const value = lap.results?.[corner.id];
-                return value === undefined ? [] : [value];
-              });
-              if (values.length < 2) return null;
-              const change = values.at(-1)! - values[0]!;
-              const spread = Math.max(...values) - Math.min(...values);
-              return (
-                <p key={corner.id}>
-                  {corner.name} · última vs. primeira {formatDelta(change)} · variação entre voltas{' '}
-                  {formatDelta(spread)}
-                </p>
-              );
-            })}
-          <button
-            type="button"
-            className="btn btn-ghost"
-            onClick={() => useEngineerTraining.setState({ run: null })}
-          >
-            {active ? 'Encerrar treino' : 'Novo treino'}
-          </button>
-        </>
-      ) : (
-        <>
-          <p>
-            Escolha até duas curvas. O rádio foca nelas por cinco voltas válidas e compara todas com
-            a mesma referência. No perfil Aprender pista, escolher uma curva reativa a ajuda nela.
-          </p>
-          {!audioHere && <p>Inicie o treino no aparelho que toca o rádio.</p>}
-          {!recording && <p>Ative a gravação automática para analisar as voltas do treino.</p>}
-          {!reference && <p>Escolha uma volta compatível para fixar a referência do treino.</p>}
-          {track?.corners.length ? (
-            <fieldset className="engineer-training-corners">
-              <legend>Curvas do treino</legend>
-              {track.corners.map((corner) => (
-                <label key={corner.id}>
-                  <input
-                    type="checkbox"
-                    checked={chosen.includes(corner.id)}
-                    disabled={corners.length >= 2 && !chosen.includes(corner.id)}
-                    onChange={(event) => {
-                      setChosen(
-                        event.currentTarget.checked
-                          ? [...corners.map((item) => item.id), corner.id]
-                          : chosen.filter((id) => id !== corner.id),
-                      );
-                    }}
-                  />
-                  {cornerLabel(corner)}
-                </label>
-              ))}
-            </fieldset>
-          ) : (
-            <p>Aguardando as curvas do traçado atual.</p>
-          )}
-          <button
-            type="button"
-            className="btn btn-ghost"
-            disabled={starting || !audioHere || !recording || !reference || !corners.length}
-            onClick={() => void start()}
-          >
-            {starting ? 'Preparando treino…' : 'Iniciar treino de 5 voltas'}
-          </button>
-        </>
-      )}
+    <details className="ui-card bn-card engineer-training bn-training">
+      <summary>
+        <span className="ui-card-title">Treino por curvas</span>
+        {run && (
+          <span className="ui-badge" data-tone={active ? 'accent' : 'gain'}>
+            {run.laps.length}/{TRAINING_LAPS}
+          </span>
+        )}
+        <Icon name="chevron-down" size={18} className="bn-training-chev" />
+      </summary>
+      <div className="bn-fields bn-training-body">
+        {run ? (
+          <>
+            <p className="ui-help">
+              {active
+                ? `${run.laps.length} de ${TRAINING_LAPS} voltas válidas`
+                : 'Treino concluído'}{' '}
+              · {run.corners.map((corner) => corner.name).join(' e ')}
+            </p>
+            {run.notice && (
+              <p className="bn-note" data-tone="info" role="status">
+                {run.notice}
+              </p>
+            )}
+            {run.laps.length > 0 && (
+              <ol className="engineer-training-results bn-results">
+                {run.laps.map((lap) => (
+                  <li key={lap.id}>
+                    <a href={routes.compare({ lap: lap.id, ref: run.referenceId })}>
+                      Abrir comparação
+                    </a>
+                    <span>
+                      {lap.failed
+                        ? 'Análise indisponível'
+                        : lap.results
+                          ? run.corners
+                              .map(
+                                (corner) =>
+                                  `${corner.name} ${formatDelta(lap.results?.[corner.id])}`,
+                              )
+                              .join(' · ')
+                          : 'Analisando…'}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            )}
+            {!active &&
+              run.corners.map((corner) => {
+                const values = run.laps.flatMap((lap) => {
+                  const value = lap.results?.[corner.id];
+                  return value === undefined ? [] : [value];
+                });
+                if (values.length < 2) return null;
+                const change = values.at(-1)! - values[0]!;
+                const spread = Math.max(...values) - Math.min(...values);
+                return (
+                  <p className="ui-help" key={corner.id}>
+                    {corner.name} · última vs. primeira {formatDelta(change)} · variação entre
+                    voltas {formatDelta(spread)}
+                  </p>
+                );
+              })}
+            <button
+              type="button"
+              className="ui-btn"
+              data-variant={active ? 'danger' : 'secondary'}
+              data-size="sm"
+              onClick={() => useEngineerTraining.setState({ run: null })}
+            >
+              {active ? 'Encerrar treino' : 'Novo treino'}
+            </button>
+          </>
+        ) : (
+          <>
+            <p className="ui-help">
+              Escolha até duas curvas. O rádio foca nelas por cinco voltas válidas e compara todas
+              com a mesma referência. No perfil Aprender pista, escolher uma curva reativa a ajuda
+              nela.
+            </p>
+            {!audioHere && (
+              <p className="bn-note" data-tone="warn">
+                Inicie o treino no aparelho que toca o rádio.
+              </p>
+            )}
+            {!recording && (
+              <p className="bn-note" data-tone="warn">
+                Ative a gravação automática para analisar as voltas do treino.
+              </p>
+            )}
+            {!reference && (
+              <p className="bn-note" data-tone="info">
+                Escolha uma volta compatível para fixar a referência do treino.
+              </p>
+            )}
+            {track?.corners.length ? (
+              <fieldset className="engineer-training-corners bn-corners">
+                <legend className="ui-label">Curvas do treino</legend>
+                <div className="bn-corner-grid">
+                  {track.corners.map((corner) => (
+                    <label key={corner.id} className="bn-check">
+                      <input
+                        type="checkbox"
+                        checked={chosen.includes(corner.id)}
+                        disabled={corners.length >= 2 && !chosen.includes(corner.id)}
+                        onChange={(event) => {
+                          setChosen(
+                            event.currentTarget.checked
+                              ? [...corners.map((item) => item.id), corner.id]
+                              : chosen.filter((id) => id !== corner.id),
+                          );
+                        }}
+                      />
+                      <span>{cornerLabel(corner)}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            ) : (
+              <p className="ui-help">Aguardando as curvas do traçado atual.</p>
+            )}
+            <button
+              type="button"
+              className="ui-btn"
+              data-size="sm"
+              disabled={starting || !audioHere || !recording || !reference || !corners.length}
+              onClick={() => void start()}
+            >
+              <Icon name="play" size={16} />
+              {starting ? 'Preparando treino…' : 'Iniciar treino de 5 voltas'}
+            </button>
+          </>
+        )}
+      </div>
     </details>
   );
 }

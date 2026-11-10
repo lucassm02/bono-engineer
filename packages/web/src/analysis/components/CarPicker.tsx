@@ -19,7 +19,8 @@ import {
   searchMakers,
 } from '@gt7/shared';
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { Icon } from '../../components/ui/Icon.tsx';
+import { Modal } from '../../components/ui/Modal.tsx';
 import {
   type CarFilter,
   describeCarFilter,
@@ -62,7 +63,7 @@ export function FilterChip({
         onClick={onRemove}
         aria-label={`Remover filtro ${label}`}
       >
-        <span aria-hidden="true">×</span>
+        <Icon name="close" size={14} />
       </button>
     </span>
   );
@@ -136,23 +137,19 @@ export function CarFilterField({
         ) : (
           <span className="carname-text">{describeCarFilter(value)}</span>
         )}
-        <span className="cf-caret" aria-hidden="true">
-          ▾
-        </span>
+        <Icon name="chevron-down" size={16} className="cf-caret" />
       </button>
-      {open &&
-        createPortal(
-          <CarPicker
-            usage={usage}
-            value={value}
-            onClose={() => setOpen(false)}
-            onPick={(f) => {
-              onChange(f);
-              setOpen(false);
-            }}
-          />,
-          document.body,
-        )}
+      {open && (
+        <CarPicker
+          usage={usage}
+          value={value}
+          onClose={() => setOpen(false)}
+          onPick={(f) => {
+            onChange(f);
+            setOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -194,24 +191,18 @@ function CarPicker({
   const [makerId, setMakerId] = useState<number | null>(value.makerId);
   const [query, setQuery] = useState('');
   const [onlyUsed, setOnlyUsed] = useState(false);
-  const sheet = useRef<HTMLDivElement>(null);
-  const closeRef = useRef(onClose);
-  closeRef.current = onClose;
+  const searchRef = useRef<HTMLInputElement>(null);
+  const firstRender = useRef(true);
 
-  // Esc closes; the page behind does not scroll while the sheet is open; focus moves into it.
+  // Ao trocar de passo (marca <-> carros) o botão clicado some: devolve o foco para a busca.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: roda só quando o passo muda
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeRef.current();
-    };
-    window.addEventListener('keydown', onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    sheet.current?.focus();
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prev;
-    };
-  }, []);
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    searchRef.current?.focus();
+  }, [makerId]);
 
   const tiles = useMemo<MakerTile[]>(() => {
     const used = (m: CarMaker | null): MakerTile => {
@@ -237,57 +228,32 @@ function CarPicker({
       : (maker?.name ?? 'Marca')
     : 'Escolher carro';
 
-  return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: backdrop click is a mouse shortcut; Esc and the close button are the accessible ways
-    <div
-      className="cp-overlay"
-      role="presentation"
-      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div
-        className="cp-sheet"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Escolher carro"
-        tabIndex={-1}
-        ref={sheet}
-      >
-        <header className="cp-head">
-          {inMaker ? (
-            <button
-              type="button"
-              className="cp-iconbtn"
-              onClick={() => {
-                setMakerId(null);
-                setQuery('');
-                setOnlyUsed(false);
-              }}
-              aria-label="Voltar para as marcas"
-            >
-              <span aria-hidden="true">←</span>
-            </button>
-          ) : null}
-          <div className="cp-title">
-            {maker && <BrandLogo maker={maker} size={36} />}
-            <div className="cp-title-text">
-              <h2>{title}</h2>
-              <p className="dim a-small">
-                {maker
-                  ? `${maker.countryName} · ${plural(maker.carCount, 'carro', 'carros')} no jogo`
-                  : makerId === UNKNOWN_MAKER_ID
-                    ? 'Carros que ainda não estão na lista do jogo (DLC novo?)'
-                    : 'Escolha a marca e depois o carro'}
-              </p>
-            </div>
-          </div>
-          <button type="button" className="cp-iconbtn" onClick={onClose} aria-label="Fechar">
-            <span aria-hidden="true">✕</span>
-          </button>
-        </header>
+  const subtitle = maker
+    ? `${maker.countryName} · ${plural(maker.carCount, 'carro', 'carros')} no jogo`
+    : makerId === UNKNOWN_MAKER_ID
+      ? 'Carros que ainda não estão na lista do jogo (DLC novo?)'
+      : 'Escolha a marca e depois o carro';
 
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      size="lg"
+      className="cp-modal"
+      title={
+        <span className="cp-title">
+          {maker && <BrandLogo maker={maker} size={32} />}
+          <span>{title}</span>
+        </span>
+      }
+      subtitle={subtitle}
+    >
+      <div className="cp-toolbar">
         <div className="cp-search">
+          <Icon name="search" size={18} />
           <input
-            className="a-input"
+            ref={searchRef}
+            className="ui-input"
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -301,86 +267,95 @@ function CarPicker({
             spellCheck={false}
           />
         </div>
-
-        <div className="cp-body">
-          {!inMaker ? (
-            q !== '' ? (
-              <SearchResults
-                query={q}
-                lapsByCar={lapsByCar}
-                lapsByMaker={lapsByMaker}
-                onMaker={(id) => {
-                  setMakerId(id);
-                  setQuery('');
-                }}
-                onCar={(code) => onPick(pickCar(code))}
-                onClear={() => setQuery('')}
-              />
-            ) : (
-              <>
-                {hasHistory && (
-                  <div className="cp-tabs">
-                    <button
-                      type="button"
-                      aria-pressed={tab === 'history'}
-                      onClick={() => setTab('history')}
-                    >
-                      No meu histórico
-                    </button>
-                    <button
-                      type="button"
-                      aria-pressed={tab === 'all'}
-                      onClick={() => setTab('all')}
-                    >
-                      Todas as marcas do jogo
-                    </button>
-                  </div>
-                )}
-                {!hasHistory && (
-                  <p className="cp-hint dim a-small">
-                    Você ainda não tem voltas gravadas: aqui estão todas as marcas do Gran Turismo
-                    7.
-                  </p>
-                )}
-                {isCarFiltering(value) && (
-                  <button type="button" className="cp-all" onClick={() => onPick(NO_CAR_FILTER)}>
-                    Mostrar todos os carros (limpar filtro)
-                  </button>
-                )}
-                <ul className="cp-grid">
-                  {tiles.map((t) => {
-                    const id = t.maker?.id ?? UNKNOWN_MAKER_ID;
-                    return (
-                      <li key={id}>
-                        <BrandTile
-                          maker={t.maker}
-                          laps={t.laps}
-                          active={value.makerId === id}
-                          onClick={() => setMakerId(id)}
-                        />
-                      </li>
-                    );
-                  })}
-                </ul>
-              </>
-            )
-          ) : (
-            <MakerCars
-              makerId={makerId}
-              query={q}
-              onlyUsed={onlyUsed}
-              setOnlyUsed={setOnlyUsed}
-              lapsByCar={lapsByCar}
-              usedCars={lapsByMaker.get(makerId)?.cars ?? []}
-              activeCar={value.carCode}
-              onAllOfMaker={() => onPick(pickMaker(makerId))}
-              onCar={(code) => onPick(pickCar(code))}
-              onClear={() => setQuery('')}
-            />
-          )}
-        </div>
+        {inMaker && (
+          <button
+            type="button"
+            className="ui-btn"
+            data-variant="ghost"
+            data-size="sm"
+            onClick={() => {
+              setMakerId(null);
+              setQuery('');
+              setOnlyUsed(false);
+            }}
+          >
+            <Icon name="back" size={16} />
+            Todas as marcas
+          </button>
+        )}
       </div>
-    </div>
+
+      {!inMaker ? (
+        q !== '' ? (
+          <SearchResults
+            query={q}
+            lapsByCar={lapsByCar}
+            lapsByMaker={lapsByMaker}
+            onMaker={(id) => {
+              setMakerId(id);
+              setQuery('');
+            }}
+            onCar={(code) => onPick(pickCar(code))}
+            onClear={() => setQuery('')}
+          />
+        ) : (
+          <>
+            {hasHistory && (
+              <div className="ui-segmented cp-tabs">
+                <button
+                  type="button"
+                  aria-pressed={tab === 'history'}
+                  onClick={() => setTab('history')}
+                >
+                  No meu histórico
+                </button>
+                <button type="button" aria-pressed={tab === 'all'} onClick={() => setTab('all')}>
+                  Todas as marcas do jogo
+                </button>
+              </div>
+            )}
+            {!hasHistory && (
+              <p className="cp-hint">
+                Você ainda não tem voltas gravadas: aqui estão todas as marcas do Gran Turismo 7.
+              </p>
+            )}
+            {isCarFiltering(value) && (
+              <button type="button" className="cp-all" onClick={() => onPick(NO_CAR_FILTER)}>
+                Mostrar todos os carros (limpar filtro)
+              </button>
+            )}
+            <ul className="cp-grid">
+              {tiles.map((t) => {
+                const id = t.maker?.id ?? UNKNOWN_MAKER_ID;
+                return (
+                  <li key={id}>
+                    <BrandTile
+                      maker={t.maker}
+                      laps={t.laps}
+                      active={value.makerId === id}
+                      onClick={() => setMakerId(id)}
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+          </>
+        )
+      ) : (
+        <MakerCars
+          makerId={makerId}
+          query={q}
+          onlyUsed={onlyUsed}
+          setOnlyUsed={setOnlyUsed}
+          lapsByCar={lapsByCar}
+          usedCars={lapsByMaker.get(makerId)?.cars ?? []}
+          activeCar={value.carCode}
+          onAllOfMaker={() => onPick(pickMaker(makerId))}
+          onCar={(code) => onPick(pickCar(code))}
+          onClear={() => setQuery('')}
+        />
+      )}
+    </Modal>
   );
 }
 
@@ -485,11 +460,15 @@ function MakerCars({
                 >
                   <span className="cp-car-main">
                     <span className="cp-car-name">{r.label}</span>
-                    <span className="cp-car-meta dim">
+                    <span className="cp-car-meta">
                       {[r.sub, r.group].filter(Boolean).join(' · ')}
                     </span>
                   </span>
-                  {laps > 0 && <span className="cp-badge">{plural(laps, 'volta', 'voltas')}</span>}
+                  {laps > 0 && (
+                    <span className="ui-badge" data-tone="accent">
+                      {plural(laps, 'volta', 'voltas')}
+                    </span>
+                  )}
                 </button>
               </li>
             );
@@ -564,12 +543,14 @@ function SearchResults({
                     <BrandLogo maker={m} size={32} />
                     <span className="cp-car-main">
                       <span className="cp-car-name">{c.name}</span>
-                      <span className="cp-car-meta dim">
+                      <span className="cp-car-meta">
                         {[m?.name, groupLabel(c.group)].filter(Boolean).join(' · ')}
                       </span>
                     </span>
                     {laps > 0 && (
-                      <span className="cp-badge">{plural(laps, 'volta', 'voltas')}</span>
+                      <span className="ui-badge" data-tone="accent">
+                        {plural(laps, 'volta', 'voltas')}
+                      </span>
                     )}
                   </button>
                 </li>
@@ -577,7 +558,7 @@ function SearchResults({
             })}
           </ul>
           {more && (
-            <p className="dim a-small cp-hint">
+            <p className="cp-hint">
               Mostrando os {SEARCH_LIMIT} primeiros. Escreva mais do nome para refinar.
             </p>
           )}
@@ -598,12 +579,10 @@ function Nothing({
 }) {
   return (
     <div className="cp-empty">
-      <div className="cp-empty-icon" aria-hidden="true">
-        ⌕
-      </div>
+      <Icon name="search" size={28} className="cp-empty-icon" />
       <p>{text}</p>
       {onClear && (
-        <button type="button" className="a-btn a-btn-ghost" onClick={onClear}>
+        <button type="button" className="ui-btn" data-variant="secondary" onClick={onClear}>
           {clearLabel}
         </button>
       )}

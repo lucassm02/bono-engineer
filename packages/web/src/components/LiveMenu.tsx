@@ -1,50 +1,84 @@
 /**
- * Always-visible way out of the live dashboard: a menu button next to the padlock opens a sheet with
- * shortcuts to every other area (history, compare, reference capture, coach, guide, settings) and
- * to the dashboard's own screen picker. Keyboard: M toggles it, Esc closes it.
+ * Saída sempre disponível do painel ao vivo: o botão de menu ao lado do cadeado abre uma gaveta com
+ * três abas — Navegar (as outras áreas do app), Engenheiro (rádio) e Painel (telas e comportamento).
+ * Teclado: M abre/fecha; Esc, fundo e foco vêm do componente Modal.
  */
 
-import { useEffect, useRef } from 'react';
+import { type KeyboardEvent, useId, useState } from 'react';
 import { routes } from '../lib/route.ts';
-import { closeMenu, openPicker } from '../state/actions.ts';
+import {
+  closeMenu,
+  dispatchProfile,
+  openLayoutEditor,
+  openPicker,
+  setLocked,
+} from '../state/actions.ts';
 import { useUi } from '../state/uiStore.ts';
 import { EngineerControls } from './EngineerControls.tsx';
 import { FullscreenButton } from './FullscreenButton.tsx';
 import { ProductBrand } from './ProductBrand.tsx';
+import { ToggleRow } from './ToggleRow.tsx';
+import { Icon, type IconName } from './ui/Icon.tsx';
+import { Modal } from './ui/Modal.tsx';
 
 interface Entry {
+  icon: IconName;
   label: string;
   hint: string;
-  go: () => void;
+  href: string;
 }
 
-const goTo = (hash: string) => () => {
-  closeMenu();
-  location.hash = hash;
-};
-
-const ENTRIES: readonly Entry[] = [
-  { label: 'Início', hint: 'Suas pistas, sessões e voltas', go: goTo(routes.home()) },
-  { label: 'Comparar voltas', hint: 'Curva a curva, com gráficos', go: goTo(routes.compare({})) },
+const AREAS: readonly Entry[] = [
+  { icon: 'home', label: 'Início', hint: 'Suas pistas, sessões e voltas', href: routes.home() },
   {
+    icon: 'compare',
+    label: 'Comparar voltas',
+    hint: 'Curva a curva, com gráficos',
+    href: routes.compare({}),
+  },
+  {
+    icon: 'capture',
     label: 'Captura de referência',
     hint: 'Gravar a volta de um replay',
-    go: goTo(routes.capture()),
+    href: routes.capture(),
   },
-  { label: 'Coach de IA', hint: 'Análise e dicas da sua sessão', go: goTo(routes.coach()) },
-  { label: 'Guia de pilotagem', hint: 'Técnicas por classe de carro', go: goTo(routes.guide()) },
-  { label: 'Configurações', hint: 'Console, dispositivos, dados e IA', go: goTo(routes.config()) },
+  {
+    icon: 'coach',
+    label: 'Coach de IA',
+    hint: 'Análise e dicas da sua sessão',
+    href: routes.coach(),
+  },
+  {
+    icon: 'guide',
+    label: 'Guia de pilotagem',
+    hint: 'Técnicas por classe de carro',
+    href: routes.guide(),
+  },
 ];
 
-function MenuGlyph() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="live-menu-glyph">
-      <path d="M5 7h14M5 12h14M5 17h14" />
-    </svg>
-  );
-}
+const SETUP: readonly Entry[] = [
+  {
+    icon: 'config',
+    label: 'Configurações',
+    hint: 'Console, dispositivos, dados e IA',
+    href: routes.config(),
+  },
+  {
+    icon: 'remote',
+    label: 'Dispositivo remoto',
+    hint: 'QR Code e endereço para abrir o painel em outro aparelho',
+    href: routes.config('acesso-remoto'),
+  },
+];
 
-/** Floating button, left of the padlock. */
+type TabId = 'nav' | 'engineer' | 'panel';
+const TABS: readonly { id: TabId; label: string }[] = [
+  { id: 'nav', label: 'Navegar' },
+  { id: 'engineer', label: 'Engenheiro' },
+  { id: 'panel', label: 'Painel' },
+];
+
+/** Botão flutuante, à esquerda do cadeado. */
 export function MenuButton() {
   const open = useUi((s) => s.menuOpen);
   return (
@@ -57,68 +91,198 @@ export function MenuButton() {
       aria-expanded={open}
       onClick={() => useUi.setState({ menuOpen: !open, overlayVisible: false })}
     >
-      <MenuGlyph />
+      <Icon name="menu" />
     </button>
   );
 }
 
-export function LiveMenuSheet() {
-  const open = useUi((s) => s.menuOpen);
-  const closeRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (open) closeRef.current?.focus();
-  }, [open]);
-
-  if (!open) return null;
+function ListItemBody({ icon, title, hint }: { icon: IconName; title: string; hint: string }) {
   return (
-    <div
-      className="live-menu-backdrop"
-      data-no-gesture
-      onPointerDown={(e) => e.target === e.currentTarget && closeMenu()}
-    >
-      <div className="live-menu" role="dialog" aria-modal="true" aria-label="Menu do app">
-        <header className="live-menu-head">
-          <ProductBrand />
-          <FullscreenButton className="btn btn-ghost" />
-          <button type="button" className="btn btn-ghost" ref={closeRef} onClick={closeMenu}>
-            Voltar ao painel
-          </button>
-        </header>
-        <a
-          className="live-menu-item live-menu-remote"
-          href={routes.config('acesso-remoto')}
-          onClick={closeMenu}
-        >
-          <span className="live-menu-label">Dispositivo remoto</span>
-          <span className="live-menu-hint">Abrir QR Code e endereço do painel</span>
-        </a>
-        <EngineerControls />
-        <ul className="live-menu-list">
-          {ENTRIES.map((e) => (
-            <li key={e.label}>
-              <button type="button" className="live-menu-item" onClick={e.go}>
-                <span className="live-menu-label">{e.label}</span>
-                <span className="live-menu-hint">{e.hint}</span>
-              </button>
-            </li>
-          ))}
+    <>
+      <Icon name={icon} size={22} />
+      <span className="ui-list-text">
+        <span className="ui-list-title">{title}</span>
+        <span className="ui-list-desc">{hint}</span>
+      </span>
+      <Icon name="chevron-right" size={18} className="bn-chev" />
+    </>
+  );
+}
+
+function LinkList({ entries }: { entries: readonly Entry[] }) {
+  return (
+    <ul className="ui-list">
+      {entries.map((e) => (
+        <li key={e.label}>
+          <a className="ui-list-item" href={e.href} onClick={closeMenu}>
+            <ListItemBody icon={e.icon} title={e.label} hint={e.hint} />
+          </a>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function NavigateTab() {
+  return (
+    <div className="bn-stack">
+      <section className="bn-section" aria-labelledby="bn-areas">
+        <h3 id="bn-areas" className="ui-eyebrow">
+          Áreas do app
+        </h3>
+        <LinkList entries={AREAS} />
+      </section>
+      <section className="bn-section" aria-labelledby="bn-setup">
+        <h3 id="bn-setup" className="ui-eyebrow">
+          Aparelhos e ajustes
+        </h3>
+        <LinkList entries={SETUP} />
+      </section>
+    </div>
+  );
+}
+
+function PanelTab() {
+  const locked = useUi((s) => s.profile.locked);
+  const popups = useUi((s) => s.profile.popupsEnabled);
+  const hint = locked ? 'Destrave os gestos para abrir' : null;
+  return (
+    <div className="bn-stack">
+      <section className="bn-section" aria-labelledby="bn-screens">
+        <h3 id="bn-screens" className="ui-eyebrow">
+          Telas
+        </h3>
+        <ul className="ui-list">
           <li>
             <button
               type="button"
-              className="live-menu-item live-menu-item-alt"
+              className="ui-list-item"
+              disabled={locked}
               onClick={() => {
                 closeMenu();
                 openPicker();
               }}
             >
-              <span className="live-menu-label">Telas do painel ao vivo</span>
-              <span className="live-menu-hint">Escolher e ordenar as telas deste aparelho</span>
+              <ListItemBody
+                icon="live"
+                title="Telas do painel ao vivo"
+                hint={hint ?? 'Escolher e ordenar as telas deste aparelho'}
+              />
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
+              className="ui-list-item"
+              disabled={locked}
+              onClick={() => {
+                closeMenu();
+                openLayoutEditor();
+              }}
+            >
+              <ListItemBody
+                icon="layout"
+                title="Editar tela Personalizada"
+                hint={hint ?? 'Montar a sua grade de widgets'}
+              />
             </button>
           </li>
         </ul>
-        <p className="live-menu-keys">Atalho: tecla M abre e fecha este menu.</p>
-      </div>
+      </section>
+      <section className="ui-card bn-card" aria-labelledby="bn-behavior">
+        <div className="ui-card-head">
+          <h3 id="bn-behavior" className="ui-card-title">
+            Comportamento
+          </h3>
+        </div>
+        <ToggleRow
+          title="Travar gestos"
+          description="Evita trocar de tela sem querer. Segure o cadeado para destravar."
+          checked={locked}
+          onChange={setLocked}
+        />
+        <hr className="ui-divider" />
+        <ToggleRow
+          title="Cartão ao fechar a volta"
+          description="Mostra o tempo e os setores quando você completa uma volta."
+          checked={popups}
+          onChange={(enabled) => dispatchProfile({ type: 'setPopups', enabled })}
+        />
+      </section>
     </div>
+  );
+}
+
+export function LiveMenuSheet() {
+  const open = useUi((s) => s.menuOpen);
+  const [tab, setTab] = useState<TabId>('nav');
+  const base = useId();
+
+  function onTabKey(e: KeyboardEvent<HTMLDivElement>) {
+    const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+    if (!step) return;
+    e.preventDefault();
+    const next = TABS[(TABS.findIndex((t) => t.id === tab) + step + TABS.length) % TABS.length]!;
+    setTab(next.id);
+    document.getElementById(`${base}-tab-${next.id}`)?.focus();
+  }
+
+  return (
+    <Modal
+      open={open}
+      onClose={closeMenu}
+      placement="side"
+      className="bn-drawer"
+      title={
+        <>
+          <span className="bn-sr-only">Menu · </span>
+          <ProductBrand />
+        </>
+      }
+      headerExtra={<FullscreenButton />}
+      footer={
+        <>
+          <p className="bn-foot-hint">
+            <kbd className="ui-kbd">M</kbd> abre e fecha o menu · <kbd className="ui-kbd">Esc</kbd>{' '}
+            fecha
+          </p>
+          <button type="button" className="ui-btn" onClick={closeMenu}>
+            Voltar ao painel
+          </button>
+        </>
+      }
+    >
+      <div
+        className="ui-tabs bn-tabs"
+        role="tablist"
+        aria-label="Seções do menu"
+        onKeyDown={onTabKey}
+      >
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            id={`${base}-tab-${t.id}`}
+            type="button"
+            role="tab"
+            aria-selected={tab === t.id}
+            aria-controls={`${base}-panel-${t.id}`}
+            tabIndex={tab === t.id ? 0 : -1}
+            onClick={() => setTab(t.id)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      <div
+        role="tabpanel"
+        id={`${base}-panel-${tab}`}
+        aria-labelledby={`${base}-tab-${tab}`}
+        className="bn-tabpanel"
+      >
+        {tab === 'nav' && <NavigateTab />}
+        {tab === 'engineer' && <EngineerControls />}
+        {tab === 'panel' && <PanelTab />}
+      </div>
+    </Modal>
   );
 }

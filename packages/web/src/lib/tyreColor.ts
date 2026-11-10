@@ -1,16 +1,28 @@
 import type { TyreTempScale } from '../config.ts';
+import { THEME } from './theme.ts';
 
 /** Bands of the panel scale; the radio tyre rules use the same function (@gt7/shared). */
 export { type TyreTempBand, tyreTempBand } from '@gt7/shared';
 
 export type Rgb = readonly [number, number, number];
 
-/** Palette anchors of the temperature scale. */
+function hexToRgb(hex: string): Rgb {
+  const n = hex.replace('#', '');
+  return [
+    Number.parseInt(n.slice(0, 2), 16),
+    Number.parseInt(n.slice(2, 4), 16),
+    Number.parseInt(n.slice(4, 6), 16),
+  ];
+}
+
+/** Palette anchors of the temperature scale (race codes: info = cold, gain = ideal, loss = hot). */
 export const TYRE_COLORS = {
-  cold: [56, 132, 255] as Rgb,
-  ideal: [38, 214, 110] as Rgb,
-  hot: [255, 52, 64] as Rgb,
+  cold: hexToRgb(THEME.info),
+  ideal: hexToRgb(THEME.gain),
+  hot: hexToRgb(THEME.loss),
 } as const;
+
+const UNKNOWN: Rgb = hexToRgb(THEME.text3);
 
 function mix(a: Rgb, b: Rgb, t: number): Rgb {
   const k = t < 0 ? 0 : Math.min(t, 1);
@@ -23,7 +35,7 @@ function mix(a: Rgb, b: Rgb, t: number): Rgb {
 
 /** Colour for a temperature: blue at/below `cold`, green inside the ideal window, red at/above `hot`. */
 export function tyreTempRgb(tempC: number, s: TyreTempScale): Rgb {
-  if (!Number.isFinite(tempC)) return [90, 98, 110];
+  if (!Number.isFinite(tempC)) return UNKNOWN;
   if (tempC <= s.cold) return TYRE_COLORS.cold;
   if (tempC < s.idealMin) {
     return mix(TYRE_COLORS.cold, TYRE_COLORS.ideal, (tempC - s.cold) / (s.idealMin - s.cold));

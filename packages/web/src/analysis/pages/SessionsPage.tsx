@@ -69,7 +69,7 @@ export function SessionsPage({ route }: { route: Route }) {
           </>
         }
       />
-      <div className="a-filters">
+      <div className="a-toolbar">
         <label>
           Pista
           <select value={trackFilter} onChange={(e) => setTrack(e.target.value)}>
@@ -105,18 +105,21 @@ export function SessionsPage({ route }: { route: Route }) {
         <Empty>
           {sessions.data.length === 0 ? (
             <>
-              <p>Nenhuma sessão gravada ainda.</p>
-              <p className="dim">
+              <strong>Nenhuma sessão gravada ainda</strong>
+              <p>
                 Abra o Gran Turismo 7 e dê algumas voltas: cada volta completa aparece aqui sozinha.
               </p>
             </>
           ) : (
-            <p>Nenhuma sessão com esses filtros.</p>
+            <>
+              <strong>Nenhuma sessão com esses filtros</strong>
+              <p>Tente outra pista, carro ou modo.</p>
+            </>
           )}
         </Empty>
       ) : (
         <div className="a-table-wrap">
-          <table className="a-table a-table-click">
+          <table className="a-table a-table-click a-table-cards">
             <thead>
               <tr>
                 <th>Data</th>
@@ -130,13 +133,13 @@ export function SessionsPage({ route }: { route: Route }) {
             <tbody>
               {list.map((s) => (
                 <tr key={s.id} onClick={() => navigate(routes.session(s.id))}>
-                  <td>
+                  <td data-label="Data">
                     <a href={routes.session(s.id)} onClick={(e) => e.stopPropagation()}>
                       {formatDateTime(s.startedAt)}
                     </a>
                     {s.endedAt === null && <Tag tone="info">em andamento</Tag>}
                   </td>
-                  <td>
+                  <td data-label="Pista">
                     {s.trackId ? (
                       <a href={routes.track(s.trackId)} onClick={(e) => e.stopPropagation()}>
                         {trackName(tracks.data, s.trackId)}
@@ -145,18 +148,22 @@ export function SessionsPage({ route }: { route: Route }) {
                       <span className="dim">{trackName(tracks.data, null)}</span>
                     )}
                   </td>
-                  <td>
+                  <td data-label="Carro">
                     <CarName carCode={s.carCode} />
                   </td>
-                  <td>
+                  <td data-label="Modo">
                     {s.mode === 'replayCapture' ? (
                       <Tag tone="ref">{SESSION_MODE_LABELS[s.mode]}</Tag>
                     ) : (
                       SESSION_MODE_LABELS[s.mode]
                     )}
                   </td>
-                  <td className="num num-col">{s.lapCount}</td>
-                  <td className="num num-col">{s.bestLapMs ? formatLapTime(s.bestLapMs) : '–'}</td>
+                  <td className="num num-col" data-label="Voltas">
+                    {s.lapCount}
+                  </td>
+                  <td className="num num-col" data-label="Melhor">
+                    {s.bestLapMs ? formatLapTime(s.bestLapMs) : '–'}
+                  </td>
                 </tr>
               ))}
             </tbody>

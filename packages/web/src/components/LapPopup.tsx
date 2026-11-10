@@ -19,13 +19,23 @@ export function LapPopup() {
       aria-live="assertive"
     >
       <div className="lap-popup-head">
-        <span>Volta {ev.lapNumber}</span>
+        <span className="lap-popup-lap">Volta {ev.lapNumber}</span>
         <span className="lap-popup-badges">
-          {ev.isPersonalBest && <span className="tag tag-pb">Melhor pessoal</span>}
-          {!ev.isPersonalBest && ev.isSessionBest && (
-            <span className="tag tag-sb">Melhor da sessão</span>
+          {ev.isPersonalBest && (
+            <span className="ui-badge" data-tone="purple">
+              Melhor pessoal
+            </span>
           )}
-          {!ev.valid && <span className="tag tag-bad">Inválida</span>}
+          {!ev.isPersonalBest && ev.isSessionBest && (
+            <span className="ui-badge" data-tone="gain">
+              Melhor da sessão
+            </span>
+          )}
+          {!ev.valid && (
+            <span className="ui-badge" data-tone="loss">
+              Inválida
+            </span>
+          )}
         </span>
       </div>
       <div className="lap-popup-time num">{formatLapTime(ev.timeMs)}</div>
@@ -43,11 +53,11 @@ export function LapPopup() {
           <span
             // biome-ignore lint/suspicious/noArrayIndexKey: sectors are positional
             key={i}
-            className="sector sector-mini"
+            className="lap-sector"
             data-status={ev.sectorStatus[i] ?? 'pending'}
             data-best={best === i ? '1' : '0'}
           >
-            <span className="sector-name">S{i + 1}</span>
+            <span className="lap-sector-name">S{i + 1}</span>
             <span className="num">{formatSectorTime(t)}</span>
           </span>
         ))}

@@ -1,10 +1,65 @@
-/* Página da pista (TrackPage). */
+/* Página da pista e da sessão: números de destaque, evolução, consistência, curvas. */
 
-/* Track page */
+/* Números de destaque (≙ ui-stat em cartão) */
+.a-stats,
+.a-records {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
+}
+.a-stats > .a-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--line);
+  border-left-width: 1px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+.a-card .a-stats > .a-stat {
+  background: var(--surface-1);
+}
+.a-stat-k {
+  color: var(--text-3);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+}
+.a-stat-v {
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.a-stat-s {
+  color: var(--text-3);
+  font-size: var(--fs-xs);
+}
+/* O número que o piloto veio buscar. */
+.a-stats > .a-stat[data-emph="1"] {
+  border-color: color-mix(in srgb, var(--purple) 45%, transparent);
+  background: linear-gradient(var(--purple-soft), var(--purple-soft)), var(--surface-2);
+}
+.a-stats > .a-stat[data-emph="1"] .a-stat-v {
+  color: var(--purple);
+}
+.a-stats > .a-stat[data-emph="ideal"] {
+  border-color: color-mix(in srgb, var(--gain) 40%, transparent);
+}
+.a-stats > .a-stat[data-emph="ideal"] .a-stat-v {
+  color: var(--gain);
+}
+
+/* Aba de curvas */
 .a-track-grid {
   display: grid;
   grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.1fr);
-  gap: 14px;
+  gap: var(--sp-4);
   align-items: start;
 }
 .a-corner-edit {
@@ -17,50 +72,64 @@
 .a-rename {
   display: inline-flex;
   flex-wrap: wrap;
-  gap: 8px;
   align-items: center;
+  gap: var(--sp-2);
 }
 .a-rename .a-input {
   width: auto;
-  font-size: 20px;
+  font-size: var(--fs-xl);
 }
-.a-records,
-.a-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 10px;
-}
+
+/* Evolução e consistência */
 .a-highlights {
-  margin: 12px 0;
+  margin: var(--sp-4) 0;
   padding-left: 22px;
 }
 .a-highlights li {
-  margin: 4px 0;
+  margin: var(--sp-1) 0;
 }
 .a-theo {
-  margin-top: 16px;
-  border-top: 1px solid var(--line);
-  padding-top: 4px;
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--line-soft);
 }
 .a-evo-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  gap: var(--sp-5);
+  margin-bottom: var(--sp-4);
 }
 .a-minichart .u-legend {
-  font-size: 12px;
-  color: var(--dim);
+  color: var(--text-2);
+  font-size: var(--fs-xs);
 }
 .a-trends {
-  list-style: none;
-  padding: 0;
   margin: 0;
+  padding: 0;
+  list-style: none;
 }
 .a-trends li {
-  margin: 4px 0;
+  margin: var(--sp-1) 0;
 }
 .a-trends li > span {
   display: inline-block;
   width: 16px;
 }
+.a-section-note {
+  margin: var(--sp-3) 0 0;
+  color: var(--text-3);
+  font-size: var(--fs-sm);
+}
 
+@media (max-width: 640px) {
+  .a-stats,
+  .a-records {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .a-stats > .a-stat {
+    padding: var(--sp-3);
+  }
+  .a-stat-v {
+    font-size: var(--fs-lg);
+  }
+}

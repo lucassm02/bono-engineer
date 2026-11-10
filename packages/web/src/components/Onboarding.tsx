@@ -4,6 +4,7 @@
  *  2. "PS5 encontrado ✓" + the QR code to race from the phone,
  *  3. all set → live dashboard.
  * Can be skipped at any time. After ~40 s without finding the console it offers a help checklist.
+ * Runs inside the shared Modal (focus, Esc, backdrop); the footer carries Pular / Voltar / Próximo.
  */
 
 import type { ApiStatus } from '@gt7/shared';
@@ -26,6 +27,8 @@ import { rescanConsole } from '../net/consoleActions.ts';
 import { useConsoleConnection } from '../state/consoleLink.ts';
 import { useUi } from '../state/uiStore.ts';
 import { IpForm, LinkDot } from './ConsoleLink.tsx';
+import { Icon } from './ui/Icon.tsx';
+import { Modal } from './ui/Modal.tsx';
 
 /** Ends the assistant (finished or skipped): it will not come back on its own. */
 export function finishOnboarding(goLive: boolean): void {
@@ -40,39 +43,9 @@ function Radar({ found }: { found: boolean }) {
       <span className="ob-ring" />
       <span className="ob-ring" />
       <span className="ob-ring" />
-      <svg viewBox="0 0 64 64" className="ob-radar-core" aria-hidden="true">
-        {found ? (
-          <path
-            d="M18 33l10 10 18-22"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="ob-check"
-          />
-        ) : (
-          <>
-            <rect
-              x="22"
-              y="12"
-              width="20"
-              height="40"
-              rx="8"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="3"
-            />
-            <path
-              d="M32 18v28"
-              stroke="currentColor"
-              strokeWidth="3"
-              strokeLinecap="round"
-              opacity=".5"
-            />
-          </>
-        )}
-      </svg>
+      <div className="ob-radar-core">
+        <Icon name={found ? 'check' : 'remote'} size={34} className={found ? 'ob-check' : ''} />
+      </div>
     </div>
   );
 }
@@ -90,8 +63,8 @@ function HelpChecklist({ status }: { status: ApiStatus | null }) {
   const [showIp, setShowIp] = useState(false);
   const fw = status?.firewall;
   return (
-    <section className="ob-help" aria-label="Ajuda para achar o PS5">
-      <h3>Ainda não achei o PS5. Vamos conferir:</h3>
+    <section className="ui-card ob-help" data-tone="warn" aria-label="Ajuda para achar o PS5">
+      <h3 className="ui-card-title">Ainda não achei o PS5. Vamos conferir:</h3>
       <ul>
         <li>
           <strong>PS5 ligado e na mesma rede.</strong> Ele precisa estar no mesmo Wi-Fi (ou no mesmo
@@ -115,9 +88,12 @@ function HelpChecklist({ status }: { status: ApiStatus | null }) {
                   <pre className="ob-code">{fw.powershellCommands.join('\n')}</pre>
                   <button
                     type="button"
-                    className="cx-btn cx-btn-ghost cx-btn-sm"
+                    className="ui-btn"
+                    data-variant="secondary"
+                    data-size="sm"
                     onClick={() => void copyText(fw.powershellCommands.join('\n'))}
                   >
+                    <Icon name="copy" size={16} />
                     Copiar comandos
                   </button>
                 </>
@@ -131,10 +107,17 @@ function HelpChecklist({ status }: { status: ApiStatus | null }) {
         </li>
       </ul>
       <div className="cx-actions">
-        <button type="button" className="cx-btn" onClick={() => void rescanConsole()}>
+        <button type="button" className="ui-btn" onClick={() => void rescanConsole()}>
+          <Icon name="refresh" size={18} />
           Procurar de novo
         </button>
-        <button type="button" className="cx-btn cx-btn-ghost" onClick={() => setShowIp((v) => !v)}>
+        <button
+          type="button"
+          className="ui-btn"
+          data-variant="secondary"
+          aria-expanded={showIp}
+          onClick={() => setShowIp((v) => !v)}
+        >
           Último recurso: informar o IP
         </button>
       </div>
@@ -166,14 +149,13 @@ function SearchStep({ startedAt }: { startedAt: number }) {
     };
   }, [help]);
   return (
-    <>
+    <div className="ob-step">
       <Radar found={false} />
-      <h1>Conecte o {GT7_INTEGRATION.name}</h1>
       <p className="ob-lead">
         No PS5, <strong>abra o Gran Turismo 7 e entre em uma pista</strong> (ou num replay). O resto
         é comigo.
       </p>
-      <div className="ob-live" data-tone={view.tone} role="status" aria-live="polite">
+      <div className="ui-card ob-live" data-tone={view.tone} role="status" aria-live="polite">
         <LinkDot tone={view.tone} busy={view.busy} />
         <div>
           <strong>{view.title}</strong>
@@ -191,17 +173,17 @@ function SearchStep({ startedAt }: { startedAt: number }) {
         <span />
       </div>
       {!help && (
-        <p className="ob-hint dim">
+        <p className="ui-help">
           Pode levar alguns segundos. Se demorar mais de {Math.round(HELP_AFTER_MS / 1000)} s, eu
           mostro o que conferir.
         </p>
       )}
       {help && <HelpChecklist status={status} />}
-    </>
+    </div>
   );
 }
 
-function FoundStep({ onNext }: { onNext: () => void }) {
+function FoundStep() {
   const conn = useConsoleConnection();
   const view = describeLink(conn);
   const [lan, setLan] = useState<{ url: string | null; qr: string | null } | null>(null);
@@ -217,9 +199,8 @@ function FoundStep({ onNext }: { onNext: () => void }) {
     };
   }, []);
   return (
-    <>
+    <div className="ob-step">
       <Radar found />
-      <h1>PS5 encontrado ✓</h1>
       <p className="ob-lead">
         {conn?.consoleIp ? (
           <>
@@ -232,22 +213,22 @@ function FoundStep({ onNext }: { onNext: () => void }) {
           ? 'Os dados já estão chegando.'
           : 'Assim que você entrar numa pista, os dados começam a chegar.'}
       </p>
-      <div className="ob-live" data-tone={view.tone} role="status" aria-live="polite">
+      <div className="ui-card ob-live" data-tone={view.tone} role="status" aria-live="polite">
         <LinkDot tone={view.tone} busy={view.busy} />
         <div>
           <strong>{conn?.state === 'found' ? 'Aguardando o jogo' : view.title}</strong>
         </div>
       </div>
       {lan?.qr && (
-        <div className="ob-phone">
+        <div className="ui-card ob-phone">
           <img
             className="ob-qr"
             src={lan.qr}
             alt="QR Code para abrir o painel em outro dispositivo"
           />
           <div>
-            <h3>Quer abrir o painel em outro dispositivo?</h3>
-            <p>
+            <h3 className="ui-card-title">Quer abrir o painel em outro dispositivo?</h3>
+            <p className="ui-help">
               Escaneie o QR Code com a câmera do dispositivo. Ele abre o mesmo painel (dispositivo
               remoto e PC no mesmo Wi-Fi).
             </p>
@@ -256,12 +237,15 @@ function FoundStep({ onNext }: { onNext: () => void }) {
                 <span className="num">{lan.url}</span>{' '}
                 <button
                   type="button"
-                  className="cx-btn cx-btn-ghost cx-btn-sm"
+                  className="ui-btn"
+                  data-variant="secondary"
+                  data-size="sm"
                   onClick={async () => {
                     setCopied(await copyText(lan.url ?? ''));
                     setTimeout(() => setCopied(false), 1800);
                   }}
                 >
+                  <Icon name={copied ? 'check' : 'copy'} size={16} />
                   {copied ? 'Copiado ✓' : 'Copiar'}
                 </button>
               </p>
@@ -269,20 +253,14 @@ function FoundStep({ onNext }: { onNext: () => void }) {
           </div>
         </div>
       )}
-      <div className="cx-actions ob-actions">
-        <button type="button" className="cx-btn cx-btn-lg" onClick={onNext}>
-          Continuar
-        </button>
-      </div>
-    </>
+    </div>
   );
 }
 
 function ReadyStep() {
   return (
-    <>
+    <div className="ob-step">
       <Radar found />
-      <h1>Tudo pronto!</h1>
       <p className="ob-lead">Agora é só pilotar. O painel ao vivo mostra tudo em tempo real.</p>
       <ul className="ob-tips">
         <li>
@@ -298,14 +276,15 @@ function ReadyStep() {
           Depois da sessão, abra <strong>Início</strong> para ver suas pistas e onde ganhar tempo.
         </li>
       </ul>
-      <div className="cx-actions ob-actions">
-        <button type="button" className="cx-btn cx-btn-lg" onClick={() => finishOnboarding(true)}>
-          Ir para o painel ao vivo
-        </button>
-      </div>
-    </>
+    </div>
   );
 }
+
+const TITLES: Record<OnboardingStep, string> = {
+  search: `Conecte o ${GT7_INTEGRATION.name}`,
+  found: 'PS5 encontrado ✓',
+  ready: 'Tudo pronto!',
+};
 
 export default function Onboarding() {
   const conn = useConsoleConnection();
@@ -318,40 +297,65 @@ export default function Onboarding() {
     setStep((cur) => nextStep(cur, linkState));
   }, [linkState]);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') finishOnboarding(false);
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
-
   const idx = ONBOARDING_STEPS.indexOf(step);
   return (
-    <div
-      className="ob"
-      data-no-gesture
-      role="dialog"
-      aria-modal="true"
-      aria-label="Primeiros passos"
-    >
-      <div className="ob-top">
+    <Modal
+      open
+      onClose={() => finishOnboarding(false)}
+      className="bn-modal-text ob-modal"
+      title={TITLES[step]}
+      subtitle={`Primeiros passos · ${idx + 1} de ${ONBOARDING_STEPS.length}`}
+      hideClose
+      dismissOnBackdrop={false}
+      headerExtra={
         <ol className="ob-steps" aria-label={`Passo ${idx + 1} de ${ONBOARDING_STEPS.length}`}>
           {ONBOARDING_STEPS.map((s, i) => (
             <li key={s} data-state={i < idx ? 'done' : i === idx ? 'current' : 'todo'} />
           ))}
         </ol>
-        <button type="button" className="ob-skip" onClick={() => finishOnboarding(false)}>
-          Pular
-        </button>
+      }
+      footer={
+        <>
+          {step !== 'ready' && (
+            <button
+              type="button"
+              className="ui-btn bn-foot-left"
+              data-variant="ghost"
+              onClick={() => finishOnboarding(false)}
+            >
+              Pular
+            </button>
+          )}
+          {step === 'ready' && (
+            <button
+              type="button"
+              className="ui-btn bn-foot-left"
+              data-variant="ghost"
+              onClick={() => setStep('found')}
+            >
+              <Icon name="back" size={18} />
+              Voltar
+            </button>
+          )}
+          {step === 'found' && (
+            <button type="button" className="ui-btn" onClick={() => setStep('ready')}>
+              Continuar
+              <Icon name="chevron-right" size={18} />
+            </button>
+          )}
+          {step === 'ready' && (
+            <button type="button" className="ui-btn" onClick={() => finishOnboarding(true)}>
+              Ir para o painel ao vivo
+            </button>
+          )}
+        </>
+      }
+    >
+      <div className="ob-card" key={step}>
+        {step === 'search' && <SearchStep startedAt={startedAt} />}
+        {step === 'found' && <FoundStep />}
+        {step === 'ready' && <ReadyStep />}
       </div>
-      <div className="ob-body">
-        <div className="ob-card" key={step}>
-          {step === 'search' && <SearchStep startedAt={startedAt} />}
-          {step === 'found' && <FoundStep onNext={() => setStep('ready')} />}
-          {step === 'ready' && <ReadyStep />}
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

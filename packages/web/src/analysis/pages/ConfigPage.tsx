@@ -1,7 +1,8 @@
 /**
  * #/config — everything is configured here, in plain language: connection with the PS5 (with
  * automatic discovery), phone (QR + firewall), AI coach, data folder, AI integration (MCP) and about.
- * Technical options sit behind "Avançado".
+ * Cada assunto é um cartão com título e descrição; a navegação por abas leva às âncoras
+ * `#/config?s=<secao>`. Technical options sit behind "Avançado".
  */
 
 import {
@@ -16,9 +17,10 @@ import {
   VIEW_IDS,
   type ViewId,
 } from '@gt7/shared';
-import { useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useId, useState } from 'react';
 import { ConnectionDetails } from '../../components/ConsoleLink.tsx';
 import { FullscreenButton } from '../../components/FullscreenButton.tsx';
+import { Icon } from '../../components/ui/Icon.tsx';
 import { GT7_INTEGRATION } from '../../lib/integrations.ts';
 import { DELTA_REFERENCE_LABELS, VIEW_LABELS } from '../../lib/labels.ts';
 import { ONBOARDING_KEY } from '../../lib/onboarding.ts';
@@ -26,17 +28,11 @@ import { type Route, routes } from '../../lib/route.ts';
 import { saveString } from '../../lib/storage.ts';
 import { addNotice, useUi } from '../../state/uiStore.ts';
 import { api } from '../api.ts';
+import { ConfirmModal } from '../components/ConfirmModal.tsx';
+import { CodeBlock, CopyBtn } from '../components/CopyBlock.tsx';
 import { DiscordSettings } from '../components/DiscordSettings.tsx';
-import {
-  Card,
-  CodeBlock,
-  CopyButton,
-  ErrorBox,
-  Loading,
-  PageHead,
-  Tag,
-  useTitle,
-} from '../components/ui.tsx';
+import { Panel } from '../components/Panel.tsx';
+import { ErrorBox, Loading, PageHead, useTitle } from '../components/ui.tsx';
 import { formatAgo, PACKET_FORMAT_INFO } from '../lib/labels.ts';
 import { useFetch } from '../useFetch.ts';
 
@@ -64,6 +60,66 @@ function useSave() {
   return { busy, run };
 }
 
+/** Linha de opção com chave: título, descrição e interruptor. */
+function Toggle({
+  title,
+  description,
+  checked,
+  disabled,
+  hint,
+  onChange,
+}: {
+  title: string;
+  description: ReactNode;
+  checked: boolean;
+  disabled?: boolean;
+  hint?: string;
+  onChange: () => void;
+}) {
+  const id = useId();
+  return (
+    <div className="ui-toggle">
+      <div className="ui-toggle-text">
+        <span className="ui-toggle-title" id={id}>
+          {title}
+        </span>
+        <span className="ui-toggle-desc">{description}</span>
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-labelledby={id}
+        className="ui-switch"
+        disabled={disabled}
+        title={hint}
+        onClick={onChange}
+      />
+    </div>
+  );
+}
+
+/** Linha de opção com um controle livre à direita (segmentado, select...). */
+function Row({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <div className="cfg-row">
+      <div className="ui-toggle-text">
+        <span className="ui-toggle-title">{title}</span>
+        {description && <span className="ui-toggle-desc">{description}</span>}
+      </div>
+      <div className="cfg-row-control">{children}</div>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------------------------
 
 function ConnectionSection({ status, onChange }: { status: ApiStatus; onChange: () => void }) {
@@ -74,104 +130,89 @@ function ConnectionSection({ status, onChange }: { status: ApiStatus; onChange: 
     if (await run(() => api.patchSettings(p), ok)) onChange();
   };
   return (
-    <Card title="Integração de telemetria" id="conexao">
-      <p className="a-integration-label">
+    <Panel
+      title="Integração de telemetria"
+      description="Como o app recebe os dados do jogo e o que ele guarda."
+      id="conexao"
+    >
+      <div className="cfg-integration">
         <strong>{GT7_INTEGRATION.name}</strong>
-        <Tag tone="info">{GT7_INTEGRATION.platform}</Tag>
-      </p>
+        <span className="ui-badge" data-tone="accent">
+          {GT7_INTEGRATION.platform}
+        </span>
+      </div>
       <div className="cx-inline">
         <ConnectionDetails />
       </div>
       {isDemo && (
-        <p className="a-note a-mt">
-          <Tag tone="warn">Demo</Tag> Modo demonstração: o console é simulado dentro do app.
-        </p>
+        <div className="ui-card cfg-note" data-tone="warn" role="note">
+          <span className="ui-badge" data-tone="warn">
+            Demo
+          </span>
+          <span>Modo demonstração: o console é simulado dentro do app.</span>
+        </div>
       )}
 
-      <div className="a-setting-row a-mt">
-        <div>
-          <strong>Formato do pacote: automático (recomendado)</strong>
-          <div className="dim a-small">
-            O app descobre sozinho o formato que o seu console aceita.
-            {s.liveFormatAuto
-              ? ` Em uso agora: ${PACKET_FORMAT_INFO[s.liveFormat].label}.`
-              : ` Fixado em ${PACKET_FORMAT_INFO[s.liveFormat].label}.`}
-          </div>
-        </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={s.liveFormatAuto}
-          aria-label="Formato do pacote automático"
-          className="switch"
+      <div className="cfg-list">
+        <Toggle
+          title="Formato do pacote: automático (recomendado)"
+          description={
+            <>
+              O app descobre sozinho o formato que o seu console aceita.
+              {s.liveFormatAuto
+                ? ` Em uso agora: ${PACKET_FORMAT_INFO[s.liveFormat].label}.`
+                : ` Fixado em ${PACKET_FORMAT_INFO[s.liveFormat].label}.`}
+            </>
+          }
+          checked={s.liveFormatAuto}
           disabled={busy || s.liveFormatAuto}
-          title={s.liveFormatAuto ? 'Para fixar um formato, abra “Avançado”.' : undefined}
-          onClick={() => patch({ liveFormatAuto: true }, 'Formato automático ligado.')}
-        >
-          <span className="switch-knob" />
-        </button>
-      </div>
-
-      <div className="a-setting-row a-mt">
-        <div>
-          <strong>Gravar sessões brutas</strong>
-          <div className="dim a-small">
-            Guarda todo pacote (~20 KB/s) para reprocessar depois e baixar o .gt7rec. Ocupa espaço
-            em disco; deixe desligado se não precisar.
-          </div>
-        </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={s.record}
-          aria-label="Gravar sessões brutas"
-          className="switch"
+          hint={s.liveFormatAuto ? 'Para fixar um formato, abra “Avançado”.' : undefined}
+          onChange={() => patch({ liveFormatAuto: true }, 'Formato automático ligado.')}
+        />
+        <Toggle
+          title="Gravar sessões brutas"
+          description="Guarda todo pacote (~20 KB/s) para reprocessar depois e baixar o .gt7rec. Ocupa espaço em disco; deixe desligado se não precisar."
+          checked={s.record}
           disabled={busy}
-          onClick={() =>
+          onChange={() =>
             patch({ record: !s.record }, s.record ? 'Gravação desligada.' : 'Gravação ligada.')
           }
+        />
+        <Row
+          title="Referência padrão do delta"
+          description="Cada aparelho ainda pode trocar com toque duplo no painel."
         >
-          <span className="switch-knob" />
-        </button>
+          <fieldset className="ui-segmented" aria-label="Referência padrão do delta">
+            {DELTA_REFERENCE_KINDS.map((k) => (
+              <button
+                key={k}
+                type="button"
+                aria-pressed={s.deltaReference.kind === k}
+                disabled={busy}
+                onClick={() =>
+                  patch(
+                    { deltaReference: { kind: k } },
+                    `Delta contra: ${DELTA_REFERENCE_LABELS[k]}.`,
+                  )
+                }
+              >
+                {DELTA_REFERENCE_LABELS[k]}
+              </button>
+            ))}
+          </fieldset>
+        </Row>
       </div>
 
-      <div className="a-setting-row a-mt">
-        <div>
-          <strong>Referência padrão do delta</strong>
-          <div className="dim a-small">
-            Cada aparelho ainda pode trocar com toque duplo no painel.
-          </div>
-        </div>
-        <fieldset className="a-seg" aria-label="Referência padrão do delta">
-          {DELTA_REFERENCE_KINDS.map((k) => (
-            <button
-              key={k}
-              type="button"
-              aria-pressed={s.deltaReference.kind === k}
-              disabled={busy}
-              onClick={() =>
-                patch(
-                  { deltaReference: { kind: k } },
-                  `Delta contra: ${DELTA_REFERENCE_LABELS[k]}.`,
-                )
-              }
-            >
-              {DELTA_REFERENCE_LABELS[k]}
-            </button>
-          ))}
-        </fieldset>
-      </div>
-
-      <details className="a-advanced a-mt">
+      <details className="cfg-adv">
         <summary>Avançado: formato do pacote</summary>
-        <p className="dim a-small">
-          Só mexa nisto se o modo automático não funcionar. Ao escolher um formato, o app para de
-          trocar sozinho; para voltar, ligue o interruptor “Formato do pacote: automático”.
-        </p>
-        <div className="a-format-grid">
-          <fieldset className="a-fieldset">
+        <div className="cfg-adv-body">
+          <p className="cfg-hint">
+            Só mexa nisto se o modo automático não funcionar. Ao escolher um formato, o app para de
+            trocar sozinho; para voltar, ligue o interruptor “Formato do pacote: automático”.
+          </p>
+          <fieldset className="cfg-radios">
             <legend>Formato ao vivo</legend>
-            <label className="a-radio">
+            <label className="cfg-radio">
               <input
                 type="radio"
                 name="liveFormat"
@@ -181,13 +222,11 @@ function ConnectionSection({ status, onChange }: { status: ApiStatus; onChange: 
               />
               <span>
                 <strong>Automático (recomendado)</strong>
-                <span className="dim a-small">
-                  Testa ~, depois B e A, e guarda o que funcionar.
-                </span>
+                <small>Testa ~, depois B e A, e guarda o que funcionar.</small>
               </span>
             </label>
             {PACKET_FORMATS.map((f) => (
-              <label key={f} className="a-radio">
+              <label key={f} className="cfg-radio">
                 <input
                   type="radio"
                   name="liveFormat"
@@ -199,18 +238,18 @@ function ConnectionSection({ status, onChange }: { status: ApiStatus; onChange: 
                 />
                 <span>
                   <strong>{PACKET_FORMAT_INFO[f].label}</strong>
-                  <span className="dim a-small">{PACKET_FORMAT_INFO[f].text}</span>
+                  <small>{PACKET_FORMAT_INFO[f].text}</small>
                 </span>
               </label>
             ))}
           </fieldset>
-          <p className="dim a-small">
+          <p className="cfg-hint">
             A captura de referência (replay) usa o formato acima: ela não troca mais o formato do
             pacote, porque o formato atual já entrega os dados do replay.
           </p>
         </div>
       </details>
-    </Card>
+    </Panel>
   );
 }
 
@@ -226,29 +265,25 @@ function CaptureSection({ status, onChange }: { status: ApiStatus; onChange: () 
     if (await run(() => api.patchSettings({ autoCapture: next }), ok)) onChange();
   };
   return (
-    <Card title="Captura" id="captura">
-      <div className="a-setting-row">
-        <div>
-          <strong>Gravar sessões automaticamente</strong>
-          <div className="dim a-small">
-            {on
+    <Panel
+      title="Captura"
+      description="Quando o app salva sessões, voltas e pistas por conta própria."
+      id="captura"
+    >
+      <div className="cfg-list">
+        <Toggle
+          title="Gravar sessões automaticamente"
+          description={
+            on
               ? 'Quando você entra numa pista no jogo, o app abre a sessão sozinho e a salva quando você sai. Não há botão de iniciar.'
-              : 'Desligado: o painel mostra tudo ao vivo, mas nenhuma sessão, volta ou pista nova é salva.'}
-          </div>
-        </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={on}
-          aria-label="Gravar sessões automaticamente"
-          className="switch"
+              : 'Desligado: o painel mostra tudo ao vivo, mas nenhuma sessão, volta ou pista nova é salva.'
+          }
+          checked={on}
           disabled={busy}
-          onClick={toggle}
-        >
-          <span className="switch-knob" />
-        </button>
+          onChange={toggle}
+        />
       </div>
-    </Card>
+    </Panel>
   );
 }
 
@@ -259,38 +294,44 @@ function LanSection({ status, onChange }: { status: ApiStatus; onChange: () => v
   const { busy, run } = useSave();
   const fw = status.firewall;
   return (
-    <Card title="Dispositivo remoto" id="acesso-remoto">
-      <div className="a-lan">
-        <div className="a-lan-urls">
+    <Panel
+      title="Dispositivo remoto"
+      description="Abra o painel no celular ou tablet pela rede local."
+      id="acesso-remoto"
+    >
+      <div className="cfg-lan">
+        <div className="cfg-lan-urls">
           {lan.error ? (
             <ErrorBox error={lan.error} compact />
           ) : !lan.data ? (
             <Loading />
           ) : lan.data.urls.length === 0 ? (
-            <p className="dim">
+            <p className="cfg-hint">
               Nenhum endereço de rede disponível. Conecte o PC e o dispositivo remoto à mesma rede
               local.
             </p>
           ) : (
             <>
-              <p>
+              <p className="cfg-lead">
                 Escaneie o QR Code com a câmera do dispositivo remoto ou abra um dos endereços
                 abaixo no navegador. Os dois dispositivos precisam estar na mesma rede local.
               </p>
-              <ul className="a-url-list">
+              <ul className="cfg-urls">
                 {lan.data.urls.map((u) => (
                   <li key={u}>
                     <a href={u} className="num">
                       {u}
                     </a>
-                    <CopyButton text={u} />
                     {u === lan.data!.preferredUrl?.split('?')[0] && (
-                      <Tag tone="info">preferida</Tag>
+                      <span className="ui-badge" data-tone="accent">
+                        preferida
+                      </span>
                     )}
+                    <CopyBtn text={u} />
                   </li>
                 ))}
               </ul>
-              <p className="dim a-small">
+              <p className="cfg-hint">
                 Se o navegador oferecer “Adicionar à tela inicial”, use essa opção para abrir o
                 painel em tela cheia. Neste PC: <span className="num">{lan.data.localUrl}</span>
               </p>
@@ -299,47 +340,58 @@ function LanSection({ status, onChange }: { status: ApiStatus; onChange: () => v
         </div>
         {lan.data?.qrSvgDataUrl && (
           <img
-            className="a-qr"
+            className="cfg-qr"
             src={lan.data.qrSvgDataUrl}
             alt="QR Code para abrir o painel em outro dispositivo"
           />
         )}
       </div>
 
-      <div className="a-firewall a-mt" data-state={fw.state}>
-        <div className="a-setting-row">
-          <div>
-            <strong>Firewall do Windows</strong>{' '}
-            <Tag tone={fw.state === 'ok' ? 'sb' : fw.state === 'missing' ? 'bad' : 'info'}>
-              {fw.state === 'ok'
-                ? 'liberado'
-                : fw.state === 'missing'
-                  ? 'faltam regras'
-                  : 'não verificado'}
-            </Tag>
-            <div className="dim a-small">{fw.message}</div>
+      <div className="cfg-sub" data-state={fw.state}>
+        <div className="cfg-sub-head">
+          <div className="ui-toggle-text">
+            <span className="ui-toggle-title">
+              Firewall do Windows{' '}
+              <span
+                className="ui-badge"
+                data-tone={fw.state === 'ok' ? 'gain' : fw.state === 'missing' ? 'loss' : 'accent'}
+              >
+                {fw.state === 'ok'
+                  ? 'liberado'
+                  : fw.state === 'missing'
+                    ? 'faltam regras'
+                    : 'não verificado'}
+              </span>
+            </span>
+            <span className="ui-toggle-desc">{fw.message}</span>
           </div>
           <button
             type="button"
-            className="a-btn a-btn-ghost a-btn-sm"
+            className="ui-btn"
+            data-variant="secondary"
+            data-size="sm"
             disabled={busy}
             onClick={async () => {
               if (await run(() => api.firewallCheck(), 'Firewall verificado.')) onChange();
             }}
           >
+            <Icon name="refresh" size={14} />
             Verificar de novo
           </button>
         </div>
         {fw.rules.length > 0 && (
-          <ul className="a-rules">
+          <ul className="cfg-rules">
             {fw.rules.map((r) => (
               <li key={r.name}>
-                <span data-tone={r.present ? 'gain' : r.present === false ? 'loss' : undefined}>
+                <span
+                  className="cfg-rule-mark"
+                  data-tone={r.present ? 'gain' : r.present === false ? 'loss' : undefined}
+                >
                   {r.present ? '✓' : r.present === false ? '✗' : '?'}
-                </span>{' '}
+                </span>
                 {r.name}
                 {!r.name.includes(String(r.port)) && (
-                  <span className="dim">
+                  <span className="cfg-muted">
                     {' '}
                     ({r.protocol} {r.port})
                   </span>
@@ -363,7 +415,7 @@ function LanSection({ status, onChange }: { status: ApiStatus; onChange: () => v
           </>
         )}
       </div>
-    </Card>
+    </Panel>
   );
 }
 
@@ -376,18 +428,23 @@ function DevicesSection() {
   const { busy, run } = useSave();
   const list = (devices.data ?? []).slice().sort((a, b) => Number(b.online) - Number(a.online));
   return (
-    <Card title="Aparelhos conectados" id="dispositivos">
+    <Panel
+      title="Aparelhos conectados"
+      description="Painéis abertos agora e a tela que cada um está mostrando."
+      id="dispositivos"
+    >
       {devices.error && !devices.data ? (
         <ErrorBox error={devices.error} compact />
       ) : !devices.data ? (
         <Loading />
       ) : list.length === 0 ? (
-        <p className="dim">
-          Nenhum painel conectado ainda. Use o QR Code ou o endereço da seção “Dispositivo remoto”.
-        </p>
+        <div className="ui-empty">
+          <strong>Nenhum painel conectado ainda</strong>
+          <p>Use o QR Code ou o endereço da seção “Dispositivo remoto”.</p>
+        </div>
       ) : (
-        <div className="a-table-wrap a-devices-table">
-          <table className="a-table">
+        <div className="cfg-table-wrap cfg-devices">
+          <table className="cfg-table">
             <thead>
               <tr>
                 <th>Aparelho</th>
@@ -403,28 +460,36 @@ function DevicesSection() {
                 return (
                   <tr key={d.deviceId}>
                     <td>
-                      {d.name}
-                      {d.deviceId === myId && <Tag tone="info">este</Tag>}
-                      <div className="dim a-small">{d.deviceId}</div>
+                      <strong>{d.name}</strong>
+                      {d.deviceId === myId && (
+                        <>
+                          {' '}
+                          <span className="ui-badge" data-tone="accent">
+                            este
+                          </span>
+                        </>
+                      )}
+                      <div className="cfg-muted cfg-id">{d.deviceId}</div>
                     </td>
                     <td>
                       {d.online ? (
-                        <Tag tone="sb">
+                        <span className="ui-badge" data-tone="gain">
                           online{d.connections > 1 ? ` · ${d.connections} abas` : ''}
-                        </Tag>
+                        </span>
                       ) : (
-                        <span className="dim">offline · {formatAgo(d.lastSeenAt)}</span>
+                        <span className="cfg-muted">offline · {formatAgo(d.lastSeenAt)}</span>
                       )}
                     </td>
                     <td>
-                      <span className="a-device-mobile-label" aria-hidden="true">
+                      <span className="cfg-cell-label" aria-hidden="true">
                         Tela atual
                       </span>
                       {d.currentView ? VIEW_LABELS[d.currentView] : '–'}
                     </td>
                     <td>
-                      <div className="a-row-actions">
+                      <div className="cfg-device-actions">
                         <select
+                          className="ui-select"
                           value={sel}
                           aria-label={`Tela para ${d.name}`}
                           onChange={(e) =>
@@ -440,7 +505,8 @@ function DevicesSection() {
                         </select>
                         <button
                           type="button"
-                          className="a-btn a-btn-sm"
+                          className="ui-btn"
+                          data-size="sm"
                           disabled={!d.online || busy}
                           onClick={async () => {
                             if (
@@ -464,7 +530,7 @@ function DevicesSection() {
           </table>
         </div>
       )}
-    </Card>
+    </Panel>
   );
 }
 
@@ -484,70 +550,85 @@ function McpSection({ status }: { status: ApiStatus }) {
     ...(tokenRequired ? ['bearer_token_env_var = "GT7_TOKEN"'] : []),
   ].join('\n');
   return (
-    <Card title="Integração com IA (MCP)" id="mcp">
-      <p>
-        Opcional. Permite que o Codex ou o Claude consultem suas voltas e análises. Copie o trecho
-        para o seu cliente. Os endereços e caminhos correspondem a esta instalação.
-      </p>
-      <h3 className="a-h3">Codex (com o app aberto — inclui o estado ao vivo)</h3>
-      <CodeBlock label="Adicione ao ~/.codex/config.toml e reinicie o Codex" code={codexConfig} />
-      {tokenRequired && (
-        <p className="dim a-small">
-          Defina <code>GT7_TOKEN</code> no ambiente do Codex com o mesmo token de acesso do app.
-        </p>
-      )}
-      <h3 className="a-h3">Claude Code (com o app aberto — inclui o estado ao vivo)</h3>
-      {i && <CodeBlock label="Cole no terminal" code={i.claudeCode.http} />}
-      <ul className="a-url-list">
-        <li>
-          <span className="num">{localUrl}</span> <CopyButton text={localUrl} />
-          <span className="dim a-small"> endereço neste PC</span>
-        </li>
-        {lanUrl && (
-          <li>
-            <span className="num">{lanUrl}</span> <CopyButton text={lanUrl} />
-            <span className="dim a-small"> de outro PC da rede</span>
-          </li>
-        )}
-      </ul>
-      <h3 className="a-h3">Claude Desktop (lê os dados salvos, mesmo com o app fechado)</h3>
-      {info.error && !i && <ErrorBox error={info.error} compact onRetry={info.reload} />}
-      {!i && !info.error && <Loading />}
-      {i && (
-        <CodeBlock
-          label={`Cole em ${DESKTOP_CONFIG_PATH} e reinicie o Claude Desktop`}
-          code={JSON.stringify(i.claudeDesktopConfig, null, 2)}
-        />
-      )}
-      {i && (
-        <details className="a-advanced">
-          <summary>Avançado: outras formas de conectar</summary>
-          {i.repoRoot && (
-            <p className="dim a-small">
-              Pasta do repositório: <span className="num">{i.repoRoot}</span>
+    <Panel
+      title="Integração com IA (MCP)"
+      description="Opcional. Permite que o Codex ou o Claude consultem suas voltas e análises. Copie o trecho para o seu cliente; os endereços e caminhos correspondem a esta instalação."
+      id="mcp"
+    >
+      <div className="cfg-stack">
+        <section className="cfg-client">
+          <h3 className="cfg-h3">Codex (com o app aberto — inclui o estado ao vivo)</h3>
+          <CodeBlock
+            label="Adicione ao ~/.codex/config.toml e reinicie o Codex"
+            code={codexConfig}
+          />
+          {tokenRequired && (
+            <p className="cfg-hint">
+              Defina <code>GT7_TOKEN</code> no ambiente do Codex com o mesmo token de acesso do app.
             </p>
           )}
-          <CodeBlock label="Claude Code (lê os dados salvos)" code={i.claudeCode.stdio} />
-          <CodeBlock label="Linha de comando" code={i.stdio.commandLine} />
-          {i.stdio.npmCommandLine && (
-            <CodeBlock label="Dentro da pasta do repositório" code={i.stdio.npmCommandLine} />
+        </section>
+        <section className="cfg-client">
+          <h3 className="cfg-h3">Claude Code (com o app aberto — inclui o estado ao vivo)</h3>
+          {i && <CodeBlock label="Cole no terminal" code={i.claudeCode.http} />}
+          <ul className="cfg-urls">
+            <li>
+              <span className="num">{localUrl}</span>
+              <span className="cfg-muted">endereço neste PC</span>
+              <CopyBtn text={localUrl} />
+            </li>
+            {lanUrl && (
+              <li>
+                <span className="num">{lanUrl}</span>
+                <span className="cfg-muted">de outro PC da rede</span>
+                <CopyBtn text={lanUrl} />
+              </li>
+            )}
+          </ul>
+        </section>
+        <section className="cfg-client">
+          <h3 className="cfg-h3">Claude Desktop (lê os dados salvos, mesmo com o app fechado)</h3>
+          {info.error && !i && <ErrorBox error={info.error} compact onRetry={info.reload} />}
+          {!i && !info.error && <Loading />}
+          {i && (
+            <CodeBlock
+              label={`Cole em ${DESKTOP_CONFIG_PATH} e reinicie o Claude Desktop`}
+              code={JSON.stringify(i.claudeDesktopConfig, null, 2)}
+            />
           )}
-          <p className="dim a-small">
-            {i.repoRoot ? (
-              <>
-                O <code>--import</code> precisa ser uma URL <code>file:///</code> absoluta.
-              </>
-            ) : (
-              <>
-                O executável do app roda o servidor MCP como Node graças a{' '}
-                <code>ELECTRON_RUN_AS_NODE=1</code>; não precisa instalar nada.
-              </>
-            )}{' '}
-            Detalhes em <code>packages/mcp/README.md</code>.
-          </p>
-        </details>
-      )}
-    </Card>
+        </section>
+        {i && (
+          <details className="cfg-adv">
+            <summary>Avançado: outras formas de conectar</summary>
+            <div className="cfg-adv-body">
+              {i.repoRoot && (
+                <p className="cfg-hint">
+                  Pasta do repositório: <span className="num">{i.repoRoot}</span>
+                </p>
+              )}
+              <CodeBlock label="Claude Code (lê os dados salvos)" code={i.claudeCode.stdio} />
+              <CodeBlock label="Linha de comando" code={i.stdio.commandLine} />
+              {i.stdio.npmCommandLine && (
+                <CodeBlock label="Dentro da pasta do repositório" code={i.stdio.npmCommandLine} />
+              )}
+              <p className="cfg-hint">
+                {i.repoRoot ? (
+                  <>
+                    O <code>--import</code> precisa ser uma URL <code>file:///</code> absoluta.
+                  </>
+                ) : (
+                  <>
+                    O executável do app roda o servidor MCP como Node graças a{' '}
+                    <code>ELECTRON_RUN_AS_NODE=1</code>; não precisa instalar nada.
+                  </>
+                )}{' '}
+                Detalhes em <code>packages/mcp/README.md</code>.
+              </p>
+            </div>
+          </details>
+        )}
+      </div>
+    </Panel>
   );
 }
 
@@ -556,6 +637,7 @@ function McpSection({ status }: { status: ApiStatus }) {
 function CoachSection() {
   const cfg = useFetch('coachcfg', () => api.coachConfig());
   const [key, setKey] = useState('');
+  const [confirmRemove, setConfirmRemove] = useState(false);
   const { busy, run } = useSave();
   const apply = async (p: Parameters<typeof api.putCoachConfig>[0], ok: string) => {
     const r = await run(() => api.putCoachConfig(p), ok);
@@ -564,7 +646,7 @@ function CoachSection() {
   };
   if (cfg.error && !cfg.data) {
     return (
-      <Card title="Coach IA (Claude)" id="coach">
+      <Panel title="Coach IA (Claude)" id="coach">
         <ErrorBox
           error={
             cfg.error.status === 404
@@ -574,35 +656,42 @@ function CoachSection() {
           compact
           onRetry={cfg.reload}
         />
-      </Card>
+      </Panel>
     );
   }
   const c = cfg.data;
   return (
-    <Card title="Coach IA (Claude)" id="coach">
+    <Panel
+      title="Coach IA (Claude)"
+      description="O debrief em linguagem natural usa a API da Anthropic com a sua chave."
+      id="coach"
+    >
       {!c ? (
         <Loading />
       ) : (
-        <>
-          <p>
-            Chave:{' '}
+        <div className="cfg-stack">
+          <div className="cfg-keystate">
+            <span className="ui-label">Chave da API</span>
             {c.hasKey ? (
-              <>
-                <Tag tone="sb">configurada</Tag> <span className="num">…{c.keyLast4}</span>{' '}
-                <span className="dim a-small">
-                  (
+              <span className="cfg-keyline">
+                <span className="ui-badge" data-tone="gain">
+                  configurada
+                </span>
+                <span className="num">…{c.keyLast4}</span>
+                <span className="cfg-muted">
                   {c.keySource === 'env'
                     ? 'variável ANTHROPIC_API_KEY — tem prioridade'
                     : 'salva no app'}
-                  )
                 </span>
-              </>
+              </span>
             ) : (
-              <Tag tone="bad">sem chave</Tag>
+              <span className="ui-badge" data-tone="loss">
+                sem chave
+              </span>
             )}
-          </p>
+          </div>
           <form
-            className="a-inline-form"
+            className="cfg-keyform"
             autoComplete="off"
             onSubmit={async (e) => {
               e.preventDefault();
@@ -610,60 +699,66 @@ function CoachSection() {
               if (await apply({ apiKey: key.trim() }, 'Chave salva.')) setKey('');
             }}
           >
-            <label className="a-grow">
-              Chave da API da Anthropic
-              <input
-                className="a-input"
-                type="password"
-                value={key}
-                placeholder={c.hasKey ? 'Digite para trocar a chave' : 'sk-ant-…'}
-                autoComplete="new-password"
-                spellCheck={false}
-                onChange={(e) => setKey(e.target.value)}
-              />
-            </label>
-            <button type="submit" className="a-btn" disabled={busy || !key.trim()}>
-              Salvar chave
-            </button>
-            {c.keySource === 'settings' && (
-              <button
-                type="button"
-                className="a-btn a-btn-ghost"
-                disabled={busy}
-                onClick={() => apply({ apiKey: null }, 'Chave removida.')}
-              >
-                Remover chave
-              </button>
-            )}
+            <div className="ui-field">
+              <label className="ui-label" htmlFor="coach-key">
+                Chave da API da Anthropic
+              </label>
+              <div className="cfg-inputrow">
+                <input
+                  id="coach-key"
+                  className="ui-input"
+                  type="password"
+                  value={key}
+                  placeholder={c.hasKey ? 'Digite para trocar a chave' : 'sk-ant-…'}
+                  autoComplete="new-password"
+                  spellCheck={false}
+                  onChange={(e) => setKey(e.target.value)}
+                />
+                <button type="submit" className="ui-btn" disabled={busy || !key.trim()}>
+                  Salvar chave
+                </button>
+                {c.keySource === 'settings' && (
+                  <button
+                    type="button"
+                    className="ui-btn"
+                    data-variant="danger"
+                    disabled={busy}
+                    onClick={() => setConfirmRemove(true)}
+                  >
+                    Remover chave
+                  </button>
+                )}
+              </div>
+              <span className="ui-help">
+                A chave fica só no PC (banco local) e nunca volta para o navegador — aqui aparecem
+                só os 4 últimos caracteres. Crie uma em console.anthropic.com.
+              </span>
+            </div>
           </form>
-          <p className="dim a-small">
-            A chave fica só no PC (banco local) e nunca volta para o navegador — aqui aparecem só os
-            4 últimos caracteres. Crie uma em console.anthropic.com.
-          </p>
-          <div className="a-format-grid a-mt">
-            <label>
-              Modelo
-              <select
-                value={c.model}
-                disabled={busy}
-                onChange={(e) => apply({ model: e.target.value }, 'Modelo salvo.')}
-              >
-                {c.models.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.label}
-                    {m.id === c.defaultModel ? ' (padrão)' : ''}
-                  </option>
-                ))}
-              </select>
-              <span className="a-help">{c.models.find((m) => m.id === c.model)?.description}</span>
-            </label>
-          </div>
-          <details className="a-advanced a-mt">
+          <label className="ui-field">
+            <span className="ui-label">Modelo</span>
+            <select
+              className="ui-select"
+              value={c.model}
+              disabled={busy}
+              onChange={(e) => apply({ model: e.target.value }, 'Modelo salvo.')}
+            >
+              {c.models.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.label}
+                  {m.id === c.defaultModel ? ' (padrão)' : ''}
+                </option>
+              ))}
+            </select>
+            <span className="ui-help">{c.models.find((m) => m.id === c.model)?.description}</span>
+          </label>
+          <details className="cfg-adv">
             <summary>Avançado: esforço e relatórios guardados</summary>
-            <div className="a-format-grid a-mt">
-              <label>
-                Esforço
+            <div className="cfg-adv-body cfg-two">
+              <label className="ui-field">
+                <span className="ui-label">Esforço</span>
                 <select
+                  className="ui-select"
                   value={c.effort}
                   disabled={busy}
                   onChange={(e) =>
@@ -676,13 +771,14 @@ function CoachSection() {
                     </option>
                   ))}
                 </select>
-                <span className="a-help">
+                <span className="ui-help">
                   Até {c.maxToolIterations} rodadas de ferramentas por pedido.
                 </span>
               </label>
-              <label>
-                Relatórios guardados
+              <label className="ui-field">
+                <span className="ui-label">Relatórios guardados</span>
                 <select
+                  className="ui-select"
                   value={c.maxReports}
                   disabled={busy}
                   onChange={(e) =>
@@ -697,15 +793,32 @@ function CoachSection() {
                       </option>
                     ))}
                 </select>
-                <span className="a-help">
+                <span className="ui-help">
                   Os mais antigos são apagados ao terminar um novo (cada um guarda os gráficos).
                 </span>
               </label>
             </div>
           </details>
-        </>
+          <ConfirmModal
+            open={confirmRemove}
+            title="Remover a chave da API?"
+            message={
+              <>
+                <p>A chave salva neste PC será apagada e o coach de IA deixa de funcionar aqui.</p>
+                <p>Você pode informar uma chave de novo quando quiser.</p>
+              </>
+            }
+            confirmLabel="Remover chave"
+            busy={busy}
+            onClose={() => setConfirmRemove(false)}
+            onConfirm={async () => {
+              await apply({ apiKey: null }, 'Chave removida.');
+              setConfirmRemove(false);
+            }}
+          />
+        </div>
       )}
-    </Card>
+    </Panel>
   );
 }
 
@@ -715,30 +828,42 @@ function DataSection({ status }: { status: ApiStatus }) {
   const info = useFetch('mcpinfo', () => api.mcpInfo());
   const dir = info.data?.dataDir ?? null;
   return (
-    <Card title="Seus dados" id="dados">
-      <p>
-        Suas sessões, voltas e gravações ficam <strong>só neste PC</strong>, nesta pasta:
-      </p>
-      {info.error && !dir ? (
-        <ErrorBox error={info.error} compact onRetry={info.reload} />
-      ) : !dir ? (
-        <Loading />
-      ) : (
-        <p className="a-datapath">
-          <span className="num">{dir}</span> <CopyButton text={dir} label="Copiar caminho" />
+    <Panel
+      title="Seus dados"
+      description="Suas sessões, voltas e gravações ficam só neste PC."
+      id="dados"
+    >
+      <div className="cfg-stack">
+        <div className="ui-field">
+          <span className="ui-label">Pasta dos dados</span>
+          {info.error && !dir ? (
+            <ErrorBox error={info.error} compact onRetry={info.reload} />
+          ) : !dir ? (
+            <Loading />
+          ) : (
+            <div className="cfg-datapath">
+              <span className="num">{dir}</span>
+              <CopyBtn text={dir} label="Copiar caminho" />
+            </div>
+          )}
+        </div>
+        <p className="cfg-hint">
+          Para fazer uma cópia de segurança, feche o app e copie essa pasta inteira. Ela fica fora
+          da pasta do programa, então atualizar ou reinstalar o app não apaga nada.
         </p>
-      )}
-      <p className="dim a-small">
-        Para fazer uma cópia de segurança, feche o app e copie essa pasta inteira. Ela fica fora da
-        pasta do programa, então atualizar ou reinstalar o app não apaga nada.
-      </p>
-      {status.simulator && (
-        <p className="a-note">
-          <Tag tone="warn">Demo</Tag> Você está no modo demonstração: estes dados são de um piloto
-          simulado e ficam numa subpasta separada (<code>demo</code>), sem misturar com os reais.
-        </p>
-      )}
-    </Card>
+        {status.simulator && (
+          <div className="ui-card cfg-note" data-tone="warn" role="note">
+            <span className="ui-badge" data-tone="warn">
+              Demo
+            </span>
+            <span>
+              Você está no modo demonstração: estes dados são de um piloto simulado e ficam numa
+              subpasta separada (<code>demo</code>), sem misturar com os reais.
+            </span>
+          </div>
+        )}
+      </div>
+    </Panel>
   );
 }
 
@@ -746,40 +871,42 @@ function DataSection({ status }: { status: ApiStatus }) {
 
 function AboutSection({ status }: { status: ApiStatus }) {
   return (
-    <Card title="Sobre" id="sobre">
-      <div className="a-setting-row">
-        <div>
-          <strong>{PRODUCT_NAME}</strong>
-          <div className="dim a-small">
-            Versão <span className="num">{status.serverVersion}</span> · porta{' '}
-            <span className="num">{status.httpPort}</span>
-            {status.tokenRequired ? ' · acesso com senha (token)' : ''}
-          </div>
-        </div>
-      </div>
-      <div className="a-setting-row a-mt">
-        <div>
-          <strong>Assistente de boas-vindas</strong>
-          <div className="dim a-small">
-            Mostra de novo como encontrar o PS5 e abrir o painel em outro dispositivo.
-          </div>
-        </div>
-        <button
-          type="button"
-          className="a-btn a-btn-ghost"
-          onClick={() => {
-            saveString(ONBOARDING_KEY, '0');
-            useUi.setState({ onboarding: 'active' });
-          }}
+    <Panel title="Sobre" id="sobre">
+      <div className="cfg-list">
+        <Row
+          title={PRODUCT_NAME}
+          description={
+            <>
+              Versão <span className="num">{status.serverVersion}</span> · porta{' '}
+              <span className="num">{status.httpPort}</span>
+              {status.tokenRequired ? ' · acesso com senha (token)' : ''}
+            </>
+          }
         >
-          Rever o assistente
-        </button>
+          <span className="ui-badge">v{status.serverVersion}</span>
+        </Row>
+        <Row
+          title="Assistente de boas-vindas"
+          description="Mostra de novo como encontrar o PS5 e abrir o painel em outro dispositivo."
+        >
+          <button
+            type="button"
+            className="ui-btn"
+            data-variant="secondary"
+            onClick={() => {
+              saveString(ONBOARDING_KEY, '0');
+              useUi.setState({ onboarding: 'active' });
+            }}
+          >
+            Rever o assistente
+          </button>
+        </Row>
       </div>
-      <p className="dim a-small a-mt">
+      <p className="cfg-hint cfg-credit">
         Projeto pessoal, sem relação com a Polyphony Digital. O protocolo de telemetria do GT7 não
         tem documentação oficial; vem de engenharia reversa da comunidade.
       </p>
-    </Card>
+    </Panel>
   );
 }
 
@@ -792,52 +919,125 @@ const SECTION_ALIASES: Record<string, string> = {
   celular: 'acesso-remoto',
 };
 
+const SECTIONS: { id: string; label: string; desktopOnly?: boolean }[] = [
+  { id: 'conexao', label: 'Conexão' },
+  { id: 'captura', label: 'Captura' },
+  { id: 'acesso-remoto', label: 'Dispositivo remoto' },
+  { id: 'dispositivos', label: 'Aparelhos' },
+  { id: 'discord', label: 'Rádio no Discord', desktopOnly: true },
+  { id: 'coach', label: 'Coach IA' },
+  { id: 'dados', label: 'Dados' },
+  { id: 'mcp', label: 'Integração com IA' },
+  { id: 'sobre', label: 'Sobre' },
+];
+
 export function ConfigPage({ route }: { route: Route }) {
   useTitle('Configurações');
   const status = useFetch('status', () => api.status(), 10000);
   const requested = route.query.s;
   const section = requested ? (SECTION_ALIASES[requested] ?? requested) : undefined;
-  // biome-ignore lint/correctness/useExhaustiveDependencies: scroll once the content is there
+  const [active, setActive] = useState<string>(section ?? 'conexao');
+  const hasDiscord = !!window.bonoDiscord;
+  const tabs = SECTIONS.filter((s) => !s.desktopOnly || hasDiscord);
+  const ready = !!status.data;
+
   useEffect(() => {
-    if (section && status.data)
+    if (section && ready) {
       document.getElementById(section)?.scrollIntoView({ block: 'start' });
-  }, [section, !!status.data]);
+      setActive(section);
+    }
+  }, [section, ready]);
+
+  // Mantém a aba ativa visível na faixa de abas (que rola de lado no celular).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: roda quando a aba ativa muda
+  useEffect(() => {
+    const nav = document.querySelector<HTMLElement>('.cfg-nav');
+    const tab = nav?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!nav || !tab) return;
+    nav.scrollTo({
+      left: tab.offsetLeft - (nav.clientWidth - tab.offsetWidth) / 2,
+      behavior: 'smooth',
+    });
+  }, [active]);
+
+  // Marca a aba da seção que está sob a faixa de abas.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `tabs` só muda com hasDiscord
+  useEffect(() => {
+    if (!ready) return;
+    const ids = tabs.map((t) => t.id);
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const navBottom = document.querySelector('.cfg-nav')?.getBoundingClientRect().bottom ?? 0;
+      let current = ids[0] ?? 'conexao';
+      for (const id of ids) {
+        const top = document.getElementById(id)?.getBoundingClientRect().top;
+        if (top !== undefined && top <= navBottom + 24) current = id;
+      }
+      const atBottom =
+        window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
+      if (atBottom && window.scrollY > 0) current = ids[ids.length - 1] ?? current;
+      setActive(current);
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    update();
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [ready, hasDiscord]);
 
   return (
-    <>
+    <div className="cfg-page">
       <PageHead
         title="Configurações"
         sub="Tudo se ajusta aqui: nada de arquivo de configuração."
-        actions={<FullscreenButton className="a-btn a-btn-ghost" />}
+        actions={<FullscreenButton />}
       />
-      <nav className="a-toc" aria-label="Seções">
-        <a href="#/config?s=conexao">Conexão</a>
-        <a href="#/config?s=captura">Captura</a>
-        <a href={routes.config('acesso-remoto')}>Dispositivo remoto</a>
-        <a href="#/config?s=dispositivos">Aparelhos</a>
-        {window.bonoDiscord && <a href="#/config?s=discord">Rádio no Discord</a>}
-        <a href="#/config?s=coach">Coach IA</a>
-        <a href="#/config?s=dados">Dados</a>
-        <a href="#/config?s=mcp">Integração com IA</a>
-        <a href="#/config?s=sobre">Sobre</a>
+      <nav className="ui-tabs cfg-nav" aria-label="Seções">
+        {tabs.map((t) => (
+          <a
+            key={t.id}
+            href={routes.config(t.id)}
+            aria-current={active === t.id ? 'page' : undefined}
+            onClick={(e) => {
+              if (section === t.id) {
+                e.preventDefault();
+                document.getElementById(t.id)?.scrollIntoView({ block: 'start' });
+              }
+              setActive(t.id);
+            }}
+          >
+            {t.label}
+          </a>
+        ))}
       </nav>
-      <DiscordSettings />
       {status.error && !status.data ? (
-        <ErrorBox error={status.error} onRetry={status.reload} />
+        <>
+          <ErrorBox error={status.error} onRetry={status.reload} />
+          <DiscordSettings />
+        </>
       ) : !status.data ? (
-        <Loading />
+        <>
+          <Loading />
+          <DiscordSettings />
+        </>
       ) : (
-        <div className="a-config">
+        <div className="cfg-main">
           <ConnectionSection status={status.data} onChange={status.reload} />
           <CaptureSection status={status.data} onChange={status.reload} />
           <LanSection status={status.data} onChange={status.reload} />
           <DevicesSection />
+          <DiscordSettings />
           <CoachSection />
           <DataSection status={status.data} />
           <McpSection status={status.data} />
           <AboutSection status={status.data} />
         </div>
       )}
-    </>
+    </div>
   );
 }

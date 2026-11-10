@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Icon } from '../components/ui/Icon.tsx';
 import { sanitizeLayout } from '../lib/widgetLayout.ts';
 import { openLayoutEditor } from '../state/actions.ts';
 import { useUi } from '../state/uiStore.ts';
@@ -44,11 +45,14 @@ export function PersonalizadaView() {
       {!locked && (
         <button
           type="button"
-          className="grid-edit-btn"
+          className="ui-btn grid-edit-btn"
+          data-variant="secondary"
+          data-size="sm"
           data-no-gesture
           aria-label="Editar a grade"
           onClick={openLayoutEditor}
         >
+          <Icon name="layout" size={16} />
           Editar
         </button>
       )}

@@ -15,9 +15,11 @@ import type {
   Lap,
   MapCorner,
 } from '@gt7/shared';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { type CSSProperties, useCallback, useEffect, useMemo, useState } from 'react';
+import { Icon } from '../../components/ui/Icon.tsx';
 import { formatDelta, formatLapTime } from '../../lib/format.ts';
 import { navigate, type Route, routes } from '../../lib/route.ts';
+import { THEME } from '../../lib/theme.ts';
 import { flushEngineerJournal } from '../../state/engineerJournal.ts';
 import { api, urls } from '../api.ts';
 import { CarName } from '../components/CarName.tsx';
@@ -26,8 +28,9 @@ import { CornerTable } from '../components/CornerTable.tsx';
 import { DrivingEventsPanel } from '../components/DrivingEventsPanel.tsx';
 import { EngineerRadioReview } from '../components/EngineerRadioReview.tsx';
 import { FindingsPanel } from '../components/FindingsPanel.tsx';
+import { Panel } from '../components/Panel.tsx';
 import { type ChartLap, SyncCharts } from '../components/SyncCharts.tsx';
-import { Card, Empty, ErrorBox, Loading, PageHead, Tag, useTitle } from '../components/ui.tsx';
+import { ErrorBox, Loading, PageHead, useTitle } from '../components/ui.tsx';
 import {
   COMPARE_TRACE_CHANNELS,
   cornerLabel,
@@ -45,10 +48,11 @@ import { useFetch } from '../useFetch.ts';
 type RefKind = (typeof COMPARISON_REFERENCE_KINDS)[number];
 const REF_KINDS: RefKind[] = ['auto', 'bestReference', 'personalBest', 'sessionBest'];
 
+/** Volta analisada = ciano, referência = roxo, extras = laranja e azul (SERIES_COLORS). */
 export const LAP_COLORS = {
-  subject: '#ff7a2f',
-  reference: '#2fd3b0',
-  extra: ['#7aa7ff', '#e08cff'],
+  subject: THEME.chart1,
+  reference: THEME.chart2,
+  extra: [THEME.chart3, THEME.chart4, THEME.chart5],
 } as const;
 
 const MAX_EXTRA = 2;
@@ -133,14 +137,13 @@ export function ComparePage({ route }: { route: Route }) {
           title="Comparação de voltas"
           back={{ href: routes.home(), label: 'Suas pistas' }}
         />
-        <Empty>
+        <div className="ui-empty">
+          <strong>Nenhuma volta escolhida</strong>
           <p>Escolha uma volta para comparar com a sua melhor ou com a de um piloto do top.</p>
-          <p>
-            <a className="a-btn" href={routes.home()}>
-              Escolher uma pista
-            </a>
-          </p>
-        </Empty>
+          <a className="ui-btn" href={routes.home()}>
+            Escolher uma pista
+          </a>
+        </div>
       </>
     );
   }
@@ -154,7 +157,11 @@ export function ComparePage({ route }: { route: Route }) {
         <ErrorBox error={cmp.error} onRetry={cmp.reload} />
         {ref !== 'auto' && (
           <p>
-            <a href={routes.compare({ lap: lapId, ref: 'auto', extra })}>
+            <a
+              className="ui-btn"
+              data-variant="secondary"
+              href={routes.compare({ lap: lapId, ref: 'auto', extra })}
+            >
               Tentar com a referência automática
             </a>
           </p>
@@ -241,9 +248,7 @@ export function CompareView({
       if (!corner) return;
       setFocus(id);
       setRange(cornerRange(corner, row, lengthM));
-      document
-        .querySelector('.a-cmp-visual')
-        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.querySelector('.cmp-visual')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     },
     [c.rows, corners, lengthM],
   );
@@ -272,9 +277,7 @@ export function CompareView({
       setEventTracesOn(true);
       setFocus(e.cornerId);
       setRange(eventRange(e, lengthM));
-      document
-        .querySelector('.a-cmp-visual')
-        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.querySelector('.cmp-visual')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     },
     [lengthM],
   );
@@ -306,7 +309,7 @@ export function CompareView({
           return {
             id,
             label: l ? `${lapTitle(l)} · ${formatLapTime(l.timeMs)}` : `Volta ${id}`,
-            color: LAP_COLORS.extra[k] ?? '#aaa',
+            color: LAP_COLORS.extra[k] ?? THEME.text3,
             dash: [5, 4],
           };
         }),
@@ -366,9 +369,28 @@ export function CompareView({
   const sectorDeltas = c.sectorDeltasMs ?? [];
   const isReplay = !!c.referenceIsReplay;
   const otherLaps = trackLaps.filter((l) => l.id !== lap.id);
+  const worstCorners = useMemo(
+    () =>
+      c.rows
+        .filter((r) => r.timeLostMs > 0)
+        .sort((a, b) => b.timeLostMs - a.timeLostMs)
+        .slice(0, 5),
+    [c.rows],
+  );
+  const resetRange = () => {
+    setRange(null);
+    setFocus(null);
+    setSelectedEvent(null);
+  };
+  const warnings = [
+    ...c.warnings,
+    ...(isReplay && !c.warnings.some((w) => /replay/i.test(w))
+      ? ['Referência de replay: entradas suavizadas, precisão de alguns metros.']
+      : []),
+  ];
 
   return (
-    <>
+    <div className="cmp-page">
       <PageHead
         back={{ href: routes.session(lap.sessionId), label: 'Sessão' }}
         title={
@@ -393,7 +415,9 @@ export function CompareView({
             {demo && (
               <>
                 {' '}
-                <Tag tone="warn">demonstração</Tag>
+                <span className="ui-badge" data-tone="warn">
+                  demonstração
+                </span>
               </>
             )}
           </>
@@ -402,7 +426,8 @@ export function CompareView({
           !demo && (
             <>
               <a
-                className="a-btn a-btn-ghost"
+                className="ui-btn"
+                data-variant="secondary"
                 href={urls.chartPng(lap.id, refLap.id, focus ?? undefined)}
                 target="_blank"
                 rel="noopener"
@@ -410,7 +435,7 @@ export function CompareView({
                 Gerar gráfico (PNG)
               </a>
               <a
-                className="a-btn"
+                className="ui-btn"
                 href={routes.coach({
                   session: lap.sessionId,
                   lap: lap.id,
@@ -425,132 +450,190 @@ export function CompareView({
         }
       />
 
-      <section className="a-summary">
-        <div className="a-sum-lap" style={{ borderColor: LAP_COLORS.subject }}>
-          <span className="a-sum-k">Você · {lapTitle(lap)}</span>
-          <span className="a-sum-v num">{formatLapTime(c.lapATimeMs)}</span>
-          {!lap.valid && <Tag tone="bad">inválida</Tag>}
-        </div>
-        <div className="a-sum-lap" style={{ borderColor: LAP_COLORS.reference }}>
-          <span className="a-sum-k">Referência · {lapTitle(refLap)}</span>
-          <span className="a-sum-v num">{formatLapTime(c.lapBTimeMs)}</span>
-        </div>
-        <div className="a-sum-lap">
-          <span className="a-sum-k">Delta total</span>
-          <span className="a-sum-v num" data-tone={timeTone(c.totalDeltaMs)}>
-            {formatDelta(c.totalDeltaMs)}
-          </span>
-          <span className="dim a-small num">retas {formatDelta(c.straightsDeltaMs)}</span>
-        </div>
-        {sectorDeltas.length > 0 && (
-          <div className="a-sum-lap">
-            <span className="a-sum-k">Setores</span>
-            <span className="a-sectors">
-              {sectorDeltas.map((d, k) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: sector index
-                <span key={k} className="a-sector num" data-tone={timeTone(d)}>
-                  <small>S{k + 1}</small> {formatDelta(d)}
-                </span>
+      <Panel
+        title="Voltas comparadas"
+        description="A volta analisada fica fixa. Escolha contra qual referência medir e, se quiser, sobreponha até duas outras voltas nos gráficos."
+      >
+        <div className="cmp-picker-grid">
+          <div className="ui-field">
+            <span className="ui-label">Volta analisada</span>
+            <div className="cmp-lapbox">
+              <i className="cmp-swatch" style={{ background: LAP_COLORS.subject }} />
+              <span className="cmp-lapbox-text">
+                <strong>{lapTitle(lap)}</strong>
+                <span className="cmp-lapbox-time">{formatLapTime(lap.timeMs)}</span>
+                {!lap.valid && (
+                  <span className="ui-badge" data-tone="loss">
+                    inválida
+                  </span>
+                )}
+              </span>
+              <a
+                className="ui-btn"
+                data-variant="ghost"
+                data-size="sm"
+                href={routes.session(lap.sessionId)}
+              >
+                Trocar
+              </a>
+            </div>
+          </div>
+          <label className="ui-field">
+            <span className="ui-label">Referência</span>
+            <select className="ui-select" value={refParam} onChange={(e) => setRef(e.target.value)}>
+              {REF_KINDS.map((k) => (
+                <option key={k} value={k}>
+                  {REFERENCE_KIND_LABELS[k]}
+                </option>
               ))}
+              {!REF_KINDS.includes(refParam as RefKind) &&
+                !otherLaps.some((l) => l.id === refParam) && (
+                  <option value={refParam}>{lapOptionLabel(refLap)}</option>
+                )}
+              {otherLaps.length > 0 && (
+                <optgroup label="Outra volta desta pista">
+                  {otherLaps.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {lapOptionLabel(l)}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+            </select>
+            <span className="ui-help">
+              <i className="cmp-swatch" style={{ background: LAP_COLORS.reference }} />{' '}
+              {lapTitle(refLap)} · {formatLapTime(refLap.timeMs)}
             </span>
-          </div>
-        )}
-        {theoretical && (
-          <div
-            className="a-sum-lap"
-            title={`Soma dos melhores microssetores de ${theoretical.laps} voltas válidas da sessão`}
-          >
-            <span className="a-sum-k">Volta ideal da sessão</span>
-            <span className="a-sum-v num">{formatLapTime(theoretical.theoreticalBestMs)}</span>
-            <span className="dim a-small num">
-              {formatDelta(theoretical.theoreticalBestMs - theoretical.bestLapMs)} vs sua melhor
-            </span>
-          </div>
-        )}
-      </section>
-
-      {(c.warnings.length > 0 || isReplay) && (
-        <ul className="a-warnings">
-          {c.warnings.map((w) => (
-            <li key={w}>{w}</li>
-          ))}
-          {isReplay && !c.warnings.some((w) => /replay/i.test(w)) && (
-            <li>Referência de replay: entradas suavizadas, precisão de alguns metros.</li>
+          </label>
+          {!demo && extra.length < MAX_EXTRA && otherLaps.length > 0 && (
+            <label className="ui-field">
+              <span className="ui-label">Sobrepor outra volta</span>
+              <select
+                className="ui-select"
+                value=""
+                onChange={(e) => e.target.value && addExtra(e.target.value)}
+              >
+                <option value="">Escolher…</option>
+                {otherLaps
+                  .filter((l) => l.id !== refLap.id && !extra.includes(l.id))
+                  .map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {lapOptionLabel(l)}
+                    </option>
+                  ))}
+              </select>
+              <span className="ui-help">Aparece tracejada nos gráficos (até {MAX_EXTRA}).</span>
+            </label>
           )}
-        </ul>
+        </div>
+        {extraLaps.length > 0 && (
+          <div className="cmp-extras">
+            {extraLaps.map((l, k) => (
+              <span key={l.id} className="cmp-chip">
+                <i
+                  className="cmp-swatch"
+                  style={{ backgroundColor: LAP_COLORS.extra[k] }}
+                  data-dash="1"
+                />
+                {lapTitle(l)} · {formatLapTime(l.timeMs)}
+                <button
+                  type="button"
+                  aria-label={`Remover ${lapTitle(l)} do gráfico`}
+                  onClick={() => removeExtra(l.id)}
+                >
+                  <Icon name="close" size={14} />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+      </Panel>
+
+      <Panel title="Resumo da comparação">
+        <div className="cmp-stats">
+          <div className="ui-stat cmp-stat" data-series style={seriesStyle(LAP_COLORS.subject)}>
+            <span className="ui-stat-label">Você · {lapTitle(lap)}</span>
+            <span className="ui-stat-value num">{formatLapTime(c.lapATimeMs)}</span>
+            {!lap.valid && (
+              <span className="ui-badge" data-tone="loss">
+                inválida
+              </span>
+            )}
+          </div>
+          <div className="ui-stat cmp-stat" data-series style={seriesStyle(LAP_COLORS.reference)}>
+            <span className="ui-stat-label">Referência · {lapTitle(refLap)}</span>
+            <span className="ui-stat-value num">{formatLapTime(c.lapBTimeMs)}</span>
+          </div>
+          <div className="ui-stat cmp-stat">
+            <span className="ui-stat-label">Delta total</span>
+            <span className="ui-stat-value num" data-tone={timeTone(c.totalDeltaMs)}>
+              {formatDelta(c.totalDeltaMs)}
+            </span>
+            <span className="cmp-stat-sub num">retas {formatDelta(c.straightsDeltaMs)}</span>
+          </div>
+          {sectorDeltas.length > 0 && (
+            <div className="ui-stat cmp-stat">
+              <span className="ui-stat-label">Delta por setor</span>
+              <span className="cmp-sectors">
+                {sectorDeltas.map((d, k) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: sector index
+                  <span key={k} className="cmp-sector" data-tone={timeTone(d)}>
+                    <small>S{k + 1}</small>
+                    {formatDelta(d)}
+                  </span>
+                ))}
+              </span>
+            </div>
+          )}
+          {theoretical && (
+            <div
+              className="ui-stat cmp-stat"
+              title={`Soma dos melhores microssetores de ${theoretical.laps} voltas válidas da sessão`}
+            >
+              <span className="ui-stat-label">Volta ideal da sessão</span>
+              <span className="ui-stat-value num">
+                {formatLapTime(theoretical.theoreticalBestMs)}
+              </span>
+              <span className="cmp-stat-sub num">
+                {formatDelta(theoretical.theoreticalBestMs - theoretical.bestLapMs)} vs sua melhor
+              </span>
+            </div>
+          )}
+        </div>
+        {worstCorners.length > 0 && (
+          <div className="cmp-losses">
+            <span className="ui-stat-label">Onde você mais perde tempo (clique para dar zoom)</span>
+            <div className="cmp-losses-list">
+              {worstCorners.map((r) => (
+                <button
+                  key={r.corner.id}
+                  type="button"
+                  className="ui-chip"
+                  aria-pressed={focus === r.corner.id}
+                  onClick={() => zoomCorner(r.corner.id)}
+                >
+                  <strong>{r.corner.id}</strong>
+                  <span className="num">{formatDelta(r.timeLostMs)}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </Panel>
+
+      {warnings.length > 0 && (
+        <section className="ui-card cmp-warn" data-tone="warn" role="note">
+          <Icon name="alert" size={20} />
+          <ul>
+            {warnings.map((w) => (
+              <li key={w}>{w}</li>
+            ))}
+          </ul>
+        </section>
       )}
 
-      <div className="a-controls">
-        <label>
-          Referência
-          <select value={refParam} onChange={(e) => setRef(e.target.value)}>
-            {REF_KINDS.map((k) => (
-              <option key={k} value={k}>
-                {REFERENCE_KIND_LABELS[k]}
-              </option>
-            ))}
-            {!REF_KINDS.includes(refParam as RefKind) &&
-              !otherLaps.some((l) => l.id === refParam) && (
-                <option value={refParam}>{lapOptionLabel(refLap)}</option>
-              )}
-            {otherLaps.length > 0 && (
-              <optgroup label="Outra volta desta pista">
-                {otherLaps.map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {lapOptionLabel(l)}
-                  </option>
-                ))}
-              </optgroup>
-            )}
-          </select>
-        </label>
-        {!demo && extra.length < MAX_EXTRA && otherLaps.length > 0 && (
-          <label>
-            Sobrepor outra volta
-            <select value="" onChange={(e) => e.target.value && addExtra(e.target.value)}>
-              <option value="">Escolher…</option>
-              {otherLaps
-                .filter((l) => l.id !== refLap.id && !extra.includes(l.id))
-                .map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {lapOptionLabel(l)}
-                  </option>
-                ))}
-            </select>
-          </label>
-        )}
-        {extraLaps.map((l, k) => (
-          <span key={l.id} className="a-chip" style={{ borderColor: LAP_COLORS.extra[k] }}>
-            {lapTitle(l)} · {formatLapTime(l.timeMs)}
-            <button type="button" aria-label="Remover do gráfico" onClick={() => removeExtra(l.id)}>
-              ×
-            </button>
-          </span>
-        ))}
-        <span className="a-grow" />
-        {range && (
-          <span className="a-zoom-info num">
-            {focus
-              ? cornerLabel(corners.find((x) => x.id === focus) ?? { id: focus, name: null })
-              : 'Trecho'}
-            : {Math.round(range[0])}–{Math.round(range[1])} m
-            <button
-              type="button"
-              className="a-btn a-btn-ghost a-btn-sm"
-              onClick={() => {
-                setRange(null);
-                setFocus(null);
-                setSelectedEvent(null);
-              }}
-            >
-              Volta inteira
-            </button>
-          </span>
-        )}
-      </div>
-
-      <div className="a-cmp-visual">
-        <div className="a-cmp-charts">
+      <div className="cmp-visual">
+        <div className="cmp-charts-col">
           {chartTraces ? (
             <SyncCharts
               radioMarkers={radioMarkers}
@@ -563,6 +646,27 @@ export function CompareView({
               onRange={onRange}
               bus={bus}
               focusCorner={focus}
+              toolbar={
+                range && (
+                  <span className="cmp-zoom">
+                    {focus
+                      ? cornerLabel(
+                          corners.find((x) => x.id === focus) ?? { id: focus, name: null },
+                        )
+                      : 'Trecho'}
+                    : {Math.round(range[0])}–{Math.round(range[1])} m
+                    <button
+                      type="button"
+                      className="ui-btn"
+                      data-variant="secondary"
+                      data-size="sm"
+                      onClick={resetRange}
+                    >
+                      Volta inteira
+                    </button>
+                  </span>
+                )
+              }
             />
           ) : tracesError ? (
             <ErrorBox error={tracesError} compact />
@@ -570,8 +674,8 @@ export function CompareView({
             <Loading text="Carregando os traces…" />
           )}
         </div>
-        <aside className="a-cmp-side">
-          <div className="a-map-box">
+        <aside className="cmp-side">
+          <section className="ui-card cmp-mapbox" aria-label="Mapa da pista">
             <CompareMap
               outline={track ? { x: track.polyline.x, z: track.polyline.z } : null}
               distanceM={traces?.distanceM ?? []}
@@ -583,7 +687,7 @@ export function CompareView({
               bus={bus}
               onCorner={zoomCorner}
             />
-            <div className="a-map-legend a-small">
+            <div className="cmp-map-legend">
               <span>
                 <i style={{ background: LAP_COLORS.subject }} /> você
               </span>
@@ -591,27 +695,38 @@ export function CompareView({
                 <i style={{ background: LAP_COLORS.reference }} /> referência
               </span>
               <span>
-                <i style={{ background: 'var(--gain)' }} /> ganha
+                <i style={{ background: THEME.gain }} /> ganha tempo
               </span>
               <span>
-                <i style={{ background: 'var(--loss)' }} /> perde
+                <i style={{ background: THEME.loss }} /> perde tempo
               </span>
-              <span>○ frenagem</span>
+              <span>
+                <i className="cmp-map-ring" /> frenagem
+              </span>
             </div>
-          </div>
-          <Card title="O que treinar" className="a-findings-card">
-            <FindingsPanel
-              findings={findings}
-              corners={corners}
-              referenceIsReplay={isReplay}
-              onCorner={zoomCorner}
-            />
-          </Card>
+          </section>
         </aside>
       </div>
 
+      <Panel
+        title="O que treinar"
+        description="As curvas que mais custam tempo, com uma ação para cada."
+        className="cmp-findings"
+      >
+        <FindingsPanel
+          findings={findings}
+          corners={corners}
+          referenceIsReplay={isReplay}
+          onCorner={zoomCorner}
+        />
+      </Panel>
+
       {events && (
-        <Card title="Eventos de pilotagem" className="a-mt">
+        <Panel
+          title="Eventos de pilotagem"
+          description="Momentos da volta em que o carro escapou ou o piloto deixou tempo na pista."
+          className="cmp-events"
+        >
           <DrivingEventsPanel
             events={events.events}
             corners={corners}
@@ -620,16 +735,19 @@ export function CompareView({
             warnings={events.warnings}
           />
           {eventTraces.error && <ErrorBox error={eventTraces.error} compact />}
-        </Card>
+        </Panel>
       )}
 
-      <Card title="Curva a curva" className="a-mt">
+      <Panel
+        title="Curva a curva"
+        description="Clique numa curva para dar zoom nos gráficos e no mapa."
+      >
         {c.rows.length ? (
           <CornerTable rows={c.rows} focusCorner={focus} onCorner={zoomCorner} />
         ) : (
-          <p className="dim">Esta pista ainda não tem curvas detectadas.</p>
+          <p className="pn-desc">Esta pista ainda não tem curvas detectadas.</p>
         )}
-      </Card>
+      </Panel>
       {radio && (
         <EngineerRadioReview
           lapId={lap.id}
@@ -639,6 +757,10 @@ export function CompareView({
           onCorner={zoomCorner}
         />
       )}
-    </>
+    </div>
   );
+}
+
+function seriesStyle(color: string): CSSProperties {
+  return { ['--series' as string]: color };
 }

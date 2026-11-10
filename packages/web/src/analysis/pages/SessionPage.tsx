@@ -5,7 +5,8 @@
 
 import type { Lap } from '@gt7/shared';
 import { type ReactNode, useMemo, useState } from 'react';
-import { formatLapTime, formatSectorTime } from '../../lib/format.ts';
+import { Icon } from '../../components/ui/Icon.tsx';
+import { formatDelta, formatLapTime, formatSectorTime } from '../../lib/format.ts';
 import { navigate, routes } from '../../lib/route.ts';
 import { addNotice } from '../../state/uiStore.ts';
 import { api, urls } from '../api.ts';
@@ -90,11 +91,17 @@ function ReferenceForm({
     >
       <label>
         Piloto
-        <input value={driver} maxLength={80} onChange={(e) => setDriver(e.target.value)} />
+        <input
+          className="a-input"
+          value={driver}
+          maxLength={80}
+          onChange={(e) => setDriver(e.target.value)}
+        />
       </label>
       <label>
         Tempo do ranking (opcional)
         <input
+          className="a-input"
           value={time}
           placeholder="1:30.960"
           inputMode="decimal"
@@ -104,7 +111,12 @@ function ReferenceForm({
       </label>
       <label className="a-grow">
         Notas
-        <input value={notes} maxLength={500} onChange={(e) => setNotes(e.target.value)} />
+        <input
+          className="a-input"
+          value={notes}
+          maxLength={500}
+          onChange={(e) => setNotes(e.target.value)}
+        />
       </label>
       <div className="a-actions">
         <button type="submit" className="a-btn" disabled={busy}>
@@ -179,6 +191,10 @@ export function SessionPage({ id }: { id: string }) {
         });
 
   const sectorCount = Math.max(0, ...laps.map((l) => l.sectorTimesMs.length));
+  const idealMs =
+    sectorCount > 1 && best.length === sectorCount && best.every((v): v is number => v !== null)
+      ? best.reduce((a, b) => a + b, 0)
+      : null;
   const trackLabel = track.data
     ? fullTrackName(track.data)
     : trackId
@@ -205,6 +221,7 @@ export function SessionPage({ id }: { id: string }) {
         actions={
           <>
             <a className="a-btn" href={routes.coach({ session: session.id })}>
+              <Icon name="coach" size={18} />
               Debrief com IA
             </a>
             {trackId && (
@@ -240,27 +257,36 @@ export function SessionPage({ id }: { id: string }) {
       />
 
       <div className="a-stats a-session-stats">
-        <div>
-          <span className="a-sum-k">Voltas</span>
-          <span className="a-sum-v num">{laps.length}</span>
-          <span className="dim a-small">
+        <div className="a-stat">
+          <span className="a-stat-k">Voltas</span>
+          <span className="a-stat-v num">{laps.length}</span>
+          <span className="a-stat-s">
             {plural(laps.filter((l) => l.valid).length, 'válida', 'válidas')}
           </span>
         </div>
-        <div>
-          <span className="a-sum-k">Melhor volta</span>
-          <span className="a-sum-v num">{bestLap ? formatLapTime(bestLap.timeMs) : '–'}</span>
-          {bestLap && <span className="dim a-small">volta {bestLap.number}</span>}
+        <div className="a-stat" data-emph={bestLap ? '1' : undefined}>
+          <span className="a-stat-k">Melhor volta</span>
+          <span className="a-stat-v num">{bestLap ? formatLapTime(bestLap.timeMs) : '–'}</span>
+          {bestLap && <span className="a-stat-s">volta {bestLap.number}</span>}
         </div>
-        <div>
-          <span className="a-sum-k">Duração</span>
-          <span className="a-sum-v num">
+        {idealMs !== null && bestLap && (
+          <div className="a-stat" data-emph="ideal">
+            <span className="a-stat-k">Volta ideal</span>
+            <span className="a-stat-v num">{formatLapTime(idealMs)}</span>
+            <span className="a-stat-s" title="Soma dos melhores setores da sessão">
+              {formatDelta(idealMs - bestLap.timeMs)} vs melhor
+            </span>
+          </div>
+        )}
+        <div className="a-stat">
+          <span className="a-stat-k">Duração</span>
+          <span className="a-stat-v num">
             {formatDuration(session.startedAt, session.endedAt) ?? '–'}
           </span>
         </div>
-        <div>
-          <span className="a-sum-k">Início</span>
-          <span className="a-sum-v num">{formatDateTime(session.startedAt)}</span>
+        <div className="a-stat">
+          <span className="a-stat-k">Início</span>
+          <span className="a-stat-v num">{formatDateTime(session.startedAt)}</span>
         </div>
       </div>
 
@@ -288,7 +314,7 @@ export function SessionPage({ id }: { id: string }) {
         <Empty>Esta sessão ainda não tem voltas completas.</Empty>
       ) : (
         <div className="a-table-wrap">
-          <table className="a-table a-laps">
+          <table className="a-table a-laps a-table-cards">
             <thead>
               <tr>
                 <th aria-label="Selecionar" />
@@ -327,7 +353,11 @@ export function SessionPage({ id }: { id: string }) {
                       />
                     }
                   >
-                    <tr data-selected={sel >= 0 ? '1' : '0'} data-invalid={l.valid ? '0' : '1'}>
+                    <tr
+                      data-selected={sel >= 0 ? '1' : '0'}
+                      data-invalid={l.valid ? '0' : '1'}
+                      data-best={isBest ? '1' : '0'}
+                    >
                       <td>
                         <label className="a-check">
                           <input
@@ -423,29 +453,30 @@ export function SessionPage({ id }: { id: string }) {
                             pb.reload();
                           }}
                           extra={
-                            <details className="a-menu">
-                              <summary className="a-btn a-btn-ghost a-btn-sm">Mais</summary>
-                              <div className="a-menu-body">
-                                {!l.isReference && (
-                                  <button
-                                    type="button"
-                                    className="a-link-btn"
-                                    onClick={() => setEditing(l.id)}
-                                  >
-                                    Referência com detalhes…
-                                  </button>
-                                )}
-                                <a href={routes.coach({ session: session.id, lap: l.id })}>
-                                  Debrief desta volta
-                                </a>
-                                <a href={urls.lapCsv(l.id)} download>
-                                  Baixar CSV
-                                </a>
-                                <a href={urls.lapTrace(l.id)} download>
-                                  Baixar trace (JSON)
-                                </a>
-                              </div>
-                            </details>
+                            <>
+                              {!l.isReference && (
+                                <button
+                                  type="button"
+                                  role="menuitem"
+                                  className="a-menu-item"
+                                  onClick={() => setEditing(l.id)}
+                                >
+                                  Referência com detalhes…
+                                </button>
+                              )}
+                              <a
+                                role="menuitem"
+                                href={routes.coach({ session: session.id, lap: l.id })}
+                              >
+                                Debrief desta volta
+                              </a>
+                              <a role="menuitem" href={urls.lapCsv(l.id)} download>
+                                Baixar CSV
+                              </a>
+                              <a role="menuitem" href={urls.lapTrace(l.id)} download>
+                                Baixar trace (JSON)
+                              </a>
+                            </>
                           }
                         />
                       </td>
@@ -457,7 +488,7 @@ export function SessionPage({ id }: { id: string }) {
           </table>
         </div>
       )}
-      <p className="dim a-small a-mt">
+      <p className="a-section-note">
         Roxo = melhor setor da sessão (voltas válidas). Voltas de replay e com tempo divergente só
         são marcadas, não invalidadas.
       </p>

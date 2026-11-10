@@ -1,6 +1,7 @@
 /** Canvas sizing helper for rAF renderers: keeps the backing store at CSS size × DPR (≤ 2). */
 
 import { type RefObject, useEffect, useRef } from 'react';
+import { THEME } from '../lib/theme.ts';
 
 export interface CanvasSize {
   /** CSS pixels. */
@@ -57,18 +58,18 @@ export function beginDraw(
   return ctx;
 }
 
-/** Colours shared by canvas renderers (mirror of the CSS tokens). */
+/** Colours shared by canvas renderers (derived from the design tokens in lib/theme.ts). */
 export const CANVAS_COLORS = {
-  text: '#f1f4f6',
-  dim: '#8592a0',
-  faint: '#46515c',
-  line: '#222c34',
-  panel: '#0c1115',
-  track: '#2b343c',
-  accent: '#ffb21e',
-  gain: '#22e07a',
-  loss: '#ff3d4a',
-  neutral: '#7c8995',
-  purple: '#b266ff',
-  font: 'Bahnschrift, "DIN Alternate", "Roboto Condensed", "Arial Narrow", system-ui, sans-serif',
+  text: THEME.text,
+  dim: THEME.text2,
+  faint: THEME.text3,
+  line: THEME.line,
+  panel: THEME.surface2,
+  track: THEME.lineStrong,
+  accent: THEME.accent,
+  gain: THEME.gain,
+  loss: THEME.loss,
+  neutral: THEME.text3,
+  purple: THEME.purple,
+  font: THEME.font,
 } as const;

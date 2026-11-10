@@ -75,7 +75,12 @@ export function CorridaView() {
           <span ref={set('lap')} className="meta-strong">
             Volta –
           </span>
-          <span ref={set('invalid')} className="tag tag-bad lap-invalid" data-show="0">
+          <span
+            ref={set('invalid')}
+            className="ui-badge lap-invalid"
+            data-tone="loss"
+            data-show="0"
+          >
             Volta inválida
           </span>
         </span>

@@ -7,6 +7,7 @@
 import type { LiveFrame } from '@gt7/shared';
 import { useRef } from 'react';
 import { gScale } from '../lib/gStats.ts';
+import { THEME, withAlpha } from '../lib/theme.ts';
 import { derived } from '../live/derived.ts';
 import { live } from '../live/liveStore.ts';
 import { useLiveRender } from '../live/raf.ts';
@@ -40,7 +41,7 @@ export function GCircle({
     for (let g = 0.5; g <= maxG + 1e-6; g += 0.5) {
       ctx.beginPath();
       ctx.arc(cx, cy, g * k, 0, Math.PI * 2);
-      ctx.strokeStyle = Number.isInteger(g) ? C.faint : C.line;
+      ctx.strokeStyle = Number.isInteger(g) ? THEME.lineStrong : THEME.line;
       ctx.stroke();
     }
     ctx.beginPath();
@@ -103,7 +104,7 @@ export function GCircle({
         ctx.beginPath();
         ctx.moveTo(px, py);
         ctx.lineTo(x, y);
-        ctx.strokeStyle = `rgba(255, 178, 30, ${(0.85 * (1 - age)).toFixed(3)})`;
+        ctx.strokeStyle = withAlpha(THEME.accent, 0.85 * (1 - age));
         ctx.stroke();
       }
       px = x;

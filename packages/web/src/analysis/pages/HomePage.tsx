@@ -4,6 +4,7 @@
  */
 
 import { useMemo, useState } from 'react';
+import { Icon } from '../../components/ui/Icon.tsx';
 import { formatLapTime } from '../../lib/format.ts';
 import { GT7_INTEGRATION } from '../../lib/integrations.ts';
 import { routes } from '../../lib/route.ts';
@@ -13,7 +14,7 @@ import { CarName } from '../components/CarName.tsx';
 import { CarFilterChips, CarFilterField, FilterChip } from '../components/CarPicker.tsx';
 import { NewTrackPrompt } from '../components/TrackNaming.tsx';
 import { TrackThumb } from '../components/TrackThumb.tsx';
-import { ErrorBox, Loading, PageHead, Tag, useTitle } from '../components/ui.tsx';
+import { ErrorBox, Loading, Tag, useTitle } from '../components/ui.tsx';
 import {
   type CarFilter,
   carMatchesFilter,
@@ -85,28 +86,39 @@ export function TrackCard({
             </Tag>
           )}
         </h3>
-        <p className="a-trackcard-meta dim">
-          {formatKm(t.lengthM)} · {plural(sessionCount, 'sessão', 'sessões')} ·{' '}
-          {plural(lapCount, 'volta', 'voltas')}
-          {carFiltering ? ' com o filtro' : ''}
-        </p>
         {carFiltering ? (
           fbest ? (
             <p className="a-trackcard-best">
-              <span className="a-sum-k">Melhor volta</span>
-              <span className="a-trackcard-time num">{formatLapTime(fbest.ms)}</span>
-              <span className="dim a-small">
-                <CarName carCode={fbest.carCode} logoSize={16} />
+              <span className="a-stat-k">Melhor volta com o filtro</span>
+              <span className="a-trackcard-best-row">
+                <span className="a-trackcard-time num">{formatLapTime(fbest.ms)}</span>
+                <span className="a-trackcard-sub">
+                  <CarName carCode={fbest.carCode} logoSize={16} />
+                </span>
               </span>
             </p>
           ) : (
-            <p className="dim a-small">Sem volta válida com esse filtro.</p>
+            <p className="a-trackcard-sub">Sem volta válida com esse filtro.</p>
           )
         ) : t.best ? (
           <p className="a-trackcard-best">
-            <span className="a-sum-k">Melhor volta</span>
-            <span className="a-trackcard-time num">{formatLapTime(t.best.timeMs)}</span>
-            <span className="dim a-small">
+            <span className="a-stat-k">Melhor volta</span>
+            <span className="a-trackcard-best-row">
+              <span className="a-trackcard-time num">{formatLapTime(t.best.timeMs)}</span>
+              {trend && (
+                <span
+                  className="a-trend"
+                  data-tone={trend.tone}
+                  title="Melhor volta da última sessão contra a sessão anterior com o mesmo carro"
+                >
+                  <span aria-hidden="true">
+                    {trend.tone === 'gain' ? '▲' : trend.tone === 'loss' ? '▼' : '●'}
+                  </span>
+                  {trend.text}
+                </span>
+              )}
+            </span>
+            <span className="a-trackcard-sub">
               {whenLabel(t.best.at)}
               {t.cars.length > 1 && (
                 <>
@@ -117,27 +129,23 @@ export function TrackCard({
             </span>
           </p>
         ) : (
-          <p className="dim a-small">Ainda sem volta válida.</p>
+          <p className="a-trackcard-sub">Ainda sem volta válida.</p>
         )}
+        <ul className="a-trackcard-meta">
+          <li>{plural(sessionCount, 'sessão', 'sessões')}</li>
+          <li>
+            {plural(lapCount, 'volta', 'voltas')}
+            {carFiltering ? ' com o filtro' : ''}
+          </li>
+          <li>{formatKm(t.lengthM)}</li>
+        </ul>
         <div className="a-trackcard-foot">
-          {trend && (
-            <span
-              className="a-trend"
-              data-tone={trend.tone}
-              title="Melhor volta da última sessão contra a sessão anterior com o mesmo carro"
-            >
-              <span aria-hidden="true">
-                {trend.tone === 'gain' ? '▲' : trend.tone === 'loss' ? '▼' : '●'}
-              </span>{' '}
-              {trend.text}
-            </span>
-          )}
           {cars.length > 0 && (
-            <span className="a-trackcard-cars dim a-small">
+            <span className="a-trackcard-cars">
               {cars.map((c) => (
                 <CarName key={c.carCode} carCode={c.carCode} logoSize={16} />
               ))}
-              {t.cars.length > cars.length ? ` +${t.cars.length - cars.length}` : ''}
+              {t.cars.length > cars.length ? `+${t.cars.length - cars.length}` : ''}
             </span>
           )}
           {t.referenceCount > 0 && (
@@ -145,12 +153,8 @@ export function TrackCard({
               {t.referenceCount} ref. do top
             </Tag>
           )}
+          {t.lastActivityAt && <span>Última atividade {formatAgo(t.lastActivityAt)}</span>}
         </div>
-        {t.lastActivityAt && (
-          <p className="a-trackcard-last dim a-small">
-            Última atividade {formatAgo(t.lastActivityAt)}
-          </p>
-        )}
       </div>
     </a>
   );
@@ -246,50 +250,69 @@ export function HomePage() {
   };
 
   const totalLaps = tracks.reduce((n, t) => n + t.lapCount, 0);
+  const totalSessions = tracks.reduce((n, t) => n + t.sessionCount, 0);
+  const clearFilters = () => {
+    setQuery('');
+    setCarFilter(NO_CAR_FILTER);
+  };
 
   return (
     <>
-      <div className="a-pitwall">
-        <div className="a-pitwall-content">
-          <p className="a-pitwall-kicker">Seu engenheiro de pista</p>
-          <PageHead
-            title="Suas pistas"
-            sub={
-              data && tracks.length > 0
-                ? `${plural(tracks.length, 'pista', 'pistas')} · ${plural(totalLaps, 'volta', 'voltas')} guardadas. Escolha uma pista para ver seus melhores tempos e evolução.`
-                : 'Seu histórico de voltas, organizado por pista automaticamente.'
-            }
-            actions={
-              <>
-                <a className="a-btn" href={routes.live()}>
-                  Abrir painel ao vivo
-                </a>
-                <a className="a-btn a-btn-ghost" href={routes.sessions()}>
-                  Todas as sessões
-                </a>
-              </>
-            }
-          />
-          <a className="a-pitwall-integration" href={routes.config('conexao')}>
+      <section className="a-hero" aria-label="Suas pistas">
+        <div className="a-hero-content">
+          <p className="a-eyebrow">Seu engenheiro de pista</p>
+          <h1>Suas pistas</h1>
+          <p className="a-sub">
+            {data && tracks.length > 0
+              ? 'Escolha uma pista para ver seus melhores tempos, a evolução e onde ainda dá para ganhar.'
+              : 'Seu histórico de voltas, organizado por pista automaticamente.'}
+          </p>
+          <div className="a-actions a-hero-actions">
+            <a className="a-btn a-btn-lg" href={routes.live()}>
+              <Icon name="live" size={20} />
+              Abrir painel ao vivo
+            </a>
+            <a className="a-btn a-btn-lg a-btn-ghost" href={routes.sessions()}>
+              Todas as sessões
+            </a>
+          </div>
+          {data && tracks.length > 0 && (
+            <dl className="a-hero-stats">
+              <div>
+                <dt>Pistas</dt>
+                <dd className="num">{tracks.length}</dd>
+              </div>
+              <div>
+                <dt>Sessões</dt>
+                <dd className="num">{totalSessions}</dd>
+              </div>
+              <div>
+                <dt>Voltas</dt>
+                <dd className="num">{totalLaps}</dd>
+              </div>
+            </dl>
+          )}
+          <a className="a-hero-source" href={routes.config('conexao')}>
+            <span className="ui-dot" data-tone={isDemo ? 'warn' : 'accent'} />
             <span>{isDemo ? 'Fonte das voltas' : 'Integração disponível'}</span>
             <strong>{isDemo ? 'Demonstração' : GT7_INTEGRATION.name}</strong>
           </a>
         </div>
-        <svg className="a-pitwall-signal" viewBox="0 0 440 236" aria-hidden="true">
+        <svg className="a-hero-signal" viewBox="0 0 440 236" aria-hidden="true">
           <path
-            className="a-pitwall-grid"
+            className="a-hero-grid"
             d="M0 44h440M0 93h440M0 142h440M0 191h440M72 0v236M132 0v236M192 0v236M252 0v236M312 0v236M372 0v236"
           />
           <path
-            className="a-pitwall-echo"
+            className="a-hero-echo"
             d="M0 192h105l38-26h31l39-48h35l28 22h44l56-38h64M0 180h97l43-32h32l38-47h39l30 25h41l54-40h66"
           />
-          <path className="a-pitwall-trace" d="M0 166h95l43-38h30l40-48h42l30 28h37l55-41h68" />
-          <path className="a-pitwall-axis" d="M208 44v148M372 44v148" />
+          <path className="a-hero-trace" d="M0 166h95l43-38h30l40-48h42l30 28h37l55-41h68" />
+          <path className="a-hero-axis" d="M208 44v148M372 44v148" />
           <circle cx="208" cy="80" r="4" />
           <circle cx="372" cy="67" r="4" />
         </svg>
-      </div>
+      </section>
 
       {overview.error && !data ? (
         <ErrorBox error={overview.error} onRetry={overview.reload} />
@@ -307,17 +330,27 @@ export function HomePage() {
             />
           ))}
 
+          {isDemo && !hideDemo && tracks.length > 0 && (
+            <p className="a-note">
+              <Tag tone="warn">Demo</Tag> Você está no modo demonstração: estas voltas vêm de um
+              piloto simulado, não do console.
+            </p>
+          )}
+
           {tracks.length > 0 && (
-            <div className="a-filters a-home-filters">
-              <label className="a-grow">
+            <search className="a-toolbar">
+              <label className="a-search a-grow">
                 Buscar pista
-                <input
-                  className="a-input"
-                  type="search"
-                  value={query}
-                  placeholder="Ex.: Monza, Suzuka…"
-                  onChange={(e) => setQuery(e.target.value)}
-                />
+                <span className="a-search-field">
+                  <Icon name="search" size={18} />
+                  <input
+                    className="a-input"
+                    type="search"
+                    value={query}
+                    placeholder="Ex.: Monza, Suzuka…"
+                    onChange={(e) => setQuery(e.target.value)}
+                  />
+                </span>
               </label>
               <CarFilterField usage={usage} value={carFilter} onChange={setCarFilter} />
               {isDemo && (
@@ -330,7 +363,7 @@ export function HomePage() {
                   Esconder demonstração
                 </label>
               )}
-            </div>
+            </search>
           )}
 
           {tracks.length > 0 && filtering && (
@@ -345,40 +378,25 @@ export function HomePage() {
               <CarFilterChips value={carFilter} onChange={setCarFilter} />
               <button
                 type="button"
-                className="a-btn a-btn-ghost a-btn-sm cf-chip-clear"
-                onClick={() => {
-                  setQuery('');
-                  setCarFilter(NO_CAR_FILTER);
-                }}
+                className="a-btn a-btn-quiet a-btn-sm cf-chip-clear"
+                onClick={clearFilters}
               >
                 Limpar filtros
               </button>
             </div>
           )}
 
-          {isDemo && !hideDemo && tracks.length > 0 && (
-            <p className="a-note">
-              <Tag tone="warn">Demo</Tag> Você está no modo demonstração: estas voltas vêm de um
-              piloto simulado, não do console.
-            </p>
-          )}
-
           {shown.length === 0 ? (
             filtering ? (
-              <div className="a-empty">
+              <div className="ui-empty a-empty">
+                <Icon name="search" size={28} />
+                <strong>Nenhuma pista encontrada</strong>
                 <p>
-                  Nenhuma pista encontrada com esse filtro.
+                  Nada combina com esse filtro.
                   {isCarFiltering(carFilter) &&
                     ' Talvez você ainda não tenha voltas com esse carro.'}
                 </p>
-                <button
-                  type="button"
-                  className="a-btn a-btn-ghost"
-                  onClick={() => {
-                    setQuery('');
-                    setCarFilter(NO_CAR_FILTER);
-                  }}
-                >
+                <button type="button" className="a-btn a-btn-ghost" onClick={clearFilters}>
                   Limpar filtros
                 </button>
               </div>
@@ -389,11 +407,21 @@ export function HomePage() {
               />
             )
           ) : (
-            <div className="a-trackgrid">
-              {shown.map((t) => (
-                <TrackCard key={t.id} t={t} demo={isDemo} carFilter={carFilter} />
-              ))}
-            </div>
+            <>
+              <div className="a-sectionhead">
+                <h2>{filtering ? 'Resultado' : 'Pistas'}</h2>
+                <span className="dim a-small">
+                  {filtering
+                    ? `${shown.length} de ${plural(tracks.length, 'pista', 'pistas')}`
+                    : 'Mais recentes primeiro'}
+                </span>
+              </div>
+              <div className="a-trackgrid">
+                {shown.map((t) => (
+                  <TrackCard key={t.id} t={t} demo={isDemo} carFilter={carFilter} />
+                ))}
+              </div>
+            </>
           )}
         </>
       )}

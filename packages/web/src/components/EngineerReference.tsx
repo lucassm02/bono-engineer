@@ -14,6 +14,7 @@ import { useLiveRender } from '../live/raf.ts';
 import { dispatchProfile } from '../state/actions.ts';
 import { useUi } from '../state/uiStore.ts';
 import { EngineerTraining } from './EngineerTraining.tsx';
+import { Icon } from './ui/Icon.tsx';
 
 export function EngineerReference({
   settings,
@@ -88,76 +89,92 @@ export function EngineerReference({
     }
   }
 
+  const sourceLabel = ref?.flags.includes('replay')
+    ? 'Captura de replay'
+    : ref?.referenceMeta?.source === 'import'
+      ? 'Volta importada'
+      : 'Telemetria de pilotagem';
+
   return (
     <>
-      <label>
-        Volta de referência do painel
-        <select
-          value={selectedId ? `lap:${selectedId}` : (current?.kind ?? profileKind)}
-          disabled={saving || settings.loading}
-          onChange={(event) => void selectReference(event.currentTarget.value)}
-        >
-          {DELTA_REFERENCE_KINDS.map((kind) => (
-            <option value={kind} key={kind}>
-              {DELTA_REFERENCE_LABELS[kind]}
-            </option>
-          ))}
-          {selectedId && !laps.some((lap) => lap.id === selectedId) && (
-            <option value={`lap:${selectedId}`}>Volta selecionada anteriormente</option>
-          )}
-          {laps.map((lap) => (
-            <option value={`lap:${lap.id}`} key={lap.id}>
-              {lap.referenceMeta?.driverName ?? 'Referência'} · {formatLapTime(lap.timeMs)}
-            </option>
-          ))}
-        </select>
-      </label>
-      {ref && (
-        <div className="engineer-reference-info">
-          <strong>
-            {formatLapTime(ref.timeMs)} · {ref.referenceMeta?.driverName ?? 'Volta própria'}
-          </strong>
-          <p>
-            {ref.referenceMeta?.carName || carName(ref.carCode) || `Carro #${ref.carCode}`} ·{' '}
-            {description?.name ?? 'Traçado indisponível'}
-            {description?.layout && ` · ${description.layout}`}
-          </p>
-          <p>
-            {ref.flags.includes('replay')
-              ? 'Captura de replay'
-              : ref.referenceMeta?.source === 'import'
-                ? 'Volta importada'
-                : 'Telemetria de pilotagem'}
-          </p>
+      <section className="ui-card bn-card" aria-labelledby="engineer-ref-title">
+        <div className="ui-card-head">
+          <h3 id="engineer-ref-title" className="ui-card-title">
+            Volta de referência
+          </h3>
         </div>
-      )}
-      {needsFallback && (
-        <div role="status">
-          <p>A referência não está disponível para este carro e traçado.</p>
-          {personal && (
-            <button
-              type="button"
-              className="btn btn-ghost"
-              disabled={saving}
-              onClick={() => void selectReference('personalBest')}
+        <div className="bn-fields">
+          <label className="ui-field">
+            <span className="ui-label">Comparar o painel com</span>
+            <select
+              className="ui-select"
+              value={selectedId ? `lap:${selectedId}` : (current?.kind ?? profileKind)}
+              disabled={saving || settings.loading}
+              onChange={(event) => void selectReference(event.currentTarget.value)}
             >
-              Usar melhor pessoal · {formatLapTime(personal.timeMs)}
-            </button>
+              {DELTA_REFERENCE_KINDS.map((kind) => (
+                <option value={kind} key={kind}>
+                  {DELTA_REFERENCE_LABELS[kind]}
+                </option>
+              ))}
+              {selectedId && !laps.some((lap) => lap.id === selectedId) && (
+                <option value={`lap:${selectedId}`}>Volta selecionada anteriormente</option>
+              )}
+              {laps.map((lap) => (
+                <option value={`lap:${lap.id}`} key={lap.id}>
+                  {lap.referenceMeta?.driverName ?? 'Referência'} · {formatLapTime(lap.timeMs)}
+                </option>
+              ))}
+            </select>
+          </label>
+          {ref && (
+            <div className="engineer-reference-info bn-refinfo">
+              <div className="bn-refinfo-head">
+                <strong className="num bn-refinfo-time">{formatLapTime(ref.timeMs)}</strong>
+                <span className="ui-badge" data-tone="accent">
+                  {ref.referenceMeta?.driverName ?? 'Volta própria'}
+                </span>
+              </div>
+              <p className="ui-help">
+                {ref.referenceMeta?.carName || carName(ref.carCode) || `Carro #${ref.carCode}`} ·{' '}
+                {description?.name ?? 'Traçado indisponível'}
+                {description?.layout && ` · ${description.layout}`}
+              </p>
+              <p className="ui-help">{sourceLabel}</p>
+            </div>
+          )}
+          {needsFallback && (
+            <div className="bn-note" data-tone="warn" role="status">
+              <p>A referência não está disponível para este carro e traçado.</p>
+              {personal && (
+                <button
+                  type="button"
+                  className="ui-btn"
+                  data-variant="secondary"
+                  data-size="sm"
+                  disabled={saving}
+                  onClick={() => void selectReference('personalBest')}
+                >
+                  <Icon name="check" size={16} />
+                  Usar melhor pessoal · {formatLapTime(personal.timeMs)}
+                </button>
+              )}
+            </div>
+          )}
+          {!refId && !needsFallback && (
+            <p className="ui-help">
+              O painel mostra os detalhes assim que encontrar a volta para o carro e traçado atuais.
+            </p>
+          )}
+          {(sendError || error) && (
+            <p className="bn-note" data-tone="loss" role="status">
+              {sendError
+                ? 'Não foi possível trocar a referência.'
+                : 'Não foi possível listar as referências salvas.'}
+            </p>
           )}
         </div>
-      )}
-      {!refId && !needsFallback && (
-        <p>
-          O painel mostra os detalhes assim que encontrar a volta para o carro e traçado atuais.
-        </p>
-      )}
-      {(sendError || error) && (
-        <p role="status">
-          {sendError
-            ? 'Não foi possível trocar a referência.'
-            : 'Não foi possível listar as referências salvas.'}
-        </p>
-      )}
+      </section>
       <EngineerTraining
         key={trackId ?? ''}
         track={track.data?.id === trackId ? track.data : null}

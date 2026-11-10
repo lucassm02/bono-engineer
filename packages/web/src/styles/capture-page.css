@@ -1,117 +1,211 @@
-/* Captura de referência (CapturePage). */
+/*
+ * Captura de referência: formulário em passos, detalhes recolhíveis e o bloco "Como funciona".
+ * Carrega depois de capture.css; só tokens.
+ */
 
-/* Capture */
-.a-capture-grid {
+.cap-form {
   display: grid;
-  grid-template-columns: minmax(280px, 1fr) minmax(280px, 1fr) minmax(300px, 1.1fr);
-  gap: 14px;
-  align-items: start;
+  gap: var(--sp-5);
 }
-.a-steps-howto {
-  margin: 0;
-  padding-left: 20px;
+.cap-block {
+  display: grid;
+  gap: var(--sp-3);
+  min-width: 0;
 }
-.a-steps-howto li {
-  margin: 6px 0;
+.cap-block + .cap-block {
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--line-soft);
 }
-.a-capture-state {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 19px;
-  font-weight: 600;
-  margin: 4px 0 6px;
-}
-.a-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: var(--faint);
-  flex: none;
-}
-.a-capture-state[data-state="recording"] .a-dot {
-  background: var(--loss);
-  animation: a-pulse 1s ease-in-out infinite;
-}
-.a-capture-state[data-state="waitingLapStart"] .a-dot,
-.a-capture-state[data-state="switchingFormat"] .a-dot,
-.a-capture-state[data-state="validating"] .a-dot {
-  background: var(--accent);
-  animation: a-pulse 1.4s ease-in-out infinite;
-}
-@keyframes a-pulse {
-  50% {
-    opacity: 0.3;
-  }
-}
-.a-steps {
-  list-style: none;
-  padding: 0;
-  margin: 10px 0;
-}
-.a-steps li {
-  padding: 4px 0 4px 24px;
-  position: relative;
-  color: var(--faint);
-}
-.a-steps li::before {
-  content: "○";
-  position: absolute;
-  left: 2px;
-}
-.a-steps li[data-step="done"] {
-  color: var(--dim);
-}
-.a-steps li[data-step="done"]::before {
-  content: "✓";
-  color: var(--gain);
-}
-.a-steps li[data-step="now"] {
-  color: var(--text);
-  font-weight: 600;
-}
-.a-steps li[data-step="now"]::before {
-  content: "●";
-  color: var(--accent);
-}
-.a-rejected {
-  border: 1px solid rgba(255, 61, 74, 0.45);
-  border-radius: 8px;
-  padding: 8px 12px;
-  margin-top: 10px;
-}
-.a-rejected ul {
-  margin: 6px 0 0;
-  padding-left: 18px;
-}
-.a-progress {
-  width: 100%;
-  height: 8px;
-  margin: 4px 0 8px;
-  accent-color: var(--accent);
-}
-.a-timecheck {
+.cap-block-title {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 18px;
-  margin: 8px 0;
-}
-.a-timecheck div {
-  display: flex;
-  flex-direction: column;
-}
-.a-timecheck dt {
-  font-size: 12px;
-  color: var(--dim);
-}
-.a-timecheck dd {
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
   margin: 0;
-  font-size: 16px;
+  font-size: var(--fs-md);
+  font-weight: 700;
 }
-.a-saved {
-  border: 1px solid rgba(34, 224, 122, 0.45);
-  border-radius: 8px;
-  padding: 8px 12px;
-  margin-top: 10px;
+.cap-n {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-line);
+  color: var(--accent);
+  font-size: var(--fs-xs);
+  font-weight: 750;
+}
+.cap-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-4);
+}
+.cap-fields .ui-help[role="alert"] {
+  color: var(--loss);
 }
 
+/* Detectado automaticamente */
+.cap-auto {
+  list-style: none;
+  margin: 0;
+  padding: var(--sp-1) var(--sp-4);
+  display: grid;
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+}
+.cap-auto li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-1) var(--sp-3);
+  min-width: 0;
+  min-height: 48px;
+  padding: var(--sp-2) 0;
+}
+.cap-auto li + li {
+  border-top: 1px solid var(--line-soft);
+}
+.cap-auto-k {
+  flex: none;
+  width: 56px;
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.cap-auto-muted {
+  color: var(--text-3);
+}
+
+/* Mais detalhes / Como funciona: blocos recolhíveis */
+.cap-more,
+.cap-how {
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+}
+.cap-how {
+  background: var(--surface-2);
+  box-shadow: var(--shadow-1);
+}
+.cap-more > summary,
+.cap-how > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 48px;
+  padding: 0 var(--sp-4);
+  cursor: pointer;
+  list-style: none;
+  color: var(--text);
+  font-weight: 650;
+}
+.cap-more > summary::-webkit-details-marker,
+.cap-how > summary::-webkit-details-marker {
+  display: none;
+}
+.cap-more > summary::after,
+.cap-how > summary::after {
+  content: "";
+  margin-left: auto;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--text-2);
+  border-bottom: 2px solid var(--text-2);
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform var(--dur-fast) var(--ease);
+}
+.cap-more[open] > summary::after,
+.cap-how[open] > summary::after {
+  transform: rotate(225deg);
+}
+.cap-more[open] > summary,
+.cap-how[open] > summary {
+  border-bottom: 1px solid var(--line-soft);
+}
+.cap-more-body {
+  display: grid;
+  gap: var(--sp-4);
+  padding: var(--sp-4);
+}
+.cap-how-body {
+  display: grid;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+}
+.cap-howto {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: how;
+  display: grid;
+  gap: var(--sp-3);
+}
+.cap-howto li {
+  position: relative;
+  padding-left: 36px;
+  counter-increment: how;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+.cap-howto li::before {
+  content: counter(how);
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--surface-4);
+  color: var(--text);
+  font-size: var(--fs-xs);
+  font-weight: 750;
+}
+.cap-howto strong {
+  color: var(--text);
+}
+.cap-limits {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+  max-width: 72ch;
+}
+
+/* Botão principal */
+.cap-go {
+  width: 100%;
+}
+.cap-go-help {
+  margin: 0;
+  text-align: center;
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+}
+.cap-stopped {
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-sm);
+}
+.cap-stopped p {
+  margin: 0;
+  color: var(--text-2);
+}
+.cap-form-error {
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .cap-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cap-auto-k {
+    width: 100%;
+  }
+}

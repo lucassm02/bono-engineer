@@ -14,9 +14,11 @@ import {
   type TopicRef,
 } from '@gt7/shared';
 import { useEffect, useMemo, useState } from 'react';
+import { Icon } from '../../components/ui/Icon.tsx';
 import type { Route } from '../../lib/route.ts';
 import { Markdown } from '../components/Markdown.tsx';
-import { Card, Empty, PageHead, Tag, useTitle } from '../components/ui.tsx';
+import { Panel } from '../components/Panel.tsx';
+import { PageHead, useTitle } from '../components/ui.tsx';
 import {
   filterGuide,
   GUIDE_GROUPS,
@@ -34,6 +36,11 @@ const KIND_TAGS: Record<TopicRef['kind'], string> = {
   afinacao: 'Afinação',
   glossario: 'Glossário',
   fonte: 'Fontes',
+};
+
+const KIND_TONES: Partial<Record<TopicRef['kind'], string>> = {
+  classe: 'info',
+  diagnostico: 'accent',
 };
 
 /** Page body without its first "## Title" line (the card header already shows it). */
@@ -61,9 +68,17 @@ function Topic({
       onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}
     >
       <summary>
-        <span className="g-topic-title">{topic.title}</span>
-        <Tag tone={topic.kind === 'diagnostico' ? 'info' : undefined}>{KIND_TAGS[topic.kind]}</Tag>
-        {evidenceLow && <Tag tone="warn">pouca evidência</Tag>}
+        <span className="g-topic-head">
+          <span className="g-topic-title">{topic.title}</span>
+          <span className="ui-badge" data-tone={KIND_TONES[topic.kind]}>
+            {KIND_TAGS[topic.kind]}
+          </span>
+          {evidenceLow && (
+            <span className="ui-badge" data-tone="warn">
+              pouca evidência
+            </span>
+          )}
+        </span>
         <span className="g-topic-sum">{topic.summary}</span>
       </summary>
       {open && <Markdown className="g-md" text={bodyOf(topic.id, group)} />}
@@ -93,77 +108,76 @@ export function GuidePage({ route }: { route: Route }) {
   );
   // Few results (or an explicit search) open by default; the full list stays collapsed.
   const autoOpen = query.trim() !== '' && topics.length <= 4;
+  const filtered = query.trim() !== '' || kind !== 'todos' || group !== null;
 
   return (
-    <>
+    <div className="g-page">
       <PageHead
         title="Guia de pilotagem"
         sub="A base de conhecimento que o coach de IA usa: princípios, classes de carro, o que cada diagnóstico do app significa, mapa de afinação e fontes."
       />
 
-      <Card className="g-notice" title="Como ler este guia">
-        <ul>
-          <li>
-            Cada afirmação diz se é <strong>regra geral</strong>, <strong>depende do carro</strong>,{' '}
-            <strong>segundo uma fonte</strong> (com link) ou tem <strong>pouca evidência</strong>.
-            Regra geral não é lei: serve de ponto de partida, e o que vale são os números das suas
-            voltas.
-          </li>
-          <li>
-            <strong>O app não tem pontos de frenagem por pista.</strong> Só existem os medidos nas
-            suas voltas e nas referências capturadas; o guia nunca os inventa.
-          </li>
-          <li>
-            Gr.2, Gr.B, carros de rua (N) e especiais (X) quase não têm fonte publicada: o texto
-            deles é síntese de princípios gerais.
-          </li>
-        </ul>
-      </Card>
-
-      <div className="g-controls">
-        <label className="g-search">
-          <span>Buscar</span>
-          <input
-            className="a-input"
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="trail braking, subesterço, TCS…"
-            enterKeyHint="search"
-            autoComplete="off"
-            spellCheck={false}
-          />
+      <section className="ui-card g-controls" aria-label="Busca e filtros">
+        <label className="g-search" htmlFor="g-q">
+          <span className="ui-label">Buscar no guia</span>
+          <span className="g-search-box">
+            <Icon name="search" size={20} />
+            <input
+              id="g-q"
+              className="ui-input"
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="trail braking, subesterço, TCS…"
+              enterKeyHint="search"
+              autoComplete="off"
+              spellCheck={false}
+            />
+          </span>
         </label>
-        <label className="g-class">
-          <span>Classe do carro</span>
-          <select
-            value={group ?? ''}
-            onChange={(e) => setGroup(parseGuideGroup(e.target.value))}
-            aria-label="Filtrar por classe do carro"
-          >
-            <option value="">Todas as classes</option>
-            {GUIDE_GROUPS.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.label}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-
-      <fieldset className="g-kinds">
-        <legend className="g-sr">Tipo de conteúdo</legend>
-        {GUIDE_KINDS.map((k) => (
-          <button
-            key={k.id}
-            type="button"
-            aria-pressed={kind === k.id}
-            onClick={() => setKind(k.id)}
-          >
-            {k.label}
-          </button>
-        ))}
-      </fieldset>
+        <div className="g-filters">
+          <fieldset className="g-filter">
+            <legend className="ui-label">Tipo de conteúdo</legend>
+            <div className="g-chips">
+              {GUIDE_KINDS.map((k) => (
+                <button
+                  key={k.id}
+                  type="button"
+                  className="ui-chip"
+                  aria-pressed={kind === k.id}
+                  onClick={() => setKind(k.id)}
+                >
+                  {k.label}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+          <fieldset className="g-filter">
+            <legend className="ui-label">Classe do carro</legend>
+            <div className="g-chips">
+              <button
+                type="button"
+                className="ui-chip"
+                aria-pressed={group === null}
+                onClick={() => setGroup(null)}
+              >
+                Todas
+              </button>
+              {GUIDE_GROUPS.map((g) => (
+                <button
+                  key={g.id}
+                  type="button"
+                  className="ui-chip"
+                  aria-pressed={group === g.id}
+                  onClick={() => setGroup(group === g.id ? null : g.id)}
+                >
+                  {g.label}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+        </div>
+      </section>
 
       {brief && (
         <details className="g-brief">
@@ -175,20 +189,18 @@ export function GuidePage({ route }: { route: Route }) {
         </details>
       )}
 
-      <p className="g-count" aria-live="polite">
-        {topics.length === 0
-          ? 'Nenhum tópico encontrado.'
-          : `${topics.length} ${topics.length === 1 ? 'tópico' : 'tópicos'}${group ? ` · diagnósticos filtrados para ${groupLabel(group)}` : ''}`}
-      </p>
-
-      {topics.length === 0 ? (
-        <Empty>
-          <p>
-            Nada para “{query}”. Tente outra palavra (a busca ignora acentos) ou limpe os filtros.
-          </p>
+      <div className="g-count-row">
+        <p className="g-count" aria-live="polite">
+          {topics.length === 0
+            ? 'Nenhum tópico encontrado.'
+            : `${topics.length} ${topics.length === 1 ? 'tópico' : 'tópicos'}${group ? ` · diagnósticos filtrados para ${groupLabel(group)}` : ''}`}
+        </p>
+        {filtered && topics.length > 0 && (
           <button
             type="button"
-            className="a-btn a-btn-ghost"
+            className="ui-btn"
+            data-variant="ghost"
+            data-size="sm"
             onClick={() => {
               setQuery('');
               setKind('todos');
@@ -197,7 +209,28 @@ export function GuidePage({ route }: { route: Route }) {
           >
             Limpar filtros
           </button>
-        </Empty>
+        )}
+      </div>
+
+      {topics.length === 0 ? (
+        <div className="ui-empty">
+          <strong>Nada encontrado</strong>
+          <p>
+            Nada para “{query}”. Tente outra palavra (a busca ignora acentos) ou limpe os filtros.
+          </p>
+          <button
+            type="button"
+            className="ui-btn"
+            data-variant="secondary"
+            onClick={() => {
+              setQuery('');
+              setKind('todos');
+              setGroup(null);
+            }}
+          >
+            Limpar filtros
+          </button>
+        </div>
       ) : (
         <div className="g-list">
           {topics.map((t) => (
@@ -211,11 +244,32 @@ export function GuidePage({ route }: { route: Route }) {
         </div>
       )}
 
-      <p className="g-foot dim">
+      <Panel
+        className="g-notice"
+        title="Como ler este guia"
+        description="Regra geral não é lei: serve de ponto de partida, e o que vale são os números das suas voltas."
+      >
+        <ul>
+          <li>
+            Cada afirmação diz se é <strong>regra geral</strong>, <strong>depende do carro</strong>,{' '}
+            <strong>segundo uma fonte</strong> (com link) ou tem <strong>pouca evidência</strong>.
+          </li>
+          <li>
+            <strong>O app não tem pontos de frenagem por pista.</strong> Só existem os medidos nas
+            suas voltas e nas referências capturadas; o guia nunca os inventa.
+          </li>
+          <li>
+            Gr.2, Gr.B, carros de rua (N) e especiais (X) quase não têm fonte publicada: o texto
+            deles é síntese de princípios gerais.
+          </li>
+        </ul>
+      </Panel>
+
+      <p className="g-foot">
         {stats.topics} tópicos · {stats.diagnostics} diagnósticos · {KNOWLEDGE_SOURCES.length}{' '}
         fontes (consultadas em 2026-11-09). Resumos em palavras próprias; os links levam aos textos
         originais.
       </p>
-    </>
+    </div>
   );
 }

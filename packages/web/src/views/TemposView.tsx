@@ -132,9 +132,15 @@ export function TemposView() {
                     <td className="tempos-time">
                       {formatLapTime(row.timeMs)}
                       {!row.valid && (
-                        <span className="tag tag-bad">{invalidReason(row.flags)}</span>
+                        <span className="ui-badge" data-tone="loss">
+                          {invalidReason(row.flags)}
+                        </span>
                       )}
-                      {row.valid && row.isPersonalBest && <span className="tag tag-pb">PB</span>}
+                      {row.valid && row.isPersonalBest && (
+                        <span className="ui-badge" data-tone="purple">
+                          PB
+                        </span>
+                      )}
                     </td>
                     {sectorIdx.map((i) => {
                       const t = row.sectorTimesMs[i] ?? null;

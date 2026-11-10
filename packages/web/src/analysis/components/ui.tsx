@@ -2,6 +2,7 @@
 
 import { PRODUCT_NAME } from '@gt7/shared';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { Icon } from '../../components/ui/Icon.tsx';
 import { routes } from '../../lib/route.ts';
 import type { ApiError } from '../api.ts';
 
@@ -16,20 +17,24 @@ export function PageHead({
   sub,
   actions,
   back,
+  eyebrow,
 }: {
   title: ReactNode;
   sub?: ReactNode;
   actions?: ReactNode;
   back?: { href: string; label: string };
+  eyebrow?: ReactNode;
 }) {
   return (
     <header className="a-pagehead">
       <div className="a-pagehead-text">
         {back && (
           <a className="a-back" href={back.href}>
-            ← {back.label}
+            <Icon name="back" size={16} />
+            {back.label}
           </a>
         )}
+        {eyebrow && <p className="a-eyebrow">{eyebrow}</p>}
         <h1>{title}</h1>
         {sub && <p className="a-sub">{sub}</p>}
       </div>
@@ -85,7 +90,11 @@ export function ErrorBox({
   const msg = typeof error === 'string' ? error : error.message;
   const offline = typeof error !== 'string' && (error as ApiError).offline;
   return (
-    <div className={`a-error ${compact ? 'a-error-compact' : ''}`} role="alert">
+    <div
+      className={`ui-card a-error ${compact ? 'a-error-compact' : ''}`}
+      data-tone="loss"
+      role="alert"
+    >
       <strong>{offline ? 'Servidor fora do ar' : 'Algo deu errado'}</strong>
       <p>{msg}</p>
       {offline && !compact && (
@@ -104,7 +113,7 @@ export function ErrorBox({
 }
 
 export function Empty({ children }: { children: ReactNode }) {
-  return <div className="a-empty">{children}</div>;
+  return <div className="ui-empty a-empty">{children}</div>;
 }
 
 /** Two-step destructive button: first click asks, second confirms (no blocking dialogs). */

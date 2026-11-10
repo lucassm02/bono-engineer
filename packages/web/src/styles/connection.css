@@ -1,40 +1,35 @@
 /*
- * Console link ("Conexão com o PS5"): discreet indicator, details panel and the first-run assistant.
- * Shared by the live dashboard and the analysis area (prefix cx- / ob-). Dark only.
+ * Conexão com o PS5: indicador discreto (cx-), painel de detalhes (Modal) e assistente inicial (ob-).
+ * Compartilhado pelo painel ao vivo e pela área de análise. Montado sobre os componentes ui-*.
  */
 
 /* ------------------------------------------------------------------------------------------- */
-/* Dot + chip                                                                                   */
+/* Ponto + chip                                                                                 */
 /* ------------------------------------------------------------------------------------------- */
 
+/* ui-dot com anel de pulso quando o app está trabalhando (procurando o console). */
 .cx-dot {
-  --c: var(--faint);
   position: relative;
-  flex: none;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--c);
+  color: var(--text-3);
 }
-.cx-dot[data-tone="ok"] {
-  --c: var(--gain);
-}
-.cx-dot[data-tone="busy"],
-.cx-dot[data-tone="info"] {
-  --c: var(--accent);
+.cx-dot[data-tone="gain"] {
+  color: var(--gain);
 }
 .cx-dot[data-tone="warn"] {
-  --c: var(--yellow);
+  color: var(--warn);
 }
-.cx-dot[data-tone="bad"] {
-  --c: var(--loss);
+.cx-dot[data-tone="loss"] {
+  color: var(--loss);
+}
+.cx-dot[data-tone="accent"] {
+  color: var(--accent);
 }
 .cx-dot[data-busy="1"]::after {
   content: "";
   position: absolute;
   inset: 0;
+  border: 2px solid currentColor;
   border-radius: 50%;
-  border: 2px solid var(--c);
   animation: cx-pulse 1.6s ease-out infinite;
 }
 @keyframes cx-pulse {
@@ -54,309 +49,156 @@
   gap: 7px;
   min-height: 28px;
   padding: 4px 10px 4px 8px;
-  border-radius: 999px;
   border: 1px solid var(--line);
-  background: rgba(12, 17, 21, 0.78);
-  color: var(--dim);
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--surface-1) 78%, transparent);
+  color: var(--text-2);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--fs-sm);
   line-height: 1;
   white-space: nowrap;
   cursor: pointer;
   pointer-events: auto;
 }
-.cx-chip:hover,
-.cx-chip:focus-visible {
+.cx-chip:hover {
   color: var(--text);
-  border-color: var(--dim);
+  border-color: var(--line-strong);
 }
-/* Live panel while telemetry arrives: just a dot, with a roomy tap target. */
+.cx-chip:focus-visible {
+  outline: none;
+  color: var(--text);
+  box-shadow: var(--focus-ring);
+}
+/* Painel ao vivo com dados chegando: só o ponto, com área de toque folgada. */
 .cx-chip[data-quiet="1"] {
-  padding: 9px;
   min-height: 28px;
-  background: transparent;
+  padding: 9px;
   border-color: transparent;
+  background: transparent;
 }
 .cx-chip[data-variant="live"] {
-  opacity: 0.8;
+  opacity: 0.85;
 }
 .cx-chip[data-variant="bar"] {
-  background: transparent;
-  border-color: transparent;
   padding: 4px 6px;
-  font-size: 13px;
+  border-color: transparent;
+  background: transparent;
 }
 .cx-chip[data-variant="bar"]:hover {
-  background: var(--panel);
+  background: var(--surface-3);
 }
 .cx-chip-text {
+  max-width: 46vw;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 46vw;
 }
 
 /* ------------------------------------------------------------------------------------------- */
-/* Buttons / inputs                                                                             */
+/* Detalhes (no Modal e embutido nas configurações)                                             */
 /* ------------------------------------------------------------------------------------------- */
-
-.cx-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-height: 40px;
-  padding: 8px 16px;
-  border-radius: 8px;
-  border: 1px solid var(--accent);
-  background: var(--accent);
-  color: #000;
-  font: inherit;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.cx-btn:hover {
-  filter: brightness(1.08);
-}
-.cx-btn:disabled {
-  opacity: 0.45;
-  cursor: default;
-  filter: none;
-}
-.cx-btn-ghost {
-  background: transparent;
-  color: var(--text);
-  border-color: var(--line);
-}
-.cx-btn-ghost:hover {
-  border-color: var(--dim);
-  filter: none;
-}
-.cx-btn-sm {
-  min-height: 32px;
-  padding: 4px 12px;
-  font-size: 13px;
-}
-.cx-btn-lg {
-  min-height: 50px;
-  padding: 12px 28px;
-  font-size: 17px;
-}
-.cx-input {
-  width: 100%;
-  min-height: 40px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--line);
-  background: var(--bg);
-  color: var(--text);
-  font: inherit;
-  font-size: 16px;
-  user-select: text;
-  -webkit-user-select: text;
-}
-.cx-input:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
-.cx-input[aria-invalid="true"] {
-  border-color: var(--loss);
-}
-
-/* ------------------------------------------------------------------------------------------- */
-/* Details (modal + inline in the settings)                                                     */
-/* ------------------------------------------------------------------------------------------- */
-
-.cx-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 70;
-  display: grid;
-  place-items: center;
-  padding: 14px;
-  background: rgba(0, 0, 0, 0.72);
-  touch-action: manipulation;
-}
-.cx-modal {
-  width: min(520px, 100%);
-  max-height: 100%;
-  overflow: auto;
-  padding: 16px 18px 18px;
-  border-radius: 14px;
-  border: 1px solid var(--line);
-  background: var(--panel);
-  color: var(--text);
-  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.6);
-  user-select: text;
-  -webkit-user-select: text;
-}
-.cx-modal-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-.cx-modal-head h2 {
-  margin: 0;
-  font-size: 19px;
-}
-.cx-close {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--dim);
-  font-size: 22px;
-  line-height: 1;
-  cursor: pointer;
-}
-.cx-close:hover {
-  color: var(--text);
-  border-color: var(--dim);
-}
 
 .cx-details {
   display: grid;
-  gap: 14px;
+  gap: var(--sp-4);
 }
 .cx-status {
   display: flex;
-  gap: 12px;
   align-items: flex-start;
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: var(--panel-2);
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
 }
-.cx-status .cx-dot {
-  margin-top: 5px;
+.cx-status .ui-dot {
+  margin-top: 6px;
 }
 .cx-status strong {
   display: block;
-  font-size: 17px;
+  font-size: var(--fs-lg);
   line-height: 1.25;
 }
 .cx-status p {
   margin: 4px 0 0;
-  color: var(--dim);
-  font-size: 14px;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
   line-height: 1.4;
-}
-.cx-status[data-tone="ok"] {
-  border-color: rgba(34, 224, 122, 0.45);
-}
-.cx-status[data-tone="busy"],
-.cx-status[data-tone="info"] {
-  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
-}
-.cx-status[data-tone="warn"] {
-  border-color: rgba(255, 214, 10, 0.4);
-}
-.cx-status[data-tone="bad"] {
-  border-color: rgba(255, 61, 74, 0.5);
 }
 .cx-facts {
   display: grid;
-  gap: 0;
   margin: 0;
-  font-size: 14px;
+  font-size: var(--fs-sm);
 }
 .cx-facts > div {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
-  padding: 7px 0;
-  border-bottom: 1px solid var(--line);
+  gap: var(--sp-4);
+  padding: var(--sp-2) 0;
+  border-bottom: 1px solid var(--line-soft);
 }
 .cx-facts dt {
-  color: var(--dim);
   flex: none;
+  color: var(--text-3);
 }
 .cx-facts dd {
   margin: 0;
-  text-align: right;
   min-width: 0;
+  text-align: right;
   overflow-wrap: anywhere;
+}
+.cx-muted {
+  color: var(--text-3);
 }
 .cx-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--sp-2);
 }
-.cx-help {
+.cx-details .ui-help,
+.cx-details .ui-error {
   margin: 0;
-  color: var(--dim);
-  font-size: 13px;
-  line-height: 1.4;
-}
-.cx-help[data-bad="1"] {
-  color: var(--loss);
 }
 .cx-ipform {
   display: grid;
-  gap: 8px;
   grid-template-columns: 1fr auto;
   align-items: end;
-  padding: 12px;
-  border-radius: 10px;
-  border: 1px dashed var(--line);
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-md);
 }
-.cx-ipform label {
-  display: grid;
-  gap: 4px;
-  font-size: 13px;
-  color: var(--dim);
-}
-.cx-ipform .cx-help {
+.cx-ipform .ui-help,
+.cx-ipform .ui-error {
   grid-column: 1 / -1;
+  margin: 0;
 }
-
-/* ------------------------------------------------------------------------------------------- */
-/* First-run assistant                                                                          */
-/* ------------------------------------------------------------------------------------------- */
-
-.ob {
-  position: fixed;
-  inset: 0;
-  z-index: 90;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  background:
-    radial-gradient(
-      900px 520px at 50% -8%,
-      color-mix(in srgb, var(--accent) 14%, transparent),
-      transparent 70%
-    ),
-    var(--bg);
-  color: var(--text);
+.cx-input {
   user-select: text;
   -webkit-user-select: text;
-  touch-action: pan-y;
 }
-.ob-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: calc(var(--safe-t) + 8px) calc(var(--safe-r) + 8px) 8px calc(var(--safe-l) + 8px);
+/* Dentro das configurações os detalhes não são um modal. */
+.cx-inline .cx-details {
+  max-width: 640px;
+}
+
+/* ------------------------------------------------------------------------------------------- */
+/* Assistente inicial (Modal)                                                                   */
+/* ------------------------------------------------------------------------------------------- */
+
+.ob-modal {
+  --modal-w: 540px;
 }
 .ob-steps {
   display: flex;
-  gap: 8px;
+  align-self: center;
+  gap: 6px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 .ob-steps li {
-  width: 34px;
+  width: 26px;
   height: 5px;
   border-radius: 3px;
   background: var(--line);
-  transition: background 200ms;
+  transition: background var(--dur) var(--ease);
 }
 .ob-steps li[data-state="done"] {
   background: var(--gain);
@@ -364,67 +206,38 @@
 .ob-steps li[data-state="current"] {
   background: var(--accent);
 }
-.ob-skip {
-  min-height: 36px;
-  padding: 6px 14px;
-  border-radius: 8px;
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--dim);
-  font: inherit;
-  font-size: 14px;
-  cursor: pointer;
-}
-.ob-skip:hover {
-  color: var(--text);
-  border-color: var(--dim);
-}
-.ob-body {
-  flex: 1;
-  display: grid;
-  place-items: center;
-  padding: 8px calc(var(--safe-r) + 12px) calc(var(--safe-b) + 24px) calc(var(--safe-l) + 12px);
-}
 .ob-card {
-  width: min(560px, 100%);
-  display: grid;
-  gap: 14px;
-  justify-items: center;
-  text-align: center;
-  animation: ob-in 380ms ease-out both;
+  animation: ob-in 380ms var(--ease) both;
 }
 @keyframes ob-in {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(12px);
   }
 }
-.ob-card h1 {
-  margin: 4px 0 0;
-  font-size: clamp(26px, 6vw, 38px);
-  line-height: 1.1;
+.ob-step {
+  display: grid;
+  gap: var(--sp-4);
+  justify-items: center;
+  text-align: center;
 }
 .ob-lead {
+  max-width: 420px;
   margin: 0;
-  max-width: 460px;
-  font-size: 18px;
+  font-size: var(--fs-lg);
   line-height: 1.45;
   color: var(--text);
 }
 .ob-lead strong {
   color: var(--accent);
 }
-.ob-hint {
-  margin: 0;
-  font-size: 13px;
-}
 
 .ob-radar {
   position: relative;
-  width: 132px;
-  height: 132px;
   display: grid;
   place-items: center;
+  width: 132px;
+  height: 132px;
   color: var(--accent);
 }
 .ob-radar[data-found="1"] {
@@ -433,8 +246,8 @@
 .ob-ring {
   position: absolute;
   inset: 22px;
-  border-radius: 50%;
   border: 2px solid currentColor;
+  border-radius: 50%;
   opacity: 0;
   animation: ob-ring 2.6s ease-out infinite;
 }
@@ -459,13 +272,13 @@
 }
 .ob-radar-core {
   position: relative;
-  width: 64px;
-  height: 64px;
-  padding: 14px;
-  box-sizing: content-box;
-  border-radius: 50%;
-  background: var(--panel);
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
   border: 1px solid currentColor;
+  border-radius: 50%;
+  background: var(--surface-3);
 }
 .ob-check {
   stroke-dasharray: 60;
@@ -481,26 +294,20 @@
 .ob-live {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 18px;
-  border-radius: 12px;
-  border: 1px solid var(--line);
-  background: var(--panel);
-  text-align: left;
+  gap: var(--sp-3);
   max-width: 100%;
+  padding: var(--sp-3) var(--sp-4);
+  text-align: left;
 }
 .ob-live strong {
   display: block;
-  font-size: 16px;
+  font-size: var(--fs-md);
 }
 .ob-live-sub {
   display: block;
   margin-top: 2px;
-  font-size: 13px;
-  color: var(--dim);
-}
-.ob-live[data-tone="ok"] {
-  border-color: rgba(34, 224, 122, 0.5);
+  color: var(--text-3);
+  font-size: var(--fs-sm);
 }
 .ob-progress {
   width: min(320px, 80%);
@@ -529,86 +336,74 @@
 .ob-help {
   width: 100%;
   text-align: left;
-  padding: 14px 16px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 214, 10, 0.4);
-  background: var(--panel);
-  animation: ob-in 300ms ease-out both;
-}
-.ob-help h3 {
-  margin: 0 0 8px;
-  font-size: 16px;
+  animation: ob-in 300ms var(--ease) both;
 }
 .ob-help ul {
-  margin: 0 0 12px;
-  padding-left: 1.2em;
   display: grid;
-  gap: 8px;
-  font-size: 14px;
+  gap: var(--sp-2);
+  margin: var(--sp-3) 0;
+  padding-left: 1.2em;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
   line-height: 1.45;
-  color: var(--dim);
 }
-.ob-help li strong {
+.ob-help strong {
   color: var(--text);
+}
+.ob-help .ui-field {
+  margin-top: var(--sp-3);
 }
 .ob-code {
-  margin: 6px 0;
-  padding: 8px 10px;
-  border-radius: 8px;
-  background: var(--bg);
+  margin: var(--sp-2) 0;
+  padding: var(--sp-2) var(--sp-3);
   border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface-1);
   color: var(--text);
-  font-size: 12px;
+  font-size: var(--fs-xs);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+  user-select: text;
 }
 
 .ob-phone {
   display: flex;
-  gap: 16px;
   align-items: center;
+  gap: var(--sp-4);
   width: 100%;
-  padding: 14px;
-  border-radius: 12px;
-  border: 1px solid var(--line);
-  background: var(--panel);
   text-align: left;
 }
-.ob-phone h3 {
-  margin: 0 0 4px;
-  font-size: 16px;
+.ob-phone .ui-card-title {
+  margin-bottom: var(--sp-1);
 }
 .ob-phone p {
-  margin: 0 0 6px;
-  font-size: 14px;
-  color: var(--dim);
-  line-height: 1.4;
+  margin: 0 0 var(--sp-2);
 }
 .ob-qr {
   flex: none;
   width: 132px;
   height: 132px;
   padding: 6px;
-  border-radius: 8px;
-  background: #fff;
+  border-radius: var(--r-sm);
+  background: var(--text);
 }
 .ob-url {
   overflow-wrap: anywhere;
 }
 .ob-tips {
+  display: grid;
+  gap: var(--sp-2);
+  max-width: 440px;
   margin: 0;
   padding: 0;
   list-style: none;
-  display: grid;
-  gap: 8px;
+  color: var(--text-2);
+  font-size: var(--fs-md);
   text-align: left;
-  font-size: 15px;
-  color: var(--dim);
-  max-width: 440px;
 }
 .ob-tips li {
-  padding-left: 22px;
   position: relative;
+  padding-left: 22px;
   line-height: 1.4;
 }
 .ob-tips li::before {
@@ -624,10 +419,6 @@
 .ob-tips strong {
   color: var(--text);
 }
-.ob-actions {
-  justify-content: center;
-  margin-top: 4px;
-}
 
 @media (max-width: 480px) {
   .ob-phone {
@@ -640,11 +431,6 @@
   .cx-chip-text {
     max-width: 52vw;
   }
-}
-
-/* Inside the settings the details are not a modal. */
-.cx-inline .cx-details {
-  max-width: 640px;
 }
 
 @media (prefers-reduced-motion: reduce) {

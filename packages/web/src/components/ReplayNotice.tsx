@@ -17,6 +17,7 @@ export function ReplayNotice() {
   const armed = !!capture && capture.state !== 'idle';
   return (
     <div className="replay-notice" data-no-gesture role="status">
+      <span className="ui-dot" data-tone="accent" aria-hidden="true" />
       <span className="replay-text">
         {armed
           ? (capture?.hint ?? 'Captura de referência em andamento.')

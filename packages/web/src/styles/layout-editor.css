@@ -1,115 +1,116 @@
-/* Editor da tela Personalizada (LayoutEditor). */
+/* Editor da tela Personalizada (LayoutEditor), dentro do Modal. */
 
-/* --- Layout editor --------------------------------------------------------------------------- */
-
-.editor-body {
+.bn-editor {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-  min-height: 0;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: var(--sp-5);
+  align-items: start;
 }
-.editor-preview-wrap {
-  padding: 12px;
-  min-height: 0;
-  overflow: auto;
-  touch-action: pan-y;
-  display: flex;
+.bn-editor-preview-wrap {
+  position: sticky;
+  top: 0;
+  display: grid;
+  gap: var(--sp-2);
+  min-width: 0;
 }
 .editor-preview {
-  flex: 1;
   display: grid;
   gap: 6px;
-  min-height: 180px;
-  background: #000;
-  border-radius: 10px;
+  min-height: 220px;
   padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-0);
 }
 .editor-cell {
   position: relative;
-  border: 1px solid var(--line);
-  background: var(--panel-2);
-  border-radius: 6px;
-  font-size: 13px;
-  padding: 4px;
-  cursor: pointer;
   min-width: 0;
+  padding: var(--sp-1);
   overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface-3);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-sm);
   text-overflow: ellipsis;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease);
+}
+.editor-cell:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-4);
+}
+.editor-cell:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 .editor-cell[aria-pressed="true"] {
-  border: 2px solid var(--accent);
-  background: color-mix(in srgb, var(--accent) 18%, var(--panel-2));
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface-3));
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 .editor-cell-n {
   position: absolute;
   top: 2px;
   left: 5px;
-  font-size: 11px;
-  color: var(--dim);
+  font-size: var(--fs-2xs);
+  color: var(--text-3);
 }
 .editor-cell-empty {
   grid-column: 1 / -1;
   display: grid;
   place-items: center;
+  color: var(--text-3);
 }
-.editor-controls {
-  border-left: 1px solid var(--line);
-  padding: 12px 18px 18px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  touch-action: pan-y;
+.bn-editor-controls {
+  display: grid;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.bn-stepper-row {
   display: flex;
-  flex-direction: column;
-  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+.bn-stepper-label {
+  font-size: var(--fs-md);
+  font-weight: 600;
 }
 .stepper {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 .stepper-value {
-  min-width: 1.5em;
-  text-align: center;
-  font-size: 20px;
+  min-width: 1.8em;
+  font-size: var(--fs-xl);
   font-weight: 700;
+  text-align: center;
 }
-.editor-selected {
-  background: var(--panel-2);
-  border-radius: 10px;
-  padding: 10px;
-  font-size: 14px;
+.editor-selected[data-empty="1"] {
+  border-style: dashed;
+  background: transparent;
+  box-shadow: none;
 }
-.editor-selected-name {
-  font-size: 17px;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-.editor-actions,
 .editor-add {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--sp-2);
 }
-.editor-add .chip {
-  font-size: 14px;
-  padding: 6px 10px;
+.editor-add .ui-chip {
   min-height: 36px;
 }
 
-@media (orientation: portrait), (max-width: 620px) {
-  .editor-body {
-    grid-template-columns: 1fr;
-    grid-template-rows: minmax(160px, 0.8fr) minmax(0, 1fr);
+@media (max-width: 760px) {
+  .bn-editor {
+    grid-template-columns: minmax(0, 1fr);
   }
-  .editor-controls {
-    border-left: 0;
-    border-top: 1px solid var(--line);
+  .bn-editor-preview-wrap {
+    position: static;
   }
 }
-
-/* The picker's segmented buttons use aria-pressed (index.css only styled aria-checked). */
-.segmented button[aria-pressed="true"] {
-  background: var(--accent);
-  color: #000;
-  font-weight: 600;
-}
-

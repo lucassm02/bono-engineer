@@ -20,10 +20,26 @@ import {
   useConsoleConnection,
 } from '../state/consoleLink.ts';
 import { useUi } from '../state/uiStore.ts';
+import { Icon } from './ui/Icon.tsx';
+import { Modal } from './ui/Modal.tsx';
+
+/** Tom do link (lib/consoleLink) → tom do ponto e do cartão no design system. */
+const DOT_TONE: Record<LinkTone, string> = {
+  ok: 'gain',
+  busy: 'accent',
+  info: 'accent',
+  warn: 'warn',
+  bad: 'loss',
+};
 
 export function LinkDot({ tone, busy }: { tone: LinkTone; busy?: boolean }) {
   return (
-    <span className="cx-dot" data-tone={tone} data-busy={busy ? '1' : '0'} aria-hidden="true" />
+    <span
+      className="ui-dot cx-dot"
+      data-tone={DOT_TONE[tone]}
+      data-busy={busy ? '1' : '0'}
+      aria-hidden="true"
+    />
   );
 }
 
@@ -78,28 +94,29 @@ export function IpForm({ onDone, autoFocus }: { onDone?: () => void; autoFocus?:
       onDone?.();
     }
   };
+  const bad = touched && !valid;
   return (
     <form className="cx-ipform" onSubmit={submit} noValidate>
-      <label>
-        Endereço IP do PS5
+      <label className="ui-field">
+        <span className="ui-label">Endereço IP do PS5</span>
         <input
           ref={inputRef}
-          className="cx-input"
+          className="ui-input cx-input"
           value={ip}
           placeholder="192.168.0.20"
           inputMode="decimal"
           autoComplete="off"
           spellCheck={false}
-          aria-invalid={touched && !valid}
+          aria-invalid={bad}
           aria-describedby="cx-ip-help"
           onChange={(e) => setIp(e.target.value)}
         />
       </label>
-      <button type="submit" className="cx-btn" disabled={busy || ip.trim() === ''}>
+      <button type="submit" className="ui-btn" disabled={busy || ip.trim() === ''}>
         Usar este IP
       </button>
-      <p id="cx-ip-help" className="cx-help" data-bad={touched && !valid ? '1' : '0'}>
-        {touched && !valid
+      <p id="cx-ip-help" className={bad ? 'ui-error' : 'ui-help'}>
+        {bad
           ? 'Digite quatro números de 0 a 255 separados por pontos, como 192.168.0.20.'
           : 'No PS5: Configurações › Rede › Ver status da conexão › Endereço IPv4.'}
       </p>
@@ -126,7 +143,7 @@ export function ConnectionDetails() {
 
   return (
     <div className="cx-details">
-      <div className="cx-status" data-tone={view.tone} role="status">
+      <div className="ui-card cx-status" data-tone={DOT_TONE[view.tone]} role="status">
         <LinkDot tone={view.tone} busy={view.busy} />
         <div>
           <strong>{view.title}</strong>
@@ -142,10 +159,10 @@ export function ConnectionDetails() {
               {conn.consoleIp ? (
                 <>
                   <span className="num">{conn.consoleIp}</span>{' '}
-                  <span className="dim">({ipSourceLabel(conn.source)})</span>
+                  <span className="cx-muted">({ipSourceLabel(conn.source)})</span>
                 </>
               ) : (
-                <span className="dim">ainda não encontrado</span>
+                <span className="cx-muted">ainda não encontrado</span>
               )}
             </dd>
           </div>
@@ -155,7 +172,7 @@ export function ConnectionDetails() {
               {conn.subnets.length > 0 ? (
                 <span className="num">{conn.subnets.join(', ')}</span>
               ) : (
-                <span className="dim">nenhuma rede local encontrada neste PC</span>
+                <span className="cx-muted">nenhuma rede local encontrada neste PC</span>
               )}
             </dd>
           </div>
@@ -179,15 +196,17 @@ export function ConnectionDetails() {
       <div className="cx-actions">
         <button
           type="button"
-          className="cx-btn"
+          className="ui-btn"
           disabled={busy || (!mock && !conn)}
           onClick={() => run(rescanConsole)}
         >
+          <Icon name="refresh" size={18} />
           Procurar de novo
         </button>
         <button
           type="button"
-          className="cx-btn cx-btn-ghost"
+          className="ui-btn"
+          data-variant="secondary"
           aria-expanded={showIp}
           onClick={() => setShowIp((v) => !v)}
         >
@@ -196,7 +215,8 @@ export function ConnectionDetails() {
         {conn?.source === 'manual' && (
           <button
             type="button"
-            className="cx-btn cx-btn-ghost"
+            className="ui-btn"
+            data-variant="ghost"
             disabled={busy}
             onClick={() => run(backToAutomatic)}
           >
@@ -205,7 +225,7 @@ export function ConnectionDetails() {
         )}
       </div>
       {showIp && <IpForm autoFocus onDone={() => setShowIp(false)} />}
-      <p className="cx-help">
+      <p className="ui-help">
         Você não precisa informar o IP: o app procura o PS5 sozinho. Use “Usar outro IP” só se a
         busca automática não achar o console.
       </p>
@@ -218,40 +238,15 @@ export function ConnectionDetails() {
 /** Modal with the details; mounted once per app area, opened by {@link openConnectionPanel}. */
 export function ConsolePanelHost() {
   const open = useUi((s) => s.connectionPanelOpen);
-  const closeRef = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    if (!open) return;
-    closeRef.current?.focus();
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeConnectionPanel();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [open]);
-  if (!open) return null;
   return (
-    <div
-      className="cx-backdrop"
-      data-no-gesture
-      onPointerDown={(e) => {
-        if (e.target === e.currentTarget) closeConnectionPanel();
-      }}
+    <Modal
+      open={open}
+      onClose={closeConnectionPanel}
+      className="bn-modal-text"
+      title="Conexão com o PS5"
+      subtitle="O app procura o console sozinho. Aqui você acompanha e corrige, se precisar."
     >
-      <div className="cx-modal" role="dialog" aria-modal="true" aria-labelledby="cx-modal-title">
-        <header className="cx-modal-head">
-          <h2 id="cx-modal-title">Conexão com o PS5</h2>
-          <button
-            ref={closeRef}
-            type="button"
-            className="cx-close"
-            aria-label="Fechar"
-            onClick={closeConnectionPanel}
-          >
-            ×
-          </button>
-        </header>
-        <ConnectionDetails />
-      </div>
-    </div>
+      <ConnectionDetails />
+    </Modal>
   );
 }

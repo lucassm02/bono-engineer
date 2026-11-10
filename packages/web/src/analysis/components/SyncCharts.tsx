@@ -6,10 +6,11 @@
  */
 
 import type { ApiTraces, Corner } from '@gt7/shared';
-import { useEffect, useMemo, useRef } from 'react';
+import { type ReactNode, useEffect, useMemo, useRef } from 'react';
 import uPlot from 'uplot';
 import 'uplot/dist/uPlot.min.css';
 import { formatFixed } from '../../lib/format.ts';
+import { THEME, withAlpha } from '../../lib/theme.ts';
 import {
   COMPARE_PANELS,
   EVENT_PANEL_KEYS,
@@ -42,12 +43,14 @@ interface Props {
   radioMarkers?: readonly number[];
   /** Distance range of the selected driving event, shaded on every chart. */
   highlight?: [number, number] | null;
+  /** Ferramentas à direita da legenda (ex.: botão de zoom). */
+  toolbar?: ReactNode;
 }
 
 const Y_AXIS = 54;
-const GRID = '#1a2229';
-const AXIS = '#8592a0';
-const FONT = '12px Bahnschrift, "DIN Alternate", "Roboto Condensed", "Arial Narrow", sans-serif';
+const GRID = THEME.line;
+const AXIS = THEME.text3;
+const FONT = `12px ${THEME.font}`;
 
 function same(a: [number, number] | null, b: [number, number] | null): boolean {
   if (!a || !b) return a === b;
@@ -65,6 +68,7 @@ export function SyncCharts({
   focusCorner,
   radioMarkers,
   highlight,
+  toolbar,
 }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const plotsRef = useRef<uPlot[]>([]);
@@ -125,7 +129,7 @@ export function SyncCharts({
         const x1 = u.valToPos(c.exitM, 'x', true);
         if (x1 < u.bbox.left || x0 > u.bbox.left + u.bbox.width) continue;
         ctx.fillStyle =
-          c.id === focusRef.current ? 'rgba(255,178,30,0.16)' : 'rgba(255,178,30,0.06)';
+          c.id === focusRef.current ? withAlpha(THEME.accent, 0.14) : withAlpha(THEME.text2, 0.05);
         const l = Math.max(x0, u.bbox.left);
         const r = Math.min(x1, u.bbox.left + u.bbox.width);
         ctx.fillRect(l, top, r - l, height);
@@ -135,11 +139,11 @@ export function SyncCharts({
         const x0 = Math.max(u.valToPos(hl[0], 'x', true), u.bbox.left);
         const x1 = Math.min(u.valToPos(hl[1], 'x', true), u.bbox.left + u.bbox.width);
         if (x1 > x0) {
-          ctx.fillStyle = 'rgba(224,140,255,0.16)';
+          ctx.fillStyle = withAlpha(THEME.warn, 0.14);
           ctx.fillRect(x0, top, x1 - x0, height);
         }
       }
-      ctx.fillStyle = '#7aa7ff';
+      ctx.fillStyle = withAlpha(THEME.info, 0.85);
       for (const meters of radioMarkersRef.current ?? []) {
         const x = u.valToPos(meters, 'x', true);
         if (x >= u.bbox.left && x < u.bbox.left + u.bbox.width) ctx.fillRect(x, top, 1, height);
@@ -151,7 +155,7 @@ export function SyncCharts({
       const ctx = u.ctx;
       const pr = uPlot.pxRatio;
       ctx.save();
-      ctx.font = `${Math.round(11 * pr)}px Bahnschrift, "Roboto Condensed", sans-serif`;
+      ctx.font = `${Math.round(11 * pr)}px ${THEME.font}`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
       let lastRight = -1e9;
@@ -163,7 +167,7 @@ export function SyncCharts({
         const w = ctx.measureText(text).width + 8 * pr;
         if (xm - w / 2 < lastRight) continue;
         lastRight = xm + w / 2;
-        ctx.fillStyle = c.id === focusRef.current ? '#ffb21e' : 'rgba(255,178,30,0.75)';
+        ctx.fillStyle = c.id === focusRef.current ? THEME.accent : withAlpha(THEME.text2, 0.85);
         ctx.fillText(text, xm, u.bbox.top + 3 * pr);
       }
       ctx.restore();
@@ -174,7 +178,7 @@ export function SyncCharts({
       if (y < u.bbox.top || y > u.bbox.top + u.bbox.height) return;
       const ctx = u.ctx;
       ctx.save();
-      ctx.strokeStyle = '#46515c';
+      ctx.strokeStyle = THEME.lineStrong;
       ctx.lineWidth = uPlot.pxRatio;
       ctx.beginPath();
       ctx.moveTo(u.bbox.left, y);
@@ -205,7 +209,7 @@ export function SyncCharts({
     visible.forEach((p, idx) => {
       const last = idx === visible.length - 1;
       const def: PanelDef = p.def;
-      const el = host.querySelector<HTMLDivElement>(`[data-panel="${def.key}"] .a-chart-plot`);
+      const el = host.querySelector<HTMLDivElement>(`[data-panel="${def.key}"] .cmp-chart-plot`);
       if (!el) return;
       el.innerHTML = '';
       const opts: uPlot.Options = {
@@ -332,7 +336,6 @@ export function SyncCharts({
 
   // Touch: two fingers pinch/pan the shared x range, a double tap resets it (uPlot only drags with
   // a mouse). One finger keeps scrolling the page.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: listeners follow the data
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
@@ -414,30 +417,41 @@ export function SyncCharts({
   }, [focusCorner, corners, radioMarkers, highlight]);
 
   return (
-    <div className="a-charts" ref={hostRef}>
-      <div className="a-charts-legend">
-        {laps.map((l) => (
-          <span key={l.id} className="a-legend-item">
-            <i style={{ background: l.color }} data-dash={l.dash ? '1' : '0'} />
-            {l.label}
-          </span>
-        ))}
-        <span
-          className="a-legend-d num"
-          ref={(el) => void (el && readoutRefs.current.set('distance', el))}
-        />
-        <span className="dim a-small a-legend-hint">
-          Arraste (ou pince com dois dedos) para dar zoom · duplo clique/toque volta
-        </span>
+    <div className="cmp-charts" ref={hostRef}>
+      <div className="cmp-legend">
+        <ul className="cmp-legend-items" aria-label="Legenda das séries">
+          {laps.map((l) => (
+            <li key={l.id} className="cmp-legend-item">
+              <i
+                className="cmp-swatch"
+                style={{ backgroundColor: l.color }}
+                data-dash={l.dash ? '1' : '0'}
+              />
+              {l.label}
+            </li>
+          ))}
+        </ul>
+        <div className="cmp-legend-tools">
+          {toolbar}
+          <span
+            className="cmp-legend-d num"
+            ref={(el) => void (el && readoutRefs.current.set('distance', el))}
+          />
+          {!toolbar && (
+            <span className="cmp-legend-hint">
+              Arraste (ou pince com dois dedos) para dar zoom · duplo clique/toque volta
+            </span>
+          )}
+        </div>
       </div>
       {panels.map((p) => (
-        <div key={p.def.key} className="a-chart" data-panel={p.def.key} hidden={p.empty}>
-          <div className="a-chart-head">
-            <span className="a-chart-title">
+        <div key={p.def.key} className="cmp-chart" data-panel={p.def.key} hidden={p.empty}>
+          <div className="cmp-chart-head">
+            <span>
               {p.def.label}
-              {p.def.unit && <span className="dim"> ({p.def.unit})</span>}
+              {p.def.unit && <span className="cmp-chart-unit"> ({p.def.unit})</span>}
             </span>
-            <span className="a-chart-values num">
+            <span className="cmp-chart-values num">
               {p.laps.map((l) => (
                 <span
                   key={l.id}
@@ -449,11 +463,11 @@ export function SyncCharts({
               ))}
             </span>
           </div>
-          <div className="a-chart-plot" />
+          <div className="cmp-chart-plot" />
         </div>
       ))}
       {panels.some((p) => p.empty && !EVENT_PANEL_KEYS.has(p.def.key)) && (
-        <p className="dim a-small">
+        <p className="cmp-chart-note">
           Sem dados de{' '}
           {panels
             .filter((p) => p.empty && !EVENT_PANEL_KEYS.has(p.def.key))

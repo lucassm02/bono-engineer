@@ -1,191 +1,83 @@
-.engineer-controls {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 8px;
-  margin-bottom: 16px;
-  padding: 12px 14px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--panel-2);
-}
-
-.engineer-controls header,
-.engineer-controls-audio {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.engineer-controls header {
-  justify-content: space-between;
-}
-.engineer-controls h3 {
-  margin: 0;
-  font-size: 1rem;
-}
-.engineer-controls p {
-  margin: 0;
-  color: var(--dim);
-  font-size: 0.85rem;
-}
-.engineer-controls label {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 4px;
-  font-size: 0.85rem;
-}
-.engineer-controls select,
-.engineer-controls input[type="number"] {
-  width: 100%;
-  min-width: 0;
-  min-height: 36px;
-  padding: 4px 8px;
-  color: inherit;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-}
-.engineer-voice-options {
-  display: grid;
-  gap: 8px;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 145px), 1fr));
-}
-.engineer-controls input[type="range"] {
-  width: 100%;
-  accent-color: var(--accent);
-}
-.engineer-controls .engineer-controls-check {
-  display: flex;
-  align-items: center;
-  align-self: end;
-  gap: 8px;
-  min-height: 36px;
-}
-.engineer-controls-check input {
-  width: 18px;
-  height: 18px;
-  margin: 0;
-  accent-color: var(--accent);
-}
-.engineer-reference-info,
-.engineer-training {
-  min-width: 0;
-  padding: 8px 10px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  overflow-wrap: anywhere;
-}
-.engineer-training > summary {
-  cursor: pointer;
-  font-weight: 600;
-}
-.engineer-training > p,
-.engineer-training > button {
-  margin-top: 8px;
-}
-.engineer-training-corners {
-  min-width: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 145px), 1fr));
-  max-height: 12rem;
-  overflow: auto;
-  margin: 8px 0 0;
-  border: 1px solid var(--line);
-}
-.engineer-training-corners label {
-  display: flex;
-  align-items: center;
-  min-height: 32px;
-}
-.engineer-training-results li > span {
-  display: block;
-  font-size: 0.85rem;
-  color: var(--dim);
-}
-.engineer-training-results a {
-  color: var(--accent);
-}
+/* Controles do engenheiro vivem em live-menu.css (aba Engenheiro). Aqui fica só a legenda ao vivo. */
 
 .engineer-hud {
   --radio-color: var(--accent);
   position: absolute;
   z-index: 18;
-  inset: auto auto calc(var(--safe-b) + 42px) 50%;
+  inset: auto auto calc(var(--safe-b) + 46px) 50%;
   transform: translateX(-50%);
   width: max-content;
   max-width: calc(100% - var(--safe-l) - var(--safe-r));
-  padding: 7px 12px 8px;
+  display: grid;
+  gap: var(--sp-1);
+  padding: var(--sp-2) var(--sp-4) var(--sp-3);
   border: 1px solid var(--line);
   border-left: 4px solid var(--radio-color);
-  border-radius: 8px;
-  background: rgba(10, 14, 18, 0.96);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--surface-2) 96%, transparent);
+  box-shadow: var(--shadow-2);
   color: var(--text);
   pointer-events: none;
 }
 
 .engineer-hud[data-action^="brake"] {
-  --radio-color: #ff7979;
+  --radio-color: var(--loss);
 }
 .engineer-hud[data-action^="throttle"] {
-  --radio-color: #64e8a0;
+  --radio-color: var(--gain);
 }
 .engineer-hud-mode,
 .engineer-hud small {
-  color: var(--dim);
-  font-size: 0.74rem;
+  color: var(--text-3);
+  font-size: var(--fs-xs);
 }
 .engineer-hud-mode {
   display: block;
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
 }
 .engineer-hud-heading {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-4);
   justify-content: space-between;
 }
 .engineer-hud-settings {
   pointer-events: auto;
-  border: 0;
-  border-radius: 4px;
-  padding: 5px 6px;
-  background: var(--panel-2);
-  color: var(--text);
-  font: inherit;
-  font-size: 0.75rem;
-  cursor: pointer;
 }
 .engineer-hud-call {
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: var(--sp-3);
 }
 .engineer-hud-call strong {
   min-width: 0;
   overflow-wrap: anywhere;
+  font-size: var(--fs-lg);
 }
 .engineer-hud[data-action] strong {
   text-transform: uppercase;
-  font-size: clamp(0.94rem, 3.2vw, 1.3rem);
+  font-size: clamp(1rem, 3.2vw, 1.4rem);
 }
 .engineer-hud-distance {
   flex: none;
   color: var(--radio-color);
-  font-size: 1.25rem;
+  font-size: 1.4rem;
   white-space: nowrap;
 }
 
 @media (max-width: 480px) {
   .engineer-hud {
-    bottom: calc(var(--safe-b) + 68px);
+    bottom: calc(var(--safe-b) + 72px);
   }
   .app:has(.engineer-hud) {
-    --live-portrait-footer-space: 136px;
+    --live-portrait-footer-space: 144px;
   }
 }
 
 @media (min-width: 481px) and (min-height: 480px) {
   .app:has(.engineer-hud) .view {
-    padding-bottom: calc(var(--safe-b) + 136px);
+    padding-bottom: calc(var(--safe-b) + 144px);
   }
 }

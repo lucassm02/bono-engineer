@@ -6,21 +6,16 @@
 
 import type { CoachConfig, CoachReport, CoachReportSummary, Lap, Session } from '@gt7/shared';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Icon } from '../../components/ui/Icon.tsx';
 import { formatLapTime } from '../../lib/format.ts';
 import { navigate, type Route, routes } from '../../lib/route.ts';
 import { addNotice } from '../../state/uiStore.ts';
 import { api } from '../api.ts';
 import { type CoachToolCall, streamCoach } from '../coachStream.ts';
+import { ConfirmModal } from '../components/ConfirmModal.tsx';
 import { Markdown } from '../components/Markdown.tsx';
-import {
-  Card,
-  ConfirmButton,
-  ErrorBox,
-  Loading,
-  PageHead,
-  Tag,
-  useTitle,
-} from '../components/ui.tsx';
+import { Panel } from '../components/Panel.tsx';
+import { ErrorBox, Loading, PageHead, useTitle } from '../components/ui.tsx';
 import { coachToolLabel, formatDateTime, REFERENCE_KIND_LABELS } from '../lib/labels.ts';
 import { useFetch } from '../useFetch.ts';
 
@@ -42,7 +37,7 @@ function sessionLabel(s: Session, trackNames: Map<string, string>): string {
 function ToolChips({ tools }: { tools: CoachToolCall[] }) {
   if (!tools.length) return null;
   return (
-    <ul className="a-tools" aria-label="Ferramentas usadas">
+    <ul className="coach-tools" aria-label="Ferramentas usadas">
       {tools.map((t) => (
         <li key={t.id} data-status={t.status} title={t.summary}>
           {t.status === 'running' ? (
@@ -59,19 +54,40 @@ function ToolChips({ tools }: { tools: CoachToolCall[] }) {
 
 function NoKey() {
   return (
-    <Card className="a-nokey" title="Configure o coach de IA">
-      <p>
-        O coach usa a API do Claude com as mesmas ferramentas de análise do app. Para usar aqui
-        dentro, informe uma chave da API da Anthropic em{' '}
-        <a href={routes.config('coach')}>Configurações → Coach IA</a> (ou defina a variável{' '}
-        <code>ANTHROPIC_API_KEY</code> antes de iniciar o servidor).
-      </p>
-      <p className="dim">
-        Sem chave? As mesmas ferramentas funcionam no <strong>Claude Desktop</strong> ou no{' '}
-        <strong>Claude Code</strong> pelo MCP — veja{' '}
-        <a href={routes.config('mcp')}>como conectar</a> e use o prompt “debrief_sessao”.
-      </p>
-    </Card>
+    <Panel
+      tone="accent"
+      title="Configure o coach de IA"
+      description="O coach usa a API do Claude com as mesmas ferramentas de análise do app."
+    >
+      <div className="coach-nokey">
+        <p>
+          Para usar aqui dentro, informe uma chave da API da Anthropic em{' '}
+          <a href={routes.config('coach')}>Configurações → Coach IA</a> (ou defina a variável{' '}
+          <code>ANTHROPIC_API_KEY</code> antes de iniciar o servidor).
+        </p>
+        <p className="coach-muted">
+          Sem chave? As mesmas ferramentas funcionam no <strong>Claude Desktop</strong> ou no{' '}
+          <strong>Claude Code</strong> pelo MCP — veja{' '}
+          <a href={routes.config('mcp')}>como conectar</a> e use o prompt “debrief_sessao”.
+        </p>
+        <a className="ui-btn" href={routes.config('coach')}>
+          Abrir Configurações
+        </a>
+      </div>
+    </Panel>
+  );
+}
+
+function Thinking() {
+  return (
+    <div className="coach-thinking" role="status">
+      <Loading text="Pensando…" />
+      <div className="coach-skel" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
+    </div>
   );
 }
 
@@ -288,16 +304,35 @@ export function CoachPage({ route }: { route: Route }) {
   const noCoachEndpoint = cfg.error?.status === 404;
   const laps: Lap[] = detail.data?.laps ?? [];
   const reportList: CoachReportSummary[] = reports.data ?? [];
+  const [toDelete, setToDelete] = useState<CoachReportSummary | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const canGenerate = !streaming && !(config !== null && !config.hasKey) && !noCoachEndpoint;
+
+  const confirmDelete = async () => {
+    if (!toDelete) return;
+    setDeleting(true);
+    try {
+      await api.deleteCoachReport(toDelete.id);
+      reports.reload();
+      if (toDelete.id === currentId) navigate(routes.coach(), true);
+    } catch (e) {
+      addNotice('error', (e as Error).message, 6000);
+    } finally {
+      setDeleting(false);
+      setToDelete(null);
+    }
+  };
 
   return (
-    <>
+    <div className="coach-page">
       <PageHead
         title="Coach IA"
         sub="Debrief com números e uma ação por curva, a partir das mesmas métricas da página de análise."
         actions={
           currentId && (
             <a
-              className="a-btn a-btn-ghost"
+              className="ui-btn"
+              data-variant="secondary"
               href={routes.coach()}
               onClick={() => abortRef.current?.abort()}
             >
@@ -306,8 +341,8 @@ export function CoachPage({ route }: { route: Route }) {
           )
         }
       />
-      <div className="a-coach">
-        <div className="a-coach-main">
+      <div className="coach-layout">
+        <div className="coach-main">
           {cfg.error && !noCoachEndpoint && !config && (
             <ErrorBox error={cfg.error} compact onRetry={cfg.reload} />
           )}
@@ -320,17 +355,21 @@ export function CoachPage({ route }: { route: Route }) {
           {config && !config.hasKey && <NoKey />}
 
           {!currentId && entries.length === 0 && (
-            <Card title="Pedir um debrief">
+            <Panel
+              title="Pedir um debrief"
+              description="Escolha o que o coach deve olhar. Sem escolher nada, ele analisa a melhor volta da sessão mais recente."
+            >
               <form
-                className="a-form a-coach-form"
+                className="coach-form"
                 onSubmit={(e) => {
                   e.preventDefault();
                   startDebrief();
                 }}
               >
-                <label>
-                  Sessão
+                <label className="ui-field coach-span2">
+                  <span className="ui-label">Sessão</span>
                   <select
+                    className="ui-select"
                     value={effectiveSession}
                     onChange={(e) => {
                       setSessionId(e.target.value);
@@ -346,9 +385,13 @@ export function CoachPage({ route }: { route: Route }) {
                     ))}
                   </select>
                 </label>
-                <label>
-                  Volta
-                  <select value={lapId} onChange={(e) => setLapId(e.target.value)}>
+                <label className="ui-field">
+                  <span className="ui-label">Volta</span>
+                  <select
+                    className="ui-select"
+                    value={lapId}
+                    onChange={(e) => setLapId(e.target.value)}
+                  >
                     <option value="">Melhor volta da sessão</option>
                     {laps.map((l) => (
                       <option key={l.id} value={l.id}>
@@ -359,9 +402,13 @@ export function CoachPage({ route }: { route: Route }) {
                     ))}
                   </select>
                 </label>
-                <label>
-                  Referência
-                  <select value={ref} onChange={(e) => setRef(e.target.value)}>
+                <label className="ui-field">
+                  <span className="ui-label">Referência</span>
+                  <select
+                    className="ui-select"
+                    value={ref}
+                    onChange={(e) => setRef(e.target.value)}
+                  >
                     {REF_OPTIONS.map((k) => (
                       <option key={k} value={k}>
                         {REFERENCE_KIND_LABELS[k]}
@@ -372,9 +419,13 @@ export function CoachPage({ route }: { route: Route }) {
                     )}
                   </select>
                 </label>
-                <label>
-                  Foco
-                  <select value={corner} onChange={(e) => setCorner(e.target.value)}>
+                <label className="ui-field coach-span2">
+                  <span className="ui-label">Foco</span>
+                  <select
+                    className="ui-select"
+                    value={corner}
+                    onChange={(e) => setCorner(e.target.value)}
+                  >
                     <option value="">Volta inteira (debrief)</option>
                     {(track.data?.corners ?? []).map((c) => (
                       <option key={c.id} value={c.id}>
@@ -387,46 +438,42 @@ export function CoachPage({ route }: { route: Route }) {
                     )}
                   </select>
                 </label>
-                <label className="a-span2">
-                  Pergunta (opcional)
+                <label className="ui-field coach-span2">
+                  <span className="ui-label">Pergunta (opcional)</span>
                   <textarea
-                    className="a-input"
-                    rows={2}
+                    className="ui-input"
+                    rows={3}
                     maxLength={1000}
                     value={question}
                     placeholder="ex.: por que perco tanto na saída da T3?"
                     onChange={(e) => setQuestion(e.target.value)}
                   />
                 </label>
-                <div className="a-actions a-span2">
-                  <button
-                    type="submit"
-                    className="a-btn"
-                    disabled={streaming || (config !== null && !config.hasKey) || noCoachEndpoint}
-                  >
+                <div className="coach-actions coach-span2">
+                  <button type="submit" className="ui-btn" data-size="lg" disabled={!canGenerate}>
                     Gerar debrief
                   </button>
-                  <span className="dim a-small">
+                  <span className="coach-muted">
                     {config
                       ? `Modelo: ${config.models.find((m) => m.id === config.model)?.label ?? config.model}`
                       : ''}
                   </span>
                 </div>
               </form>
-            </Card>
+            </Panel>
           )}
 
           {(entries.length > 0 || currentId) && (
-            <div className="a-conv">
+            <div className="coach-conv">
               {activeReport && (
-                <div className="a-report-meta dim a-small">
-                  {activeReport.title} · {formatDateTime(activeReport.createdAt)} ·{' '}
-                  {activeReport.model}
+                <div className="coach-meta">
+                  <strong>{activeReport.title}</strong>
+                  <span className="ui-badge">{formatDateTime(activeReport.createdAt)}</span>
+                  <span className="ui-badge">{activeReport.model}</span>
                   {activeReport.usage && (
-                    <>
-                      {' '}
-                      · {activeReport.usage.inputTokens + activeReport.usage.outputTokens} tokens
-                    </>
+                    <span className="ui-badge">
+                      {activeReport.usage.inputTokens + activeReport.usage.outputTokens} tokens
+                    </span>
                   )}
                 </div>
               )}
@@ -434,55 +481,75 @@ export function CoachPage({ route }: { route: Route }) {
               {entries.map((e, i) =>
                 e.role === 'user' ? (
                   // biome-ignore lint/suspicious/noArrayIndexKey: append-only conversation
-                  <div key={i} className="a-msg a-msg-user">
+                  <div key={i} className="coach-msg coach-msg-user">
+                    <span className="coach-who">Você</span>
                     {e.text}
                   </div>
                 ) : (
                   // biome-ignore lint/suspicious/noArrayIndexKey: append-only conversation
-                  <div key={i} className="a-msg a-msg-bot">
+                  <article key={i} className="ui-card coach-msg coach-msg-bot">
+                    <header className="coach-who-row">
+                      <span className="coach-avatar" aria-hidden="true">
+                        <Icon name="coach" size={16} />
+                      </span>
+                      <span className="coach-who">Coach IA</span>
+                      {e.streaming && (
+                        <span className="ui-badge" data-tone="accent">
+                          respondendo
+                        </span>
+                      )}
+                    </header>
                     <ToolChips tools={e.tools} />
                     {e.text ? (
-                      <Markdown text={e.text} />
+                      <Markdown className="coach-md" text={e.text} />
                     ) : e.streaming && !e.tools.length ? (
-                      <Loading text="Pensando…" />
+                      <Thinking />
                     ) : null}
-                    {e.streaming && e.text && <span className="a-caret" aria-hidden="true" />}
+                    {e.streaming && e.text && <span className="coach-caret" aria-hidden="true" />}
                     {e.error && (
-                      <p className="a-form-error">
-                        {e.error}
-                        {/chave|key/i.test(e.error) && (
-                          <>
-                            {' '}
-                            <a href={routes.config('coach')}>Configurar</a>
-                          </>
-                        )}
-                      </p>
+                      <div className="ui-card coach-error" data-tone="loss" role="alert">
+                        <Icon name="alert" size={18} />
+                        <p>
+                          {e.error}
+                          {/chave|key/i.test(e.error) && (
+                            <>
+                              {' '}
+                              <a href={routes.config('coach')}>Configurar</a>
+                            </>
+                          )}
+                        </p>
+                      </div>
                     )}
-                  </div>
+                  </article>
                 ),
               )}
               {streaming ? (
-                <button
-                  type="button"
-                  className="a-btn a-btn-ghost"
-                  onClick={() => abortRef.current?.abort()}
-                >
-                  Parar
-                </button>
+                <div className="coach-actions">
+                  <button
+                    type="button"
+                    className="ui-btn"
+                    data-variant="secondary"
+                    onClick={() => abortRef.current?.abort()}
+                  >
+                    <Icon name="stop" size={16} />
+                    Parar
+                  </button>
+                </div>
               ) : (
                 currentId && (
                   <form
-                    className="a-chat"
+                    className="coach-chat"
                     onSubmit={(e) => {
                       e.preventDefault();
                       sendChat();
                     }}
                   >
                     <textarea
-                      className="a-input"
+                      className="ui-input"
                       rows={2}
                       value={chat}
                       maxLength={2000}
+                      aria-label="Pergunta de acompanhamento"
                       placeholder="Pergunte mais (ex.: e na T5? como treino isso?)"
                       onChange={(e) => setChat(e.target.value)}
                       onKeyDown={(e) => {
@@ -492,7 +559,7 @@ export function CoachPage({ route }: { route: Route }) {
                         }
                       }}
                     />
-                    <button type="submit" className="a-btn" disabled={!chat.trim()}>
+                    <button type="submit" className="ui-btn" disabled={!chat.trim()}>
                       Enviar
                     </button>
                   </form>
@@ -502,57 +569,70 @@ export function CoachPage({ route }: { route: Route }) {
           )}
         </div>
 
-        <aside className="a-coach-side">
-          <Card title="Relatórios">
+        <aside className="coach-side">
+          <Panel title="Relatórios" description="Debriefs salvos, do mais recente ao mais antigo.">
             {reports.error && !reports.data ? (
-              <p className="dim a-small">
+              <p className="coach-muted">
                 {noCoachEndpoint ? 'Indisponível neste servidor.' : reports.error.message}
               </p>
             ) : !reports.data ? (
               <Loading />
             ) : reportList.length === 0 ? (
-              <p className="dim a-small">Nenhum relatório ainda.</p>
+              <p className="coach-muted">Nenhum relatório ainda.</p>
             ) : (
-              <ul className="a-reports">
+              <ul className="coach-reports">
                 {reportList.map((r) => (
                   <li key={r.id} data-current={r.id === currentId ? '1' : '0'}>
                     <a href={routes.coach({ id: r.id })}>
                       <strong>{r.title}</strong>
-                      <span className="dim a-small">
+                      <span className="coach-report-date">
                         {formatDateTime(r.createdAt)}
                         {r.status !== 'done' && (
                           <>
                             {' '}
-                            <Tag tone={r.status === 'error' ? 'bad' : 'info'}>
+                            <span
+                              className="ui-badge"
+                              data-tone={r.status === 'error' ? 'loss' : 'accent'}
+                            >
                               {r.status === 'error' ? 'erro' : 'em andamento'}
-                            </Tag>
+                            </span>
                           </>
                         )}
                       </span>
-                      {r.preview && <span className="a-report-preview">{r.preview}</span>}
+                      {r.preview && <span className="coach-report-preview">{r.preview}</span>}
                     </a>
-                    <ConfirmButton
-                      className="a-btn a-btn-ghost a-btn-sm"
-                      label="Apagar"
-                      question="Apagar?"
-                      confirmLabel="Sim"
-                      onConfirm={async () => {
-                        try {
-                          await api.deleteCoachReport(r.id);
-                          reports.reload();
-                          if (r.id === currentId) navigate(routes.coach(), true);
-                        } catch (e) {
-                          addNotice('error', (e as Error).message, 6000);
-                        }
-                      }}
-                    />
+                    <button
+                      type="button"
+                      className="ui-icon-btn coach-report-del"
+                      aria-label={`Apagar o relatório ${r.title}`}
+                      title="Apagar"
+                      onClick={() => setToDelete(r)}
+                    >
+                      <Icon name="trash" size={16} />
+                    </button>
                   </li>
                 ))}
               </ul>
             )}
-          </Card>
+          </Panel>
         </aside>
       </div>
-    </>
+      <ConfirmModal
+        open={!!toDelete}
+        title="Apagar este relatório?"
+        message={
+          <>
+            <p>
+              <strong>{toDelete?.title}</strong> será apagado junto com os gráficos que ele guardou.
+            </p>
+            <p>Essa ação não pode ser desfeita.</p>
+          </>
+        }
+        confirmLabel="Apagar relatório"
+        busy={deleting}
+        onClose={() => setToDelete(null)}
+        onConfirm={() => void confirmDelete()}
+      />
+    </div>
   );
 }

@@ -7,12 +7,38 @@
 
 import type { SessionSavedMessage } from '@gt7/shared';
 import { create } from 'zustand';
-import { describeCapture, describeReferenceCapture, savedToastText } from '../lib/captureStatus.ts';
+import {
+  type CaptureTone,
+  describeCapture,
+  describeReferenceCapture,
+  savedToastText,
+} from '../lib/captureStatus.ts';
 import { routes } from '../lib/route.ts';
 import { useUi } from '../state/uiStore.ts';
+import { Icon } from './ui/Icon.tsx';
 import '../styles/capture-status.css';
 
 const TOAST_MS = 15_000;
+
+/** Tom do estado de captura → tom do ponto do design system (idle/off ficam neutros). */
+const DOT_TONE: Record<CaptureTone, string | undefined> = {
+  ok: 'gain',
+  warn: 'warn',
+  info: 'accent',
+  idle: undefined,
+  off: undefined,
+};
+
+function CaptureDot({ tone, pulse }: { tone: CaptureTone; pulse?: boolean }) {
+  return (
+    <span
+      className="ui-dot cs-dot"
+      data-tone={DOT_TONE[tone]}
+      data-pulse={pulse ? '1' : '0'}
+      aria-hidden="true"
+    />
+  );
+}
 
 interface SavedToast {
   id: number;
@@ -59,7 +85,7 @@ export function CaptureStatus({ variant }: { variant: 'live' | 'bar' }) {
         data-no-gesture
         title="Demonstração: nada é gravado."
       >
-        <span className="cs-dot" data-tone="off" aria-hidden="true" />
+        <CaptureDot tone="off" />
         <span className="cs-text">Demo · não grava</span>
       </span>
     );
@@ -67,12 +93,7 @@ export function CaptureStatus({ variant }: { variant: 'live' | 'bar' }) {
   if (!view) return null;
   const inner = (
     <>
-      <span
-        className="cs-dot"
-        data-tone={view.tone}
-        data-pulse={view.pulse ? '1' : '0'}
-        aria-hidden="true"
-      />
+      <CaptureDot tone={view.tone} pulse={view.pulse} />
       <span className="cs-text">{view.label}</span>
     </>
   );
@@ -123,22 +144,31 @@ export function SessionSavedToast() {
   const toast = useSavedToast((s) => s.toast);
   if (!toast) return null;
   return (
-    <div className="cs-toast" data-no-gesture role="status" aria-live="polite">
-      <span>{toast.message}</span>
+    <div
+      className="ui-toast cs-toast"
+      data-level="success"
+      data-no-gesture
+      role="status"
+      aria-live="polite"
+    >
+      <Icon name="check" size={18} className="cs-toast-icon" />
+      <span className="cs-toast-text">{toast.message}</span>
       <a
-        className="cs-toast-link"
+        className="ui-btn"
+        data-variant="secondary"
+        data-size="sm"
         href={routes.session(toast.sessionId)}
         onClick={dismissSessionSaved}
       >
-        ver
+        Ver
       </a>
       <button
         type="button"
-        className="cs-toast-x"
+        className="ui-icon-btn cs-toast-x"
         aria-label="Fechar aviso"
         onClick={dismissSessionSaved}
       >
-        ×
+        <Icon name="close" size={16} />
       </button>
     </div>
   );

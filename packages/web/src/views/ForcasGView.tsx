@@ -81,29 +81,31 @@ export function ForcasGView() {
             </span>
           </div>
         </div>
-        <table className="forcas-peaks num">
-          <thead>
-            <tr>
-              <th>Máximas (g)</th>
-              <th>Volta</th>
-              <th>Sessão</th>
-            </tr>
-          </thead>
-          <tbody>
-            {PEAK_ROWS.map((row) => (
-              <tr key={row.key}>
-                <td>{row.label}</td>
-                <td ref={set(`l-${row.key}`)} />
-                <td ref={set(`s-${row.key}`)} />
+        <div className="forcas-peaks-wrap">
+          <table className="forcas-peaks num">
+            <thead>
+              <tr>
+                <th>Máximas (g)</th>
+                <th>Volta</th>
+                <th>Sessão</th>
               </tr>
-            ))}
-            <tr ref={set('vertPeak')} data-show="0">
-              <td>Vertical</td>
-              <td ref={set('l-vert')} />
-              <td ref={set('s-vert')} />
-            </tr>
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {PEAK_ROWS.map((row) => (
+                <tr key={row.key}>
+                  <td>{row.label}</td>
+                  <td ref={set(`l-${row.key}`)} />
+                  <td ref={set(`s-${row.key}`)} />
+                </tr>
+              ))}
+              <tr ref={set('vertPeak')} data-show="0">
+                <td>Vertical</td>
+                <td ref={set('l-vert')} />
+                <td ref={set('s-vert')} />
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <p className="forcas-hint dim">Marcas roxas: máximas desta volta.</p>
       </div>
     </div>

@@ -2,6 +2,7 @@
 
 import type { CornerComparisonRow, CornerMetrics } from '@gt7/shared';
 import { useState } from 'react';
+import { THEME } from '../../lib/theme.ts';
 import {
   CORNER_METRICS,
   type CornerSort,
@@ -25,21 +26,37 @@ export function CornerTable({ rows, focusCorner, onCorner }: Props) {
   const [sort, setSort] = useState<CornerSort>('order');
   const sorted = sortRows(rows, sort);
   return (
-    <div className="a-corner-table">
-      <fieldset className="a-seg" aria-label="Ordenar curvas">
-        <button type="button" aria-pressed={sort === 'order'} onClick={() => setSort('order')}>
-          Ordem da pista
-        </button>
-        <button
-          type="button"
-          aria-pressed={sort === 'timeLost'}
-          onClick={() => setSort('timeLost')}
-        >
-          Mais tempo perdido
-        </button>
-      </fieldset>
-      <div className="a-table-wrap">
-        <table className="a-table a-table-click a-ct">
+    <div className="cmp-corner-table">
+      <div className="cmp-ct-tools">
+        <fieldset className="ui-segmented" aria-label="Ordenar curvas">
+          <button type="button" aria-pressed={sort === 'order'} onClick={() => setSort('order')}>
+            Ordem da pista
+          </button>
+          <button
+            type="button"
+            aria-pressed={sort === 'timeLost'}
+            onClick={() => setSort('timeLost')}
+          >
+            Mais tempo perdido
+          </button>
+        </fieldset>
+        <p className="cmp-ct-legend">
+          <span>
+            <i className="cmp-swatch" style={{ background: THEME.chart1 }} /> Você
+          </span>
+          <span>
+            <i className="cmp-swatch" style={{ background: THEME.chart2 }} /> Referência
+          </span>
+          <span>
+            <i className="cmp-swatch" style={{ background: THEME.gain }} /> a seu favor
+          </span>
+          <span>
+            <i className="cmp-swatch" style={{ background: THEME.loss }} /> custa tempo
+          </span>
+        </p>
+      </div>
+      <div className="cmp-table-wrap">
+        <table className="cmp-table cmp-table-click">
           <thead>
             <tr>
               <th>Curva</th>
@@ -56,14 +73,14 @@ export function CornerTable({ rows, focusCorner, onCorner }: Props) {
                   title={`${m.label} (${m.unit}). Diferença: ${m.hint}`}
                 >
                   {m.short}
-                  <span className="dim"> {m.unit}</span>
+                  <span className="cmp-th-unit"> {m.unit}</span>
                 </th>
               ))}
               <th
                 className="num-col"
                 title="Desvio lateral do seu traçado em relação à linha da referência (+ = à esquerda): entrada / ápice / saída"
               >
-                Traçado <span className="dim">m</span>
+                Traçado <span className="cmp-th-unit">m</span>
               </th>
               <th className="num-col" title="Marcha no ápice: você / referência">
                 Marcha
@@ -88,7 +105,7 @@ export function CornerTable({ rows, focusCorner, onCorner }: Props) {
                       <strong>{r.corner.id}</strong>
                       {r.corner.name && <span> {r.corner.name}</span>}
                     </button>
-                    <span className="dim a-small">
+                    <span className="cmp-corner-meta">
                       {' '}
                       {r.corner.direction === 'left' ? '↰' : '↱'}
                       {r.corner.kind ? ` ${CORNER_KIND_LABELS[r.corner.kind]}` : ''}
@@ -135,7 +152,7 @@ export function CornerTable({ rows, focusCorner, onCorner }: Props) {
           </tbody>
         </table>
       </div>
-      <p className="dim a-small">
+      <p className="cmp-table-note">
         Em cada métrica: <span className="a-m-you">você</span> ·{' '}
         <span className="a-m-ref">referência</span> · diferença (verde = a seu favor, vermelho =
         custa tempo). Frenagem e retomada são posições na volta (m); frenagem + = você freia mais

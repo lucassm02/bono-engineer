@@ -15,8 +15,10 @@ import type {
   Session,
 } from '@gt7/shared';
 import { useEffect, useMemo, useState } from 'react';
+import { Icon } from '../../components/ui/Icon.tsx';
 import { formatDelta, formatLapTime } from '../../lib/format.ts';
 import { navigate, type Route, routes } from '../../lib/route.ts';
+import { SERIES_COLORS } from '../../lib/theme.ts';
 import { addNotice } from '../../state/uiStore.ts';
 import { api } from '../api.ts';
 import { CarName } from '../components/CarName.tsx';
@@ -173,21 +175,21 @@ function ConsistencySection({
   return (
     <>
       <div className="a-stats">
-        <div>
-          <span className="a-sum-k">Voltas analisadas</span>
-          <span className="a-sum-v num">{report.lapIds.length}</span>
+        <div className="a-stat">
+          <span className="a-stat-k">Voltas analisadas</span>
+          <span className="a-stat-v num">{report.lapIds.length}</span>
         </div>
-        <div>
-          <span className="a-sum-k">Melhor</span>
-          <span className="a-sum-v num">{formatLapTime(lt.min)}</span>
+        <div className="a-stat">
+          <span className="a-stat-k">Melhor</span>
+          <span className="a-stat-v num">{formatLapTime(lt.min)}</span>
         </div>
-        <div>
-          <span className="a-sum-k">Média</span>
-          <span className="a-sum-v num">{formatLapTime(lt.mean)}</span>
+        <div className="a-stat">
+          <span className="a-stat-k">Média</span>
+          <span className="a-stat-v num">{formatLapTime(lt.mean)}</span>
         </div>
-        <div>
-          <span className="a-sum-k">Desvio-padrão</span>
-          <span className="a-sum-v num">±{fixed(lt.stdDev / 1000, 3)} s</span>
+        <div className="a-stat">
+          <span className="a-stat-k">Desvio-padrão</span>
+          <span className="a-stat-v num">±{fixed(lt.stdDev / 1000, 3)} s</span>
         </div>
       </div>
       {report.highlights.length > 0 && (
@@ -223,7 +225,7 @@ function ConsistencySection({
           </tbody>
         </table>
       </div>
-      <p className="dim a-small">
+      <p className="a-section-note">
         ± = desvio-padrão entre as voltas (passe o mouse para média, mínimo e máximo).
       </p>
     </>
@@ -257,10 +259,10 @@ function EvolutionSection({ evo, corners }: { evo: EvolutionReport; corners: Map
   };
   const lapSeries: MiniSeries[] = useMemo(
     () => [
-      { label: 'Melhor volta', color: '#ff7a2f', values: evo.days.map((d) => d.bestLapMs) },
+      { label: 'Melhor volta', color: SERIES_COLORS[0]!, values: evo.days.map((d) => d.bestLapMs) },
       {
         label: 'Média das 3 melhores',
-        color: '#7aa7ff',
+        color: SERIES_COLORS[3]!,
         values: evo.days.map((d) => d.top3MeanMs),
         dash: [5, 4],
       },
@@ -268,7 +270,7 @@ function EvolutionSection({ evo, corners }: { evo: EvolutionReport; corners: Map
         ? [
             {
               label: evo.baseline.kind === 'reference' ? 'Referência top' : 'Melhor pessoal',
-              color: '#2fd3b0',
+              color: SERIES_COLORS[1]!,
               values: evo.days.map(() => evo.baseline!.timeMs),
               dash: [2, 4],
             },
@@ -292,7 +294,7 @@ function EvolutionSection({ evo, corners }: { evo: EvolutionReport; corners: Map
     () => [
       {
         label: `${cid} · ${def.label}`,
-        color: '#ffb21e',
+        color: SERIES_COLORS[2]!,
         values: evo.days.map((d) => {
           const v = d.corners.find((c) => c.cornerId === cid)?.[metric];
           return typeof v === 'number' ? v : null;
@@ -435,7 +437,7 @@ function BestLapsTab({ trackId, hasTopReference }: { trackId: string; hasTopRefe
     <>
       {(usage.length > 1 || filtering) && (
         <>
-          <div className="a-filters">
+          <div className="a-toolbar">
             <CarFilterField usage={usage} value={carFilter} onChange={setCarFilter} />
           </div>
           {filtering && (
@@ -458,7 +460,7 @@ function BestLapsTab({ trackId, hasTopReference }: { trackId: string; hasTopRefe
               key={g.carCode}
               title={<CarName carCode={g.carCode} logoSize={24} className="carname-wrap" />}
               actions={
-                <span className="dim a-small">
+                <span className="a-small dim">
                   Melhor <strong className="num a-pbtime">{formatLapTime(pb.timeMs)}</strong>
                 </span>
               }
@@ -471,7 +473,7 @@ function BestLapsTab({ trackId, hasTopReference }: { trackId: string; hasTopRefe
                       <span className="a-toplap-time num" data-best={i === 0 ? '1' : '0'}>
                         {formatLapTime(l.timeMs)}
                       </span>
-                      <a className="dim a-small" href={routes.session(l.sessionId)}>
+                      <a className="a-toplap-when" href={routes.session(l.sessionId)}>
                         {formatDateTime(l.startedAt)} · volta {l.number}
                       </a>
                       {l.isReference && <Tag tone="ref">ref</Tag>}
@@ -520,7 +522,7 @@ function SessionsTab({ sessions }: { sessions: Session[] }) {
     <>
       {(usage.length > 1 || isCarFiltering(carFilter)) && (
         <>
-          <div className="a-filters">
+          <div className="a-toolbar">
             <CarFilterField usage={usage} value={carFilter} onChange={setCarFilter} />
           </div>
           {isCarFiltering(carFilter) && (
@@ -695,21 +697,21 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
 
       {data && (
         <div className="a-stats a-track-stats">
-          <div>
-            <span className="a-sum-k">Sua melhor volta</span>
-            <span className="a-sum-v num">{formatLapTime(anyPb?.personalBestMs ?? null)}</span>
+          <div className="a-stat" data-emph="1">
+            <span className="a-stat-k">Sua melhor volta</span>
+            <span className="a-stat-v num">{formatLapTime(anyPb?.personalBestMs ?? null)}</span>
           </div>
-          <div>
-            <span className="a-sum-k">Melhor do top</span>
-            <span className="a-sum-v num">{bestRef ? formatLapTime(bestRef) : '–'}</span>
+          <div className="a-stat">
+            <span className="a-stat-k">Melhor do top</span>
+            <span className="a-stat-v num">{bestRef ? formatLapTime(bestRef) : '–'}</span>
           </div>
-          <div>
-            <span className="a-sum-k">Sessões</span>
-            <span className="a-sum-v num">{sessions.data ? ownSessions.length : '–'}</span>
+          <div className="a-stat">
+            <span className="a-stat-k">Sessões</span>
+            <span className="a-stat-v num">{sessions.data ? ownSessions.length : '–'}</span>
           </div>
-          <div>
-            <span className="a-sum-k">Voltas</span>
-            <span className="a-sum-v num">{data.lapCount}</span>
+          <div className="a-stat">
+            <span className="a-stat-k">Voltas</span>
+            <span className="a-stat-v num">{data.lapCount}</span>
           </div>
         </div>
       )}
@@ -809,25 +811,29 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
               <div className="a-theo">
                 <h3 className="a-h3">Volta ideal da sessão</h3>
                 <div className="a-stats">
-                  <div>
-                    <span className="a-sum-k">Sua melhor</span>
-                    <span className="a-sum-v num">{formatLapTime(theo.data.report.bestLapMs)}</span>
+                  <div className="a-stat">
+                    <span className="a-stat-k">Sua melhor</span>
+                    <span className="a-stat-v num">
+                      {formatLapTime(theo.data.report.bestLapMs)}
+                    </span>
                   </div>
-                  <div>
-                    <span className="a-sum-k">Melhores setores</span>
-                    <span className="a-sum-v num">
+                  <div className="a-stat">
+                    <span className="a-stat-k">Melhores setores</span>
+                    <span className="a-stat-v num">
                       {formatLapTime(theo.data.report.theoreticalBestSectorsMs)}
                     </span>
                   </div>
-                  <div>
-                    <span className="a-sum-k">Melhores {theo.data.report.count} microssetores</span>
-                    <span className="a-sum-v num">
+                  <div className="a-stat">
+                    <span className="a-stat-k">
+                      Melhores {theo.data.report.count} microssetores
+                    </span>
+                    <span className="a-stat-v num">
                       {formatLapTime(theo.data.report.theoreticalBestMs)}
                     </span>
                   </div>
-                  <div>
-                    <span className="a-sum-k">Ganho possível</span>
-                    <span className="a-sum-v num" data-tone="gain">
+                  <div className="a-stat" data-emph="ideal">
+                    <span className="a-stat-k">Ganho possível</span>
+                    <span className="a-stat-v num" data-tone="gain">
                       {formatDelta(theo.data.report.theoreticalBestMs - theo.data.report.bestLapMs)}
                     </span>
                   </div>
@@ -846,7 +852,7 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
         <Card title="Referências do top mundial">
           {data && data.references.length > 0 ? (
             <div className="a-table-wrap">
-              <table className="a-table">
+              <table className="a-table a-table-cards">
                 <thead>
                   <tr>
                     <th>Piloto</th>
@@ -864,14 +870,16 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
                         <td>
                           <Tag tone="ref">ref</Tag> {r.driverName ?? 'sem nome'}
                         </td>
-                        <td>
+                        <td data-label="Carro">
                           <CarName carCode={r.carCode} />
                         </td>
-                        <td className="num num-col">{formatLapTime(r.timeMs)}</td>
+                        <td className="num num-col" data-label="Tempo">
+                          {formatLapTime(r.timeMs)}
+                        </td>
                         <td>
                           {mine && (
                             <a
-                              className="a-btn a-btn-sm"
+                              className="a-btn a-btn-ghost a-btn-sm"
                               href={routes.compare({ lap: mine, ref: r.lapId })}
                             >
                               Comparar com minha melhor
@@ -885,13 +893,14 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
               </table>
             </div>
           ) : (
-            <div className="a-empty">
-              <p>Nenhuma volta do top guardada para esta pista.</p>
-              <p className="dim">
+            <div className="ui-empty a-empty">
+              <strong>Nenhuma volta do top guardada para esta pista</strong>
+              <p>
                 Assista ao replay de um piloto do ranking no Time Trial e o app grava a volta dele
                 como alvo para você comparar.
               </p>
               <a className="a-btn" href={routes.capture()}>
+                <Icon name="capture" size={18} />
                 Capturar uma referência
               </a>
             </div>

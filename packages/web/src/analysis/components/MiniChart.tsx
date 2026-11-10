@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import uPlot from 'uplot';
 import 'uplot/dist/uPlot.min.css';
+import { THEME } from '../../lib/theme.ts';
 
 export interface MiniSeries {
   label: string;
@@ -21,9 +22,9 @@ interface Props {
   zeroLine?: number | null;
 }
 
-const GRID = '#1a2229';
-const AXIS = '#8592a0';
-const FONT = '12px Bahnschrift, "DIN Alternate", "Roboto Condensed", "Arial Narrow", sans-serif';
+const GRID = THEME.line;
+const AXIS = THEME.text3;
+const FONT = `12px ${THEME.font}`;
 
 export function MiniChart({ xs, series, height = 200, xLabel, yLabel, zeroLine = null }: Props) {
   const ref = useRef<HTMLDivElement>(null);
@@ -76,7 +77,7 @@ export function MiniChart({ xs, series, height = 200, xLabel, yLabel, zeroLine =
             const y = u.valToPos(zeroLine, 'y', true);
             if (y < u.bbox.top || y > u.bbox.top + u.bbox.height) return;
             u.ctx.save();
-            u.ctx.strokeStyle = '#46515c';
+            u.ctx.strokeStyle = THEME.lineStrong;
             u.ctx.setLineDash([4, 4]);
             u.ctx.beginPath();
             u.ctx.moveTo(u.bbox.left, y);

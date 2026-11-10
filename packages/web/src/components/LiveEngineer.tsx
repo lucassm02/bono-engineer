@@ -174,7 +174,9 @@ function EngineerHud() {
         <button
           type="button"
           data-no-gesture
-          className="engineer-hud-settings"
+          className="ui-btn engineer-hud-settings"
+          data-variant="secondary"
+          data-size="sm"
           onClick={toggleMenu}
         >
           Ajustar rádio
@@ -195,7 +197,9 @@ function EngineerHud() {
         <button
           type="button"
           data-no-gesture
-          className="engineer-hud-settings"
+          className="ui-btn engineer-hud-settings"
+          data-variant="secondary"
+          data-size="sm"
           disabled={status === WAITING_TELEMETRY || status === STATUS.suspended}
           onClick={() => radioEngine.requestSummary()}
         >

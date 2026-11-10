@@ -207,14 +207,21 @@ export function TreinoCurvaView() {
       <div className="treino-controls" data-no-gesture>
         <button
           type="button"
-          className="chip"
+          className="ui-btn"
+          data-variant="secondary"
           aria-pressed={audio}
           disabled={!speechSupported()}
           onClick={() => setCornerAudio(!audio)}
         >
           {audio ? 'Áudio: ligado' : 'Áudio: desligado'}
         </button>
-        <button type="button" className="chip" aria-pressed={!!pinned} onClick={pinCurrent}>
+        <button
+          type="button"
+          className="ui-btn"
+          data-variant="secondary"
+          aria-pressed={!!pinned}
+          onClick={pinCurrent}
+        >
           {pinned ? `Soltar ${pinned}` : 'Fixar esta curva'}
         </button>
       </div>

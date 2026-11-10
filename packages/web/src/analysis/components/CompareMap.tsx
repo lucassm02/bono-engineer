@@ -7,7 +7,8 @@
 import type { MapCorner, MicrosectorColor } from '@gt7/shared';
 import { type PointerEvent as ReactPointerEvent, useCallback, useEffect, useRef } from 'react';
 import { type Bounds, boundsOf, fitScale, mapX, mapY } from '../../lib/mapMath.ts';
-import { CANVAS_COLORS as C, useCanvasSize } from '../../widgets/useCanvas.ts';
+import { THEME, withAlpha } from '../../lib/theme.ts';
+import { useCanvasSize } from '../../widgets/useCanvas.ts';
 import { colorAt, gridIndex, type Series, valueAt } from '../lib/chartData.ts';
 import type { CursorBus } from '../lib/cursorBus.ts';
 
@@ -45,11 +46,11 @@ interface Props {
 }
 
 const TONE: Record<MicrosectorColor['tone'], string> = {
-  gain: C.gain,
-  loss: C.loss,
-  neutral: '#c9d1d8',
+  gain: THEME.gain,
+  loss: THEME.loss,
+  neutral: THEME.text2,
   // 'best' = equals the best microsector of a 2-lap set, i.e. you gained there: same as gain.
-  best: C.gain,
+  best: THEME.gain,
 };
 
 interface Hit {
@@ -123,8 +124,8 @@ export function CompareMap({
       );
     }
     if (!b) {
-      ctx.fillStyle = C.dim;
-      ctx.font = `14px ${C.font}`;
+      ctx.fillStyle = THEME.text3;
+      ctx.font = `14px ${THEME.font}`;
       ctx.textAlign = 'center';
       ctx.fillText('Sem traçado da pista', s.w / 2, s.h / 2);
       return;
@@ -141,7 +142,7 @@ export function CompareMap({
 
     // Outline (track width ~12 m).
     if (p.outline && p.outline.x.length > 1) {
-      ctx.strokeStyle = '#1b232a';
+      ctx.strokeStyle = THEME.surface4;
       ctx.lineWidth = Math.min(46, Math.max(7, 12 * k));
       ctx.beginPath();
       p.outline.x.forEach((x, i) => {
@@ -208,7 +209,7 @@ export function CompareMap({
       const x0 = subject.x[0];
       const z0 = subject.z[0];
       if (x0 !== null && x0 !== undefined && z0 !== null && z0 !== undefined) {
-        ctx.fillStyle = C.text;
+        ctx.fillStyle = THEME.text;
         ctx.fillRect(toX(x0) - 3, toY(z0) - 3, 6, 6);
       }
     }
@@ -223,7 +224,7 @@ export function CompareMap({
       if (x === null || z === null) continue;
       const r = zoomed ? 6 : 3.5;
       ctx.strokeStyle = m.color;
-      ctx.fillStyle = '#000';
+      ctx.fillStyle = THEME.surface0;
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(toX(x), toY(z), r, 0, Math.PI * 2);
@@ -231,7 +232,7 @@ export function CompareMap({
       ctx.stroke();
       if (zoomed) {
         ctx.fillStyle = m.color;
-        ctx.font = `600 11px ${C.font}`;
+        ctx.font = `600 11px ${THEME.font}`;
         // Your markers labelled to the right, the reference's to the left (they are often close).
         const mine = m.lineId === subject?.id;
         ctx.textAlign = mine ? 'left' : 'right';
@@ -242,7 +243,7 @@ export function CompareMap({
 
     // Corner labels.
     const hits: Hit[] = [];
-    ctx.font = `600 12px ${C.font}`;
+    ctx.font = `600 12px ${THEME.font}`;
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'center';
     for (const cn of p.corners) {
@@ -260,14 +261,14 @@ export function CompareMap({
       const lx = Math.min(s.w - w / 2 - 2, Math.max(w / 2 + 2, ax + (dx / len) * 18));
       const ly = Math.min(s.h - h / 2 - 2, Math.max(h / 2 + 2, ay + (dy / len) * 18));
       const focus = cn.id === p.focusCorner;
-      ctx.fillStyle = focus ? C.accent : 'rgba(12,17,21,0.88)';
-      ctx.strokeStyle = focus ? C.accent : 'rgba(255,178,30,0.55)';
+      ctx.fillStyle = focus ? THEME.accent : withAlpha(THEME.surface1, 0.9);
+      ctx.strokeStyle = focus ? THEME.accent : THEME.lineStrong;
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.roundRect(lx - w / 2, ly - h / 2, w, h, 4);
       ctx.fill();
       ctx.stroke();
-      ctx.fillStyle = focus ? '#000' : C.accent;
+      ctx.fillStyle = focus ? THEME.surface0 : THEME.text;
       ctx.fillText(text, lx, ly + 0.5);
       hits.push({ id: cn.id, x: lx - w / 2, y: ly - h / 2, w, h });
     }
@@ -281,7 +282,7 @@ export function CompareMap({
         const z = valueAt(p.distanceM, ln.z, d);
         if (x === null || z === null) return;
         ctx.fillStyle = ln.color;
-        ctx.strokeStyle = '#000';
+        ctx.strokeStyle = THEME.surface0;
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(toX(x), toY(z), li === 0 ? 7 : 5, 0, Math.PI * 2);
@@ -360,7 +361,7 @@ export function CompareMap({
   return (
     <canvas
       ref={canvasRef}
-      className={`a-map ${className}`}
+      className={`a-map cmp-map ${className}`}
       onPointerMove={onMove}
       onPointerLeave={() => bus?.set(null, 'map')}
       onPointerUp={onClick}

@@ -291,13 +291,13 @@ export function NewTrackPrompt({
             <button
               key={s.id}
               type="button"
-              className="a-chip"
+              className="a-suggest"
               disabled={busy}
               title={candidateTitle(s)}
               onClick={() => save(s.name, s.layout)}
             >
               {s.displayName}
-              <span className="a-chip-sub">
+              <span className="a-suggest-sub">
                 {s.basis === 'geometry' && s.confidence === 'high' ? 'traçado confere' : 'é essa'}
               </span>
             </button>

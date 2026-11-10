@@ -30,6 +30,7 @@ import {
   zoomAt,
 } from '../lib/mapMath.ts';
 import { microTone } from '../lib/microsectors.ts';
+import { THEME } from '../lib/theme.ts';
 import type { TrackGeometry } from '../lib/trackOutline.ts';
 import { derived } from '../live/derived.ts';
 import { live } from '../live/liveStore.ts';
@@ -37,7 +38,7 @@ import { useLiveRender, ViewActiveContext } from '../live/raf.ts';
 import { clearDoubleTapOverride, setDoubleTapOverride } from '../state/gestureOverride.ts';
 import { beginDraw, CANVAS_COLORS as C, type CanvasSize, useCanvasSize } from './useCanvas.ts';
 
-const TONE_COLOR = { gain: C.gain, loss: C.loss, neutral: '#c9d1d8', none: '' } as const;
+const TONE_COLOR = { gain: C.gain, loss: C.loss, neutral: THEME.text2, none: '' } as const;
 
 interface Props {
   interactive?: boolean;
@@ -265,7 +266,7 @@ export function TrackMap({ interactive = false, details = true, className = '' }
       ctx.fillStyle = C.accent;
       ctx.fill();
       ctx.lineWidth = 2;
-      ctx.strokeStyle = '#000';
+      ctx.strokeStyle = THEME.surface0;
       ctx.stroke();
     }
   };
@@ -415,7 +416,7 @@ export function TrackMap({ interactive = false, details = true, className = '' }
         <div className="map-controls" data-no-gesture>
           <button
             type="button"
-            className="icon-btn"
+            className="ui-icon-btn"
             aria-label="Aproximar"
             onClick={() => zoomBy(1.6)}
           >
@@ -423,7 +424,7 @@ export function TrackMap({ interactive = false, details = true, className = '' }
           </button>
           <button
             type="button"
-            className="icon-btn"
+            className="ui-icon-btn"
             aria-label="Afastar"
             disabled={!ui.zoomed}
             onClick={() => zoomBy(1 / 1.6)}
@@ -433,7 +434,7 @@ export function TrackMap({ interactive = false, details = true, className = '' }
           {ui.zoomed && (
             <button
               type="button"
-              className="icon-btn map-follow"
+              className="ui-icon-btn map-follow"
               aria-pressed={ui.follow}
               aria-label="Seguir o carro"
               title="Seguir o carro"
@@ -445,7 +446,7 @@ export function TrackMap({ interactive = false, details = true, className = '' }
           {ui.zoomed && (
             <button
               type="button"
-              className="icon-btn"
+              className="ui-icon-btn"
               aria-label="Ver a pista toda"
               title="Ver a pista toda"
               onClick={() => applyView((_v, b) => ({ ...initialView(b), follow: true }))}

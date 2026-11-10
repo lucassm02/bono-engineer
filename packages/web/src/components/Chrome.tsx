@@ -9,6 +9,7 @@ import { CaptureStatus, SessionSavedToast } from './CaptureStatus.tsx';
 import { animateStep } from './Carousel.tsx';
 import { ConsoleChip } from './ConsoleLink.tsx';
 import { ReplayNotice } from './ReplayNotice.tsx';
+import { Icon } from './ui/Icon.tsx';
 
 export function OverlayHeader() {
   const visible = useUi((s) => s.overlayVisible);
@@ -32,11 +33,13 @@ export function OverlayHeader() {
         Delta contra <strong>{DELTA_REFERENCE_LABELS[reference]}</strong>
         <span className="dim"> (toque duplo troca)</span>
       </div>
-      <div className="overlay-link dim">
-        <span>{source === 'mock' ? 'Demonstração' : 'Servidor'}</span>
-        {liveState && <span>{CONNECTION_STATE_LABELS[liveState]}</span>}
-        {format && <span>Pacote {format}</span>}
-        {latency !== null && <span>Latência {latency} ms</span>}
+      <div className="overlay-link">
+        <span className="ui-badge" data-tone={source === 'mock' ? 'accent' : undefined}>
+          {source === 'mock' ? 'Demonstração' : 'Servidor'}
+        </span>
+        {liveState && <span className="ui-badge">{CONNECTION_STATE_LABELS[liveState]}</span>}
+        {format && <span className="ui-badge">Pacote {format}</span>}
+        {latency !== null && <span className="ui-badge">Latência {latency} ms</span>}
       </div>
     </div>
   );
@@ -72,32 +75,23 @@ export function EdgeArrows() {
     <>
       <button
         type="button"
-        className="edge-arrow edge-prev"
+        className="ui-icon-btn edge-arrow edge-prev"
         data-no-gesture
         aria-label="Tela anterior"
         onClick={() => animateStep(-1)}
       >
-        ‹
+        <Icon name="back" size={24} />
       </button>
       <button
         type="button"
-        className="edge-arrow edge-next"
+        className="ui-icon-btn edge-arrow edge-next"
         data-no-gesture
         aria-label="Próxima tela"
         onClick={() => animateStep(1)}
       >
-        ›
+        <Icon name="chevron-right" size={24} />
       </button>
     </>
-  );
-}
-
-function LockGlyph({ locked }: { locked: boolean }) {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="lock-glyph">
-      <rect x="5" y="10.5" width="14" height="10" rx="2" />
-      <path d={locked ? 'M8 10.5 V7.5 a4 4 0 0 1 8 0 V10.5' : 'M8 10.5 V7.5 a4 4 0 0 1 7.6 -1.6'} />
-    </svg>
   );
 }
 
@@ -117,7 +111,7 @@ export function LockButton() {
   return (
     <button
       type="button"
-      className="lock-btn"
+      className="ui-icon-btn lock-btn"
       data-no-gesture
       data-locked={locked ? '1' : '0'}
       data-holding={holding ? '1' : '0'}
@@ -144,7 +138,7 @@ export function LockButton() {
         else addNotice('info', 'Segure o cadeado para destravar.', 2000);
       }}
     >
-      <LockGlyph locked={locked} />
+      <Icon name={locked ? 'lock' : 'unlock'} />
     </button>
   );
 }
@@ -157,11 +151,12 @@ export function Notices() {
         <button
           key={n.id}
           type="button"
-          className="notice"
+          className="ui-toast notice"
           data-level={n.level}
           onClick={() => dismissNotice(n.id)}
         >
-          {n.message}
+          <Icon name={n.level === 'info' ? 'info' : 'alert'} size={18} />
+          <span>{n.message}</span>
         </button>
       ))}
     </div>
@@ -178,11 +173,15 @@ export function SourceBadge() {
       <CaptureStatus variant="live" />
       <SessionSavedToast />
       {source === 'mock' && (
-        <span className="badge badge-demo">
+        <span className="ui-badge" data-tone="accent">
           {auto ? 'Demonstração (sem servidor)' : 'Demonstração'}
         </span>
       )}
-      {state === 'replay' && <span className="badge badge-replay">REPLAY</span>}
+      {state === 'replay' && (
+        <span className="ui-badge" data-tone="info">
+          REPLAY
+        </span>
+      )}
       <ReplayNotice />
     </div>
   );

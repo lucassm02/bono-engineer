@@ -8,6 +8,7 @@ import { CaptureStatus, SessionSavedToast } from '../components/CaptureStatus.ts
 import { ConsoleChip, ConsolePanelHost } from '../components/ConsoleLink.tsx';
 import { ProductBrand } from '../components/ProductBrand.tsx';
 import { UpdateNotice } from '../components/UpdateNotice.tsx';
+import { Icon, type IconName } from '../components/ui/Icon.tsx';
 import type { Route } from '../lib/route.ts';
 import { routes } from '../lib/route.ts';
 import { dismissNotice, useUi } from '../state/uiStore.ts';
@@ -31,8 +32,6 @@ import '../styles/capture-page.css';
 import '../styles/config.css';
 import '../styles/coach.css';
 
-type IconName = 'live' | 'home' | 'compare' | 'capture' | 'coach' | 'guide' | 'config';
-
 interface NavItem {
   icon: IconName;
   /** Routes where this item is highlighted. */
@@ -43,20 +42,27 @@ interface NavItem {
   short: string;
 }
 
-const NAV: NavItem[] = [
-  { icon: 'live', names: [], href: routes.live(), label: 'Ao vivo', short: 'Ao vivo' },
+const LIVE: NavItem = {
+  icon: 'live',
+  names: [],
+  href: routes.live(),
+  label: 'Ao vivo',
+  short: 'Ao vivo',
+};
+
+const MAIN_NAV: NavItem[] = [
   {
     icon: 'home',
     names: ['home', 'sessions', 'session', 'track'],
     href: routes.home(),
-    label: 'Início · Pistas',
+    label: 'Início',
     short: 'Início',
   },
   {
     icon: 'compare',
     names: ['compare'],
     href: routes.compare({}),
-    label: 'Comparar',
+    label: 'Comparar voltas',
     short: 'Comparar',
   },
   {
@@ -74,73 +80,15 @@ const NAV: NavItem[] = [
     label: 'Guia de pilotagem',
     short: 'Guia',
   },
-  {
-    icon: 'config',
-    names: ['config'],
-    href: routes.config(),
-    label: 'Configurações',
-    short: 'Ajustes',
-  },
 ];
 
-/** 22px line icons (stroke = currentColor). */
-function NavIcon({ name }: { name: IconName }) {
-  const p = {
-    fill: 'none',
-    stroke: 'currentColor',
-    strokeWidth: 1.8,
-    strokeLinecap: 'round' as const,
-    strokeLinejoin: 'round' as const,
-  };
-  return (
-    <svg className="a-nav-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-      {name === 'live' && (
-        <>
-          <path {...p} d="M4 17a8 8 0 1 1 16 0" />
-          <path {...p} d="M12 17l4-6" />
-          <circle {...p} cx="12" cy="17" r="1.2" />
-        </>
-      )}
-      {name === 'home' && (
-        <>
-          <path {...p} d="M5 5c4-2 9 0 11 3s-1 5-4 6-5 3-3 5 6 2 9-1" />
-          <circle {...p} cx="5" cy="5" r="1.2" />
-        </>
-      )}
-      {name === 'compare' && (
-        <>
-          <path {...p} d="M4 18l5-7 4 4 7-9" />
-          <path {...p} d="M4 6l5 4 4-2 7 5" opacity="0.55" />
-        </>
-      )}
-      {name === 'capture' && (
-        <>
-          <circle {...p} cx="12" cy="12" r="8" />
-          <circle cx="12" cy="12" r="3.2" fill="currentColor" />
-        </>
-      )}
-      {name === 'coach' && (
-        <>
-          <path {...p} d="M5 6h14v9H11l-4 3v-3H5z" />
-          <path {...p} d="M9 10h6" />
-        </>
-      )}
-      {name === 'guide' && (
-        <>
-          <path {...p} d="M5 5.5C5 4.7 5.7 4 6.5 4H19v13H6.5A1.5 1.5 0 0 0 5 18.5z" />
-          <path {...p} d="M5 18.5A1.5 1.5 0 0 0 6.5 20H19v-3M9 8h6" />
-        </>
-      )}
-      {name === 'config' && (
-        <>
-          <path {...p} d="M5 8h9M18 8h1M5 16h1M10 16h9" />
-          <circle {...p} cx="16" cy="8" r="2" />
-          <circle {...p} cx="8" cy="16" r="2" />
-        </>
-      )}
-    </svg>
-  );
-}
+const SETTINGS: NavItem = {
+  icon: 'config',
+  names: ['config'],
+  href: routes.config(),
+  label: 'Configurações',
+  short: 'Ajustes',
+};
 
 class PageBoundary extends Component<
   { children: ReactNode; resetKey: string },
@@ -156,7 +104,7 @@ class PageBoundary extends Component<
   override render() {
     if (this.state.error) {
       return (
-        <div className="a-error" role="alert">
+        <div className="ui-card a-error" data-tone="loss" role="alert">
           <strong>Esta página falhou ao desenhar</strong>
           <p>{this.state.error.message}</p>
           <button type="button" className="a-btn a-btn-ghost" onClick={() => location.reload()}>
@@ -197,7 +145,7 @@ function Toasts() {
         <button
           key={n.id}
           type="button"
-          className="a-toast"
+          className="ui-toast"
           data-level={n.level}
           onClick={() => dismissNotice(n.id)}
         >
@@ -210,12 +158,17 @@ function Toasts() {
 
 function NotFound() {
   return (
-    <div className="a-empty">
+    <div className="ui-empty a-empty">
       <h1>Página não encontrada</h1>
-      <p>
-        <a href={routes.home()}>Ir para o início</a> ·{' '}
-        <a href={routes.live()}>Voltar ao painel ao vivo</a>
-      </p>
+      <p>Esse endereço não existe na área de análise.</p>
+      <div className="a-actions">
+        <a className="a-btn" href={routes.home()}>
+          Ir para o início
+        </a>
+        <a className="a-btn a-btn-ghost" href={routes.live()}>
+          Voltar ao painel ao vivo
+        </a>
+      </div>
     </div>
   );
 }
@@ -245,6 +198,21 @@ function page(route: Route): ReactNode {
   }
 }
 
+function NavLink({ item, route, className }: { item: NavItem; route: Route; className?: string }) {
+  return (
+    <a
+      href={item.href}
+      className={className}
+      aria-current={item.names.includes(route.name) ? 'page' : undefined}
+      data-live={item.icon === 'live' ? '1' : undefined}
+    >
+      <Icon name={item.icon} size={22} />
+      <span className="a-nav-label">{item.label}</span>
+      <span className="a-nav-short">{item.short}</span>
+    </a>
+  );
+}
+
 export default function AnalysisApp({ route }: { route: Route }) {
   useEffect(() => {
     const el = document.documentElement;
@@ -266,18 +234,14 @@ export default function AnalysisApp({ route }: { route: Route }) {
           <ProductBrand />
         </a>
         <nav className="a-nav" aria-label="Seções">
-          {NAV.map((n) => (
-            <a
-              key={n.label}
-              href={n.href}
-              aria-current={n.names.includes(route.name) ? 'page' : undefined}
-              data-live={n.icon === 'live' ? '1' : undefined}
-            >
-              <NavIcon name={n.icon} />
-              <span className="a-nav-label">{n.label}</span>
-              <span className="a-nav-short">{n.short}</span>
-            </a>
+          <NavLink item={LIVE} route={route} />
+          <p className="a-nav-group" aria-hidden="true">
+            Histórico e análise
+          </p>
+          {MAIN_NAV.map((n) => (
+            <NavLink key={n.label} item={n} route={route} />
           ))}
+          <NavLink item={SETTINGS} route={route} className="a-nav-end" />
         </nav>
         <div className="a-side-foot">
           <ConnectionPill />
