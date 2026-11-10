@@ -81,8 +81,7 @@ jobs:
             echo "::error::A draft release already exists for $TAG."
             exit 1
           fi
-          existing_commit="$(gh api "repos/$GH_REPO/commits/$TAG" --jq '.sha' 2>/dev/null || true)"
-          if [[ -n "$existing_commit" && "$existing_commit" != "$GITHUB_SHA" ]]; then
+          if existing_commit="$(gh api "repos/$GH_REPO/commits/$TAG" --jq '.sha' 2>/dev/null)" && [[ "$existing_commit" != "$GITHUB_SHA" ]]; then
             echo "::error::Tag $TAG already points to another commit."
             exit 1
           fi
