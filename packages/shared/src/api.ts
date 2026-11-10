@@ -12,6 +12,7 @@ import type {
   EvolutionReport,
   LapAnalysis,
   LapComparisonResult,
+  LapDrivingEvents,
   MapCorner,
   MicrosectorAnalysis,
   TraceChannel,
@@ -48,6 +49,12 @@ export interface ApiTrackAnalysis {
 
 /** GET /api/analysis/laps/:lapId: per-corner metrics, validity report and AI summary. */
 export type ApiLapAnalysis = LapAnalysis;
+
+/**
+ * GET /api/analysis/laps/:lapId/events: driving events of the lap (understeer, oversteer, front
+ * lock, exit traction loss) with corner, distance range, evidence, confidence and pt-BR action.
+ */
+export type ApiLapDrivingEvents = LapDrivingEvents;
 
 /**
  * GET /api/analysis/compare?lap=&ref=: corner-by-corner table (`comparison.rows`), findings,

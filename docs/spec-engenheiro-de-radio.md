@@ -1,6 +1,7 @@
 # Spec do engenheiro de rádio do Bono
 
-**Status:** pronta para implementação. A spec descreve o comportamento proposto.
+**Status:** implementada no app. A calibração de pneus, fases de classificação e janelas de
+fala em sessão ao vivo segue pendente de validação com o PS5.
 
 ## Objetivo
 
@@ -39,6 +40,11 @@ mais silencioso até haver dados suficientes para distingui-la.
 | **Livre** | Tocar somente alertas essenciais do carro. Deixar a análise disponível sob demanda. |
 
 #### Aprender pista
+
+- Nas instruções de freada, **Básicas** usa a intensidade qualitativa. **Detalhadas** diz o
+  pico do pedal da referência arredondado a dezenas de pontos percentuais, por exemplo
+  “Cinquenta por cento de freio em cem metros”. Quando o pico não é confiável ou a frase
+  longa não cabe, usa a instrução básica se ainda houver tempo.
 
 - Alinhar a posição atual com a referência. Combinar distância, velocidade atual, duração
   estimada da frase e tempo de reação para programar a chamada.

@@ -69,7 +69,12 @@ export function engineerMarks(lap: PreparedLap, m: CornerMetrics, exitM: number)
     }
     const kind =
       strongS >= 0.18 ? 'brakeHard' : !isReplay && peakBrake! <= 0.32 ? 'brakeLight' : 'brake';
-    marks.push({ kind, atM: s[brakeStart]!, position: point(brakeStart) });
+    marks.push({
+      kind,
+      atM: s[brakeStart]!,
+      position: point(brakeStart),
+      ...(!isReplay && reliable(peakIndex) && peakBrake !== null ? { brakePeak: peakBrake } : {}),
+    });
 
     if (brakeEnd < n - 1 && reliable(brakeEnd)) {
       let coastEnd = brakeEnd + 1;

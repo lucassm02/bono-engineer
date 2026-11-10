@@ -28,6 +28,7 @@
     "demo": "node --disable-warning=ExperimentalWarning --import tsx packages/server/src/main.ts --sim",
     "build": "npm run build -w @gt7/web",
     "brand:icons": "node --import tsx packages/desktop/scripts/icons.ts",
+    "radio:voices": "node --disable-warning=ExperimentalWarning --import tsx packages/web/scripts/radio-voices/generate.ts",
     "desktop": "node --disable-warning=ExperimentalWarning --import tsx packages/desktop/scripts/dev.ts",
     "desktop:build": "node --disable-warning=ExperimentalWarning --import tsx packages/desktop/scripts/build.ts",
     "desktop:dist": "node --disable-warning=ExperimentalWarning --import tsx packages/desktop/scripts/dist.ts"

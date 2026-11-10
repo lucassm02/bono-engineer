@@ -7,7 +7,10 @@
 import {
   BRAKE_ON_THRESHOLD,
   type Corner,
+  type DrivingEventModel,
   type EngineerCueKind,
+  type LapTrace,
+  type LiveCornerPass,
   type Track,
   type Vec2,
 } from '@gt7/shared';
@@ -17,6 +20,7 @@ export interface EngineerMark {
   kind: EngineerCueKind;
   atM: number;
   position: Vec2;
+  brakePeak?: number;
   untilM?: number;
   endPosition?: Vec2;
 }
@@ -37,9 +41,34 @@ export interface CornerHintInput {
   reference: StoredLap | null;
 }
 
+/** A corner pass just completed in the current lap (live review). */
+export interface CornerPassInput {
+  track: Track;
+  corner: Corner;
+  /** Compatible engineer reference (same track and car, valid), null when there is none. */
+  reference: StoredLap | null;
+  /** Samples of the current lap so far (lap distance from the start line). */
+  trace: LapTrace;
+  /** Driving-event response model of this car (calibrated on an earlier lap), null = none yet. */
+  model: DrivingEventModel | null;
+}
+
+/** What the provider measured on the pass; the engine adds id, lap, reference and distance. */
+export type CornerPassReview = Omit<
+  LiveCornerPass,
+  'id' | 'lap' | 'lapStartedAt' | 'referenceLapId' | 'atM'
+>;
+
 export interface CornerHintProvider {
   /** Called once per (track, corner, reference lap); results are cached by the engine. */
   targetsFor(input: CornerHintInput): CornerHintTargets | null;
+  /**
+   * Reviews a corner pass ~80 m after its exit (cause vs the reference, driving event). Optional:
+   * without it the live frames carry no corner passes.
+   */
+  reviewPass?(input: CornerPassInput): CornerPassReview | null;
+  /** Calibrates the driving-event model of a car from one of its stored laps. */
+  calibrateEvents?(input: { track: Track; lap: StoredLap }): DrivingEventModel | null;
 }
 
 /** Look-back distance before the corner entry searched for the brake point (m). */

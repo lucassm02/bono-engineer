@@ -362,20 +362,38 @@ export function createGt7McpServer(deps: McpDeps): McpServer {
     {
       title: 'Resumo da volta',
       description:
-        'Resumo de uma volta: tempo, setores, validade (problemas detectados) e métricas por curva ' +
-        '(frenagem m, pico de freio %, trail braking s, V-mín km/h, marcha, acelerador m, roda livre s, saída km/h).',
+        'Resumo de uma volta: tempo, setores, validade (problemas detectados), métricas por curva ' +
+        '(frenagem m, pico de freio %, trail braking s, V-mín km/h, marcha, acelerador m, roda livre s, saída km/h) ' +
+        'e eventos de pilotagem detectados (saída de frente, saída de traseira, travamento dianteiro, ' +
+        'perda de tração na saída) com curva, trecho, confiança e ação. Confiança média/baixa = provável.',
       inputSchema: { lap_id: z.string().describe('Id da volta.') },
       annotations: RO,
     },
     async ({ lap_id }) =>
       safe(async () => {
         const la = await analysis.getLapAnalysis(lap_id);
+        const events = await analysis.getLapDrivingEvents(lap_id).catch(() => null);
         return ok(
           jsonText({
             lap: compactLap(la.lap, { session: true }),
             track: { id: la.track.id, name: la.track.name },
             issues: la.validity.issues.slice(0, 5).map((i) => i.message),
             summary: la.summary,
+            drivingEvents:
+              events?.events.map((e) => ({
+                kind: e.kind,
+                corner: e.cornerId,
+                phase: e.phase,
+                from_m: Math.round(e.startM),
+                to_m: Math.round(e.endM),
+                duration_s: e.durationS,
+                confidence: e.confidence,
+                message: e.message,
+                action: e.action,
+                evidence: Object.fromEntries(
+                  Object.entries(e.evidence).filter(([, v]) => v !== null),
+                ),
+              })) ?? null,
           }),
         );
       }),

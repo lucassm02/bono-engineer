@@ -8,15 +8,27 @@
  * the input and the line is built from the stored centerline (cached by the AnalysisService).
  */
 
-import { computeCornerMetrics, computeLapMetrics, cornerWindows, prepareLap } from '@gt7/analysis';
+import {
+  computeCornerMetrics,
+  computeLapMetrics,
+  cornerWindows,
+  type PreparedLap,
+  prepareLap,
+} from '@gt7/analysis';
+import type { DrivingEventModel, Track } from '@gt7/shared';
 import {
   type CornerHintInput,
   type CornerHintProvider,
   type CornerHintTargets,
+  type CornerPassInput,
+  type CornerPassReview,
   TraceCornerHintProvider,
 } from '../live/corner-hints.ts';
-import type { AnalysisService } from './analysis-service.ts';
+import type { StoredLap } from '../live/delta-reference.ts';
+import type { AnalysisService, LineEntry } from './analysis-service.ts';
 import { cornersSignature } from './analysis-service.ts';
+import { reviewCornerPass } from './corner-pass-review.ts';
+import { calibrateDrivingEventModel } from './driving-events.ts';
 import { engineerMarks, wrapEngineerLap } from './engineer-marks.ts';
 import { LruCache } from './lru.ts';
 
@@ -24,6 +36,7 @@ export class AnalysisCornerHintProvider implements CornerHintProvider {
   readonly #analysis: AnalysisService;
   readonly #fallback = new TraceCornerHintProvider();
   readonly #cache = new LruCache<string, Map<string, CornerHintTargets>>(16);
+  readonly #prepared = new LruCache<string, PreparedLap>(4);
 
   constructor(analysis: AnalysisService) {
     this.#analysis = analysis;
@@ -72,6 +85,45 @@ export class AnalysisCornerHintProvider implements CornerHintProvider {
       return byCorner.get(corner.id) ?? this.#fallback.targetsFor(input);
     } catch {
       return this.#fallback.targetsFor(input);
+    }
+  }
+
+  /** Stored lap prepared on the track line (cached per lap and line). */
+  #preparedStored(stored: StoredLap, line: LineEntry): PreparedLap {
+    const key = `${stored.lap.id}|${line.key}`;
+    let lap = this.#prepared.get(key);
+    if (!lap) {
+      lap = prepareLap(stored.trace, line.line, {
+        lapTimeMs: stored.lap.timeMs,
+        isReplay: stored.lap.flags.includes('replay'),
+      });
+      this.#prepared.set(key, lap);
+    }
+    return lap;
+  }
+
+  reviewPass(input: CornerPassInput): CornerPassReview | null {
+    const { track, corner, reference, trace, model } = input;
+    if (trace.length < 30) return null;
+    try {
+      const line = this.#analysis.getLine(track.id);
+      if (!line) return null;
+      const pass = prepareLap(trace, line.line);
+      const ref =
+        reference && reference.trace.length >= 10 ? this.#preparedStored(reference, line) : null;
+      return reviewCornerPass(pass, ref, track.corners, corner.id, { model });
+    } catch {
+      return null;
+    }
+  }
+
+  calibrateEvents({ track, lap }: { track: Track; lap: StoredLap }): DrivingEventModel | null {
+    if (lap.trace.length < 10) return null;
+    try {
+      const line = this.#analysis.getLine(track.id);
+      return line ? calibrateDrivingEventModel(this.#preparedStored(lap, line)) : null;
+    } catch {
+      return null;
     }
   }
 }

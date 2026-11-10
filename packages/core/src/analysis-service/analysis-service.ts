@@ -48,6 +48,7 @@ import {
   type LapAnalysis,
   type LapComparison,
   type LapComparisonResult,
+  type LapDrivingEvents,
   type MicrosectorAnalysis,
   type ResampledTrace,
   type TraceChannel,
@@ -56,6 +57,7 @@ import {
 } from '@gt7/shared';
 import { isPersonalLap } from '../live/context.ts';
 import type { Gt7Store } from '../store/store.ts';
+import { detectDrivingEvents } from './driving-events.ts';
 import { LruCache } from './lru.ts';
 
 /** Bump when the corner detection changes enough to warrant re-detecting stored corners. */
@@ -126,7 +128,7 @@ export interface ChartRequest {
 
 export type ConsistencyTarget = { sessionId: Id; lapIds?: undefined } | { lapIds: Id[] };
 
-interface LineEntry {
+export interface LineEntry {
   key: string;
   line: Centerline;
 }
@@ -186,6 +188,7 @@ export class AnalysisService {
   #prepared: LruCache<string, Promise<PreparedLap>>;
   #comparisons: LruCache<string, Promise<LapComparisonResult>>;
   #lapAnalyses: LruCache<string, Promise<LapAnalysis>>;
+  #lapEvents: LruCache<string, Promise<LapDrivingEvents>>;
   #evolution = new Map<string, Promise<EvolutionReport>>();
   #cornerJobs = new Map<Id, Promise<EnsureCornersResult>>();
 
@@ -195,6 +198,7 @@ export class AnalysisService {
     this.#prepared = new LruCache(opts.preparedCacheSize ?? 48);
     this.#comparisons = new LruCache(opts.resultCacheSize ?? 64);
     this.#lapAnalyses = new LruCache(opts.resultCacheSize ?? 64);
+    this.#lapEvents = new LruCache(opts.resultCacheSize ?? 64);
   }
 
   /** Cache statistics (tests / diagnostics). */
@@ -420,12 +424,14 @@ export class AnalysisService {
     this.#prepared.clear();
     this.#comparisons.clear();
     this.#lapAnalyses.clear();
+    this.#lapEvents.clear();
     this.#evolution.clear();
   }
 
   #invalidateTrackResults(trackId: Id): void {
     this.#comparisons.deleteWhere((k) => k.startsWith(`${trackId}|`));
     this.#lapAnalyses.deleteWhere((k) => k.startsWith(`${trackId}|`));
+    this.#lapEvents.deleteWhere((k) => k.startsWith(`${trackId}|`));
     this.#evolution.forEach((_v, k) => {
       if (k.startsWith(`${trackId}|`)) this.#evolution.delete(k);
     });
@@ -535,6 +541,28 @@ export class AnalysisService {
     })();
     this.#lapAnalyses.set(key, p);
     p.catch(() => this.#lapAnalyses.delete(key));
+    return p;
+  }
+
+  /**
+   * Driving events of one lap (understeer, oversteer, front lock, exit traction loss), with the
+   * response model calibrated on the lap itself. Cached like the lap analysis.
+   */
+  async getLapDrivingEvents(lapId: Id): Promise<LapDrivingEvents> {
+    const lap = this.getLapOrThrow(lapId);
+    const track0 = this.#lapTrack(lap);
+    const corners = await this.getCorners(track0.id);
+    const line = this.#lineOrThrow(track0.id);
+    const key = `${track0.id}|events|${lap.id}|${line.key}|${cornersSignature(corners)}`;
+    const hit = this.#lapEvents.get(key);
+    if (hit) return hit;
+    const p = (async (): Promise<LapDrivingEvents> => {
+      const prepared = await this.preparedLap(lap);
+      const r = detectDrivingEvents(prepared, corners);
+      return { lapId: lap.id, trackId: track0.id, ...r };
+    })();
+    this.#lapEvents.set(key, p);
+    p.catch(() => this.#lapEvents.delete(key));
     return p;
   }
 

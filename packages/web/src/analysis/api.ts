@@ -11,6 +11,7 @@ import type {
   ApiErrorBody,
   ApiEvolution,
   ApiLapAnalysis,
+  ApiLapDrivingEvents,
   ApiMcpInfo,
   ApiMicrosectors,
   ApiRedetectCornersResult,
@@ -204,6 +205,7 @@ export const api = {
 
   trackAnalysis: (trackId: string) => get<ApiTrackAnalysis>(`/api/analysis/tracks/${enc(trackId)}`),
   lapAnalysis: (lapId: string) => get<ApiLapAnalysis>(`/api/analysis/laps/${enc(lapId)}`),
+  lapEvents: (lapId: string) => get<ApiLapDrivingEvents>(`/api/analysis/laps/${enc(lapId)}/events`),
   compare: (lap: string, ref: string) =>
     get<ApiComparison>(`/api/analysis/compare${qs({ lap, ref, topN: 20 })}`),
   traces: (laps: string[], channels: readonly string[], ref?: string, maxPoints = 2500) =>

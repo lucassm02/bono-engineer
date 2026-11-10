@@ -118,7 +118,7 @@ export function EngineerTraining({
         <>
           <p>
             Escolha até duas curvas. O rádio foca nelas por cinco voltas válidas e compara todas com
-            a mesma referência.
+            a mesma referência. No perfil Aprender pista, escolher uma curva reativa a ajuda nela.
           </p>
           {!audioHere && <p>Inicie o treino no aparelho que toca o rádio.</p>}
           {!recording && <p>Ative a gravação automática para analisar as voltas do treino.</p>}

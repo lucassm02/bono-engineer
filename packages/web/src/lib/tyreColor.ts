@@ -1,5 +1,8 @@
 import type { TyreTempScale } from '../config.ts';
 
+/** Bands of the panel scale; the radio tyre rules use the same function (@gt7/shared). */
+export { type TyreTempBand, tyreTempBand } from '@gt7/shared';
+
 export type Rgb = readonly [number, number, number];
 
 /** Palette anchors of the temperature scale. */
@@ -8,8 +11,6 @@ export const TYRE_COLORS = {
   ideal: [38, 214, 110] as Rgb,
   hot: [255, 52, 64] as Rgb,
 } as const;
-
-export type TyreTempBand = 'cold' | 'warming' | 'ideal' | 'overheating' | 'hot';
 
 function mix(a: Rgb, b: Rgb, t: number): Rgb {
   const k = t < 0 ? 0 : Math.min(t, 1);
@@ -37,12 +38,4 @@ export function tyreTempRgb(tempC: number, s: TyreTempScale): Rgb {
 export function tyreTempColor(tempC: number, s: TyreTempScale): string {
   const [r, g, b] = tyreTempRgb(tempC, s);
   return `rgb(${r} ${g} ${b})`;
-}
-
-export function tyreTempBand(tempC: number, s: TyreTempScale): TyreTempBand {
-  if (tempC <= s.cold) return 'cold';
-  if (tempC < s.idealMin) return 'warming';
-  if (tempC <= s.idealMax) return 'ideal';
-  if (tempC < s.hot) return 'overheating';
-  return 'hot';
 }

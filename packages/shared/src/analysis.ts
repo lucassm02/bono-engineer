@@ -418,6 +418,119 @@ export interface LapValidityReport {
 }
 
 // ---------------------------------------------------------------------------------------------
+// Driving events (docs/spec-engenheiro-de-radio.md, "Eventos de pilotagem")
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * Car behaviour detected from one lap's samples:
+ * - understeer: "saída de frente" (steering held, yaw below the expected response, line opening);
+ * - oversteer: "saída de traseira" (rotation beyond the input with sideslip or countersteer);
+ * - frontLock: "travamento dianteiro" (front wheel slower than the car while braking);
+ * - exitTraction: "perda de tração na saída" (longitudinal slip under throttle, no lateral slide).
+ */
+export type DrivingEventKind = 'understeer' | 'oversteer' | 'frontLock' | 'exitTraction';
+
+export const DRIVING_EVENT_KINDS: readonly DrivingEventKind[] = [
+  'understeer',
+  'oversteer',
+  'frontLock',
+  'exitTraction',
+] as const;
+
+/** Where in the corner the event started. */
+export type DrivingEventPhase = 'braking' | 'entry' | 'mid' | 'exit';
+
+/**
+ * Measured values behind an event (null = channel unavailable or not used by that rule).
+ * Angles in degrees, rates in °/s, slip ratios as fractions (−0.15 = front wheel 15% slower).
+ */
+export interface DrivingEventEvidence {
+  /** Speed at the start of the event (km/h). */
+  speedKmh: number;
+  /** Mean steering wheel angle magnitude during the event (°). */
+  steeringDeg: number | null;
+  /** Steering magnitude at the end minus at the start (°, + = more lock added). */
+  steeringChangeDeg: number | null;
+  /** Mean yaw rate in the steering direction (°/s). */
+  yawRateDps: number | null;
+  /** Yaw rate expected for the speed and steering, capped by the lap's grip (°/s). */
+  expectedYawRateDps: number | null;
+  /** Mean actual / expected yaw rate (< 1 = less rotation than the input asks). */
+  yawRatio: number | null;
+  /** Lateral drift towards the outside of the turn during the event (m, + = line opening). */
+  lineOpeningM: number | null;
+  /** Rotation accumulated beyond the path direction (sideslip build-up, °). */
+  slipAngleDeg: number | null;
+  /** Time steering against the rotation (s). */
+  countersteerS: number | null;
+  /** Most negative front slip ratio (braking). */
+  frontSlipPeak: number | null;
+  /** Most negative rear slip ratio under braking, or the highest one under throttle. */
+  rearSlipPeak: number | null;
+  /** Mean brake pedal (0–1). */
+  brake: number | null;
+  /** Mean throttle pedal (0–1). */
+  throttle: number | null;
+  /** Time with the TCS flag active (s). */
+  tcsActiveS: number | null;
+  /** Largest vertical acceleration deviation (g): crests, compressions, kerbs. */
+  verticalG: number | null;
+}
+
+export interface DrivingEvent {
+  /** Stable id within the lap: `${kind}:${cornerId ?? '-'}:${round(startM)}`. */
+  id: string;
+  kind: DrivingEventKind;
+  lapId: Id;
+  /** Corner of the event (track corner segmentation), null on a straight. */
+  cornerId: string | null;
+  phase: DrivingEventPhase;
+  /** Aligned distance range (m). */
+  startM: number;
+  endM: number;
+  /** Lap clock time range (s). */
+  startS: number;
+  endS: number;
+  durationS: number;
+  /** 'high' = clear evidence (eligible for the radio); medium/low = probable, review only. */
+  confidence: FindingConfidence;
+  evidence: DrivingEventEvidence;
+  /** pt-BR reasons that lowered the confidence or distinctions applied ("lombada", "replay"…). */
+  notes: string[];
+  /** pt-BR diagnosis ("Provável saída de frente na T2: …"). */
+  message: string;
+  /** ONE short pt-BR instruction for the next pass. */
+  action: string;
+  /**
+   * First distance after the event where the car is straight again (low steering and yaw), when
+   * the radio may speak. Null when it did not straighten inside the analysed window.
+   */
+  settledM: number | null;
+}
+
+/** Per-lap response model used by the event rules (calibrated from a lap, reusable live). */
+export interface DrivingEventModel {
+  /** v·steer / yaw (m) in linear cornering; null when it could not be calibrated. */
+  steerGainM: number | null;
+  /** 95th percentile of |lateral acceleration| (m/s²): the grip cap of the expected yaw. */
+  maxLatAccMps2: number;
+  /** Median vertical acceleration (g), the baseline for crest/kerb detection. */
+  verticalBaselineG: number;
+  /** Samples used for the steering calibration. */
+  samples: number;
+}
+
+export interface LapDrivingEvents {
+  lapId: Id;
+  trackId: Id | null;
+  /** Sorted by start distance. */
+  events: DrivingEvent[];
+  model: DrivingEventModel;
+  /** Channels that were missing (rules suppressed), pt-BR. */
+  warnings: string[];
+}
+
+// ---------------------------------------------------------------------------------------------
 // Wave 3 result types (AnalysisService in @gt7/core; consumed by MCP, server REST and web)
 // ---------------------------------------------------------------------------------------------
 

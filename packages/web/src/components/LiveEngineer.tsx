@@ -1,11 +1,11 @@
-import type { LiveFrame } from '@gt7/shared';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { type EngineerCall, engineerCall, engineerDisplay, isBrake } from '../lib/engineerRadio.ts';
+import { engineerDisplay, type LiveFrame, type RadioStepEnv } from '@gt7/shared';
+import { useCallback, useEffect, useState } from 'react';
+import { RADIO_MODE_LABELS } from '../lib/radioLabels.ts';
+import { type RadioUtterance, utteranceKeys } from '../lib/radioPhrases.ts';
 import { live } from '../live/liveStore.ts';
 import { useLiveRender } from '../live/raf.ts';
 import { toggleMenu } from '../state/actions.ts';
 import {
-  engineerVoiceMs,
   playEngineerVoice,
   stopEngineerPreview,
   stopEngineerVoice,
@@ -13,6 +13,7 @@ import {
 } from '../state/engineer.ts';
 import { recordEngineerCall } from '../state/engineerJournal.ts';
 import { TRAINING_LAPS, useEngineerTraining } from '../state/engineerTraining.ts';
+import { radioEngine } from '../state/radio.ts';
 import { useUi } from '../state/uiStore.ts';
 
 const STALE_MS = 450;
@@ -24,6 +25,14 @@ const STATUS = {
   suspended: 'Aguardando volta em pista',
   ready: 'Rádio pronto',
 };
+const WAITING_TELEMETRY = 'Aguardando telemetria';
+const SUSPENDED: Record<string, string> = {
+  'amostra velha': WAITING_TELEMETRY,
+  'sem sinal': WAITING_TELEMETRY,
+  'página oculta': WAITING_TELEMETRY,
+};
+
+type Display = ReturnType<typeof engineerDisplay>;
 
 export function LiveEngineer() {
   const enabled = useEngineer((s) => s.enabled);
@@ -32,7 +41,8 @@ export function LiveEngineer() {
 
 function EngineerHud() {
   const [status, setStatus] = useState<string>(STATUS.suspended);
-  const [display, setDisplay] = useState<ReturnType<typeof engineerDisplay>>(null);
+  const [display, setDisplay] = useState<Display>(null);
+  const [note, setNote] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const muted = useEngineer((s) => s.muted);
   const controls = useEngineer((s) => s.controls);
@@ -42,173 +52,124 @@ function EngineerHud() {
   const training = useEngineerTraining((s) => s.run);
   const voiceError = useEngineer((s) => s.voiceError);
   const voiceLoading = useEngineer((s) => s.voiceLoading);
-  const active = useRef<(EngineerCall & { deadline: number }) | null>(null);
-  const spoken = useRef(new Set<string>());
-  const previous = useRef<LiveFrame | null>(null);
+  const trainingEnabled = controls.mode === 'training';
+  const cornerCalls = trainingEnabled && controls.trainingProfile === 'learnTrack';
+  const canRequestSummary =
+    trainingEnabled && controls.trainingProfile !== 'free' && controls.summary === 'onDemand';
 
-  const suspend = useCallback((message: string) => {
-    stopEngineerVoice();
-    active.current = null;
-    previous.current = null;
+  const suspend = useCallback((reason: string, message = WAITING_TELEMETRY) => {
+    if (radioEngine.suspend(reason)) stopEngineerVoice();
     setStatus(message);
     setDisplay(null);
     setPending(false);
   }, []);
 
   useLiveRender((f, now) => {
-    if (document.hidden || now - live.receivedAt > STALE_MS) {
-      suspend('Aguardando telemetria');
+    if (document.hidden) {
+      suspend('página oculta');
       return;
     }
-    const engineer = f.engineer;
-    if (engineer?.status !== 'ready') {
-      suspend(engineer ? STATUS[engineer.status] : 'Aguardando roteiro da referência');
-      return;
-    }
-    if (active.current && now >= active.current.deadline) {
-      stopEngineerVoice();
-      active.current = null;
-    }
-
-    const before = previous.current;
-    previous.current = f;
-    const dt = before ? f.t - before.t : 0;
-    const length = f.track?.lengthM;
-    const offset = (f.distanceM ?? 0) - (before?.distanceM ?? 0);
-    const advance = length ? offset - Math.round(offset / length) * length : offset;
-    // Verify forward progress after reconnection/reacquisition. Keep deduplication across gaps.
-    if (
-      !before ||
-      before.track?.id !== f.track?.id ||
-      dt <= 0 ||
-      dt > STALE_MS ||
-      advance < -0.5 ||
-      advance > 55
-    ) {
-      stopEngineerVoice();
-      active.current = null;
-      setDisplay(null);
-      return;
-    }
-
-    const inTraining = training && training.laps.length < TRAINING_LAPS;
-    const cues = inTraining
-      ? engineer.cues.filter(
-          (cue) =>
-            training.trackId === f.track?.id &&
-            training.carCode === f.car.carCode &&
-            training.referenceId === engineer.referenceLapId &&
-            training.corners.some((corner) => corner.id === cue.cornerId),
-        )
-      : engineer.cues;
-    const ids = new Set(engineer.cues.map((c) => c.id));
-    for (const id of spoken.current) if (!ids.has(id)) spoken.current.delete(id);
-    setStatus(STATUS.ready);
-    setPending(engineer.pendingReference);
-    const next = engineerDisplay(cues, f.car);
-    setDisplay((last) =>
-      last?.label === next?.label && last?.meters === next?.meters ? last : next,
-    );
-
     const ui = useUi.getState();
-    if (
-      muted ||
-      !audioHere ||
-      controls.volume === 0 ||
-      voiceError ||
-      voiceLoading ||
-      ui.menuOpen ||
-      ui.onboarding === 'active' ||
-      advance <= 0
-    )
-      return;
-    const imminentBrake = cues.some(
-      (c) => isBrake(c.kind) && c.aheadM >= 0 && c.aheadM < f.car.speedKmh / 3.6,
-    );
-    const calls = cues
-      .filter(
-        (c) =>
-          !spoken.current.has(c.id) &&
-          (!imminentBrake || isBrake(c.kind)) &&
-          (controls.detail === 'full' || c.kind === 'brake' || c.kind === 'brakeHard'),
-      )
-      .flatMap((cue) => {
-        const call = engineerCall(cue, f.car, engineerVoiceMs, controls.anticipationMs);
-        return call ? [{ ...call, cue }] : [];
-      })
-      .sort((a, b) => Number(b.brake) - Number(a.brake) || a.expiresInMs - b.expiresInMs);
-    const call = calls[0];
-    if (!call || (active.current && (!call.brake || active.current.brake))) return;
+    const run = useEngineerTraining.getState().run;
+    const inTraining =
+      trainingEnabled &&
+      run &&
+      run.laps.length < TRAINING_LAPS &&
+      (!run.sessionId || run.sessionId === f.sessionId);
+    const engineer = f.engineer;
+    const focusCornerIds = inTraining
+      ? run.trackId === f.track?.id &&
+        run.carCode === f.car.carCode &&
+        engineer?.status === 'ready' &&
+        run.referenceId === engineer.referenceLapId
+        ? run.corners.map((corner) => corner.id)
+        : []
+      : null;
+    const env: RadioStepEnv = {
+      audio:
+        muted ||
+        !audioHere ||
+        controls.volume === 0 ||
+        voiceError ||
+        typeof AudioContext === 'undefined'
+          ? 'off'
+          : voiceLoading || ui.menuOpen || ui.onboarding === 'active'
+            ? 'wait'
+            : 'ready',
+      sampleAgeMs: now - live.receivedAt,
+      focusCornerIds,
+      assistCornerIds: cornerCalls ? focusCornerIds : null,
+    };
+    const out = radioEngine.step(f, env);
+    if (out.stop) stopEngineerVoice();
+    setNote(out.panel?.label ?? null);
 
-    const playing = { ...call, deadline: now + call.expiresInMs };
-    active.current = playing;
-    const started = playEngineerVoice(
-      call.text,
-      false,
-      () => {
-        if (active.current === playing) active.current = null;
-      },
-      () => {
-        const latest = live.frame;
-        const latestEngineer = latest?.engineer;
-        if (
-          active.current !== playing ||
-          !latest ||
-          latest.sessionId !== f.sessionId ||
-          latest.lap.startedAt !== f.lap.startedAt ||
-          latestEngineer?.status !== 'ready'
-        )
-          return;
-        const latestCue = latestEngineer.cues.find((cue) => cue.id === call.id);
-        if (latestCue) recordEngineerCall(latest, latestCue, call.text, deviceId);
-      },
-    );
-    if (started) spoken.current.add(call.id);
-    else active.current = null;
+    if (out.suspended) {
+      setStatus(SUSPENDED[out.suspended] ?? STATUS.suspended);
+      setDisplay(null);
+      setPending(false);
+    } else if (cornerCalls) {
+      setStatus(engineer ? STATUS[engineer.status] : 'Aguardando roteiro da referência');
+      setPending(engineer?.status === 'ready' && engineer.pendingReference);
+      const cues =
+        engineer?.status === 'ready'
+          ? engineer.cues.filter(
+              (cue) => !focusCornerIds || (cue.cornerId && focusCornerIds.includes(cue.cornerId)),
+            )
+          : [];
+      const next = engineerDisplay(cues, f.car, controls.learningBrakePercent);
+      setDisplay((last) =>
+        last?.label === next?.label && last?.meters === next?.meters ? last : next,
+      );
+    } else {
+      setStatus(STATUS.ready);
+      setDisplay(null);
+      setPending(false);
+    }
+
+    const speech = out.speak;
+    if (!speech) return;
+    const started = playEngineerVoice(speech.utterance, false, undefined, () => {
+      if (speech.cueId) journal(f, speech.cueId, speech.utterance, deviceId);
+    });
+    if (!started) radioEngine.playbackFailed();
   });
 
   useEffect(() => {
-    if (!audioHere || muted || controls.volume === 0) {
-      stopEngineerVoice();
-      active.current = null;
-    }
+    if (!audioHere || muted || controls.volume === 0) stopEngineerVoice();
   }, [audioHere, muted, controls.volume]);
 
   useEffect(() => {
     const visibility = () => {
       if (document.hidden) {
-        suspend('Aguardando telemetria');
+        suspend('página oculta');
         stopEngineerPreview();
       }
     };
     const timer = setInterval(() => {
-      const now = performance.now();
-      if (!live.frame || now - live.receivedAt > STALE_MS) {
-        suspend('Aguardando telemetria');
-      } else if (active.current && now >= active.current.deadline) {
-        stopEngineerVoice();
-        active.current = null;
-      }
+      if (!live.frame || performance.now() - live.receivedAt > STALE_MS) suspend('sem sinal');
     }, 125);
     document.addEventListener('visibilitychange', visibility);
     return () => {
       clearInterval(timer);
       document.removeEventListener('visibilitychange', visibility);
+      radioEngine.suspend('rádio desligado');
       stopEngineerVoice();
     };
   }, [suspend]);
 
+  const mode = RADIO_MODE_LABELS[controls.mode];
   return (
     <aside className="engineer-hud" data-action={display?.kind} aria-label="Engenheiro ao vivo">
       <div className="engineer-hud-heading">
         <span className="engineer-hud-mode">
           {!audioHere
-            ? 'Engenheiro · áudio em outro aparelho'
+            ? `${mode} · áudio em outro aparelho`
             : muted || controls.volume === 0
-              ? 'Engenheiro · sem som'
+              ? `${mode} · sem som`
               : voiceError
-                ? 'Engenheiro · voz indisponível'
-                : 'Engenheiro ao vivo'}
+                ? `${mode} · áudio indisponível`
+                : `Engenheiro · ${mode}`}
         </span>
         <button
           type="button"
@@ -220,15 +181,42 @@ function EngineerHud() {
         </button>
       </div>
       <div className="engineer-hud-call">
-        <strong>{display?.label ?? status}</strong>
+        <strong>{display?.label ?? note ?? status}</strong>
         {display?.meters != null && <b className="engineer-hud-distance">{display.meters} m</b>}
       </div>
+      {display && note && <small>{note}</small>}
       {pending && !display && <small>Nova referência na próxima volta</small>}
-      {training && (
+      {training && trainingEnabled && controls.trainingProfile !== 'free' && (
         <small>
           Treino · {training.laps.length}/{TRAINING_LAPS} voltas válidas
         </small>
       )}
+      {canRequestSummary && (
+        <button
+          type="button"
+          data-no-gesture
+          className="engineer-hud-settings"
+          disabled={status === WAITING_TELEMETRY || status === STATUS.suspended}
+          onClick={() => radioEngine.requestSummary()}
+        >
+          Pedir resumo
+        </button>
+      )}
     </aside>
   );
+}
+
+/** Journal the corner call once it actually starts, if the lap and cue are still current. */
+function journal(f: LiveFrame, cueId: string, utterance: RadioUtterance, deviceId: string): void {
+  const latest = live.frame;
+  const latestEngineer = latest?.engineer;
+  if (
+    !latest ||
+    latest.sessionId !== f.sessionId ||
+    latest.lap.startedAt !== f.lap.startedAt ||
+    latestEngineer?.status !== 'ready'
+  )
+    return;
+  const cue = latestEngineer.cues.find((c) => c.id === cueId);
+  if (cue) recordEngineerCall(latest, cue, utteranceKeys(utterance).join(' '), deviceId);
 }

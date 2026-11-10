@@ -219,11 +219,18 @@ describe('AnalysisService', () => {
     const secondId = amateurDay1[0]!;
     const kinds = new Set<EngineerCueKind>();
     const referenceByLap = new Map<number, string>();
+    let sawMeasuredBrakePeak = false;
     let pending = false;
     const onFrame = (frame: LiveFrame) => {
       if (frame.engineer?.status !== 'ready') return;
       referenceByLap.set(frame.lap.lap, frame.engineer.referenceLapId);
-      for (const cue of frame.engineer.cues) kinds.add(cue.kind);
+      for (const cue of frame.engineer.cues) {
+        kinds.add(cue.kind);
+        if (frame.engineer.referenceLapId === secondId && cue.kind.startsWith('brake')) {
+          sawMeasuredBrakePeak ||=
+            cue.brakePeak !== undefined && cue.brakePeak > 0 && cue.brakePeak <= 1;
+        }
+      }
       pending ||= frame.engineer.pendingReference;
       if (frame.lap.lap === 2 && engine.deltaReference.lapId === referenceId) {
         engine.setDeltaReference('reference', secondId);
@@ -245,6 +252,7 @@ describe('AnalysisService', () => {
       expect(referenceByLap.get(2)).toBe(referenceId);
       expect(referenceByLap.get(3)).toBe(secondId);
       expect(pending).toBe(true);
+      expect(sawMeasuredBrakePeak).toBe(true);
       expect([...kinds].some((kind) => kind.startsWith('brake'))).toBe(true);
       expect([...kinds].some((kind) => kind.startsWith('throttle'))).toBe(true);
     } finally {

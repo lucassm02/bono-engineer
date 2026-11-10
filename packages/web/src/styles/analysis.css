@@ -884,6 +884,9 @@ textarea.a-input {
   padding: 10px 12px;
   background: var(--bg);
 }
+.a-finding[data-selected="1"] {
+  border-color: #e08cff;
+}
 .a-finding-head {
   display: flex;
   flex-wrap: wrap;

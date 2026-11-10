@@ -1,10 +1,27 @@
-Clipes de rádio em português do Brasil gerados para o Bono Engineer.
+Clipes de rádio em português do Brasil pré-gerados para o Bono Engineer.
+Áudio sintético (voz gerada por computador), gerado offline com sherpa-onnx
+(https://github.com/k2-fsa/sherpa-onnx, Apache-2.0), sherpa-onnx-node 1.13.8.
+Regenerar: npm run radio:voices (packages/web/scripts/radio-voices).
+Pós-processamento: corte de silêncio, filtro passa-altas, normalização de volume.
 
-Modelo: Kokoro-82M v1.0, de hexgrad, Apache-2.0
+== Alex (radio:alex)
+Modelo: Kokoro-82M v1.0, de hexgrad. Licença Apache-2.0.
 https://huggingface.co/hexgrad/Kokoro-82M
+Conversão ONNX: k2-fsa/sherpa-onnx, kokoro-multi-lang-v1_0 (Apache-2.0).
+https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
+Voz: pm_alex.
 
-Vozes: pf_dora (Dora) e pm_alex (Alex)
-https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md
+== Santa (radio:santa)
+Modelo: Kokoro-82M v1.0, de hexgrad. Licença Apache-2.0.
+https://huggingface.co/hexgrad/Kokoro-82M
+Conversão ONNX: k2-fsa/sherpa-onnx, kokoro-multi-lang-v1_0 (Apache-2.0).
+https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
+Voz: pm_santa.
 
-Geração offline com sherpa-onnx e o modelo kokoro-multi-lang-v1_0.
-https://k2-fsa.github.io/sherpa/onnx/tts/all/Chinese-English/kokoro-multi-lang-v1_0.html
+== Bruno (radio:bruno)
+Modelo: Kokoro-82M v1.0, de hexgrad. Licença Apache-2.0.
+https://huggingface.co/hexgrad/Kokoro-82M
+Conversão ONNX: k2-fsa/sherpa-onnx, kokoro-multi-lang-v1_0 (Apache-2.0).
+https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
+Voz: mistura gerada pelo Bono dos estilos pm_alex (60%) e am_onyx (40%), modificação
+dos arquivos de voz Apache-2.0 do Kokoro, com fonemas em pt-BR.

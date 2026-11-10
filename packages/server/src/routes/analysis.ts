@@ -3,6 +3,7 @@
  *
  *   GET  /api/analysis/tracks/:trackId          map polyline, corners, sectors, records
  *   GET  /api/analysis/laps/:lapId              per-corner metrics, validity, AI summary
+ *   GET  /api/analysis/laps/:lapId/events       driving events (understeer, oversteer, lock, traction)
  *   GET  /api/analysis/compare?lap=&ref=        corner-by-corner comparison (+ Markdown)
  *   GET  /api/analysis/delta?lap=&ref=&stepM=   delta by distance
  *   GET  /api/analysis/traces?laps=&channels=…  laps resampled on one distance grid
@@ -27,6 +28,7 @@ import {
   type ApiDistanceDelta,
   type ApiEvolution,
   type ApiLapAnalysis,
+  type ApiLapDrivingEvents,
   type ApiLapTrace,
   type ApiMicrosectors,
   type ApiRedetectCornersResult,
@@ -269,6 +271,12 @@ export function analysisRoutes(app: FastifyInstance, ctx: RouteContext): void {
   app.get(
     '/analysis/laps/:lapId',
     async (req): Promise<ApiLapAnalysis> => analysis.getLapAnalysis(idParam(req.params, 'lapId')),
+  );
+
+  app.get(
+    '/analysis/laps/:lapId/events',
+    async (req): Promise<ApiLapDrivingEvents> =>
+      analysis.getLapDrivingEvents(idParam(req.params, 'lapId')),
   );
 
   app.get('/analysis/compare', async (req): Promise<ApiComparison> => {

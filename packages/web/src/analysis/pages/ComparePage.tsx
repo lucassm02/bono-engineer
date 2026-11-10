@@ -5,10 +5,12 @@
 
 import type {
   ApiComparison,
+  ApiLapDrivingEvents,
   ApiMicrosectors,
   ApiTraces,
   ApiTrackAnalysis,
   COMPARISON_REFERENCE_KINDS,
+  DrivingEvent,
   EngineerRadioLog,
   Lap,
   MapCorner,
@@ -21,6 +23,7 @@ import { api, urls } from '../api.ts';
 import { CarName } from '../components/CarName.tsx';
 import { type BrakeMarker, CompareMap, type MapLine } from '../components/CompareMap.tsx';
 import { CornerTable } from '../components/CornerTable.tsx';
+import { DrivingEventsPanel } from '../components/DrivingEventsPanel.tsx';
 import { EngineerRadioReview } from '../components/EngineerRadioReview.tsx';
 import { FindingsPanel } from '../components/FindingsPanel.tsx';
 import { type ChartLap, SyncCharts } from '../components/SyncCharts.tsx';
@@ -29,7 +32,10 @@ import {
   COMPARE_TRACE_CHANNELS,
   cornerLabel,
   cornerRange,
+  EVENT_TRACE_CHANNELS,
+  eventRange,
   lapSeries,
+  mergeEventTraces,
   timeTone,
 } from '../lib/chartData.ts';
 import { CursorBus } from '../lib/cursorBus.ts';
@@ -54,6 +60,8 @@ export interface CompareData {
   micro: ApiMicrosectors | null;
   theoretical: { theoreticalBestMs: number; bestLapMs: number; laps: number } | null;
   radio?: EngineerRadioLog[];
+  /** Driving events of the subject lap (null while loading or unavailable). */
+  events?: ApiLapDrivingEvents | null;
 }
 
 function lapOptionLabel(l: Lap): string {
@@ -113,6 +121,7 @@ export function ComparePage({ route }: { route: Route }) {
       laps: ids.length,
     };
   });
+  const events = useFetch(lapId ? `ev:${lapId}` : null, () => api.lapEvents(lapId));
   const trackLaps = useFetch(trackId ? `tl:${trackId}` : null, () =>
     api.trackLaps(trackId!, { orderBy: 'time', limit: 80 }),
   );
@@ -164,6 +173,7 @@ export function ComparePage({ route }: { route: Route }) {
         micro: micro.data,
         theoretical: theo.data ?? null,
         radio: radio.data ?? undefined,
+        events: events.data,
       }}
       tracesError={traces.error?.message ?? null}
       trackLaps={trackLaps.data ?? []}
@@ -191,7 +201,7 @@ export function CompareView({
   initialCorner: string | null;
   demo?: boolean;
 }) {
-  const { cmp, traces, track, micro, theoretical, radio } = data;
+  const { cmp, traces, track, micro, theoretical, radio, events } = data;
   const c = cmp.comparison;
   const lap = cmp.lap;
   const refLap = cmp.referenceLap;
@@ -199,6 +209,18 @@ export function CompareView({
   const [range, setRange] = useState<[number, number] | null>(null);
   const [focus, setFocus] = useState<string | null>(null);
   const lengthM = c.lengthM ?? track?.polyline.lengthM ?? traces?.toM ?? 0;
+  const [selectedEvent, setSelectedEvent] = useState<DrivingEvent | null>(null);
+  const [eventTracesOn, setEventTracesOn] = useState(false);
+  const traceLapIds = useMemo(() => traces?.laps.map((l) => l.lapId) ?? [], [traces]);
+  // Yaw and wheel slip load on the first "Ver traços", on the same grid as the other charts.
+  const eventTraces = useFetch(
+    eventTracesOn && !demo && traceLapIds.length ? `etr:${traceLapIds.join(',')}` : null,
+    () => api.traces(traceLapIds, EVENT_TRACE_CHANNELS, refLap.id),
+  );
+  const chartTraces = useMemo(
+    () => (traces ? mergeEventTraces(traces, eventTraces.data) : null),
+    [traces, eventTraces.data],
+  );
   const radioMarkers = useMemo(
     () =>
       radio
@@ -238,8 +260,24 @@ export function CompareView({
 
   const onRange = useCallback((r: [number, number] | null) => {
     setRange(r);
-    if (!r) setFocus(null);
+    if (!r) {
+      setFocus(null);
+      setSelectedEvent(null);
+    }
   }, []);
+
+  const openEvent = useCallback(
+    (e: DrivingEvent) => {
+      setSelectedEvent(e);
+      setEventTracesOn(true);
+      setFocus(e.cornerId);
+      setRange(eventRange(e, lengthM));
+      document
+        .querySelector('.a-cmp-visual')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    },
+    [lengthM],
+  );
 
   const extraLaps = useMemo(
     () =>
@@ -502,6 +540,7 @@ export function CompareView({
               onClick={() => {
                 setRange(null);
                 setFocus(null);
+                setSelectedEvent(null);
               }}
             >
               Volta inteira
@@ -512,10 +551,11 @@ export function CompareView({
 
       <div className="a-cmp-visual">
         <div className="a-cmp-charts">
-          {traces ? (
+          {chartTraces ? (
             <SyncCharts
               radioMarkers={radioMarkers}
-              traces={traces}
+              highlight={selectedEvent ? [selectedEvent.startM, selectedEvent.endM] : null}
+              traces={chartTraces}
               laps={chartLaps}
               refId={refLap.id}
               corners={corners}
@@ -569,6 +609,19 @@ export function CompareView({
           </Card>
         </aside>
       </div>
+
+      {events && (
+        <Card title="Eventos de pilotagem" className="a-mt">
+          <DrivingEventsPanel
+            events={events.events}
+            corners={corners}
+            selectedId={selectedEvent?.id ?? null}
+            onOpen={openEvent}
+            warnings={events.warnings}
+          />
+          {eventTraces.error && <ErrorBox error={eventTraces.error} compact />}
+        </Card>
+      )}
 
       <Card title="Curva a curva" className="a-mt">
         {c.rows.length ? (

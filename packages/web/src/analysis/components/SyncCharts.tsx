@@ -10,7 +10,14 @@ import { useEffect, useMemo, useRef } from 'react';
 import uPlot from 'uplot';
 import 'uplot/dist/uPlot.min.css';
 import { formatFixed } from '../../lib/format.ts';
-import { COMPARE_PANELS, isAllNull, type PanelDef, panelData } from '../lib/chartData.ts';
+import {
+  COMPARE_PANELS,
+  EVENT_PANEL_KEYS,
+  EVENT_PANELS,
+  isAllNull,
+  type PanelDef,
+  panelData,
+} from '../lib/chartData.ts';
 import type { CursorBus } from '../lib/cursorBus.ts';
 import { DOUBLE_TAP_MS, pinchRange } from '../lib/touchZoom.ts';
 
@@ -33,6 +40,8 @@ interface Props {
   bus: CursorBus;
   focusCorner?: string | null;
   radioMarkers?: readonly number[];
+  /** Distance range of the selected driving event, shaded on every chart. */
+  highlight?: [number, number] | null;
 }
 
 const Y_AXIS = 54;
@@ -55,6 +64,7 @@ export function SyncCharts({
   bus,
   focusCorner,
   radioMarkers,
+  highlight,
 }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const plotsRef = useRef<uPlot[]>([]);
@@ -69,6 +79,8 @@ export function SyncCharts({
   cornersRef.current = corners;
   const radioMarkersRef = useRef(radioMarkers);
   radioMarkersRef.current = radioMarkers;
+  const highlightRef = useRef(highlight ?? null);
+  highlightRef.current = highlight ?? null;
 
   const syncKey = useMemo(() => `cmp-${Math.random().toString(36).slice(2)}`, []);
   const full: [number, number] = useMemo(
@@ -76,9 +88,12 @@ export function SyncCharts({
     [traces],
   );
 
-  /** Panels with data for at least one lap (steering is absent in some formats). */
+  /**
+   * Panels with data for at least one lap (steering is absent in some formats; the event panels
+   * only have data once their channels are loaded).
+   */
   const panels = useMemo(() => {
-    return COMPARE_PANELS.map((p) => {
+    return [...COMPARE_PANELS, ...EVENT_PANELS].map((p) => {
       const ids = p.key === 'delta' ? laps.filter((l) => l.id !== refId) : laps;
       const data = panelData(
         traces,
@@ -114,6 +129,15 @@ export function SyncCharts({
         const l = Math.max(x0, u.bbox.left);
         const r = Math.min(x1, u.bbox.left + u.bbox.width);
         ctx.fillRect(l, top, r - l, height);
+      }
+      const hl = highlightRef.current;
+      if (hl) {
+        const x0 = Math.max(u.valToPos(hl[0], 'x', true), u.bbox.left);
+        const x1 = Math.min(u.valToPos(hl[1], 'x', true), u.bbox.left + u.bbox.width);
+        if (x1 > x0) {
+          ctx.fillStyle = 'rgba(224,140,255,0.16)';
+          ctx.fillRect(x0, top, x1 - x0, height);
+        }
       }
       ctx.fillStyle = '#7aa7ff';
       for (const meters of radioMarkersRef.current ?? []) {
@@ -237,7 +261,9 @@ export function SyncCharts({
           drawClear: [bandsHook],
           draw: [
             ...(idx === 0 ? [labelsHook] : []),
-            ...(def.key === 'delta' || def.key === 'steering' ? [zeroHook] : []),
+            ...(def.key === 'delta' || def.key === 'steering' || EVENT_PANEL_KEYS.has(def.key)
+              ? [zeroHook]
+              : []),
           ],
           setCursor: [
             (u) => {
@@ -385,7 +411,7 @@ export function SyncCharts({
   // biome-ignore lint/correctness/useExhaustiveDependencies: redraw trigger
   useEffect(() => {
     for (const o of plotsRef.current) o.redraw(false);
-  }, [focusCorner, corners, radioMarkers]);
+  }, [focusCorner, corners, radioMarkers, highlight]);
 
   return (
     <div className="a-charts" ref={hostRef}>
@@ -426,11 +452,11 @@ export function SyncCharts({
           <div className="a-chart-plot" />
         </div>
       ))}
-      {panels.some((p) => p.empty) && (
+      {panels.some((p) => p.empty && !EVENT_PANEL_KEYS.has(p.def.key)) && (
         <p className="dim a-small">
           Sem dados de{' '}
           {panels
-            .filter((p) => p.empty)
+            .filter((p) => p.empty && !EVENT_PANEL_KEYS.has(p.def.key))
             .map((p) => p.def.label.toLowerCase())
             .join(', ')}{' '}
           neste formato de pacote.

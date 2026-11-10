@@ -1,19 +1,20 @@
 import type { EngineerCue, LiveCar } from '@gt7/shared';
 import { describe, expect, it } from 'vitest';
-import { RADIO_VOICES, radioClipMs, radioPack } from './engineerClips.ts';
+import { radioClipMs, radioPack } from './engineerClips.ts';
 import { ENGINEER_PHRASES, engineerCall, engineerDisplay } from './engineerRadio.ts';
+import { RADIO_VOICES } from './radioVoices.ts';
 
-const estimate = (_text: string, ms: number) => ms;
+const estimate = (_utterance: unknown, ms: number) => ms;
 const driver = (speedKmh: number, brake = 0, throttle = 0) =>
   ({ speedKmh, brake, throttle, brakeRaw: null, throttleRaw: null }) as LiveCar;
 
 describe('Engenheiro ao vivo', () => {
-  it('ships a timed clip for every live instruction in both radio packs', () => {
+  it('ships a timed clip for every live instruction in every radio pack', () => {
     for (const voice of RADIO_VOICES) {
-      const pack = radioPack(voice.value)!;
+      const pack = radioPack(voice.id)!;
       expect(radioClipMs(pack, 'preview')).toBeGreaterThan(3000);
       for (const phrase of ENGINEER_PHRASES) {
-        expect(radioClipMs(pack, phrase), `${voice.label} · ${phrase}`).toBeGreaterThan(200);
+        expect(radioClipMs(pack, phrase), `${voice.name} · ${phrase}`).toBeGreaterThan(200);
       }
     }
   });
@@ -36,6 +37,21 @@ describe('Engenheiro ao vivo', () => {
     expect(engineerCall(cue, driver(140), () => 4000)).toBeNull();
     expect(engineerCall(cue, driver(140, 0.3), estimate)).toBeNull();
     expect(engineerCall({ ...cue, aheadM: -1 }, driver(140), estimate)).toBeNull();
+  });
+
+  it('uses the rounded reference brake percentage in detailed instructions when it fits', () => {
+    const cue: EngineerCue = { id: 'T1', kind: 'brake', aheadM: 100, brakePeak: 0.52 };
+    const duration = (utterance: unknown) => (typeof utterance === 'string' ? 1800 : 2400);
+    expect(engineerCall(cue, driver(120), duration, 0, true)?.utterance).toEqual([
+      'cinquenta por cento de freio',
+      'em cem metros.',
+    ]);
+    expect(engineerDisplay([cue], driver(120), true)?.label).toBe('Freio · 50%');
+    expect(engineerCall(cue, driver(150), duration, 0, true)?.text).toBe('Freio em cem.');
+    expect(
+      engineerCall({ ...cue, brakePeak: undefined }, driver(120), duration, 0, true)?.text,
+    ).toBe('Freio em cem.');
+    expect(engineerCall(cue, driver(120), duration)?.text).toBe('Freio em cem.');
   });
 
   it('waits for the closest safe braking call and advances it when more anticipation is requested', () => {

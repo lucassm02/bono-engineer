@@ -1861,3 +1861,32 @@ da linha de chegada (145, −16, 303) fica a 17 m do `startLine` do gt-telemetry
   pistas novas do jogo (Autumn Ring) até as fontes atualizarem; o `courseId` 1340 de SUGO (DG EDGE) e o tipo fictício/real de
   *Nürburgring Endurance II* (vem do csv). Atualizar a cada versão do jogo: `node packages/shared/scripts/gen-tracks.mjs` e conferir a
   lista oficial (`https://www.gran-turismo.com/gb/gt7/tracklist/`) à mão.
+
+## Rádio do Bono — perfis de treino e revisão de pilotagem
+
+- O motor em `packages/shared/src/radio` recebe o quadro de telemetria e a duração dos clipes.
+  A reprodução fica no app web. O registro da sessão do motor guarda a regra, as evidências,
+  a referência, a fala e o motivo do descarte. A janela de fala considera também as freagens
+  das curvas fora do foco escolhido.
+- Em Aprender pista, as chamadas usam a distância ao ponto da referência e perdem frequência
+  após acertos consecutivos. Selecionar curvas em **Treino por curvas** mantém a ajuda nelas.
+  Ganhar tempo usa as passagens comparáveis para escolher uma correção com efeito observado.
+  Em Consistência, a meta pode ser informada em segundos. Com o campo vazio, o motor usa o
+  tempo de referência ou, na ausência dele, a melhor volta do bloco.
+- O resumo por bloco usa blocos automáticos de cinco voltas válidas. **Pedir resumo** fica no
+  painel ao vivo quando a frequência é **Sob demanda**. Se o tempo da última volta ainda
+  estiver sendo confirmado, o pedido espera essa confirmação antes de buscar uma janela livre.
+- Em Trial Mountain com o Huracán Gr.4, os trechos gravados cobrem a possível saída de frente
+  na T2 da 2:04,856 e a soltura tardia na T4. Na T9 dessa mesma volta, a regra classificou a
+  perda de aderência como rotação. A T9 da 2:04,918 cobre um travamento dianteiro de confiança
+  alta. Eventos prováveis ficam na revisão, e as falas de eventos confirmados esperam o carro
+  endireitar.
+- Os pacotes locais de Alex, Santa e Bruno incluem os segmentos de treino e dos eventos.
+  A duração vem do manifesto gerado com os próprios clipes. A faixa de pneus de 50/70/95/115 °C,
+  a identificação da volta de preparação e os limites de janela ainda precisam ser calibrados
+  em sessão ao vivo no PS5.
+- Em **Aprender pista**, o formato da instrução de freada é independente do nível de fala.
+  **Básicas** usa a intensidade qualitativa. **Detalhadas** usa o pico confiável do pedal
+  da volta de referência, arredondado em passos de 10 pontos percentuais. O motor mede a
+  duração dos clipes de percentual e distância e recorre à frase básica quando ela couber
+  e o detalhe não estiver disponível.

@@ -6,6 +6,8 @@ import {
   type ComparisonReferenceKind,
   type CornerKind,
   carName,
+  type DrivingEventKind,
+  type DrivingEventPhase,
   type FindingConfidence,
   type LapFlag,
   type PacketFormat,
@@ -44,6 +46,20 @@ export const CONFIDENCE_LABELS: Record<FindingConfidence, string> = {
   high: 'Confiança alta',
   medium: 'Confiança média',
   low: 'Confiança baixa',
+};
+
+export const DRIVING_EVENT_LABELS: Record<DrivingEventKind, string> = {
+  understeer: 'Saída de frente',
+  oversteer: 'Saída de traseira',
+  frontLock: 'Travamento dianteiro',
+  exitTraction: 'Perda de tração na saída',
+};
+
+export const DRIVING_EVENT_PHASE_LABELS: Record<DrivingEventPhase, string> = {
+  braking: 'freada',
+  entry: 'entrada',
+  mid: 'meio da curva',
+  exit: 'saída da curva',
 };
 
 export const REFERENCE_KIND_LABELS: Record<ComparisonReferenceKind | 'lap', string> = {

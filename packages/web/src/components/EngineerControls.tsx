@@ -1,8 +1,20 @@
-import { useEffect, useState } from 'react';
+import {
+  CONSISTENCY_TARGET_RANGE_MS,
+  RADIO_MODES,
+  SUMMARY_FREQUENCIES,
+  TRAINING_PROFILES,
+} from '@gt7/shared';
+import { useState } from 'react';
 import { api } from '../analysis/api.ts';
 import { useFetch } from '../analysis/useFetch.ts';
-import { RADIO_VOICES, radioPack } from '../lib/engineerClips.ts';
-import { portugueseVoices, speechSupported } from '../lib/speech.ts';
+import {
+  RADIO_MODE_HINTS,
+  RADIO_MODE_LABELS,
+  SPEECH_LEVEL_LABELS,
+  SUMMARY_LABELS,
+  TRAINING_PROFILE_LABELS,
+} from '../lib/radioLabels.ts';
+import { DEFAULT_RADIO_VOICE, RADIO_VOICES, radioVoice } from '../lib/radioVoices.ts';
 import {
   type EngineerPace,
   setEngineerEnabled,
@@ -16,6 +28,9 @@ import {
 import { useUi } from '../state/uiStore.ts';
 import { EngineerReference } from './EngineerReference.tsx';
 
+const pickOption = <T extends string>(values: readonly T[], value: string, fallback: T): T =>
+  values.includes(value as T) ? (value as T) : fallback;
+
 export function EngineerControls() {
   const enabled = useEngineer((s) => s.enabled);
   const controls = useEngineer((s) => s.controls);
@@ -25,19 +40,8 @@ export function EngineerControls() {
   const previewPlaying = useEngineer((s) => s.previewPlaying);
   const voiceUri = useEngineer((s) => s.voiceUri);
   const pace = useEngineer((s) => s.pace);
-  const canSpeak = speechSupported();
-  const canPlay = typeof AudioContext !== 'undefined';
-  const selectedPack = radioPack(voiceUri);
-  const audioAvailable = selectedPack ? canPlay : canSpeak;
-  const [voices, setVoices] = useState(portugueseVoices);
-  useEffect(() => {
-    if (!canSpeak) return;
-    const synth = window.speechSynthesis;
-    const refresh = () => setVoices(portugueseVoices());
-    synth.addEventListener('voiceschanged', refresh);
-    refresh();
-    return () => synth.removeEventListener('voiceschanged', refresh);
-  }, [canSpeak]);
+  const voiceFallback = useEngineer((s) => s.voiceFallback);
+  const audioAvailable = typeof AudioContext !== 'undefined';
   const deviceId = useUi((s) => s.profile.deviceId);
   const serverStatus = useUi((s) => s.serverStatus);
   const [deviceError, setDeviceError] = useState(false);
@@ -46,6 +50,21 @@ export function EngineerControls() {
   const audioDevice = serverStatus?.engineerAudioDeviceId ?? '';
   const audioHere = !audioDevice || audioDevice === deviceId;
   const otherDevices = serverStatus?.devices.filter((device) => device.deviceId !== deviceId) ?? [];
+  const consistency = controls.trainingProfile === 'consistency';
+  const summaries = consistency
+    ? SUMMARY_FREQUENCIES.filter((frequency) => frequency !== 'lap')
+    : SUMMARY_FREQUENCIES;
+  const summary = consistency && controls.summary === 'lap' ? 'block' : controls.summary;
+
+  /** Mudo keeps the panel and the chosen level; Essencial/Detalhado also turn the sound back on. */
+  function selectSpeechLevel(value: string) {
+    if (value === 'mute') {
+      setEngineerMuted(true);
+      return;
+    }
+    setRadioControls({ level: value === 'detailed' ? 'detailed' : 'essential' });
+    if (muted) setEngineerMuted(false, audioHere && enabled);
+  }
 
   async function selectAudioDevice(value: string) {
     setSavingDevice(true);
@@ -82,7 +101,95 @@ export function EngineerControls() {
           {enabled ? 'Desativar' : 'Ativar'}
         </button>
       </header>
-      <p>Instruções de pilotagem em voz e na tela, a partir da sua referência.</p>
+      <p>Instruções em voz e na tela. Quando tudo corre bem, o rádio fica em silêncio.</p>
+      <div className="engineer-voice-options">
+        <label>
+          Modo
+          <select
+            value={controls.mode}
+            onChange={(event) =>
+              setRadioControls({
+                mode: pickOption(RADIO_MODES, event.currentTarget.value, controls.mode),
+              })
+            }
+          >
+            {RADIO_MODES.map((mode) => (
+              <option key={mode} value={mode}>
+                {RADIO_MODE_LABELS[mode]}
+              </option>
+            ))}
+          </select>
+        </label>
+        {controls.mode === 'training' && (
+          <label>
+            Perfil do treino
+            <select
+              value={controls.trainingProfile}
+              onChange={(event) =>
+                setRadioControls({
+                  trainingProfile: pickOption(
+                    TRAINING_PROFILES,
+                    event.currentTarget.value,
+                    controls.trainingProfile,
+                  ),
+                })
+              }
+            >
+              {TRAINING_PROFILES.map((profile) => (
+                <option key={profile} value={profile}>
+                  {TRAINING_PROFILE_LABELS[profile]}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+      </div>
+      <p className="engineer-controls-hint">{RADIO_MODE_HINTS[controls.mode]}</p>
+      {controls.mode === 'training' && controls.trainingProfile === 'learnTrack' && (
+        <label>
+          Instruções de freada
+          <select
+            value={controls.learningBrakePercent ? 'detailed' : 'basic'}
+            onChange={(event) =>
+              setRadioControls({ learningBrakePercent: event.currentTarget.value === 'detailed' })
+            }
+          >
+            <option value="basic">Básicas · freada leve, forte ou normal</option>
+            <option value="detailed">Detalhadas · percentual do pedal</option>
+          </select>
+        </label>
+      )}
+      {controls.mode === 'training' && consistency && (
+        <label>
+          Meta por volta em segundos
+          <input
+            key={controls.consistencyTargetMs ?? 'reference'}
+            type="number"
+            min={CONSISTENCY_TARGET_RANGE_MS[0] / 1000}
+            max={CONSISTENCY_TARGET_RANGE_MS[1] / 1000}
+            step={0.001}
+            placeholder="Tempo da referência"
+            defaultValue={
+              controls.consistencyTargetMs === null ? '' : controls.consistencyTargetMs / 1000
+            }
+            onBlur={({ currentTarget: field }) => {
+              if (field.validity.valid) {
+                setRadioControls({
+                  consistencyTargetMs: field.value ? Math.round(field.valueAsNumber * 1000) : null,
+                });
+              } else {
+                field.value =
+                  controls.consistencyTargetMs === null
+                    ? ''
+                    : String(controls.consistencyTargetMs / 1000);
+              }
+            }}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') event.currentTarget.blur();
+            }}
+          />
+        </label>
+      )}
       <label>
         Volume do rádio · {Math.round(controls.volume * 100)}%
         <input
@@ -111,20 +218,48 @@ export function EngineerControls() {
           </select>
         </label>
         <label>
-          Nível de detalhe
+          Nível de fala
           <select
-            value={controls.detail}
-            onChange={(event) =>
-              setRadioControls({
-                detail: event.currentTarget.value === 'essential' ? 'essential' : 'full',
-              })
-            }
+            value={muted ? 'mute' : controls.level}
+            onChange={(event) => selectSpeechLevel(event.currentTarget.value)}
           >
-            <option value="essential">Essencial · frenagens principais</option>
-            <option value="full">Completo · todas as dicas</option>
+            <option value="essential">{SPEECH_LEVEL_LABELS.essential}</option>
+            <option value="detailed">{SPEECH_LEVEL_LABELS.detailed}</option>
+            <option value="mute">{SPEECH_LEVEL_LABELS.mute}</option>
           </select>
         </label>
       </div>
+      {controls.mode === 'training' && controls.trainingProfile !== 'free' && (
+        <div className="engineer-voice-options">
+          <label>
+            Resumo do treino
+            <select
+              value={summary}
+              onChange={(event) =>
+                setRadioControls({
+                  summary: pickOption(summaries, event.currentTarget.value, summary),
+                })
+              }
+            >
+              {summaries.map((frequency) => (
+                <option key={frequency} value={frequency}>
+                  {SUMMARY_LABELS[frequency]}
+                </option>
+              ))}
+            </select>
+          </label>
+          {!consistency && (
+            <label className="engineer-controls-check">
+              <input
+                type="checkbox"
+                checked={controls.praise}
+                onChange={(event) => setRadioControls({ praise: event.currentTarget.checked })}
+              />
+              Reforço positivo
+            </label>
+          )}
+        </div>
+      )}
       <label>
         Aparelho que toca o rádio
         <select
@@ -152,45 +287,31 @@ export function EngineerControls() {
         <label>
           Voz do rádio
           <select
-            disabled={!canSpeak && !canPlay}
-            value={
-              selectedPack || voices.some((voice) => voice.voiceURI === voiceUri) ? voiceUri : ''
-            }
+            disabled={!audioAvailable}
+            value={voiceUri}
             onChange={(event) => setEngineerVoice(event.currentTarget.value, pace)}
           >
-            <optgroup label="Clipes em pt-BR" disabled={!canPlay}>
-              {RADIO_VOICES.map((voice) => (
-                <option key={voice.value} value={voice.value}>
-                  {voice.label}
-                </option>
-              ))}
-            </optgroup>
-            <optgroup label="Vozes do dispositivo" disabled={!canSpeak}>
-              <option value="">Automática (português)</option>
-              {voices.map((voice) => (
-                <option value={voice.voiceURI} key={voice.voiceURI}>
-                  {`${voice.name.replace(/\s+-\s+Portuguese(?:\s+\([^)]*\))?$/i, '')} · ${voice.lang}`}
-                </option>
-              ))}
-            </optgroup>
+            {RADIO_VOICES.map((voice) => (
+              <option key={voice.id} value={voice.id}>
+                {`${voice.name} · ${voice.description}`}
+              </option>
+            ))}
           </select>
         </label>
-        {!selectedPack && (
-          <label>
-            Ritmo da fala
-            <select
-              disabled={!canSpeak}
-              value={pace}
-              onChange={(event) =>
-                setEngineerVoice(voiceUri, event.currentTarget.value as EngineerPace)
-              }
-            >
-              <option value="calma">Calmo</option>
-              <option value="normal">Normal</option>
-              <option value="rapida">Rápido</option>
-            </select>
-          </label>
-        )}
+        <label>
+          Ritmo da fala
+          <select
+            disabled={!audioAvailable}
+            value={pace}
+            onChange={(event) =>
+              setEngineerVoice(voiceUri, event.currentTarget.value as EngineerPace)
+            }
+          >
+            <option value="calma">Calmo</option>
+            <option value="normal">Normal</option>
+            <option value="rapida">Rápido</option>
+          </select>
+        </label>
       </div>
       <div className="engineer-controls-audio">
         <button
@@ -211,7 +332,12 @@ export function EngineerControls() {
         </button>
       </div>
       {(!audioAvailable || voiceError) && (
-        <p role="status">Voz indisponível neste aparelho. As instruções aparecem na tela.</p>
+        <p role="status">Áudio do rádio indisponível. As instruções continuam na tela.</p>
+      )}
+      {audioAvailable && !voiceError && voiceFallback && (
+        <p role="status">
+          {`Voz ${radioVoice(voiceUri)?.name ?? ''} indisponível. Tocando com ${radioVoice(DEFAULT_RADIO_VOICE)?.name}.`}
+        </p>
       )}
       <EngineerReference settings={settings} audioHere={audioHere} />
     </section>

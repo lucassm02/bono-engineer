@@ -1,4 +1,8 @@
-type VoiceChannel = 'training' | 'engineer' | 'engineerTest';
+/**
+ * Device speech (Web Speech API) for the "Treino de curva" view only. The radio engineer never
+ * uses it: its calls are pre-generated neural clips (engineerClips.ts).
+ */
+type VoiceChannel = 'training';
 
 let channel: VoiceChannel | null = null;
 let current: SpeechSynthesisUtterance | null = null;

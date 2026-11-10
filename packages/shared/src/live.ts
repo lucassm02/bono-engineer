@@ -124,6 +124,8 @@ export interface EngineerCue {
   kind: EngineerCueKind;
   /** Signed distance from the car to the action point. */
   aheadM: number;
+  /** Measured peak brake pedal input (0–1) of the reference braking zone, when reliable. */
+  brakePeak?: number;
   /** Remaining distance to the end of an instruction that spans a zone. */
   endAheadM?: number;
 }
@@ -151,6 +153,76 @@ export type LiveEngineerFrame =
       pendingReference: boolean;
       cues: EngineerCue[];
     };
+
+/**
+ * Cause of a corner pass that lost time against the reference (Ganhar tempo), chosen from the
+ * per-corner metrics of the analysis with an observable effect (zone delta):
+ * - heldBrake: brake released later and held longer while turning ("segurou o freio");
+ * - brakeEarly: braked well before the reference;
+ * - lateThrottle: picked the throttle up later;
+ * - coasting: time without any pedal between braking and throttle;
+ * - gear: different gear at the apex.
+ */
+export type LiveCornerCauseKind = 'heldBrake' | 'brakeEarly' | 'lateThrottle' | 'coasting' | 'gear';
+
+export interface LiveCornerCause {
+  kind: LiveCornerCauseKind;
+  /** high = clear and costly; medium = probable (recurring only); low = review only. */
+  confidence: 'high' | 'medium' | 'low';
+  /** Time the cause explains in the zone (ms, ≥ 0). */
+  costMs: number;
+  /** pt-BR diagnosis for the panel and the review. */
+  message: string;
+  /** Measured values (subject, reference) behind the cause. */
+  evidence: Record<string, number | null>;
+  /** Reference gear at the apex (gear cause only). */
+  gear?: number;
+}
+
+/** The radio-eligible driving event of a corner pass (high confidence, see DrivingEvent). */
+export interface LiveDrivingEventCall {
+  id: string;
+  kind: 'understeer' | 'oversteer' | 'frontLock' | 'exitTraction';
+  phase: 'braking' | 'entry' | 'mid' | 'exit';
+  /** Lap distance where the car is straight again; null = it did not straighten. */
+  settledM: number | null;
+  startM: number;
+  endM: number;
+  /** Mean throttle during the event (0–1), null when unknown. */
+  throttle: number | null;
+  /** pt-BR diagnosis and action (panel, review). */
+  message: string;
+  action: string;
+}
+
+/**
+ * Review of one pass through a corner, made by the core ~80 m after the exit (or just before the
+ * line for the last corner) against the engineer reference. Additive (core, live).
+ */
+export interface LiveCornerPass {
+  /** `${lapStartedAt}|${cornerId}`. */
+  id: string;
+  cornerId: string;
+  lap: number;
+  lapStartedAt: number;
+  /** Reference the pass was compared with (null = none compatible). */
+  referenceLapId: Id | null;
+  referenceIsReplay: boolean;
+  /** Lap distance where the review was made. */
+  atM: number;
+  /** Zone time vs the reference (+ = slower, ms), null without a comparable reference. */
+  timeLostMs: number | null;
+  /** Why the pass cannot be compared with the reference (review only), when it cannot. */
+  incomparable?: string;
+  brakePointM: number | null;
+  referenceBrakePointM: number | null;
+  gearAtApex: number | null;
+  referenceGearAtApex: number | null;
+  /** Best-supported cause with an observable effect, null on a clean pass. */
+  cause: LiveCornerCause | null;
+  /** High-confidence driving event of the pass (at most one), null when none. */
+  event: LiveDrivingEventCall | null;
+}
 
 /** Car channels of the live frame. */
 export interface LiveCar {
@@ -238,6 +310,11 @@ export interface LiveFrame {
   track: LiveTrackInfo | null;
   nextCorner: NextCornerHint | null;
   engineer?: LiveEngineerFrame;
+  /**
+   * The latest corner pass reviews of the session (most recent last, at most 2): the radio
+   * accumulates them by id. Omitted while none was made. (core, additive)
+   */
+  cornerPasses?: LiveCornerPass[];
   /** UDP link quality. */
   link: Pick<IngestorStats, 'rateHz' | 'lossPct' | 'lost' | 'received' | 'lastPacketAt'>;
 }

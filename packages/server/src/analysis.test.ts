@@ -7,6 +7,7 @@ import type {
   ApiComparison,
   ApiDistanceDelta,
   ApiLapAnalysis,
+  ApiLapDrivingEvents,
   ApiLapTrace,
   ApiMicrosectors,
   ApiRedetectCornersResult,
@@ -187,6 +188,16 @@ describe('analysis REST, MCP over HTTP and the AI coach', () => {
     expect(la.status).toBe(200);
     expect(la.body.metrics.length).toBe(la.body.corners.length);
     expect(la.body.validity.lapId).toBe(amLaps[0]);
+
+    const evs = await api<ApiLapDrivingEvents>('GET', `/api/analysis/laps/${amLaps[0]}/events`);
+    expect(evs.status).toBe(200);
+    expect(evs.body.lapId).toBe(amLaps[0]);
+    expect(evs.body.trackId).toBe(seed.trackId);
+    expect(Array.isArray(evs.body.events)).toBe(true);
+    for (const e of evs.body.events) expect(['high', 'medium', 'low']).toContain(e.confidence);
+    expect(evs.body.model.maxLatAccMps2).toBeGreaterThan(0);
+    const noLap = await api('GET', '/api/analysis/laps/nao-existe/events');
+    expect(noLap.status).toBe(404);
 
     const cmp = await api<ApiComparison>('GET', `/api/analysis/compare?lap=${amLaps[0]}&ref=auto`);
     expect(cmp.status).toBe(200);

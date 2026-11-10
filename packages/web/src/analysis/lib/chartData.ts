@@ -9,6 +9,7 @@ import type {
   CornerComparisonRow,
   CornerMetricKey,
   CornerMetrics,
+  DrivingEvent,
   MicrosectorColor,
 } from '@gt7/shared';
 
@@ -31,7 +32,16 @@ export const COMPARE_TRACE_CHANNELS = [
 ] as const;
 
 export interface PanelDef {
-  key: 'speed' | 'throttle' | 'brake' | 'gear' | 'steering' | 'delta';
+  key:
+    | 'speed'
+    | 'throttle'
+    | 'brake'
+    | 'gear'
+    | 'steering'
+    | 'delta'
+    | 'yawRate'
+    | 'slipFront'
+    | 'slipRear';
   label: string;
   unit: string;
   /** Multiplier applied to the raw channel (pedals 0–1 → %). */
@@ -59,6 +69,87 @@ export const COMPARE_PANELS: PanelDef[] = [
   { key: 'steering', label: 'Volante', unit: '°', scale: 180 / Math.PI, height: 90, digits: 0 },
   { key: 'delta', label: 'Delta acumulado', unit: 's', scale: 1, height: 120, digits: 3 },
 ];
+
+/**
+ * Extra panels for the driving events (yaw and wheel slip), shown only after the event channels
+ * are loaded ({@link mergeEventTraces}).
+ */
+export const EVENT_PANELS: PanelDef[] = [
+  { key: 'yawRate', label: 'Guinada', unit: '°/s', scale: 180 / Math.PI, height: 90, digits: 0 },
+  {
+    key: 'slipFront',
+    label: 'Escorregamento dianteiro',
+    unit: '%',
+    scale: 100,
+    height: 80,
+    digits: 0,
+  },
+  {
+    key: 'slipRear',
+    label: 'Escorregamento traseiro',
+    unit: '%',
+    scale: 100,
+    height: 80,
+    digits: 0,
+  },
+];
+
+export const EVENT_PANEL_KEYS: ReadonlySet<PanelDef['key']> = new Set(
+  EVENT_PANELS.map((p) => p.key),
+);
+
+/** Channels requested from /api/analysis/traces for the event panels (same grid as the charts). */
+export const EVENT_TRACE_CHANNELS = ['yawRate', 'slipFL', 'slipFR', 'slipRL', 'slipRR'] as const;
+
+/**
+ * Adds the event channels of `extra` (same laps, same grid) to `traces`: yaw rate, front slip
+ * (the most negative front wheel: locking) and rear slip (the rear wheel furthest from rolling).
+ * Returns `traces` unchanged when the grids differ.
+ */
+export function mergeEventTraces(traces: ApiTraces, extra: ApiTraces | null): ApiTraces {
+  if (!extra || extra.distanceM.length !== traces.distanceM.length) return traces;
+  const pick = (
+    a: (number | null)[] | undefined,
+    b: (number | null)[] | undefined,
+    k: number,
+    f: (x: number, y: number) => number,
+  ) => {
+    const x = a?.[k];
+    const y = b?.[k];
+    if (x === null || x === undefined) return y ?? null;
+    if (y === null || y === undefined) return x;
+    return f(x, y);
+  };
+  const furthest = (x: number, y: number) => (Math.abs(x) >= Math.abs(y) ? x : y);
+  return {
+    ...traces,
+    channels: [...traces.channels, 'yawRate', 'slipFront', 'slipRear'],
+    laps: traces.laps.map((l) => {
+      const e = extra.laps.find((x) => x.lapId === l.lapId)?.channels;
+      if (!e) return l;
+      const n = traces.distanceM.length;
+      return {
+        ...l,
+        channels: {
+          ...l.channels,
+          yawRate: e.yawRate ?? traces.distanceM.map(() => null),
+          slipFront: Array.from({ length: n }, (_, k) => pick(e.slipFL, e.slipFR, k, Math.min)),
+          slipRear: Array.from({ length: n }, (_, k) => pick(e.slipRL, e.slipRR, k, furthest)),
+        },
+      };
+    }),
+  };
+}
+
+/** Zoom range of a driving event: the event with 60 m of context on each side. */
+export function eventRange(
+  event: Pick<DrivingEvent, 'startM' | 'endM'>,
+  lengthM: number,
+): [number, number] {
+  const from = Math.max(0, event.startM - 60);
+  const to = Math.min(lengthM || event.endM + 60, event.endM + 60);
+  return to > from ? [from, to] : [0, lengthM];
+}
 
 /** One channel of a lap from the traces response, scaled; nulls preserved. */
 export function lapSeries(traces: ApiTraces, lapId: string, key: string, scale = 1): Series {

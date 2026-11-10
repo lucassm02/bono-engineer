@@ -25,6 +25,16 @@ export {
   type ResampleRequest,
 } from './analysis-service/analysis-service.ts';
 export { AnalysisCornerHintProvider } from './analysis-service/corner-hints.ts';
+export {
+  calibrateDrivingEventModel,
+  type DetectDrivingEventsOptions,
+  DRIVING_EVENT_THRESHOLDS,
+  type DrivingEventsResult,
+  type DrivingEventThresholds,
+  detectCornerPassEvents,
+  detectDrivingEvents,
+  radioEventForPass,
+} from './analysis-service/driving-events.ts';
 export { LruCache } from './analysis-service/lru.ts';
 export {
   ReferenceCapture,

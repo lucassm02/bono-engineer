@@ -42,11 +42,20 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}', 'radio/*.wav'],
+        // Only the default radio voice (also the fallback) is precached; the other packs are
+        // cached when first used. Pack names carry a content hash (npm run radio:voices).
+        globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}', 'radio/alex-*.wav'],
+        maximumFileSizeToCacheInBytes: 12 * 1024 * 1024,
         navigateFallback: '/index.html',
         // Live data must never come from the cache.
         navigateFallbackDenylist: [/^\/ws/, /^\/api/, /^\/mcp/],
-        runtimeCaching: [],
+        runtimeCaching: [
+          {
+            urlPattern: /\/radio\/[a-z0-9]+-[0-9a-f]+\.wav$/,
+            handler: 'CacheFirst',
+            options: { cacheName: 'bono-radio', expiration: { maxEntries: 6 } },
+          },
+        ],
         cleanupOutdatedCaches: true,
       },
       devOptions: { enabled: false },

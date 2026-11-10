@@ -162,6 +162,7 @@ describe('GT7 MCP server (in-memory client)', () => {
 
     const sum = json(await call('get_lap_summary', { lap_id: amLap }));
     expect(sum.summary.corners).toHaveLength(10);
+    expect(Array.isArray(sum.drivingEvents)).toBe(true);
   });
 
   it('errors are reported as tool errors with a pt-BR message', async () => {

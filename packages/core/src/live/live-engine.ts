@@ -35,6 +35,7 @@ import { EventEmitter } from 'node:events';
 import {
   type ConnectionState,
   type DeltaReferenceKind,
+  type DrivingEventModel,
   decodeFlags,
   type EngineerCue,
   type Id,
@@ -44,6 +45,7 @@ import {
   type LapCompletedEvent,
   type LapFlag,
   type LapTrace,
+  type LiveCornerPass,
   type LiveEngineerFrame,
   type LiveFrame,
   type LiveGForce,
@@ -89,6 +91,10 @@ const TRACK_RECHECK_GAP_MS = 2000;
 const TRACK_RECHECK_SILENCE_MS = 5000;
 /** A single step of the "time on track" clock never counts more than this. */
 const MAX_TRACK_TIME_STEP_MS = 1000;
+/** Corner passes are reviewed this far after the corner exit (m), once the car settled. */
+const PASS_REVIEW_AFTER_EXIT_M = 80;
+/** Corner pass reviews carried by each frame (the radio accumulates them by id). */
+const PASSES_IN_FRAME = 2;
 /** Flags that make a lap invalid. */
 const INVALIDATING: readonly LapFlag[] = ['paused', 'incompleteData', 'discontinuity', 'offTrack'];
 
@@ -232,7 +238,9 @@ export interface LiveEngineEvents {
   packet: [EnginePacketInfo];
 }
 
-type LiveEngineerMark = Pick<EngineerMark, 'kind' | 'atM' | 'untilM'> & { cornerId: Id };
+type LiveEngineerMark = Pick<EngineerMark, 'kind' | 'atM' | 'untilM' | 'brakePeak'> & {
+  cornerId: Id;
+};
 
 interface LapState {
   engineerReferenceLapId?: Id;
@@ -257,6 +265,8 @@ interface LapState {
   carCode: number;
   sectorCross: number[];
   sectors: SectorSplit[];
+  /** Corners already reviewed in this lap (live corner pass review). */
+  reviewed: Set<string>;
   offTrackRun: number;
   lastX: number;
   lastZ: number;
@@ -408,6 +418,10 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     marks: LiveEngineerMark[];
   } | null = null;
   #cornerPass = new Map<string, CornerPass>();
+  /** Latest corner pass reviews (at most PASSES_IN_FRAME), carried by the frames. */
+  #passes: LiveCornerPass[] = [];
+  /** Driving-event model of the current track + car (calibrated once from an earlier lap). */
+  #eventModel: { key: string; model: DrivingEventModel } | null = null;
 
   // delta
   #deltaKind: DeltaReferenceKind;
@@ -641,6 +655,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     this.#lastLapMs = null;
     this.#fuelHistory = [];
     this.#cornerPass.clear();
+    this.#passes = [];
     this.#trackTimeMs = 0;
     this.#runningSince = null;
     this.#lastLapDoneAt = null;
@@ -969,6 +984,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       carCode: p.carCode,
       sectorCross: [],
       sectors: [],
+      reviewed: new Set(),
       offTrackRun: 0,
       lastX: p.position.x,
       lastZ: p.position.z,
@@ -1256,6 +1272,70 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       fuelL: p.fuelLevel,
       flags: p.flags,
     });
+
+    // ---- corner pass review (radio: Ganhar tempo, driving events) ----
+    const track = this.#track;
+    if (
+      track &&
+      dPk > 0 &&
+      this.#hints.reviewPass &&
+      !INVALIDATING.some((flag) => lap.flags.has(flag))
+    ) {
+      for (const c of track.corners) {
+        const at = Math.min(c.exitM + PASS_REVIEW_AFTER_EXIT_M, track.lengthM - 10);
+        if (prevDist < at && dist >= at && !lap.reviewed.has(c.id)) this.#reviewPass(lap, track, c);
+      }
+    }
+  }
+
+  #reviewPass(lap: LapState, track: Track, corner: Track['corners'][number]): void {
+    lap.reviewed.add(corner.id);
+    const ref = this.#deltaRef;
+    const compatible =
+      ref && ref.lap.valid && ref.lap.trackId === track.id && ref.lap.carCode === lap.carCode
+        ? ref
+        : null;
+    const review = this.#hints.reviewPass?.({
+      track,
+      corner,
+      reference: compatible ? { lap: compatible.lap, trace: compatible.trace } : null,
+      trace: lap.builder.build(`live-${lap.startedAt}`, 60),
+      model: this.#eventModelFor(track, lap.carCode),
+    });
+    if (!review) return;
+    const pass: LiveCornerPass = {
+      ...review,
+      id: `${lap.startedAt}|${corner.id}`,
+      lap: lap.number,
+      lapStartedAt: lap.startedAt,
+      referenceLapId: compatible?.lapId ?? null,
+      atM: Math.round(lap.dist * 10) / 10,
+    };
+    this.#passes = [...this.#passes, pass].slice(-PASSES_IN_FRAME);
+  }
+
+  /**
+   * Driving-event model of this car on this track: calibrated once, from the reference when it
+   * is an own lap of the same car, else from the first valid lap of the session (see #finalize).
+   */
+  #eventModelFor(track: Track, carCode: number): DrivingEventModel | null {
+    const key = `${track.id}|${carCode}`;
+    if (this.#eventModel?.key === key) return this.#eventModel.model;
+    const ref = this.#deltaRef;
+    if (
+      ref &&
+      this.#hints.calibrateEvents &&
+      ref.lap.carCode === carCode &&
+      ref.lap.trackId === track.id &&
+      !ref.lap.flags.includes('replay')
+    ) {
+      const model = this.#hints.calibrateEvents({ track, lap: { lap: ref.lap, trace: ref.trace } });
+      if (model) {
+        this.#eventModel = { key, model };
+        return model;
+      }
+    }
+    return null;
   }
 
   #sectorStatus(i: number, t: number, count: number): SectorStatus {
@@ -1458,6 +1538,11 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       }
     }
     const stored: StoredLap = { lap: lapRow, trace };
+    const modelKey = track ? `${track.id}|${lap.carCode}` : null;
+    if (personal && track && this.#hints.calibrateEvents && this.#eventModel?.key !== modelKey) {
+      const model = this.#hints.calibrateEvents({ track, lap: stored });
+      if (model && modelKey) this.#eventModel = { key: modelKey, model };
+    }
     if (isSessionBest) {
       this.#sessionBestLapMs = timeMs;
       this.#sessionBestRef = new DeltaReference(stored);
@@ -1533,6 +1618,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     this.#line = cl && cl.x.length >= 2 ? centerlinePolyline(cl) : null;
     this.#hintCache.clear();
     this.#cornerPass.clear();
+    this.#passes = [];
     if (this.#lap) this.#lap.reacquire = true;
     this.#refreshRecords();
     if (this.#session && this.#session.trackId !== track.id) {
@@ -1651,6 +1737,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
             kind: mark.kind,
             cornerId: corner.id,
             atM: point.s,
+            brakePeak: mark.brakePeak,
             untilM: end ? point.s + span : undefined,
           });
         }
@@ -1673,6 +1760,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
         cornerId: mark.cornerId,
         kind: mark.kind,
         aheadM,
+        ...(mark.brakePeak !== undefined ? { brakePeak: mark.brakePeak } : {}),
         ...(span > 0 ? { endAheadM: aheadM + span } : {}),
       });
     }
@@ -1825,6 +1913,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       track: this.trackInfo,
       nextCorner: this.#nextCorner(dist),
       engineer: this.#engineerFrame(p, state),
+      ...(this.#passes.length ? { cornerPasses: this.#passes } : {}),
       link: this.#link ?? {
         rateHz: 0,
         lossPct: 0,
