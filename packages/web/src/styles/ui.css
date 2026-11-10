@@ -1,0 +1,886 @@
+/*
+ * Bono Engineer — componentes base (prefixo `ui-`). Só usam tokens de tokens.css.
+ * Botões, campos, interruptor, segmentado, selo, cartão, abas, estado vazio, modal/folha, toast.
+ * Tudo que for tela deve ser montado com estas peças, e não reinventar botão ou modal.
+ */
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Botões                                                                                          */
+/* ---------------------------------------------------------------------------------------------- */
+
+.ui-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: var(--ctl-h);
+  padding: 0 var(--sp-4);
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: var(--accent);
+  color: var(--text-on-accent);
+  font: inherit;
+  font-size: var(--fs-md);
+  font-weight: 650;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease),
+    transform var(--dur-fast) var(--ease);
+}
+.ui-btn:hover {
+  background: var(--accent-strong);
+  text-decoration: none;
+}
+.ui-btn:active {
+  transform: translateY(1px);
+}
+.ui-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+.ui-btn:disabled,
+.ui-btn[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: default;
+  pointer-events: none;
+}
+.ui-btn[data-variant="secondary"] {
+  background: var(--surface-3);
+  border-color: var(--line);
+  color: var(--text);
+}
+.ui-btn[data-variant="secondary"]:hover {
+  background: var(--surface-4);
+  border-color: var(--line-strong);
+}
+.ui-btn[data-variant="ghost"] {
+  background: transparent;
+  color: var(--text-2);
+}
+.ui-btn[data-variant="ghost"]:hover {
+  background: var(--surface-3);
+  color: var(--text);
+}
+.ui-btn[data-variant="danger"] {
+  background: var(--loss-soft);
+  border-color: color-mix(in srgb, var(--loss) 45%, transparent);
+  color: var(--loss);
+}
+.ui-btn[data-variant="danger"]:hover {
+  background: color-mix(in srgb, var(--loss) 22%, transparent);
+}
+.ui-btn[data-size="sm"] {
+  min-height: 32px;
+  padding: 0 var(--sp-3);
+  font-size: var(--fs-sm);
+}
+.ui-btn[data-size="lg"] {
+  min-height: var(--tap);
+  padding: 0 var(--sp-5);
+  font-size: var(--fs-lg);
+}
+/* Em telas de toque todo botão ganha alvo de 44 px. */
+@media (pointer: coarse) {
+  .ui-btn {
+    min-height: var(--tap);
+  }
+}
+
+.ui-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: var(--ctl-h);
+  height: var(--ctl-h);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface-3);
+  color: var(--text-2);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease);
+}
+.ui-icon-btn:hover {
+  background: var(--surface-4);
+  color: var(--text);
+  border-color: var(--line-strong);
+}
+.ui-icon-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+.ui-icon-btn[aria-pressed="true"],
+.ui-icon-btn[aria-expanded="true"] {
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+  color: var(--accent);
+}
+.ui-icon-btn svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+@media (pointer: coarse) {
+  .ui-icon-btn {
+    width: var(--tap);
+    height: var(--tap);
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Campos                                                                                          */
+/* ---------------------------------------------------------------------------------------------- */
+
+.ui-field {
+  display: grid;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+.ui-label {
+  font-size: var(--fs-xs);
+  font-weight: 650;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.ui-help {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+  line-height: 1.4;
+}
+.ui-error {
+  font-size: var(--fs-xs);
+  color: var(--loss);
+}
+.ui-input,
+.ui-select {
+  width: 100%;
+  min-height: var(--ctl-h);
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface-3);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-md);
+  transition:
+    border-color var(--dur-fast) var(--ease),
+    background var(--dur-fast) var(--ease);
+}
+textarea.ui-input {
+  min-height: 84px;
+  padding: var(--sp-2) var(--sp-3);
+  resize: vertical;
+}
+.ui-input::placeholder {
+  color: var(--text-3);
+}
+.ui-input:hover,
+.ui-select:hover {
+  border-color: var(--line-strong);
+}
+.ui-input:focus,
+.ui-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.ui-input[aria-invalid="true"] {
+  border-color: var(--loss);
+}
+.ui-select {
+  appearance: none;
+  padding-right: 34px;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--text-2) 50%),
+    linear-gradient(135deg, var(--text-2) 50%, transparent 50%);
+  background-position:
+    calc(100% - 17px) 50%,
+    calc(100% - 12px) 50%;
+  background-size:
+    5px 5px,
+    5px 5px;
+  background-repeat: no-repeat;
+}
+.ui-select option {
+  background: var(--surface-2);
+  color: var(--text);
+}
+@media (pointer: coarse) {
+  .ui-input,
+  .ui-select {
+    min-height: var(--tap);
+  }
+}
+
+/* Intervalo (volume etc.) */
+.ui-range {
+  width: 100%;
+  height: 28px;
+  accent-color: var(--accent);
+  background: transparent;
+  cursor: pointer;
+}
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Interruptor em linha: rótulo + descrição à esquerda, chave à direita                            */
+/* ---------------------------------------------------------------------------------------------- */
+
+.ui-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: var(--sp-3) 0;
+  min-width: 0;
+}
+.ui-toggle-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.ui-toggle-title {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--text);
+}
+.ui-toggle-desc {
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+  line-height: 1.4;
+}
+.ui-switch {
+  position: relative;
+  flex: none;
+  width: 44px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  background: var(--surface-4);
+  cursor: pointer;
+  transition:
+    background var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
+}
+.ui-switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--text-2);
+  transition:
+    transform var(--dur) var(--ease),
+    background var(--dur) var(--ease);
+}
+.ui-switch[aria-checked="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.ui-switch[aria-checked="true"]::after {
+  transform: translateX(18px);
+  background: var(--text-on-accent);
+}
+.ui-switch:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+.ui-switch:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Segmentado (2–4 opções mutuamente exclusivas)                                                   */
+/* ---------------------------------------------------------------------------------------------- */
+
+.ui-segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface-1);
+  max-width: 100%;
+}
+.ui-segmented > button {
+  flex: 1 1 auto;
+  min-height: 32px;
+  padding: 0 var(--sp-3);
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+.ui-segmented > button:hover {
+  color: var(--text);
+}
+.ui-segmented > button[aria-pressed="true"],
+.ui-segmented > button[aria-checked="true"],
+.ui-segmented > button[aria-selected="true"] {
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+.ui-segmented > button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+@media (pointer: coarse) {
+  .ui-segmented > button {
+    min-height: 38px;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Selos e chips                                                                                   */
+/* ---------------------------------------------------------------------------------------------- */
+
+.ui-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--r-pill);
+  background: var(--surface-4);
+  color: var(--text-2);
+  font-size: var(--fs-xs);
+  font-weight: 650;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.ui-badge[data-tone="accent"] {
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+  color: var(--accent);
+}
+.ui-badge[data-tone="gain"] {
+  background: var(--gain-soft);
+  color: var(--gain);
+}
+.ui-badge[data-tone="loss"] {
+  background: var(--loss-soft);
+  color: var(--loss);
+}
+.ui-badge[data-tone="warn"] {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+.ui-badge[data-tone="purple"] {
+  background: var(--purple-soft);
+  color: var(--purple);
+}
+.ui-badge[data-tone="info"] {
+  background: var(--info-soft);
+  color: var(--info);
+}
+/* Ponto de estado (conexão, gravação). */
+.ui-dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--text-3);
+}
+.ui-dot[data-tone="gain"] {
+  background: var(--gain);
+  box-shadow: 0 0 0 3px var(--gain-soft);
+}
+.ui-dot[data-tone="loss"] {
+  background: var(--loss);
+  box-shadow: 0 0 0 3px var(--loss-soft);
+}
+.ui-dot[data-tone="warn"] {
+  background: var(--warn);
+  box-shadow: 0 0 0 3px var(--warn-soft);
+}
+.ui-dot[data-tone="accent"] {
+  background: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.ui-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 32px;
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--surface-3);
+  color: var(--text-2);
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease);
+}
+.ui-chip:hover {
+  border-color: var(--line-strong);
+  color: var(--text);
+}
+.ui-chip[aria-pressed="true"],
+.ui-chip[aria-selected="true"] {
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+  color: var(--accent);
+}
+.ui-chip:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Cartão e seção                                                                                  */
+/* ---------------------------------------------------------------------------------------------- */
+
+.ui-card {
+  min-width: 0;
+  padding: var(--sp-4) var(--sp-5);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-1);
+}
+.ui-card[data-tone="accent"] {
+  border-color: var(--accent-line);
+  background: linear-gradient(180deg, var(--accent-soft), transparent 70%), var(--surface-2);
+}
+.ui-card[data-tone="warn"] {
+  border-color: color-mix(in srgb, var(--warn) 40%, transparent);
+  background: var(--warn-soft);
+}
+.ui-card[data-tone="loss"] {
+  border-color: color-mix(in srgb, var(--loss) 40%, transparent);
+  background: var(--loss-soft);
+}
+.ui-card[data-tone="gain"] {
+  border-color: color-mix(in srgb, var(--gain) 40%, transparent);
+  background: var(--gain-soft);
+}
+.ui-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2) var(--sp-4);
+  margin-bottom: var(--sp-3);
+}
+.ui-card-title {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--text);
+}
+.ui-eyebrow {
+  margin: 0;
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.ui-divider {
+  height: 1px;
+  margin: var(--sp-3) 0;
+  border: 0;
+  background: var(--line-soft);
+}
+
+/* Cabeçalho de página: eyebrow + título + subtítulo + ações. */
+.ui-pagehead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-3) var(--sp-5);
+  margin-bottom: var(--sp-5);
+}
+.ui-pagehead h1 {
+  margin: 2px 0 0;
+  font-size: var(--fs-2xl);
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.ui-pagehead p {
+  margin: var(--sp-2) 0 0;
+  max-width: 68ch;
+  color: var(--text-2);
+}
+
+/* Número de destaque com rótulo (tempos, voltas, médias). */
+.ui-stat {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.ui-stat-label {
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.ui-stat-value {
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Abas                                                                                            */
+/* ---------------------------------------------------------------------------------------------- */
+
+.ui-tabs {
+  display: flex;
+  gap: var(--sp-1);
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.ui-tabs::-webkit-scrollbar {
+  display: none;
+}
+.ui-tabs > :is(a, button) {
+  position: relative;
+  padding: var(--sp-3) var(--sp-4);
+  border: 0;
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+}
+.ui-tabs > :is(a, button):hover {
+  color: var(--text);
+  text-decoration: none;
+}
+.ui-tabs > :is(a, button)[aria-selected="true"],
+.ui-tabs > :is(a, button)[aria-current="page"] {
+  color: var(--accent);
+}
+.ui-tabs > :is(a, button)[aria-selected="true"]::after,
+.ui-tabs > :is(a, button)[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  left: var(--sp-3);
+  right: var(--sp-3);
+  bottom: -1px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.ui-tabs > :is(a, button):focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--accent);
+  border-radius: var(--r-sm);
+}
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Lista de itens clicáveis (menu, seletor)                                                        */
+/* ---------------------------------------------------------------------------------------------- */
+
+.ui-list {
+  display: grid;
+  gap: var(--sp-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ui-list-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  min-height: 52px;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease);
+}
+.ui-list-item:hover {
+  background: var(--surface-3);
+  text-decoration: none;
+}
+.ui-list-item:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+.ui-list-item[aria-current="page"],
+.ui-list-item[aria-selected="true"] {
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+}
+.ui-list-item > svg {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  color: var(--accent-dim);
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.ui-list-text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+.ui-list-title {
+  font-weight: 650;
+}
+.ui-list-desc {
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+}
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Estado vazio, tecla                                                                             */
+/* ---------------------------------------------------------------------------------------------- */
+
+.ui-empty {
+  display: grid;
+  justify-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-6) var(--sp-5);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-md);
+  text-align: center;
+  color: var(--text-2);
+}
+.ui-empty strong {
+  font-size: var(--fs-lg);
+  color: var(--text);
+}
+.ui-empty p {
+  margin: 0;
+  max-width: 52ch;
+}
+.ui-kbd {
+  display: inline-block;
+  min-width: 22px;
+  padding: 1px 6px;
+  border: 1px solid var(--line-strong);
+  border-bottom-width: 2px;
+  border-radius: var(--r-xs);
+  background: var(--surface-3);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-align: center;
+}
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Modal e folha (componentes/ui/Modal.tsx)                                                        */
+/* ---------------------------------------------------------------------------------------------- */
+
+.ui-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: grid;
+  place-items: center;
+  padding: var(--sp-4);
+  background: var(--overlay);
+  backdrop-filter: blur(6px);
+  animation: ui-fade var(--dur) var(--ease);
+}
+.ui-modal-backdrop[data-placement="side"] {
+  place-items: stretch end;
+  padding: 0;
+}
+.ui-modal {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, var(--modal-w, 520px));
+  max-height: min(100%, 90dvh);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-3);
+  color: var(--text);
+  overflow: hidden;
+  animation: ui-rise var(--dur) var(--ease);
+}
+.ui-modal[data-size="sm"] {
+  --modal-w: 400px;
+}
+.ui-modal[data-size="lg"] {
+  --modal-w: 760px;
+}
+.ui-modal[data-size="xl"] {
+  --modal-w: 980px;
+}
+.ui-modal-backdrop[data-placement="side"] .ui-modal {
+  width: min(100%, var(--modal-w, 440px));
+  max-height: none;
+  height: 100%;
+  border-radius: var(--r-lg) 0 0 var(--r-lg);
+  border-right: 0;
+  animation: ui-slide var(--dur) var(--ease);
+}
+.ui-modal-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-4) var(--sp-3) var(--sp-5);
+  border-bottom: 1px solid var(--line-soft);
+}
+.ui-modal-titles {
+  flex: 1;
+  min-width: 0;
+}
+.ui-modal-title {
+  margin: 0;
+  font-size: var(--fs-xl);
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+.ui-modal-sub {
+  margin: 4px 0 0;
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+.ui-modal-body {
+  flex: 1;
+  min-height: 0;
+  padding: var(--sp-4) var(--sp-5);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.ui-modal-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-5) var(--sp-4);
+  border-top: 1px solid var(--line-soft);
+  background: var(--surface-2);
+}
+/* No celular o modal vira folha ancorada embaixo. */
+@media (max-width: 640px) {
+  .ui-modal-backdrop:not([data-placement="side"]) {
+    place-items: end stretch;
+    padding: 0;
+  }
+  .ui-modal:not([data-placement="side"] .ui-modal) {
+    width: 100%;
+    max-height: 92dvh;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    border-bottom: 0;
+    animation: ui-sheet var(--dur) var(--ease);
+  }
+}
+
+@keyframes ui-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes ui-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+@keyframes ui-slide {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+}
+@keyframes ui-sheet {
+  from {
+    transform: translateY(32px);
+    opacity: 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Toast                                                                                           */
+/* ---------------------------------------------------------------------------------------------- */
+
+.ui-toast {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  max-width: min(92vw, 460px);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--line-strong);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--r-sm);
+  background: var(--surface-3);
+  box-shadow: var(--shadow-2);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-sm);
+  text-align: left;
+  cursor: pointer;
+  animation: ui-rise var(--dur) var(--ease);
+}
+.ui-toast[data-level="warn"] {
+  border-left-color: var(--warn);
+}
+.ui-toast[data-level="error"] {
+  border-left-color: var(--loss);
+}
+.ui-toast[data-level="success"] {
+  border-left-color: var(--gain);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-modal,
+  .ui-modal-backdrop,
+  .ui-toast {
+    animation: none;
+  }
+  .ui-btn,
+  .ui-switch,
+  .ui-switch::after {
+    transition: none;
+  }
+}

@@ -1,0 +1,117 @@
+/* Captura de referência (CapturePage). */
+
+/* Capture */
+.a-capture-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(280px, 1fr) minmax(300px, 1.1fr);
+  gap: 14px;
+  align-items: start;
+}
+.a-steps-howto {
+  margin: 0;
+  padding-left: 20px;
+}
+.a-steps-howto li {
+  margin: 6px 0;
+}
+.a-capture-state {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 19px;
+  font-weight: 600;
+  margin: 4px 0 6px;
+}
+.a-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--faint);
+  flex: none;
+}
+.a-capture-state[data-state="recording"] .a-dot {
+  background: var(--loss);
+  animation: a-pulse 1s ease-in-out infinite;
+}
+.a-capture-state[data-state="waitingLapStart"] .a-dot,
+.a-capture-state[data-state="switchingFormat"] .a-dot,
+.a-capture-state[data-state="validating"] .a-dot {
+  background: var(--accent);
+  animation: a-pulse 1.4s ease-in-out infinite;
+}
+@keyframes a-pulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+.a-steps {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+}
+.a-steps li {
+  padding: 4px 0 4px 24px;
+  position: relative;
+  color: var(--faint);
+}
+.a-steps li::before {
+  content: "○";
+  position: absolute;
+  left: 2px;
+}
+.a-steps li[data-step="done"] {
+  color: var(--dim);
+}
+.a-steps li[data-step="done"]::before {
+  content: "✓";
+  color: var(--gain);
+}
+.a-steps li[data-step="now"] {
+  color: var(--text);
+  font-weight: 600;
+}
+.a-steps li[data-step="now"]::before {
+  content: "●";
+  color: var(--accent);
+}
+.a-rejected {
+  border: 1px solid rgba(255, 61, 74, 0.45);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-top: 10px;
+}
+.a-rejected ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+.a-progress {
+  width: 100%;
+  height: 8px;
+  margin: 4px 0 8px;
+  accent-color: var(--accent);
+}
+.a-timecheck {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin: 8px 0;
+}
+.a-timecheck div {
+  display: flex;
+  flex-direction: column;
+}
+.a-timecheck dt {
+  font-size: 12px;
+  color: var(--dim);
+}
+.a-timecheck dd {
+  margin: 0;
+  font-size: 16px;
+}
+.a-saved {
+  border: 1px solid rgba(34, 224, 122, 0.45);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-top: 10px;
+}
+

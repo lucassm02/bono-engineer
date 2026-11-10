@@ -1,0 +1,66 @@
+/* Página da pista (TrackPage). */
+
+/* Track page */
+.a-track-grid {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.1fr);
+  gap: 14px;
+  align-items: start;
+}
+.a-corner-edit {
+  max-height: 520px;
+  overflow: auto;
+}
+.a-corner-edit .a-input {
+  min-width: 140px;
+}
+.a-rename {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.a-rename .a-input {
+  width: auto;
+  font-size: 20px;
+}
+.a-records,
+.a-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+.a-highlights {
+  margin: 12px 0;
+  padding-left: 22px;
+}
+.a-highlights li {
+  margin: 4px 0;
+}
+.a-theo {
+  margin-top: 16px;
+  border-top: 1px solid var(--line);
+  padding-top: 4px;
+}
+.a-evo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 16px;
+}
+.a-minichart .u-legend {
+  font-size: 12px;
+  color: var(--dim);
+}
+.a-trends {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.a-trends li {
+  margin: 4px 0;
+}
+.a-trends li > span {
+  display: inline-block;
+  width: 16px;
+}
+

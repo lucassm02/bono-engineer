@@ -1,0 +1,138 @@
+/*
+ * Bono Engineer — design tokens (ÚNICA fonte de verdade visual).
+ *
+ * Um único tema escuro "Pit Wall": grafite azulado + ciano de sinal (a marca). A tela ao vivo e a
+ * área de análise usam exatamente os mesmos valores; a diferença entre elas é só de densidade
+ * (ao vivo = números grandes, analisando = leitura). Âmbar NÃO é mais cor de interface: o amarelo
+ * (`--warn`) existe só para alertas. Verde/vermelho/roxo/amarelo continuam sendo códigos de corrida
+ * (delta, setores, pneus, shift lights) e nunca decoram controles.
+ *
+ * Regra: nenhum CSS ou TSX novo escreve cor hexadecimal. Use os tokens abaixo. Os nomes antigos
+ * (--panel, --dim, --accent...) ficam como alias no fim do arquivo enquanto a migração termina.
+ */
+
+:root {
+  /* ---- Superfícies (do mais fundo para o mais elevado) -------------------------------------- */
+  --surface-0: #05080c; /* fundo da tela ao vivo (OLED-friendly, não puro para não "vazar" nas bordas) */
+  --surface-1: #080d13; /* fundo da área de análise */
+  --surface-2: #0d141c; /* cartões, painéis */
+  --surface-3: #131c26; /* campos, itens de lista, linhas em hover */
+  --surface-4: #1a2632; /* hover forte, item selecionado neutro */
+  --overlay: rgba(2, 5, 8, 0.72); /* fundo atrás de modais */
+
+  /* ---- Linhas -------------------------------------------------------------------------------- */
+  --line-soft: #16212c;
+  --line: #223140;
+  --line-strong: #324658;
+
+  /* ---- Texto (contraste AA sobre surface-2: text 15:1, text-2 8:1, text-3 4.9:1) ------------- */
+  --text: #eef3f7;
+  --text-2: #a9b7c4;
+  --text-3: #7b8b9a;
+  --text-on-accent: #04141a;
+
+  /* ---- Marca: ciano de sinal ----------------------------------------------------------------- */
+  --accent: #66e4f6;
+  --accent-strong: #8aedfb; /* hover / foco */
+  --accent-dim: #3fb7c9; /* ícones secundários, bordas ativas */
+  --accent-soft: rgba(102, 228, 246, 0.11); /* fundo de item ativo */
+  --accent-line: rgba(102, 228, 246, 0.38); /* borda de item ativo */
+  --ivory: #f7f5ea; /* traço do monograma */
+
+  /* ---- Códigos de corrida e estados (nunca para decorar controles) --------------------------- */
+  --gain: #2fe08a; /* ganhando tempo, melhor setor pessoal, OK */
+  --loss: #ff5160; /* perdendo tempo, erro, destrutivo */
+  --warn: #ffc83d; /* atenção, desgaste, combustível baixo */
+  --purple: #b88bff; /* melhor absoluto / recorde */
+  --info: #5b9dff; /* neutro informativo, pneus frios */
+  --gain-soft: rgba(47, 224, 138, 0.12);
+  --loss-soft: rgba(255, 81, 96, 0.12);
+  --warn-soft: rgba(255, 200, 61, 0.12);
+  --purple-soft: rgba(184, 139, 255, 0.14);
+  --info-soft: rgba(91, 157, 255, 0.13);
+
+  /* ---- Séries de gráfico (dado, não interface) ---------------------------------------------- */
+  --chart-1: #66e4f6; /* volta analisada */
+  --chart-2: #b88bff; /* referência */
+  --chart-3: #ff9f4a;
+  --chart-4: #5b9dff;
+  --chart-5: #ff7ac6;
+
+  /* ---- Tipografia ---------------------------------------------------------------------------- */
+  --font:
+    "Bahnschrift", "DIN Alternate", "DIN Condensed", "Roboto Condensed", "Arial Narrow", system-ui,
+    sans-serif;
+  --font-ui:
+    system-ui, "Segoe UI Variable", "Segoe UI", -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --fs-2xs: 11px; /* rótulo em caixa alta, microcopy */
+  --fs-xs: 12px; /* legenda, meta */
+  --fs-sm: 13px; /* texto secundário, tabela densa */
+  --fs-md: 15px; /* corpo */
+  --fs-lg: 17px; /* título de cartão */
+  --fs-xl: 22px; /* título de seção */
+  --fs-2xl: 30px; /* título de página */
+  --track-caps: 0.09em; /* tracking dos rótulos em caixa alta */
+
+  /* ---- Espaçamento (escala de 4 px) ---------------------------------------------------------- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+  --page-gutter: clamp(16px, 3vw, 40px);
+
+  /* ---- Formas -------------------------------------------------------------------------------- */
+  --r-xs: 4px;
+  --r-sm: 8px; /* botões, campos */
+  --r-md: 12px; /* cartões */
+  --r-lg: 18px; /* modais, folhas */
+  --r-pill: 999px;
+  --tap: 44px; /* alvo de toque mínimo */
+  --ctl-h: 38px; /* altura de controle no desktop */
+
+  /* ---- Elevação ------------------------------------------------------------------------------ */
+  --shadow-1: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-3: 0 24px 64px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--line);
+  --focus-ring: 0 0 0 2px var(--surface-1), 0 0 0 4px var(--accent);
+
+  /* ---- Camadas ------------------------------------------------------------------------------- */
+  --z-chrome: 20; /* botões flutuantes, cabeçalho ao vivo */
+  --z-toast: 60;
+  --z-modal: 80;
+  --z-popover: 90;
+
+  /* ---- Movimento ----------------------------------------------------------------------------- */
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur: 200ms;
+
+  /* ---- Safe areas (telas com notch / barra de gestos) ---------------------------------------- */
+  --safe-t: max(env(safe-area-inset-top), 8px);
+  --safe-r: max(env(safe-area-inset-right), 12px);
+  --safe-b: max(env(safe-area-inset-bottom), 8px);
+  --safe-l: max(env(safe-area-inset-left), 12px);
+
+  color-scheme: dark;
+
+  /* ------------------------------------------------------------------------------------------ */
+  /* Alias dos nomes antigos. NÃO criar uso novo; migrar para os tokens acima.                    */
+  /* ------------------------------------------------------------------------------------------ */
+  --bg: var(--surface-1);
+  --panel: var(--surface-2);
+  --panel-2: var(--surface-3);
+  --dim: var(--text-2);
+  --faint: var(--text-3);
+  --brand-signal: var(--accent);
+  --brand-surface: var(--surface-2);
+  --pb: var(--gain);
+  --yellow: var(--warn);
+  --blue: var(--info);
+}
+
+/* A tela ao vivo usa o fundo mais profundo; o resto (texto, acento, linhas) é idêntico. */
+.app {
+  --bg: var(--surface-0);
+}

@@ -1,0 +1,230 @@
+/* Comparação de voltas (ComparePage). */
+
+/* Comparison */
+.a-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.a-sum-lap,
+.a-stats > div,
+.a-records > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left-width: 3px;
+  border-radius: 8px;
+  padding: 8px 12px;
+  min-width: 0;
+}
+.a-sum-k {
+  font-size: 12px;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.a-sum-v {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.a-sectors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 2px;
+}
+.a-sector {
+  font-size: 16px;
+  font-weight: 600;
+}
+.a-sector small {
+  color: var(--dim);
+  font-weight: 400;
+}
+.a-warnings {
+  margin: 0 0 12px;
+  padding: 8px 12px 8px 30px;
+  border: 1px solid rgba(255, 214, 10, 0.4);
+  background: rgba(255, 214, 10, 0.05);
+  border-radius: 8px;
+  color: var(--yellow);
+  font-size: 14px;
+}
+.a-cmp-visual {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+  gap: 14px;
+  align-items: start;
+  scroll-margin-top: 70px;
+}
+.a-cmp-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: sticky;
+  top: 66px;
+}
+.a-map-box {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 6px;
+}
+.a-map {
+  display: block;
+  width: 100%;
+  height: 360px;
+  touch-action: none;
+}
+.a-map-track .a-map {
+  height: 460px;
+}
+.a-map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  padding: 4px 6px 2px;
+  color: var(--dim);
+}
+.a-map-legend i,
+.a-legend-item i {
+  display: inline-block;
+  width: 14px;
+  height: 3px;
+  border-radius: 2px;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+.a-charts {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 8px 4px;
+  min-width: 0;
+}
+.a-charts-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  padding: 2px 6px 6px;
+  font-size: 13px;
+}
+.a-legend-item i[data-dash="1"] {
+  background-image: linear-gradient(90deg, transparent 50%, var(--panel) 50%) !important;
+  background-size: 6px 3px;
+}
+.a-legend-d {
+  color: var(--accent);
+  min-width: 60px;
+}
+.a-legend-hint {
+  margin-left: auto;
+}
+.a-chart {
+  position: relative;
+}
+.a-chart-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 6px 0 6px;
+  font-size: 12px;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.a-chart-values {
+  display: flex;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: none;
+}
+.a-chart .u-select {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.a-findings-card {
+  max-height: calc(100vh - 520px);
+  min-height: 260px;
+  overflow: auto;
+}
+.a-finding-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.a-finding {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--bg);
+}
+.a-finding[data-selected="1"] {
+  border-color: #e08cff;
+}
+.a-finding-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+}
+.a-finding-rank {
+  background: var(--accent);
+  color: #000;
+  font-weight: 700;
+  border-radius: 4px;
+  min-width: 22px;
+  text-align: center;
+}
+.a-finding-cost {
+  color: var(--loss);
+  font-weight: 700;
+}
+.a-finding-msg {
+  margin: 6px 0 2px;
+}
+.a-finding-action {
+  margin: 2px 0 8px;
+  color: var(--accent);
+  font-weight: 600;
+}
+.a-mcell {
+  line-height: 1.15;
+}
+.a-mcell > span {
+  display: block;
+}
+.a-m-you {
+  color: #ff7a2f;
+  font-weight: 600;
+}
+.a-m-ref {
+  color: #2fd3b0;
+  font-size: 12px;
+}
+.a-diff {
+  font-weight: 700;
+  font-size: 13px;
+}
+.a-diff[data-tone="neutral"] {
+  color: var(--dim);
+  font-weight: 400;
+}
+.a-offsets {
+  display: inline-flex;
+  gap: 6px;
+}
+.a-ct td {
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+

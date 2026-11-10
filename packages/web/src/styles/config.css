@@ -1,0 +1,126 @@
+/* Configurações (ConfigPage). */
+
+/* Config */
+.a-config {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+.a-config > .a-card {
+  scroll-margin-top: 70px;
+}
+.a-toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: -6px 0 14px;
+  font-size: 14px;
+}
+.a-lan {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.a-lan-urls {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+.a-qr {
+  width: 180px;
+  max-width: 100%;
+  height: auto;
+  background: #fff;
+  border-radius: 8px;
+  padding: 8px;
+}
+.a-url-list {
+  list-style: none;
+  padding: 0;
+  margin: 6px 0;
+}
+.a-url-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+  font-size: 16px;
+}
+.a-url-list .num {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.a-rules {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0;
+  font-size: 14px;
+}
+.a-code {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin: 10px 0;
+  overflow: hidden;
+  background: #05080a;
+}
+.a-code-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 6px 4px 10px;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--dim);
+}
+.a-code-head > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.a-code pre {
+  margin: 0;
+  padding: 10px 12px;
+  overflow-x: auto;
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #d9e1e8;
+}
+.a-device-mobile-label {
+  display: none;
+}
+@media (max-width: 560px) {
+  .a-devices-table .a-table thead {
+    position: absolute;
+    clip-path: inset(50%);
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+  .a-devices-table .a-table tbody {
+    display: block;
+  }
+  .a-devices-table .a-table tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .a-devices-table .a-table td {
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .a-devices-table .a-table td:nth-child(n + 3) {
+    grid-column: 1 / -1;
+  }
+  .a-device-mobile-label {
+    display: block;
+    color: var(--dim);
+    font-size: 0.8rem;
+  }
+}
+.a-inline-label {
+  max-width: min(100%, 520px);
+}
+

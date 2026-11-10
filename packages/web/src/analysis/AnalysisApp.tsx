@@ -25,6 +25,11 @@ import '../styles/home.css';
 import '../styles/cars.css';
 import '../styles/tracks.css';
 import '../styles/capture.css';
+import '../styles/compare.css';
+import '../styles/track-page.css';
+import '../styles/capture-page.css';
+import '../styles/config.css';
+import '../styles/coach.css';
 
 type IconName = 'live' | 'home' | 'compare' | 'capture' | 'coach' | 'guide' | 'config';
 

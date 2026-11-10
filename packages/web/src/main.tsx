@@ -10,11 +10,15 @@ import { startSwUpdateWatch } from './lib/swUpdate.ts';
 import { setupKeepAwake } from './lib/wakeLock.ts';
 import { startConnection } from './net/connection.ts';
 import { addNotice, useUi } from './state/uiStore.ts';
+import './styles/tokens.css';
+import './styles/ui.css';
 import './styles/connection.css';
 import './styles/index.css';
 import './styles/live-menu.css';
 import './styles/engineer.css';
 import './styles/views-extra.css';
+import './styles/overlays.css';
+import './styles/layout-editor.css';
 
 /** Analysis & settings area: separate chunk, so the live dashboard bundle stays light. */
 const AnalysisApp = lazy(() => import('./analysis/AnalysisApp.tsx'));
