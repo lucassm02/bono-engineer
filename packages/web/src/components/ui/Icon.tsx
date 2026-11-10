@@ -20,6 +20,7 @@ export type IconName =
   | 'layout'
   | 'remote'
   | 'radio'
+  | 'mic'
   | 'chevron-right'
   | 'chevron-down'
   | 'check'
@@ -68,6 +69,7 @@ const PATHS: Record<IconName, string[]> = {
     'M6 9a8 8 0 0 0 0 6M18 9a8 8 0 0 1 0 6M9 7a5 5 0 0 0 0 10M15 7a5 5 0 0 1 0 10',
     'M11 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0',
   ],
+  mic: ['M9 6a3 3 0 0 1 6 0v6a3 3 0 0 1-6 0z', 'M6 11v1a6 6 0 0 0 12 0v-1M12 18v3M9 21h6'],
   'chevron-right': ['M9 5l7 7-7 7'],
   'chevron-down': ['M5 9l7 7 7-7'],
   check: ['M5 12.5l4.5 4.5L19 7.5'],

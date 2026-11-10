@@ -16,6 +16,7 @@ import { DEFAULT_RADIO_VOICE, migrateRadioVoice } from '../lib/radioVoices.ts';
 import { loadJson, saveJson } from '../lib/storage.ts';
 
 const KEY = 'gt7.engineer.muted';
+const HUD_KEY = 'gt7.engineer.hudVisible';
 const VOICE_KEY = 'gt7.engineer.voice';
 const RADIO_KEY = 'gt7.engineer.controls';
 /**
@@ -64,6 +65,7 @@ if ((savedVoice as { voiceUri?: unknown } | null)?.voiceUri !== initialVoice.voi
 
 export const useEngineer = create(() => ({
   enabled: false,
+  hudVisible: loadJson<boolean>(HUD_KEY) !== false,
   muted: loadJson<boolean>(KEY) === true,
   /** No pack can play audio right now: the instructions stay on the panel only. */
   voiceError: false,
@@ -180,6 +182,12 @@ export function setEngineerEnabled(enabled: boolean, playVoice = true): void {
     stopEngineerVoice();
     stopEngineerPreview();
   }
+}
+
+export function toggleEngineerHud(): void {
+  const hudVisible = !useEngineer.getState().hudVisible;
+  useEngineer.setState({ hudVisible });
+  saveJson(HUD_KEY, hudVisible);
 }
 
 export function setEngineerMuted(muted: boolean, playVoice = true): void {

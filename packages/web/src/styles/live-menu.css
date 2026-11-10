@@ -4,12 +4,12 @@
  */
 
 /* ---------------------------------------------------------------------------------------------- */
-/* Botão flutuante do menu (à esquerda do cadeado)                                                 */
+/* Botões flutuantes ao lado do cadeado                                                           */
 /* ---------------------------------------------------------------------------------------------- */
 
-.live-menu-btn {
+.live-menu-btn,
+.engineer-hud-btn {
   position: absolute;
-  right: calc(var(--safe-r) + 44px);
   bottom: var(--safe-b);
   z-index: 16;
   display: grid;
@@ -29,14 +29,23 @@
     border-color var(--dur-fast) var(--ease),
     background var(--dur-fast) var(--ease);
 }
+.live-menu-btn {
+  right: calc(var(--safe-r) + 44px);
+}
+.engineer-hud-btn {
+  right: calc(var(--safe-r) + 88px);
+}
 .live-menu-btn:hover,
-.live-menu-btn[aria-expanded="true"] {
+.live-menu-btn[aria-expanded="true"],
+.engineer-hud-btn:hover,
+.engineer-hud-btn[aria-pressed="true"] {
   opacity: 1;
   color: var(--accent);
   border-color: var(--accent-line);
   background: var(--accent-soft);
 }
-.live-menu-btn:focus-visible {
+.live-menu-btn:focus-visible,
+.engineer-hud-btn:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
 }

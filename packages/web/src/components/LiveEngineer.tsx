@@ -9,12 +9,14 @@ import {
   playEngineerVoice,
   stopEngineerPreview,
   stopEngineerVoice,
+  toggleEngineerHud,
   useEngineer,
 } from '../state/engineer.ts';
 import { recordEngineerCall } from '../state/engineerJournal.ts';
 import { TRAINING_LAPS, useEngineerTraining } from '../state/engineerTraining.ts';
 import { radioEngine } from '../state/radio.ts';
 import { useUi } from '../state/uiStore.ts';
+import { Icon } from './ui/Icon.tsx';
 
 const STALE_MS = 450;
 const STATUS = {
@@ -39,11 +41,31 @@ export function LiveEngineer() {
   return enabled ? <EngineerHud /> : null;
 }
 
+export function EngineerHudButton() {
+  const enabled = useEngineer((s) => s.enabled);
+  const visible = useEngineer((s) => s.hudVisible);
+  if (!enabled) return null;
+  return (
+    <button
+      type="button"
+      className="engineer-hud-btn"
+      data-no-gesture
+      aria-label="Cartão do rádio"
+      aria-pressed={visible}
+      title={visible ? 'Ocultar cartão do rádio' : 'Mostrar cartão do rádio'}
+      onClick={toggleEngineerHud}
+    >
+      <Icon name="mic" />
+    </button>
+  );
+}
+
 function EngineerHud() {
   const [status, setStatus] = useState<string>(STATUS.suspended);
   const [display, setDisplay] = useState<Display>(null);
   const [note, setNote] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const visible = useEngineer((s) => s.hudVisible);
   const muted = useEngineer((s) => s.muted);
   const controls = useEngineer((s) => s.controls);
   const deviceId = useUi((s) => s.profile.deviceId);
@@ -157,6 +179,9 @@ function EngineerHud() {
       stopEngineerVoice();
     };
   }, [suspend]);
+
+  // Hide only the overlay. This component still receives frames and plays the radio.
+  if (!visible) return null;
 
   const mode = RADIO_MODE_LABELS[controls.mode];
   return (
