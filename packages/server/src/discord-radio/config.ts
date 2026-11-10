@@ -1,5 +1,6 @@
 import {
   DEFAULT_HTTP_PORT,
+  DISCORD_RADIO_DEVICE_ID,
   normalizeRadioPreferences,
   radioEngineConfig,
   RADIO_MODES,
@@ -7,7 +8,7 @@ import {
   WS_PATH,
 } from '@gt7/shared';
 
-export const DISCORD_DEVICE_ID = 'bono-discord-radio';
+export const DISCORD_DEVICE_ID = DISCORD_RADIO_DEVICE_ID;
 
 export function calibratedDelay(value: string | undefined): number | null {
   if (!value) return null;

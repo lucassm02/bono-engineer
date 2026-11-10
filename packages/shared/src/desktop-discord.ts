@@ -1,3 +1,6 @@
+/** Identificador do aparelho "Discord · PS5" (o bot se registra no servidor com este id). */
+export const DISCORD_RADIO_DEVICE_ID = 'bono-discord-radio';
+
 export interface DesktopDiscordSettings {
   channelId: string;
   driverId: string;
@@ -19,6 +22,8 @@ export interface DesktopDiscordBridge {
     status: DesktopDiscordStatus;
   }>;
   save(settings: DesktopDiscordSettings & { token: string }): Promise<void>;
+  /** Liga ou desliga o bot salvo, sem reabrir as configurações. Falha se ainda não houver configuração. */
+  setEnabled(enabled: boolean): Promise<void>;
   test(): Promise<void>;
   stopTest(): Promise<void>;
   remove(): Promise<void>;

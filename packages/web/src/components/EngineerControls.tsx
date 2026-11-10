@@ -1,5 +1,6 @@
 import {
   CONSISTENCY_TARGET_RANGE_MS,
+  DISCORD_RADIO_DEVICE_ID,
   RADIO_MODES,
   SUMMARY_FREQUENCIES,
   TRAINING_PROFILES,
@@ -26,6 +27,7 @@ import {
   useEngineer,
 } from '../state/engineer.ts';
 import { useUi } from '../state/uiStore.ts';
+import { DiscordOutput } from './DiscordOutput.tsx';
 import { EngineerReference } from './EngineerReference.tsx';
 import { ToggleRow } from './ToggleRow.tsx';
 import { Icon } from './ui/Icon.tsx';
@@ -58,7 +60,11 @@ export function EngineerControls() {
   const settings = useFetch('engineer-reference', api.settings);
   const audioDevice = serverStatus?.engineerAudioDeviceId ?? '';
   const audioHere = !audioDevice || audioDevice === deviceId;
-  const otherDevices = serverStatus?.devices.filter((device) => device.deviceId !== deviceId) ?? [];
+  const audioDiscord = audioDevice === DISCORD_RADIO_DEVICE_ID;
+  const otherDevices =
+    serverStatus?.devices.filter(
+      (device) => device.deviceId !== deviceId && device.deviceId !== DISCORD_RADIO_DEVICE_ID,
+    ) ?? [];
   const consistency = controls.trainingProfile === 'consistency';
   const summaries = consistency
     ? SUMMARY_FREQUENCIES.filter((frequency) => frequency !== 'lap')
@@ -109,6 +115,8 @@ export function EngineerControls() {
           onChange={(next) => setEngineerEnabled(next, audioHere)}
         />
       </section>
+
+      <DiscordOutput />
 
       <section className="ui-card bn-card" aria-labelledby="engineer-radio-title">
         <div className="ui-card-head">
@@ -389,6 +397,7 @@ export function EngineerControls() {
             >
               <option value="">Cada aparelho controla o próprio som</option>
               <option value={deviceId}>Somente neste aparelho</option>
+              <option value={DISCORD_RADIO_DEVICE_ID}>Discord · PS5</option>
               {otherDevices.map((device) => (
                 <option key={device.deviceId} value={device.deviceId}>
                   {device.name}
@@ -403,7 +412,9 @@ export function EngineerControls() {
           </label>
           {!audioHere && (
             <p className="bn-note" data-tone="info">
-              Ative o engenheiro no aparelho escolhido para ouvir o rádio.
+              {audioDiscord
+                ? 'O som sai pelo canal do Discord. O Bono para Windows precisa estar aberto com o rádio do Discord ativado.'
+                : 'Ative o engenheiro no aparelho escolhido para ouvir o rádio.'}
             </p>
           )}
           {deviceError && (

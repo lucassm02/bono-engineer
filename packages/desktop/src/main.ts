@@ -111,6 +111,7 @@ function registerDiscordHandlers(): void {
   const actions = {
     get: () => discord.get(),
     save: (settings: unknown) => discord.save(settings),
+    'set-enabled': (enabled: unknown) => discord.setEnabled(enabled),
     test: () => discord.test(),
     'stop-test': () => discord.resume(),
     remove: () => discord.remove(),

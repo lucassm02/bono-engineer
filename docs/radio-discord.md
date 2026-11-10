@@ -32,8 +32,15 @@ credencial na janela do próprio aplicativo Bono.
    por vírgula ou uma margem já medida. Com várias amostras, o Bono escolhe o percentil 90.
 4. Marque **Ativar o rádio do Discord ao abrir o Bono** e salve.
 
-No painel, selecione **Engenheiro ao vivo → Aparelho que toca o rádio → Discord · PS5**.
-Para voltar ao áudio local, selecione outro aparelho no mesmo controle.
+## Ativar a saída pelo Discord
+
+Na janela do Bono para Windows, abra o menu (tecla **M**) → **Engenheiro** e ligue
+**Falar pelo Discord**. O interruptor liga o bot e escolhe **Discord · PS5** como aparelho
+que toca o rádio; desligar devolve o som a cada aparelho. Ele só fica disponível depois que
+o token, os IDs e o atraso medido estiverem salvos.
+
+Em outro aparelho (um tablet pela rede), escolha **Discord · PS5** em **Aparelho que toca o
+rádio**. O Bono para Windows precisa estar aberto com o rádio do Discord ativado.
 
 A saída do Discord inicia em **Treino → Aprender pista**. O percentual de freio pode ser
 ativado na seção **Rádio no Discord**.

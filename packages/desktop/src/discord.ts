@@ -116,6 +116,20 @@ export class DesktopDiscord {
     this.resume();
   }
 
+  /** Liga/desliga o rádio já configurado (usado pelo interruptor do painel ao vivo). */
+  setEnabled(enabled: unknown): void {
+    if (typeof enabled !== 'boolean') throw new Error('Valor inválido.');
+    const saved = this.#read();
+    if (enabled && (!saved.encryptedToken || !saved.channelId || !saved.driverId))
+      throw new Error('Configure o bot do Discord em Configurações antes de ativar.');
+    if (enabled && !saved.delay.trim())
+      throw new Error('Informe o atraso medido em Configurações → Rádio no Discord.');
+    const tmp = `${this.file}.tmp`;
+    writeFileSync(tmp, JSON.stringify({ ...saved, enabled }), { mode: 0o600 });
+    renameSync(tmp, this.file);
+    this.resume();
+  }
+
   stop(): void {
     this.#generation++;
     this.#stop?.();

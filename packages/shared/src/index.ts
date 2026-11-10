@@ -11,6 +11,12 @@ export * from './api.ts';
 export * from './brand.ts';
 export * from './cars/index.ts';
 export * from './coach.ts';
+export {
+  type DesktopDiscordBridge,
+  type DesktopDiscordSettings,
+  type DesktopDiscordStatus,
+  DISCORD_RADIO_DEVICE_ID,
+} from './desktop-discord.ts';
 export * from './domain.ts';
 export * from './driver.ts';
 export {
@@ -44,8 +50,3 @@ export * from './telemetry.ts';
 export * from './tracks/index.ts';
 export * from './ui.ts';
 export * from './ws.ts';
-export type {
-  DesktopDiscordBridge,
-  DesktopDiscordSettings,
-  DesktopDiscordStatus,
-} from './desktop-discord.ts';
