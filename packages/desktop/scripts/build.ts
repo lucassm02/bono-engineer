@@ -5,6 +5,7 @@
  *   mcp-stdio.cjs   the MCP stdio server for Claude Desktop / Claude Code (same bundling)
  *   web/       the compiled dashboard (packages/web/dist, built here when missing or outdated)
  *   icon.png, tray.png   window / tray icons (also build/icon.ico for the executable)
+ *   LICENSE    project license distributed with the Windows app
  *
  *   node --import tsx packages/desktop/scripts/build.ts
  */
@@ -51,6 +52,7 @@ export async function buildDesktop(): Promise<void> {
   const dist = join(DESKTOP_DIR, 'dist');
   rmSync(dist, { recursive: true, force: true });
   mkdirSync(dist, { recursive: true });
+  cpSync(join(REPO, 'LICENSE'), join(dist, 'LICENSE'));
 
   console.log('[desktop] gerando ícones…');
   const buildDir = join(DESKTOP_DIR, 'build');

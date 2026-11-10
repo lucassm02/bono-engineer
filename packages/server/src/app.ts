@@ -8,6 +8,7 @@ import { Gt7Runtime, type Gt7RuntimeOptions } from '@gt7/core';
 import { MCP_HTTP_PATH, mountMcpHttp } from '@gt7/mcp';
 import { DEFAULT_HTTP_PORT, WS_PATH } from '@gt7/shared';
 import Fastify, { type FastifyInstance } from 'fastify';
+import appPackage from '../../../package.json' with { type: 'json' };
 import { registerAuth, registerOriginGuard } from './auth.ts';
 import { CoachService, type CoachServiceOptions } from './coach/service.ts';
 import { FirewallChecker, type FirewallCheckerOptions } from './firewall.ts';
@@ -17,7 +18,7 @@ import { type InterfacesFn, LanResolver } from './lan.ts';
 import { type RouteContext, type RouteModule, registerApi } from './routes/index.ts';
 import { registerWeb } from './web.ts';
 
-export const SERVER_VERSION = '0.1.0';
+export const SERVER_VERSION = appPackage.version;
 
 /** Max WebSocket message from a client (device profiles are a few KB). */
 const WS_MAX_PAYLOAD = 256 * 1024;

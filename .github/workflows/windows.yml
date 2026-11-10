@@ -1,0 +1,94 @@
+name: Windows build and release
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      tag: ${{ steps.release.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - name: Validate version and prepare release notes
+        id: release
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path "$env:RUNNER_TEMP/bono-release" | Out-Null
+          node scripts/release-notes.mjs "$env:RUNNER_TEMP/bono-release/release-notes.md"
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - name: Build Windows installer and portable app
+        run: npm run desktop:dist -- --publish never
+      - name: Stage Windows binaries
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $destination = "$env:RUNNER_TEMP/bono-release"
+          Copy-Item -LiteralPath "packages/desktop/release/Bono-Engineer-Setup-${env:VERSION}.exe" -Destination $destination
+          Copy-Item -LiteralPath "packages/desktop/release/Bono-Engineer-${env:VERSION}-portable.exe" -Destination $destination
+      - uses: actions/upload-artifact@v7
+        with:
+          name: bono-engineer-windows-${{ steps.release.outputs.version }}
+          path: ${{ runner.temp }}/bono-release/
+          if-no-files-found: error
+          compression-level: 0
+
+  publish:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: windows
+    runs-on: ubuntu-latest
+    concurrency:
+      group: windows-release-${{ needs.windows.outputs.tag }}
+      cancel-in-progress: false
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: bono-engineer-windows-${{ needs.windows.outputs.version }}
+          path: release
+      - name: Publish the package version on GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ needs.windows.outputs.version }}
+          TAG: ${{ needs.windows.outputs.tag }}
+        run: |
+          draft="$(gh release view "$TAG" --json isDraft --jq '.isDraft' 2>/dev/null || true)"
+          if [[ "$draft" == false ]]; then
+            echo "$TAG is already published."
+            exit 0
+          fi
+          if [[ "$draft" == true ]]; then
+            echo "::error::A draft release already exists for $TAG."
+            exit 1
+          fi
+          existing_commit="$(gh api "repos/$GH_REPO/commits/$TAG" --jq '.sha' 2>/dev/null || true)"
+          if [[ -n "$existing_commit" && "$existing_commit" != "$GITHUB_SHA" ]]; then
+            echo "::error::Tag $TAG already points to another commit."
+            exit 1
+          fi
+          gh release create "$TAG" \
+            --target "$GITHUB_SHA" \
+            --title "Bono Engineer $VERSION" \
+            --notes-file release/release-notes.md \
+            "release/Bono-Engineer-Setup-$VERSION.exe" \
+            "release/Bono-Engineer-$VERSION-portable.exe"

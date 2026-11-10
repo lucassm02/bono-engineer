@@ -1,8 +1,9 @@
 {
   "name": "bono-engineer",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "private": true,
   "type": "module",
+  "license": "MIT",
   "description": "Bono Engineer: live telemetry, race radio and lap analysis for sim racing",
   "engines": {
     "node": ">=24.0.0"

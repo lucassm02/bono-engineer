@@ -14,7 +14,7 @@ ou ler os pacotes em testes) e permitem corrigir o parser depois sem precisar li
 
 - [ ] `npm install` e `npm run build` feitos; Node 24+.
 - [ ] IP do PS5 anotado (Configurações › Rede › Ver status da conexão). Abaixo, `IP` = esse endereço.
-- [ ] Firewall: regra de entrada **UDP 33740** (e TCP 8770 para o celular). Comandos em [README](../README.md#firewall-do-windows).
+- [ ] Firewall: regra de entrada **UDP 33740** (e TCP 8770 para o celular). Comandos em [README](README.md#firewall-do-windows).
 - [ ] PC e PS5 na mesma sub-rede; **nenhum outro app de telemetria aberto** (SimHub etc.).
 - [ ] Pasta para guardar os testes: `mkdir data\recordings\primeiro-teste`.
 - [ ] Um carro e uma pista simples e conhecidos (por exemplo, uma pista com uma curva fechada à direita logo
