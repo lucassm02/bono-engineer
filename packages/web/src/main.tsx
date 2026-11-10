@@ -2,6 +2,7 @@ import { lazy, StrictMode, Suspense, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App.tsx';
 import { api } from './analysis/api.ts';
+import { TitleBar } from './components/TitleBar.tsx';
 import { BOOT_WAIT_MS, bootTarget, openedWithoutRoute } from './lib/boot.ts';
 import { decideOnboarding, ONBOARDING_KEY, ONBOARDING_WAIT_MS } from './lib/onboarding.ts';
 import { isAnalysisRoute, navigate, parseRoute, type Route, routes } from './lib/route.ts';
@@ -19,6 +20,7 @@ import './styles/engineer.css';
 import './styles/views-extra.css';
 import './styles/overlays.css';
 import './styles/layout-editor.css';
+import './styles/titlebar.css';
 
 /** Analysis & settings area: separate chunk, so the live dashboard bundle stays light. */
 const AnalysisApp = lazy(() => import('./analysis/AnalysisApp.tsx'));
@@ -155,9 +157,16 @@ function Root() {
   const deciding = useBootGate();
   useOnboardingGate();
   const onboarding = useUi((s) => s.onboarding === 'active');
-  if (deciding) return <div className="area-loading">Conectando ao servidor…</div>;
+  if (deciding)
+    return (
+      <>
+        <TitleBar />
+        <div className="area-loading">Conectando ao servidor…</div>
+      </>
+    );
   return (
     <>
+      <TitleBar />
       {!isAnalysisRoute(route) ? (
         <App />
       ) : (

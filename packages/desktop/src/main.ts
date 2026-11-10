@@ -15,8 +15,8 @@ import { BRAND_SURFACE, PRODUCT_NAME, WS_PATH } from '@gt7/shared';
 import {
   app,
   BrowserWindow,
-  ipcMain,
   clipboard,
+  ipcMain,
   Menu,
   type MenuItemConstructorOptions,
   nativeImage,
@@ -42,6 +42,8 @@ import { type DesktopState, readDesktopState, writeDesktopState } from './state-
 import { fitWindowState, MIN_SIZE, type WindowState } from './window-state.ts';
 
 const BG = BRAND_SURFACE;
+/** Barra de título própria (Windows): botões nativos pintados com o tema. Altura = --titlebar-h do CSS. */
+const TITLEBAR = { height: 36, color: '#080d13', symbolColor: '#a9b7c4' } as const;
 const LOGIN_ARGS = ['--hidden'];
 const START_HIDDEN = process.argv.includes('--hidden');
 
@@ -250,6 +252,9 @@ function createWindow(): BrowserWindow {
     backgroundColor: BG,
     icon: nativeImage.createFromPath(assetPath('icon.png')),
     autoHideMenuBar: true,
+    ...(process.platform === 'win32'
+      ? { titleBarStyle: 'hidden' as const, titleBarOverlay: { ...TITLEBAR } }
+      : {}),
     show: false,
     webPreferences: {
       preload: assetPath('preload.cjs'),

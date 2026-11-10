@@ -1,0 +1,76 @@
+/*
+ * Barra de título do app para Windows (components/TitleBar.tsx). Só existe com
+ * html[data-titlebar]. A altura (36 px) é a mesma de TITLEBAR em desktop/src/main.ts.
+ * Os botões nativos ficam à direita; a faixa para antes deles (titlebar-area-*).
+ */
+
+:root {
+  --titlebar-h: 0px;
+}
+html[data-titlebar] {
+  --titlebar-h: env(titlebar-area-height, 36px);
+}
+
+.titlebar {
+  position: fixed;
+  top: 0;
+  left: env(titlebar-area-x, 0);
+  z-index: var(--z-popover);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: env(titlebar-area-width, 100%);
+  height: var(--titlebar-h);
+  padding: 0 var(--sp-3);
+  background: var(--surface-1);
+  color: var(--text-2);
+  font-size: var(--fs-xs);
+  font-weight: 650;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  -webkit-app-region: drag;
+  user-select: none;
+}
+.titlebar-mark {
+  display: block;
+  border-radius: 4px;
+}
+.titlebar-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A faixa em si cobre a largura inteira (cor contínua com os botões nativos). */
+html[data-titlebar] body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: calc(var(--z-popover) - 1);
+  height: var(--titlebar-h);
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+/* Painel ao vivo: desce a casca fixa. */
+html[data-titlebar] .app {
+  top: var(--titlebar-h);
+}
+/* Análise: o conteúdo rola sob a barra, a lateral e o cabeçalho móvel acompanham. */
+html[data-titlebar][data-area="analysis"] body {
+  padding-top: var(--titlebar-h);
+}
+html[data-titlebar] .a-app {
+  min-height: calc(100vh - var(--titlebar-h));
+}
+html[data-titlebar] .a-side {
+  top: var(--titlebar-h);
+  height: calc(100vh - var(--titlebar-h));
+}
+html[data-titlebar] .a-mtop {
+  top: var(--titlebar-h);
+}
+/* Telas de espera em tela cheia. */
+html[data-titlebar] .area-loading {
+  top: var(--titlebar-h);
+}
