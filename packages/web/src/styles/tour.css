@@ -1,0 +1,162 @@
+/*
+ * Tour guiado (components/ui/Tour.tsx): máscara escura com recorte no elemento, anel de acento e
+ * balão. Só tokens; acima do Modal (--z-popover).
+ */
+
+.tour-root {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-popover);
+  pointer-events: none;
+}
+/* Pega os toques: o ao vivo e as páginas ficam parados enquanto o tour roda. */
+.tour-block {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  touch-action: none;
+}
+.tour-block[data-empty="1"] {
+  background: var(--overlay);
+}
+
+/* O recorte: a sombra enorme escurece tudo ao redor, o contorno é o anel de acento. */
+.tour-spot {
+  position: absolute;
+  border-radius: var(--r-md);
+  box-shadow:
+    0 0 0 100vmax var(--overlay),
+    0 0 0 2px var(--accent),
+    0 0 24px color-mix(in srgb, var(--accent) 45%, transparent);
+  transition:
+    left var(--dur) var(--ease),
+    top var(--dur) var(--ease),
+    width var(--dur) var(--ease),
+    height var(--dur) var(--ease);
+  pointer-events: none;
+}
+
+.tour-balloon {
+  position: absolute;
+  display: grid;
+  gap: var(--sp-2);
+  width: min(340px, calc(100vw - 24px));
+  padding: var(--sp-4);
+  border: 1px solid var(--accent-line);
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-3);
+  color: var(--text);
+  pointer-events: auto;
+  transition:
+    left var(--dur) var(--ease),
+    top var(--dur) var(--ease),
+    opacity var(--dur) var(--ease);
+}
+.tour-balloon[data-ready="0"] {
+  opacity: 0;
+}
+.tour-balloon:focus {
+  outline: none;
+}
+.tour-balloon:focus-visible {
+  box-shadow: var(--shadow-3), var(--focus-ring);
+}
+.tour-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+.tour-count {
+  color: var(--accent);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+.tour-title {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: 750;
+  line-height: 1.25;
+}
+.tour-body {
+  margin: 0;
+  color: var(--text-2);
+  font-size: var(--fs-md);
+  line-height: 1.45;
+}
+.tour-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+}
+.tour-spacer {
+  flex: 1;
+}
+.tour-actions .ui-btn {
+  min-height: var(--tap);
+}
+.tour-skip {
+  padding-inline: var(--sp-2);
+}
+.tour-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-spot,
+  .tour-balloon {
+    transition: none;
+  }
+}
+
+/* Dica única: um cartão pequeno que some sozinho */
+.tour-hint {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--safe-b) + 72px);
+  z-index: var(--z-toast);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: min(420px, calc(100vw - 24px));
+  padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-4);
+  border: 1px solid var(--accent-line);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-2);
+  transform: translateX(-50%);
+  animation: tour-hint-in var(--dur) var(--ease) both;
+}
+.tour-hint-text {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+}
+.tour-hint-text strong {
+  font-size: var(--fs-md);
+}
+.tour-hint-text span {
+  color: var(--text-2);
+}
+@keyframes tour-hint-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tour-hint {
+    animation: none;
+  }
+}

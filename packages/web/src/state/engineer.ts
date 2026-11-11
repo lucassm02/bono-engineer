@@ -15,12 +15,19 @@ import { getLanguage, subscribeLanguage, t } from '../lib/i18n.ts';
 import { RADIO_HELLO, RADIO_PREVIEW_KEY, type RadioUtterance } from '../lib/radioPhrases.ts';
 import { defaultRadioVoice, migrateRadioVoice, radioVoice } from '../lib/radioVoices.ts';
 import { loadJson, saveJson } from '../lib/storage.ts';
+import { offerHint } from './tourHints.ts';
 import { addNotice } from './uiStore.ts';
 
 const KEY = 'gt7.engineer.muted';
 const HUD_KEY = 'gt7.engineer.hudVisible';
 const VOICE_KEY = 'gt7.engineer.voice';
 const RADIO_KEY = 'gt7.engineer.controls';
+const ENABLED_KEY = 'gt7.engineer.enabled';
+
+/** Saved `gt7.engineer.enabled` → on/off. Nothing saved (or anything but `true`) = off, as before. */
+export function migrateEngineerEnabled(saved: unknown): boolean {
+  return saved === true;
+}
 /**
  * Radio controls saved under `gt7.engineer.controls`: audio (volume, anticipation) plus the radio
  * preferences (mode, Essencial/Detalhado, Treino profile, summary, praise). Mudo is the separate
@@ -73,7 +80,8 @@ function loadVoice(language: Language) {
 const initialVoice = loadVoice(getLanguage());
 
 export const useEngineer = create(() => ({
-  enabled: false,
+  /** Persisted: the engineer stays on after restarting the app (spec 03 RF2). */
+  enabled: migrateEngineerEnabled(loadJson<unknown>(ENABLED_KEY)),
   hudVisible: loadJson<boolean>(HUD_KEY) !== false,
   muted: loadJson<boolean>(KEY) === true,
   /** No pack can play audio right now: the instructions stay on the panel only. */
@@ -137,6 +145,7 @@ export function playEngineerVoice(
     playRadioUtterance(pack, utterance, test, done, controls.volume, ENGINEER_PACES[pace]);
   if (started) {
     onStart?.();
+    if (!test) offerHint('engineerSpoke');
     const voiceFallback = pack.voiceId !== voiceUri;
     if (useEngineer.getState().voiceError || useEngineer.getState().voiceFallback !== voiceFallback)
       useEngineer.setState({ voiceError: false, voiceFallback });
@@ -202,6 +211,7 @@ export function testEngineerVoice(sample = true): void {
 
 export function setEngineerEnabled(enabled: boolean, playVoice = true): void {
   useEngineer.setState({ enabled });
+  saveJson(ENABLED_KEY, enabled);
   if (enabled && playVoice && !useEngineer.getState().muted) testEngineerVoice(false);
   if (!enabled) {
     stopEngineerVoice();

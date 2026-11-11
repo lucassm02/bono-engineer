@@ -41,6 +41,8 @@ interface NavItem {
   label: string;
   /** Short label for the phone bottom bar. */
   short: string;
+  /** `data-tour` anchor of the guided tour. */
+  tour?: string;
 }
 
 const LIVE: NavItem = {
@@ -69,6 +71,7 @@ const MAIN_NAV: NavItem[] = [
   },
   {
     icon: 'compare',
+    tour: 'nav-compare',
     names: ['compare'],
     href: routes.compare({}),
     get label() {
@@ -80,6 +83,7 @@ const MAIN_NAV: NavItem[] = [
   },
   {
     icon: 'capture',
+    tour: 'nav-capture',
     names: ['capture'],
     href: routes.capture(),
     get label() {
@@ -238,6 +242,7 @@ function NavLink({ item, route, className }: { item: NavItem; route: Route; clas
       className={className}
       aria-current={item.names.includes(route.name) ? 'page' : undefined}
       data-live={item.icon === 'live' ? '1' : undefined}
+      data-tour={item.tour}
     >
       <Icon name={item.icon} size={22} />
       <span className="a-nav-label">{item.label}</span>
@@ -266,7 +271,7 @@ export default function AnalysisApp({ route }: { route: Route }) {
         <a className="a-brand" href={routes.home()}>
           <ProductBrand />
         </a>
-        <nav className="a-nav" aria-label={uiText('Seções')}>
+        <nav className="a-nav" data-tour="nav" aria-label={uiText('Seções')}>
           <NavLink item={LIVE} route={route} />
           <p className="a-nav-group" aria-hidden="true">
             {uiText('Histórico e análise')}

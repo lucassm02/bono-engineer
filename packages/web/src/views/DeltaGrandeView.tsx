@@ -45,7 +45,7 @@ export function DeltaGrandeView() {
         <span ref={set('lap')} />
         <span ref={set('predicted')} className="num" />
       </div>
-      <div className="dg-value num">
+      <div className="dg-value num" data-tour="delta">
         <span ref={set('delta')}>––,––</span>
         <span className="dg-trend" ref={set('trend')} />
       </div>

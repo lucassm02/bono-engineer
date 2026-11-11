@@ -14,7 +14,7 @@ import {
 } from '@gt7/shared';
 import { type ReactNode, useId, useState } from 'react';
 import { api } from '../analysis/api.ts';
-import { Advanced, CfgRow, CfgToggle } from '../analysis/components/config/ConfigRow.tsx';
+import { Advanced, CfgRow, CfgToggle, rowDomId } from '../analysis/components/config/ConfigRow.tsx';
 import { useFetch } from '../analysis/useFetch.ts';
 import { t as uiText, useLanguage } from '../lib/i18n.ts';
 import {
@@ -36,6 +36,7 @@ import {
   useEngineer,
 } from '../state/engineer.ts';
 import { useUi } from '../state/uiStore.ts';
+import { AskTrackSetting } from './AskTrackSetting.tsx';
 import { setRadioAudioDevice } from './DiscordOutput.tsx';
 import { EngineerReference } from './EngineerReference.tsx';
 import { RadioVoicePreview, RadioVoiceStatus } from './RadioVoice.tsx';
@@ -388,6 +389,10 @@ export function EngineerSettingsPanel({ openMore }: { openMore?: boolean }) {
             </Note>
           )}
           {deviceError && <Note tone="loss">{uiText('Não foi possível alterar o aparelho.')}</Note>}
+
+          <div id={rowDomId('ask-track')}>
+            <AskTrackSetting />
+          </div>
         </div>
       </section>
 

@@ -34,6 +34,7 @@ import {
   useLiveContext,
   useSavedTracks,
 } from '../state/liveContext.ts';
+import { useTour } from '../state/tour.ts';
 import { useUi } from '../state/uiStore.ts';
 import { TrackPickerSheet } from './TrackPickerSheet.tsx';
 
@@ -55,7 +56,10 @@ function useBarData() {
   const liveState = useUi((s) => s.liveState);
   const noSignal = useUi((s) => s.serverStatus?.sessionCapture?.detail === 'noSignal');
   const demo = isDemoSource(source, source === 'mock' ? null : link);
-  const demoOk = typeof location !== 'undefined' && demoPromptsAllowed(location.search);
+  // the guided tour runs on the demo and needs the bar on screen
+  const tourDemo = useTour((s) => s.demo);
+  const demoOk =
+    tourDemo || (typeof location !== 'undefined' && demoPromptsAllowed(location.search));
   const hasData = liveState !== null && liveState !== 'disconnected' && liveState !== 'connecting';
   const visible = hasData && liveState !== 'replay' && (!demo || demoOk);
   const track = barTrackView({
@@ -295,6 +299,7 @@ export function LiveContextBar({ variant = 'live' }: { variant?: 'live' | 'menu'
         <div
           className="live-context"
           data-variant="live"
+          data-tour="context-bar"
           data-no-gesture
           role="status"
           aria-live="polite"

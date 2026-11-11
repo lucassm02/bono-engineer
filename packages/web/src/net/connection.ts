@@ -17,7 +17,14 @@ import { goToView, showLapPopup } from '../state/actions.ts';
 import { completeEngineerJournal, flushEngineerJournal } from '../state/engineerJournal.ts';
 import { completeEngineerTrainingLap } from '../state/engineerTraining.ts';
 import { noteTrackMismatch } from '../state/liveContext.ts';
-import { recordLap, resetSessionLaps, setSessionId } from '../state/sessionStore.ts';
+import {
+  recordLap,
+  resetSessionLaps,
+  type SessionLapsState,
+  setSessionId,
+  useSessionLaps,
+} from '../state/sessionStore.ts';
+import { offerHint } from '../state/tourHints.ts';
 import { addNotice, loadLocalProfile, setProfile, useUi } from '../state/uiStore.ts';
 import { setSender } from './transport.ts';
 import { WsClient, wsUrlFor } from './wsClient.ts';
@@ -44,6 +51,7 @@ function handleServerMessage(msg: ServerMessage): void {
       completeEngineerJournal(msg.event);
       completeEngineerTrainingLap(msg.event);
       showLapPopup(msg.event);
+      if (msg.event.valid && msg.event.deltaMs === null) offerHint('lapWithoutReference');
       // The server may have just built the track centerline: retry the map geometry.
       trackGeometry.retry();
       break;
@@ -53,6 +61,7 @@ function handleServerMessage(msg: ServerMessage): void {
       break;
     case 'sessionSaved':
       showSessionSaved(msg);
+      offerHint('sessionSaved');
       break;
     case 'trackMismatch':
       noteTrackMismatch(msg.info);
@@ -145,6 +154,36 @@ export function stopMock(): void {
   live.clear();
   trackGeometry.clear();
   resetSessionLaps();
+}
+
+// ---------------------------------------------------------------------------------------------
+// Tour demo (spec 04 RF4)
+// ---------------------------------------------------------------------------------------------
+
+/** Laps of the real session, kept while the tour runs on the demo. */
+let tourDemoSaved: { laps: SessionLapsState } | null = null;
+
+/**
+ * Switches to the in-browser demo for the guided tour. Nothing reaches the server: the sender is
+ * the mock's, the frames of the server are ignored and no session is recorded. No-op when the demo
+ * already runs (`?mock=1`, dev fallback): then there is nothing to restore either.
+ */
+export function enterTourDemo(): void {
+  if (tourDemoSaved || useUi.getState().source === 'mock') return;
+  tourDemoSaved = { laps: useSessionLaps.getState() };
+  startMock(false);
+}
+
+/** Back to the real source, with the laps of the session as they were. */
+export function leaveTourDemo(): void {
+  const saved = tourDemoSaved;
+  if (!saved) return;
+  tourDemoSaved = null;
+  stopMock();
+  useUi.setState({ source: 'server', mockAuto: false });
+  setSender((m) => ws?.send(m) ?? false);
+  useSessionLaps.setState(saved.laps);
+  trackGeometry.retry();
 }
 
 // ---------------------------------------------------------------------------------------------

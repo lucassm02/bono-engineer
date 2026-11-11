@@ -5,40 +5,24 @@
 
 import { type ApiStatus, PRODUCT_NAME } from '@gt7/shared';
 import { t as uiText } from '../../../lib/i18n.ts';
-import { ONBOARDING_KEY } from '../../../lib/onboarding.ts';
-import { navigate, routes } from '../../../lib/route.ts';
-import { loadString, saveString } from '../../../lib/storage.ts';
+import {
+  loadSetupState,
+  ONBOARDING_KEY,
+  resetSetupState,
+  saveSetupState,
+} from '../../../lib/onboarding.ts';
+import { saveString } from '../../../lib/storage.ts';
 import { applySwUpdate, useSwUpdate } from '../../../lib/swUpdate.ts';
-import { useUi } from '../../../state/uiStore.ts';
-import { SETUP_STATE_KEY } from '../../lib/configNav.ts';
+import { openSetupAssistant } from '../../../state/setup.ts';
+import { requestTour } from '../../../state/tour.ts';
 import { Panel } from '../Panel.tsx';
 import { Advanced, CfgRow } from './ConfigRow.tsx';
 
-/** Estado do tour guiado (spec 04). Apagar faz o tour recomeçar na próxima abertura do ao vivo. */
-const TOUR_STATE_KEY = 'gt7.tour.v1';
-
-function resetTour(): void {
-  try {
-    window.localStorage.removeItem(TOUR_STATE_KEY);
-  } catch {
-    // sem armazenamento: nada para refazer
-  }
-  navigate(routes.live());
-}
-
-/** Reabre o assistente: apaga o "feito" do formato antigo e do novo (se o novo existir). */
+/** Reabre o assistente do começo: esquece os passos feitos e abre a primeira tela. */
 function resetSetup(): void {
   saveString(ONBOARDING_KEY, '0');
-  const raw = loadString(SETUP_STATE_KEY);
-  if (raw) {
-    try {
-      const state = JSON.parse(raw) as Record<string, unknown>;
-      saveString(SETUP_STATE_KEY, JSON.stringify({ ...state, steps: {}, done: false }));
-    } catch {
-      // estado ilegível: o assistente novo recomeça sozinho
-    }
-  }
-  useUi.setState({ onboarding: 'active' });
+  saveSetupState(resetSetupState(loadSetupState()));
+  openSetupAssistant();
 }
 
 export function AboutGroup({ status }: { status: ApiStatus }) {
@@ -79,7 +63,13 @@ export function AboutGroup({ status }: { status: ApiStatus }) {
           title={uiText('Refazer o assistente')}
           description={uiText('Passa de novo pela configuração inicial: PS5, voz e telas.')}
         >
-          <button type="button" className="ui-btn" data-variant="secondary" onClick={resetSetup}>
+          <button
+            type="button"
+            className="ui-btn"
+            data-variant="secondary"
+            data-tour="setup-again"
+            onClick={resetSetup}
+          >
             {uiText('Refazer o assistente')}
           </button>
         </CfgRow>
@@ -87,8 +77,26 @@ export function AboutGroup({ status }: { status: ApiStatus }) {
           title={uiText('Refazer o tour')}
           description={uiText('Mostra de novo os gestos e botões do ao vivo.')}
         >
-          <button type="button" className="ui-btn" data-variant="secondary" onClick={resetTour}>
+          <button
+            type="button"
+            className="ui-btn"
+            data-variant="secondary"
+            onClick={() => requestTour('live')}
+          >
             {uiText('Refazer o tour')}
+          </button>
+        </CfgRow>
+        <CfgRow
+          title={uiText('Ver o tour do histórico')}
+          description={uiText('Mostra onde ficam as pistas, a comparação e os ajustes.')}
+        >
+          <button
+            type="button"
+            className="ui-btn"
+            data-variant="secondary"
+            onClick={() => requestTour('analysis')}
+          >
+            {uiText('Ver o tour')}
           </button>
         </CfgRow>
       </div>

@@ -304,6 +304,19 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
     keywords: 'aparelho áudio saída discord tocar',
   },
   {
+    id: 'ask-track',
+    group: 'engenheiro',
+    get title() {
+      return uiText('Perguntar a pista ao começar');
+    },
+    get description() {
+      return uiText(
+        'No menu do jogo, deixa você dizer onde vai treinar. Nunca com o carro andando.',
+      );
+    },
+    keywords: 'qual pista hoje escolher reconhecer',
+  },
+  {
     id: 'speech-level',
     group: 'engenheiro',
     advanced: true,

@@ -91,7 +91,12 @@ export function CorridaView() {
         </span>
         <span ref={set('fuel')}>{uiText('Comb. –')}</span>
       </div>
-      <div className="corrida-delta tone-box" ref={set('deltaBox')} data-tone="neutral">
+      <div
+        className="corrida-delta tone-box"
+        ref={set('deltaBox')}
+        data-tone="neutral"
+        data-tour="delta"
+      >
         <div className="readout-label">
           Delta <span ref={set('ref')} />
         </div>
@@ -100,13 +105,13 @@ export function CorridaView() {
           <span className="trend" ref={set('trend')} />
         </div>
       </div>
-      <div className="corrida-gear">
+      <div className="corrida-gear" data-tour="gear">
         <div className="readout-label">{uiText('Marcha')}</div>
         <div className="gear-value num" ref={set('gear')}>
           –
         </div>
       </div>
-      <div className="corrida-speed">
+      <div className="corrida-speed" data-tour="speed">
         <div className="readout-label">km/h</div>
         <div className="speed-value num" ref={set('speed')}>
           –
@@ -131,7 +136,7 @@ export function CorridaView() {
           <div className="num" ref={set('best')} />
         </div>
       </div>
-      <div className="corrida-sectors">
+      <div className="corrida-sectors" data-tour="sectors">
         {SECTORS.map((i) => (
           <div className="sector" key={i} ref={set(`sb${i}`)} data-status="pending">
             <span className="sector-name">S{i + 1}</span>

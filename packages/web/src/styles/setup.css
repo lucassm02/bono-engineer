@@ -1,0 +1,353 @@
+/*
+ * Assistente inicial (components/Onboarding.tsx + components/setup/*) e convite leve. As peças
+ * antigas de conexão (ob-radar, ob-live, ob-help, ob-qr) continuam em connection.css. Só tokens.
+ */
+
+.ob-modal {
+  --modal-w: 560px;
+}
+.ob-modal .ui-modal-title:focus {
+  outline: none;
+}
+.ob-modal .ui-modal-title:focus-visible {
+  border-radius: var(--r-xs);
+  box-shadow: var(--focus-ring);
+}
+.ob-modal .ui-modal-foot .bn-foot-left {
+  margin-right: auto;
+}
+.ob-modal .ob-steps {
+  flex: none;
+  margin-top: var(--sp-2);
+}
+
+.su-body {
+  animation: ob-in 320ms var(--ease) both;
+}
+.su-step {
+  display: grid;
+  gap: var(--sp-4);
+}
+.su-lead {
+  max-width: 52ch;
+  margin: 0;
+  color: var(--text-2);
+  font-size: var(--fs-md);
+  line-height: 1.5;
+}
+.su-lead strong {
+  color: var(--accent);
+}
+.su-field {
+  display: grid;
+  gap: var(--sp-2);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.su-field > legend {
+  padding: 0;
+  margin-bottom: var(--sp-2);
+}
+.su-field .ui-segmented {
+  flex-wrap: wrap;
+}
+.su-field .ui-help {
+  margin: 0;
+}
+
+/* Opções em linha (voz, onde fala) e cartões grandes (treino, telas) */
+.su-options,
+.su-cards {
+  display: grid;
+  gap: var(--sp-2);
+}
+.su-cards {
+  gap: var(--sp-3);
+}
+.su-radio {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.su-option,
+.su-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-3);
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease),
+    background var(--dur-fast) var(--ease);
+}
+.su-option:hover,
+.su-card:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-4);
+}
+.su-option[data-checked="1"],
+.su-card[data-checked="1"] {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+.su-option:focus-within,
+.su-card:focus-within {
+  box-shadow: var(--focus-ring);
+}
+.su-option-main {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+  min-height: 32px;
+  cursor: pointer;
+}
+.su-option-text,
+.su-card-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.su-option-text strong,
+.su-card-text strong {
+  font-size: var(--fs-md);
+  font-weight: 650;
+}
+.su-option-text span,
+.su-card-text span {
+  color: var(--text-3);
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+}
+.su-card-text {
+  flex: 1;
+}
+.su-card > svg {
+  flex: none;
+  color: var(--accent-dim);
+}
+.su-card[data-checked="1"] > svg {
+  color: var(--accent);
+}
+.su-views {
+  color: var(--text-2);
+}
+.su-tick {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  color: transparent;
+}
+.su-card[data-checked="1"] .su-tick {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+.su-option-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+}
+@media (pointer: coarse) {
+  .su-option-main {
+    min-height: var(--tap);
+  }
+}
+
+/* Engenheiro */
+.su-panel {
+  padding-block: var(--sp-1) var(--sp-3);
+}
+.su-volume {
+  display: grid;
+  gap: var(--sp-2);
+}
+.su-volume .ui-help {
+  margin: 0;
+}
+.su-volume-row {
+  display: grid;
+  grid-template-columns: 1fr 3.5ch auto;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.su-volume-row output {
+  color: var(--text-2);
+  text-align: right;
+}
+
+/* Conectar o PS5 */
+.su-console {
+  justify-items: center;
+  text-align: center;
+}
+.su-console .su-lead {
+  color: var(--text);
+  font-size: var(--fs-lg);
+}
+.su-console .ob-live {
+  text-align: left;
+}
+.su-demo {
+  display: grid;
+  gap: var(--sp-2);
+  justify-items: center;
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--line-soft);
+  width: 100%;
+}
+.su-demo .ui-help {
+  margin: 0;
+}
+.su-phone {
+  display: grid;
+  gap: var(--sp-2);
+}
+.su-phone .ui-btn {
+  justify-self: start;
+}
+
+/* Pronto */
+.su-ready {
+  justify-items: center;
+}
+.su-ready .su-lead {
+  text-align: center;
+}
+.su-seal {
+  display: grid;
+  place-items: center;
+  width: 68px;
+  height: 68px;
+  border: 1px solid var(--gain);
+  border-radius: 50%;
+  background: var(--gain-soft);
+  color: var(--gain);
+}
+.su-summary {
+  display: grid;
+  gap: 1px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--line-soft);
+  list-style: none;
+}
+.su-summary li {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--surface-2);
+  font-size: var(--fs-sm);
+}
+.su-summary-icon {
+  flex: none;
+  color: var(--gain);
+}
+.su-summary-later {
+  color: var(--text-3);
+}
+.su-summary-label {
+  flex: none;
+  width: 12ch;
+  color: var(--text-3);
+}
+.su-summary-value {
+  flex: 1;
+  min-width: 0;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+/* Convite leve para quem já usa o Bono */
+.su-invite {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--safe-b) + 72px);
+  z-index: var(--z-toast);
+  display: grid;
+  gap: var(--sp-3);
+  width: min(420px, calc(100vw - 24px));
+  padding: var(--sp-4);
+  border: 1px solid var(--accent-line);
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-3);
+  transform: translateX(-50%);
+  animation: su-invite-in 320ms var(--ease) both;
+}
+.su-invite h2 {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: 750;
+}
+.su-invite p {
+  margin: 0;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+}
+.su-invite-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+@keyframes su-invite-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+}
+
+@media (max-width: 640px) {
+  .ob-modal .ui-modal-head {
+    flex-wrap: wrap;
+  }
+  .ob-modal .ob-steps {
+    order: 3;
+    width: 100%;
+    margin: 0;
+  }
+  .ob-modal .ob-steps li {
+    flex: 1;
+  }
+  .ob-modal .ui-modal-foot {
+    padding-inline: var(--sp-4);
+  }
+  .ob-modal .su-primary {
+    order: -1;
+    flex: 1 1 100%;
+  }
+  .su-volume-row {
+    grid-template-columns: 1fr 3.5ch;
+  }
+  .su-volume-row .ui-btn {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .su-body,
+  .su-invite {
+    animation: none;
+  }
+}

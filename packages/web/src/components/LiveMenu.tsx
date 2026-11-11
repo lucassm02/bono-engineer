@@ -14,6 +14,7 @@ import {
   openPicker,
   setLocked,
 } from '../state/actions.ts';
+import { requestTour } from '../state/tour.ts';
 import { useUi } from '../state/uiStore.ts';
 import { EngineerControls } from './EngineerControls.tsx';
 import { FullscreenButton } from './FullscreenButton.tsx';
@@ -136,6 +137,7 @@ export function MenuButton() {
       type="button"
       className="live-menu-btn"
       data-no-gesture
+      data-tour="menu"
       aria-label={uiText('Menu: histórico, comparação, captura e ajustes')}
       aria-haspopup="dialog"
       aria-expanded={open}
@@ -173,6 +175,34 @@ function LinkList({ entries }: { entries: readonly Entry[] }) {
   );
 }
 
+function HelpSection() {
+  return (
+    <section className="bn-section" aria-labelledby="bn-help">
+      <h3 id="bn-help" className="ui-eyebrow">
+        {uiText('Ajuda')}
+      </h3>
+      <ul className="ui-list">
+        <li>
+          <button
+            type="button"
+            className="ui-list-item"
+            onClick={() => {
+              closeMenu();
+              requestTour('live');
+            }}
+          >
+            <ListItemBody
+              icon="info"
+              title={uiText('Ver o tour')}
+              hint={uiText('Gestos e botões do ao vivo, numa demonstração')}
+            />
+          </button>
+        </li>
+      </ul>
+    </section>
+  );
+}
+
 function NavigateTab() {
   return (
     <div className="bn-stack">
@@ -188,6 +218,7 @@ function NavigateTab() {
         </h3>
         <LinkList entries={SETUP} />
       </section>
+      <HelpSection />
     </div>
   );
 }

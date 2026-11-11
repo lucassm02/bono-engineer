@@ -10,9 +10,11 @@ import { t as uiText } from '../../lib/i18n.ts';
 import { GT7_INTEGRATION } from '../../lib/integrations.ts';
 import { routes } from '../../lib/route.ts';
 import { loadJson, saveJson } from '../../lib/storage.ts';
+import { openSetupAssistant } from '../../state/setup.ts';
 import { api } from '../api.ts';
 import { CarName } from '../components/CarName.tsx';
 import { CarFilterChips, CarFilterField, FilterChip } from '../components/CarPicker.tsx';
+import { PendingSetupCard } from '../components/config/HealthSummary.tsx';
 import { NewTrackPrompt } from '../components/TrackNaming.tsx';
 import { TrackThumb } from '../components/TrackThumb.tsx';
 import { ErrorBox, Loading, Tag, useTitle } from '../components/ui.tsx';
@@ -49,10 +51,13 @@ export function TrackCard({
   t,
   demo,
   carFilter = NO_CAR_FILTER,
+  tourAnchor,
 }: {
   t: TrackOverview;
   demo: boolean;
   carFilter?: CarFilter;
+  /** First card of the page: anchor of the guided tour. */
+  tourAnchor?: boolean;
 }) {
   const trend = trendLabel(t.trend);
   const cars = t.cars.slice(0, 3);
@@ -71,7 +76,11 @@ export function TrackCard({
   const lapCount = carFiltering ? fcars.reduce((n, c) => n + c.laps, 0) : t.lapCount;
   const sessionCount = carFiltering ? fcars.reduce((n, c) => n + c.sessions, 0) : t.sessionCount;
   return (
-    <a className="a-trackcard" href={routes.track(t.id)}>
+    <a
+      className="a-trackcard"
+      href={routes.track(t.id)}
+      data-tour={tourAnchor ? 'track-card' : undefined}
+    >
       <TrackThumb
         line={t.thumb}
         className="a-trackcard-thumb"
@@ -341,6 +350,8 @@ export function HomePage() {
         </svg>
       </section>
 
+      <PendingSetupCard onOpenAssistant={openSetupAssistant} />
+
       {overview.error && !data ? (
         <ErrorBox error={overview.error} onRetry={overview.reload} />
       ) : !data ? (
@@ -451,8 +462,14 @@ export function HomePage() {
                 </span>
               </div>
               <div className="a-trackgrid">
-                {shown.map((t) => (
-                  <TrackCard key={t.id} t={t} demo={isDemo} carFilter={carFilter} />
+                {shown.map((t, i) => (
+                  <TrackCard
+                    key={t.id}
+                    t={t}
+                    demo={isDemo}
+                    carFilter={carFilter}
+                    tourAnchor={i === 0}
+                  />
                 ))}
               </div>
             </>

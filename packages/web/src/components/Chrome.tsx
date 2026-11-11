@@ -63,7 +63,7 @@ export function Dots() {
   const locked = useUi((s) => s.profile.locked);
   if (views.length <= 1) return null;
   return (
-    <nav className="dots" data-no-gesture aria-label={uiText('Telas')}>
+    <nav className="dots" data-no-gesture data-tour="dots" aria-label={uiText('Telas')}>
       {views.map((v) => (
         <button
           key={v}
@@ -125,6 +125,7 @@ export function LockButton() {
       type="button"
       className="ui-icon-btn lock-btn"
       data-no-gesture
+      data-tour="lock"
       data-locked={locked ? '1' : '0'}
       data-holding={holding ? '1' : '0'}
       aria-label={locked ? uiText('Destravar gestos (segure)') : uiText('Travar gestos')}

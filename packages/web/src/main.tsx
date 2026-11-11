@@ -5,12 +5,22 @@ import { api } from './analysis/api.ts';
 import { TitleBar } from './components/TitleBar.tsx';
 import { BOOT_WAIT_MS, bootTarget, openedWithoutRoute } from './lib/boot.ts';
 import { applyDocumentLanguage, setLanguage, t as uiText, useLanguage } from './lib/i18n.ts';
-import { decideOnboarding, ONBOARDING_KEY, ONBOARDING_WAIT_MS } from './lib/onboarding.ts';
+import { isSafeToPrompt, SAFE_SPEED_KMH } from './lib/liveContext.ts';
+import {
+  decideSetup,
+  loadSetupState,
+  ONBOARDING_KEY,
+  ONBOARDING_WAIT_MS,
+} from './lib/onboarding.ts';
 import { isAnalysisRoute, navigate, parseRoute, type Route, routes } from './lib/route.ts';
 import { loadString } from './lib/storage.ts';
 import { startSwUpdateWatch } from './lib/swUpdate.ts';
 import { setupKeepAwake } from './lib/wakeLock.ts';
 import { startConnection } from './net/connection.ts';
+import { useLiveContext } from './state/liveContext.ts';
+import { useSetupInvite } from './state/setup.ts';
+import { useTour } from './state/tour.ts';
+import { useHint } from './state/tourHints.ts';
 import { addNotice, useUi } from './state/uiStore.ts';
 import './styles/tokens.css';
 import './styles/ui.css';
@@ -26,8 +36,11 @@ import './styles/live-context.css';
 
 /** Analysis & settings area: separate chunk, so the live dashboard bundle stays light. */
 const AnalysisApp = lazy(() => import('./analysis/AnalysisApp.tsx'));
-/** First-run assistant: only downloaded when it is going to be shown. */
+/** First-run assistant, light invite and guided tour: only downloaded when they are going to be shown. */
 const Onboarding = lazy(() => import('./components/Onboarding.tsx'));
+const SetupInvite = lazy(() => import('./components/setup/SetupInvite.tsx'));
+const Tour = lazy(() => import('./components/ui/Tour.tsx'));
+const TourHint = lazy(() => import('./components/ui/TourHint.tsx'));
 
 applyDocumentLanguage();
 void window.bonoDesktop
@@ -103,18 +116,17 @@ function useBootGate(): boolean {
 }
 
 /**
- * Decides once whether the first-run assistant shows: never raced here (empty history), console not
- * found yet, real server. `?onboarding=1` forces it (preview). Finished/skipped is kept in
- * localStorage.
+ * Decides once whether the first-run assistant shows (spec 03): the whole assistant for someone who
+ * never raced or configured here, only a light invite for someone who already uses the app, and
+ * nothing in the demos. Never with the car moving: it waits for a pause. `?onboarding=1` forces
+ * the assistant (preview). What was done lives in `gt7.setup.v2`; the old key counts as
+ * "configured".
  */
 function useOnboardingGate(): void {
   useEffect(() => {
     const forced = new URLSearchParams(location.search).get('onboarding') === '1';
-    const done = loadString(ONBOARDING_KEY) === '1';
-    if (done && !forced) {
-      useUi.setState({ onboarding: 'off' });
-      return;
-    }
+    const state = loadSetupState();
+    const legacyDone = loadString(ONBOARDING_KEY) === '1';
     let sessionCount: number | null = null;
     let fetching = false;
     let timedOut = false;
@@ -137,8 +149,11 @@ function useOnboardingGate(): void {
           })
           .finally(evaluate);
       }
-      const decision = decideOnboarding({
-        done: false,
+      const demo = s.source === 'mock' || link?.source === 'simulator';
+      const stopped = useLiveContext.getState().stopped;
+      const decision = decideSetup({
+        state,
+        legacyDone,
         forced,
         source: s.source,
         wsOpen: s.wsStatus === 'open',
@@ -146,12 +161,16 @@ function useOnboardingGate(): void {
         simulator: link?.source === 'simulator',
         sessionCount,
         timedOut,
+        safe:
+          demo || isSafeToPrompt({ state: s.liveState, speedKmh: stopped ? 0 : SAFE_SPEED_KMH }),
       });
       if (decision === 'wait') return;
       decided = true;
-      useUi.setState({ onboarding: decision === 'show' ? 'active' : 'off' });
+      useUi.setState({ onboarding: decision === 'wizard' ? 'active' : 'off' });
+      if (decision === 'invite') useSetupInvite.setState({ visible: true });
     };
     const unsub = useUi.subscribe(evaluate);
+    const unsubCar = useLiveContext.subscribe(evaluate);
     const timer = setTimeout(() => {
       timedOut = true;
       evaluate();
@@ -160,6 +179,7 @@ function useOnboardingGate(): void {
     return () => {
       decided = true;
       unsub();
+      unsubCar();
       clearTimeout(timer);
     };
   }, []);
@@ -170,6 +190,9 @@ function Root() {
   const deciding = useBootGate();
   useOnboardingGate();
   const onboarding = useUi((s) => s.onboarding === 'active');
+  const invite = useSetupInvite((s) => s.visible);
+  const touring = useTour((s) => s.active !== null);
+  const hint = useHint((s) => s.hint !== null);
   if (deciding)
     return (
       <>
@@ -190,6 +213,21 @@ function Root() {
       {onboarding && (
         <Suspense fallback={null}>
           <Onboarding />
+        </Suspense>
+      )}
+      {invite && (
+        <Suspense fallback={null}>
+          <SetupInvite />
+        </Suspense>
+      )}
+      {hint && (
+        <Suspense fallback={null}>
+          <TourHint />
+        </Suspense>
+      )}
+      {touring && (
+        <Suspense fallback={null}>
+          <Tour />
         </Suspense>
       )}
     </>
