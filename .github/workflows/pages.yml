@@ -1,0 +1,54 @@
+name: Site on GitHub Pages
+
+# Publica site/ em https://lucassm02.github.io/bono-engineer/.
+# Requer uma vez: Settings > Pages > Build and deployment > Source = GitHub Actions.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - 'docs/**'
+      - 'package.json'
+      - 'packages/desktop/package.json'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      # --ignore-scripts: o site não precisa baixar o Electron, só do @resvg/resvg-js (binário nativo).
+      - run: npm ci --ignore-scripts
+      - name: Test the site build (SEO, JSON-LD, links, images)
+        run: npm run site:test
+      - run: npm run site:build
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: site/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

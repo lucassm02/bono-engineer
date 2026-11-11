@@ -4,6 +4,8 @@
 
 Bono Engineer is a race engineer for sim racing. Its current integration is **Gran Turismo 7 on PlayStation**. Run Bono on a computer to see live telemetry, hear coaching over the radio, and compare your laps after the session. A phone or tablet on the same network can act as a second dashboard.
 
+Looking for GT7 telemetry, a race engineer for the PS5 or Discord radio for Gran Turismo 7? See the [Bono Engineer website](https://lucassm02.github.io/bono-engineer/) (in Portuguese, with an [English summary](https://lucassm02.github.io/bono-engineer/en/)).
+
 ## Screenshots
 
 These screenshots show the Brazilian Portuguese interface with demo telemetry. In **Settings → Language**, choose Brazilian Portuguese, English or Spanish for the interface and radio.
