@@ -7,6 +7,16 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-11-11
+
+### Changed
+
+- Replaced the microphone icon with a handheld radio and added bottom spacing below the live dashboard controls.
+
+### Fixed
+
+- Positioned the live menu and other dialogs below the Windows title bar so their headers and controls stay accessible.
+
 ## [0.1.3] - 2026-11-10
 
 <!-- release-notes-base: 0.1.2 -->
@@ -62,7 +72,8 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Added replay reference capture, distance-aligned lap comparisons, synchronized telemetry charts, consistency and progress analysis, and data exports.
 - Added the driving guide, an Anthropic-powered AI debrief, and MCP tools for telemetry, laps, sessions, tracks, comparisons, and PNG charts.
 
-[Unreleased]: https://github.com/lucassm02/bono-engineer/compare/v0.1.3...main
+[Unreleased]: https://github.com/lucassm02/bono-engineer/compare/v0.1.4...main
+[0.1.4]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.1.4
 [0.1.3]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.1.3
 [0.1.2]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.1.2
 [0.1.1]: https://github.com/lucassm02/bono-engineer/compare/2ffa36b...94f577d

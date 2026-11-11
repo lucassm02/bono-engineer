@@ -73,7 +73,7 @@ export function EngineerHudButton() {
       title={visible ? uiText('Ocultar cartão do rádio') : uiText('Mostrar cartão do rádio')}
       onClick={toggleEngineerHud}
     >
-      <Icon name="mic" />
+      <Icon name="radio" />
     </button>
   );
 }

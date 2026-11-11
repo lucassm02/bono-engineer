@@ -30,7 +30,7 @@ These screenshots show the Brazilian Portuguese interface with demo telemetry. I
 
 - **Training** offers Learn Track, Gain Time, Consistency, and Free Practice profiles. Learn Track can give a simple call such as “light braking in 100 metres” or a detailed call such as “50% brake in 100 metres” when a usable reference is available.
 - **Qualifying** warns about cold tyres on the out-lap, stays quiet on the flying lap, and announces the result after the line. **Race** prioritizes tyre and fuel alerts when the telemetry supports them. Both modes can run without a reference lap.
-- Choose Essential, Detailed, or Muted speech. Configure lap summaries, optional positive feedback, and the lead time for coaching. The microphone button beside the live menu and lock shows or hides the radio card while leaving the audio output active.
+- Choose Essential, Detailed, or Muted speech. Configure lap summaries, optional positive feedback, and the lead time for coaching. The radio button beside the live menu and lock shows or hides the radio card while leaving the audio output active.
 - Choose from three built-in neural voices in each language. The same call catalogue is available for local playback and Discord. Live coaching decisions come from telemetry rules and can be logged for replay and debugging.
 - Send Learn Track calls to a **Discord voice channel** and hear them through your PS5 headset. The Windows app stores the bot token using Windows encryption. A ten-beep test measures the end-to-end delay, and Bono uses that delay and recent speed to schedule calls earlier. See the [Discord setup guide in Portuguese](docs/radio-discord.md).
 
