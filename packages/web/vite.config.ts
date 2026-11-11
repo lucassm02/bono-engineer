@@ -5,7 +5,8 @@ import { PRODUCT_DESCRIPTION, PRODUCT_NAME } from '../shared/src/brand.ts';
 
 // Keep in sync with @gt7/shared DEFAULT_HTTP_PORT (not imported: the config is bundled by Node
 // before workspace TS sources are resolvable).
-const SERVER = 'http://localhost:8770';
+// GT7_DEV_SERVER permite apontar o Vite de desenvolvimento para outra instância (ex.: simulador).
+const SERVER = process.env.GT7_DEV_SERVER ?? 'http://localhost:8770';
 
 // The web package consumes workspace TS sources (e.g. @gt7/shared) directly; Vite transpiles them.
 export default defineConfig({
