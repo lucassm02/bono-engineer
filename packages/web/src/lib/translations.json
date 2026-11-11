@@ -2734,5 +2734,191 @@
   "vs sua melhor": ["vs your best", "frente a tu mejor vuelta"],
   "Widget selecionado": ["Selected widget", "Widget seleccionado"],
   "Zebra": ["Kerb", "Piano"],
-  "Δ melhor": ["Δ best", "Δ mejor"]
+  "Δ melhor": ["Δ best", "Δ mejor"],
+  "Reconhecendo a pista…": ["Identifying the track…", "Reconociendo la pista…"],
+  "Ainda não sei em que pista você está. Confirmo quando você fechar a volta.": [
+    "I don't know which track you are on yet. I will confirm when you close a lap.",
+    "Aún no sé en qué pista estás. Lo confirmo cuando cierres una vuelta."
+  ],
+  "Escolher pista": ["Choose track", "Elegir pista"],
+  "Pista não reconhecida": ["Track not recognized", "Pista no reconocida"],
+  "Diga em que pista você vai treinar para o engenheiro começar na primeira volta.": [
+    "Tell me which track you will practice on so the engineer can start on the first lap.",
+    "Dime en qué pista vas a entrenar para que el ingeniero empiece en la primera vuelta."
+  ],
+  "Eu reconheço a pista sozinho quando você fechar a primeira volta.": [
+    "I recognize the track on my own when you close the first lap.",
+    "Reconozco la pista yo solo cuando cierres la primera vuelta."
+  ],
+  "Provavelmente {0}": ["Probably {0}", "Probablemente {0}"],
+  "Provavelmente {0}. Confirmo quando você fechar a volta.": [
+    "Probably {0}. I will confirm when you close the lap.",
+    "Probablemente {0}. Lo confirmo cuando cierres la vuelta."
+  ],
+  "Pista nova": ["New track", "Pista nueva"],
+  "Dar nome": ["Name it", "Ponerle nombre"],
+  "Aprendi o traçado desta pista. Toque para dar o nome.": [
+    "I learned this track layout. Tap to name it.",
+    "Aprendí el trazado de esta pista. Toca para ponerle nombre."
+  ],
+  "Pista confirmada: {0}": ["Track confirmed: {0}", "Pista confirmada: {0}"],
+  "escolhida": ["chosen", "elegida"],
+  "Pista que você escolheu: {0}. Confirmo quando você fechar a volta.": [
+    "Track you chose: {0}. I will confirm when you close the lap.",
+    "Pista que elegiste: {0}. Lo confirmo cuando cierres la vuelta."
+  ],
+  "{0}. Confirmo quando você fechar a volta.": [
+    "{0}. I will confirm when you close the lap.",
+    "{0}. Lo confirmo cuando cierres la vuelta."
+  ],
+  "Melhor pessoal {0} · {1}": ["Personal best {0} · {1}", "Mejor personal {0} · {1}"],
+  "Volta de referência {0}": ["Reference lap {0}", "Vuelta de referencia {0}"],
+  "O engenheiro vai orientar só pelo traçado": [
+    "The engineer will guide you by the track layout only",
+    "El ingeniero te guiará solo por el trazado"
+  ],
+  "Isso não parece {0}. Troquei para {1}.": [
+    "That does not look like {0}. I switched to {1}.",
+    "Eso no parece {0}. Cambié a {1}."
+  ],
+  "Isso não parece {0}. Salvei como uma pista nova.": [
+    "That does not look like {0}. I saved it as a new track.",
+    "Eso no parece {0}. La guardé como una pista nueva."
+  ],
+  "desligado": ["off", "apagado"],
+  "sem sinal": ["no signal", "sin señal"],
+  "aprendendo a pista": ["learning the track", "aprendiendo la pista"],
+  "reconhecendo a pista": ["identifying the track", "reconociendo la pista"],
+  "aguardando referência": ["waiting for a reference", "esperando referencia"],
+  "referência incompatível": ["incompatible reference", "referencia incompatible"],
+  "sem pontos de orientação": ["no guidance points", "sin puntos de orientación"],
+  "aguardando volta": ["waiting for a lap", "esperando una vuelta"],
+  "pronto": ["ready", "listo"],
+  "Engenheiro desligado": ["Engineer off", "Ingeniero apagado"],
+  "Dê uma volta completa para eu aprender o traçado": [
+    "Drive a full lap so I can learn the layout",
+    "Da una vuelta completa para que aprenda el trazado"
+  ],
+  "Reconhecendo a pista… vou confirmar quando você cruzar a linha": [
+    "Identifying the track… I will confirm when you cross the line",
+    "Reconociendo la pista… lo confirmo cuando cruces la línea"
+  ],
+  "Preciso de uma volta de referência. Complete uma volta limpa ou grave um replay": [
+    "I need a reference lap. Complete a clean lap or record a replay",
+    "Necesito una vuelta de referencia. Completa una vuelta limpia o graba una repetición"
+  ],
+  "A referência é de outro carro ou traçado": [
+    "The reference is from another car or layout",
+    "La referencia es de otro coche o trazado"
+  ],
+  "Use uma volta do mesmo carro e do mesmo traçado.": [
+    "Use a lap from the same car and the same layout.",
+    "Usa una vuelta del mismo coche y del mismo trazado."
+  ],
+  "A referência não tem pontos de orientação confiáveis": [
+    "The reference has no reliable guidance points",
+    "La referencia no tiene puntos de orientación fiables"
+  ],
+  "Engenheiro pronto": ["Engineer ready", "Ingeniero listo"],
+  "Volta de saída (não conta)": ["Out lap (does not count)", "Vuelta de salida (no cuenta)"],
+  "Volta de reconhecimento": ["Recognition lap", "Vuelta de reconocimiento"],
+  "Pronto: a próxima volta já tem engenheiro": [
+    "Ready: the next lap already has the engineer",
+    "Listo: la próxima vuelta ya tiene ingeniero"
+  ],
+  "Faça uma volta de saída.": ["Drive an out lap.", "Haz una vuelta de salida."],
+  "Dê a volta completa, sem sair da pista nem reiniciar. É assim que eu aprendo o traçado.": [
+    "Drive the full lap, without leaving the track or restarting. That is how I learn the layout.",
+    "Da la vuelta completa, sin salirte de la pista ni reiniciar. Así aprendo el trazado."
+  ],
+  "Aprendi a pista. Curvas prontas: a próxima volta já tem engenheiro.": [
+    "I learned the track. Corners ready: the next lap already has the engineer.",
+    "Aprendí la pista. Curvas listas: la próxima vuelta ya tiene ingeniero."
+  ],
+  "Aprendi a pista. Analisando as curvas…": [
+    "I learned the track. Analysing the corners…",
+    "Aprendí la pista. Analizando las curvas…"
+  ],
+  "Essa volta não serviu (você reiniciou). Faça mais uma.": [
+    "That lap did not count (you restarted). Drive one more.",
+    "Esa vuelta no sirvió (reiniciaste). Haz una más."
+  ],
+  "Essa volta não serviu (houve um salto ou uma pausa longa). Faça mais uma.": [
+    "That lap did not count (there was a jump or a long pause). Drive one more.",
+    "Esa vuelta no sirvió (hubo un salto o una pausa larga). Haz una más."
+  ],
+  "Essa volta não serviu (você saiu da pista). Faça mais uma.": [
+    "That lap did not count (you left the track). Drive one more.",
+    "Esa vuelta no sirvió (saliste de la pista). Haz una más."
+  ],
+  "Aprendi a pista ✓ Analisando as curvas…": [
+    "I learned the track ✓ Analysing the corners…",
+    "Aprendí la pista ✓ Analizando las curvas…"
+  ],
+  "Aprendi a pista ✓ Curvas prontas. A partir da próxima volta eu te ajudo.": [
+    "I learned the track ✓ Corners ready. From the next lap I will help you.",
+    "Aprendí la pista ✓ Curvas listas. Desde la próxima vuelta te ayudo."
+  ],
+  "Contexto da sessão": ["Session context", "Contexto de la sesión"],
+  "Pista de hoje? Toque para escolher": [
+    "Today's track? Tap to choose",
+    "¿Pista de hoy? Toca para elegir"
+  ],
+  "Pista aprendida": ["Track learned", "Pista aprendida"],
+  "Nenhuma volta foi perdida: elas já estão na pista certa.": [
+    "No lap was lost: they are already on the right track.",
+    "No se perdió ninguna vuelta: ya están en la pista correcta."
+  ],
+  "Entendi": ["Got it", "Entendido"],
+  "Manter {0}": ["Keep {0}", "Mantener {0}"],
+  "Gravar volta de replay": ["Record replay lap", "Grabar vuelta de repetición"],
+  "Escolher outra referência": ["Choose another reference", "Elegir otra referencia"],
+  "Disponível quando você parar": ["Available when you stop", "Disponible cuando te detengas"],
+  "Pista de hoje": ["Today's track", "Pista de hoy"],
+  "Dê o nome da pista que acabei de aprender.": [
+    "Name the track I just learned.",
+    "Ponle nombre a la pista que acabo de aprender."
+  ],
+  "Diga onde vai treinar e o engenheiro já começa na primeira volta.": [
+    "Tell me where you will practice and the engineer starts on the first lap.",
+    "Dime dónde vas a entrenar y el ingeniero empieza en la primera vuelta."
+  ],
+  "Carro: {0}": ["Car: {0}", "Coche: {0}"],
+  "Carregando as suas pistas…": ["Loading your tracks…", "Cargando tus pistas…"],
+  "Nenhuma pista salva ainda": ["No saved track yet", "Aún no hay pistas guardadas"],
+  "Nenhuma pista com esse nome.": ["No track with that name.", "Ninguna pista con ese nombre."],
+  "Pista de hoje: {0}": ["Today's track: {0}", "Pista de hoy: {0}"],
+  "Reconhecer sozinho": ["Recognize automatically", "Reconocer automáticamente"],
+  "Não perguntar mais": ["Do not ask again", "No preguntar más"],
+  "Não vou mais perguntar. Dá para mudar em Configurações → Engenheiro.": [
+    "I will not ask again. You can change this in Settings → Engineer.",
+    "No volveré a preguntar. Puedes cambiarlo en Ajustes → Ingeniero."
+  ],
+  "Ainda não aprendi nenhuma pista nesta sessão.": [
+    "I have not learned any track in this session yet.",
+    "Aún no he aprendido ninguna pista en esta sesión."
+  ],
+  "Volta de {0}": ["Lap of {0}", "Vuelta de {0}"],
+  "Comparando o traçado com as pistas do jogo…": [
+    "Comparing the layout with the game tracks…",
+    "Comparando el trazado con las pistas del juego…"
+  ],
+  "O traçado se parece com": ["The layout looks like", "El trazado se parece a"],
+  "Parece ser (só pelo tamanho)": [
+    "Looks like (by length only)",
+    "Parece ser (solo por la longitud)"
+  ],
+  "Qual pista hoje?": ["Which track today?", "¿Qué pista hoy?"],
+  "Diga onde vai treinar e o engenheiro já ajuda na primeira volta. Se preferir, eu reconheço sozinho.": [
+    "Tell me where you will practice and the engineer already helps on the first lap. If you prefer, I recognize it on my own.",
+    "Dime dónde vas a entrenar y el ingeniero ya ayuda en la primera vuelta. Si prefieres, lo reconozco yo solo."
+  ],
+  "Perguntar a pista ao começar": [
+    "Ask for the track at the start",
+    "Preguntar la pista al empezar"
+  ],
+  "No menu do jogo, antes de entrar na pista, deixa você dizer onde vai treinar. Assim o engenheiro já ajuda na primeira volta. Nunca pergunta com o carro andando.": [
+    "In the game menu, before entering the track, lets you say where you will practice. That way the engineer already helps on the first lap. It never asks while the car is moving.",
+    "En el menú del juego, antes de entrar en la pista, te deja decir dónde vas a entrenar. Así el ingeniero ya ayuda en la primera vuelta. Nunca pregunta con el coche en movimiento."
+  ]
 }

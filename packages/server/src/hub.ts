@@ -28,6 +28,7 @@ import {
   normalizeDriverName,
   type ServerMessage,
   type ServerStatus,
+  type TrackMismatchInfo,
   type ViewId,
   WS_PROTOCOL_VERSION,
 } from '@gt7/shared';
@@ -295,6 +296,10 @@ export class WsHub {
     on('sessionSaved', (saved: SessionSavedInfo) =>
       this.#broadcast({ type: 'sessionSaved', ...saved }),
     );
+    on('trackMismatch', (info: TrackMismatchInfo) => {
+      this.#broadcast({ type: 'trackMismatch', info });
+      this.scheduleStatus();
+    });
     on('status', () => this.scheduleStatus());
     on('notice', (n: RuntimeNotice) => this.notice(n));
     // Capture state travels inside ServerStatus.capture: push it right away.
@@ -538,6 +543,18 @@ export class WsHub {
           .catch((e: Error) =>
             this.#error(c, 'captureFailed', `Falha ao parar a captura: ${e.message}`),
           );
+        return;
+      }
+      case 'setTrackHint': {
+        const id = msg.trackId;
+        if (id !== null && (typeof id !== 'string' || !id || id.length > 100)) {
+          return this.#error(c, 'badMessage', 'Pista inválida.');
+        }
+        if (id !== null && !this.runtime.store.getTrack(id)) {
+          return this.#error(c, 'trackNotFound', 'Essa pista não existe mais.');
+        }
+        this.runtime.setTrackHint(id, { force: msg.force === true });
+        this.scheduleStatus();
         return;
       }
       case 'setPacketFormat': {

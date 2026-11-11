@@ -421,6 +421,32 @@ export class Gt7Store {
     return (this.db.prepare(sql).all(...params) as Row[]).map((r) => this.#session(r));
   }
 
+  /**
+   * Moves a session and its own laps (references stay where they are) to another track in ONE
+   * transaction. Idempotent: running it again changes nothing. Returns how many laps changed.
+   * No schema change: only the existing `track_id` columns are updated.
+   */
+  reassignSessionTrack(sessionId: Id, trackId: Id): number {
+    const db = this.db;
+    const own = !(db as unknown as { isTransaction?: boolean }).isTransaction;
+    if (own) db.exec('BEGIN IMMEDIATE');
+    try {
+      const moved = Number(
+        db
+          .prepare(
+            'UPDATE laps SET track_id = ? WHERE session_id = ? AND is_reference = 0 AND (track_id IS NULL OR track_id <> ?)',
+          )
+          .run(trackId, sessionId, trackId).changes,
+      );
+      db.prepare('UPDATE sessions SET track_id = ? WHERE id = ?').run(trackId, sessionId);
+      if (own) db.exec('COMMIT');
+      return moved;
+    } catch (e) {
+      if (own) db.exec('ROLLBACK');
+      throw e;
+    }
+  }
+
   /** Deletes a session, its laps, trace files and recording. */
   async deleteSession(id: Id): Promise<boolean> {
     const s = this.getSession(id);

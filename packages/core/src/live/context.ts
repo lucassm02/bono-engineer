@@ -51,6 +51,11 @@ export interface LiveEngineContext {
   loadPersonalBest(trackId: Id, carCode: number): StoredLap | null;
   /** Best reference lap on the track (same car preferred), with trace. */
   loadBestReference(trackId: Id, carCode: number): StoredLap | null;
+  /**
+   * Moves a session and its (non-reference) laps to another track, atomically and idempotently
+   * (spec 06: the track the driver chose did not match the laps). Returns how many laps changed.
+   */
+  reassignSessionTrack?(sessionId: Id, trackId: Id): number;
 }
 
 /** True if the lap counts for personal records (own driving, valid). */
@@ -83,6 +88,25 @@ export function computeRecords(laps: readonly Lap[], sectorCount: number): Track
   return rec;
 }
 
+/** Moves a session and its own laps to `trackId` inside in-memory maps (idempotent). */
+function reassignInMemory(
+  laps: Map<Id, StoredLap>,
+  sessions: Map<Id, Session>,
+  sessionId: Id,
+  trackId: Id,
+): number {
+  let moved = 0;
+  for (const stored of laps.values()) {
+    if (stored.lap.sessionId !== sessionId || stored.lap.isReference) continue;
+    if (stored.lap.trackId === trackId) continue;
+    stored.lap = { ...stored.lap, trackId };
+    moved++;
+  }
+  const s = sessions.get(sessionId);
+  if (s && s.trackId !== trackId) sessions.set(sessionId, { ...s, trackId });
+  return moved;
+}
+
 /** In-memory context: keeps everything in maps (no IO). */
 export class MemoryEngineContext implements LiveEngineContext {
   readonly sessions = new Map<Id, Session>();
@@ -99,6 +123,10 @@ export class MemoryEngineContext implements LiveEngineContext {
 
   saveSession(session: Session): void {
     this.sessions.set(session.id, { ...session });
+  }
+
+  reassignSessionTrack(sessionId: Id, trackId: Id): number {
+    return reassignInMemory(this.laps, this.sessions, sessionId, trackId);
   }
 
   saveLap(lap: Lap, trace: LapTrace): void {
@@ -193,6 +221,11 @@ export class EphemeralContext implements LiveEngineContext {
   }
 
   saveSession(): void {}
+
+  reassignSessionTrack(sessionId: Id, trackId: Id): number {
+    // nothing of an unsaved session reaches the store: only its in-memory laps move
+    return reassignInMemory(this.laps, new Map(), sessionId, trackId);
+  }
 
   saveLap(lap: Lap, trace: LapTrace): void {
     this.laps.set(lap.id, { lap: { ...lap }, trace });

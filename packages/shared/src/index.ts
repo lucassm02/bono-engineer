@@ -15,7 +15,16 @@ export {
   type DesktopDiscordBridge,
   type DesktopDiscordSettings,
   type DesktopDiscordStatus,
+  type DesktopDiscordSummary,
+  DISCORD_BOT_PERMISSIONS,
+  DISCORD_DEFAULT_DELAY_MS,
+  DISCORD_PORTAL_URL,
   DISCORD_RADIO_DEVICE_ID,
+  type DiscordBotInfo,
+  type DiscordVoiceChannel,
+  EMPTY_DISCORD_CONFIG,
+  migrateDiscordConfig,
+  type StoredDiscordConfig,
 } from './desktop-discord.ts';
 export * from './domain.ts';
 export * from './driver.ts';
@@ -49,6 +58,7 @@ export * from './live.ts';
 export * from './radio/index.ts';
 export { localizedRadioUtterance } from './radio-translations.ts';
 export * from './telemetry.ts';
+export * from './track-context.ts';
 export * from './tracks/index.ts';
 export * from './ui.ts';
 export * from './ws.ts';

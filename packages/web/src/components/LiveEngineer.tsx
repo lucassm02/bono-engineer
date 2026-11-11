@@ -1,5 +1,7 @@
 import {
+  type EngineerStatusView,
   engineerDisplay,
+  engineerStatusView,
   type LiveFrame,
   localizedRadioUtterance,
   type RadioStepEnv,
@@ -8,6 +10,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { getLanguage, t as uiText } from '../lib/i18n.ts';
 import { RADIO_MODE_LABELS } from '../lib/radioLabels.ts';
 import { type RadioUtterance, utteranceKeys } from '../lib/radioPhrases.ts';
+import { routes } from '../lib/route.ts';
 import { live } from '../live/liveStore.ts';
 import { useLiveRender } from '../live/raf.ts';
 import { toggleMenu } from '../state/actions.ts';
@@ -25,32 +28,23 @@ import { useUi } from '../state/uiStore.ts';
 import { Icon } from './ui/Icon.tsx';
 
 const STALE_MS = 450;
-const STATUS = {
-  get waitingTrack() {
-    return uiText('Reconhecendo o traçado');
-  },
-  get waitingReference() {
-    return uiText('Escolha uma volta de referência');
-  },
-  get incompatible() {
-    return uiText('Use uma volta do mesmo carro e traçado');
-  },
-  get noCues() {
-    return uiText('Referência sem pontos de orientação confiáveis');
-  },
-  get suspended() {
-    return uiText('Aguardando volta em pista');
-  },
-  get ready() {
-    return uiText('Rádio pronto');
-  },
-};
-const WAITING_TELEMETRY = 'Aguardando telemetria';
-const SUSPENDED: Record<string, string> = {
-  'amostra velha': WAITING_TELEMETRY,
-  'sem sinal': WAITING_TELEMETRY,
-  'página oculta': WAITING_TELEMETRY,
-};
+/**
+ * What the card says about the engineer (spec 05 item 2): one table for every mode, so "pronto" is
+ * only shown when the engineer really is (frame status `ready`). See `engineerStatusView`.
+ */
+const NO_SIGNAL_VIEW = engineerStatusView({
+  enabled: true,
+  noSignal: true,
+  status: undefined,
+  context: undefined,
+});
+const WAITING_VIEW = engineerStatusView({
+  enabled: true,
+  noSignal: false,
+  status: 'suspended',
+  context: undefined,
+});
+const NO_SIGNAL_REASONS = new Set(['amostra velha', 'sem sinal', 'página oculta']);
 
 type Display = ReturnType<typeof engineerDisplay>;
 
@@ -79,7 +73,7 @@ export function EngineerHudButton() {
 }
 
 function EngineerHud() {
-  const [status, setStatus] = useState<string>(STATUS.suspended);
+  const [view, setView] = useState<EngineerStatusView>(WAITING_VIEW);
   const [display, setDisplay] = useState<Display>(null);
   const [note, setNote] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -97,9 +91,9 @@ function EngineerHud() {
   const canRequestSummary =
     trainingEnabled && controls.trainingProfile !== 'free' && controls.summary === 'onDemand';
 
-  const suspend = useCallback((reason: string, message = WAITING_TELEMETRY) => {
+  const suspend = useCallback((reason: string, next = NO_SIGNAL_VIEW) => {
     if (radioEngine.suspend(reason)) stopEngineerVoice();
-    setStatus(message);
+    setView(next);
     setDisplay(null);
     setPending(false);
   }, []);
@@ -150,12 +144,18 @@ function EngineerHud() {
         : (panel?.label ?? null),
     );
 
+    const statusView = engineerStatusView({
+      enabled: true,
+      noSignal: false,
+      status: engineer?.status,
+      context: f.trackContext,
+    });
     if (out.suspended) {
-      setStatus(SUSPENDED[out.suspended] ?? STATUS.suspended);
+      setView(NO_SIGNAL_REASONS.has(out.suspended) ? NO_SIGNAL_VIEW : WAITING_VIEW);
       setDisplay(null);
       setPending(false);
     } else if (cornerCalls) {
-      setStatus(engineer ? STATUS[engineer.status] : uiText('Aguardando roteiro da referência'));
+      setView(statusView);
       setPending(engineer?.status === 'ready' && engineer.pendingReference);
       const cues =
         engineer?.status === 'ready'
@@ -168,7 +168,7 @@ function EngineerHud() {
         last?.label === next?.label && last?.meters === next?.meters ? last : next,
       );
     } else {
-      setStatus(STATUS.ready);
+      setView(statusView);
       setDisplay(null);
       setPending(false);
     }
@@ -211,7 +211,7 @@ function EngineerHud() {
   const brakePercent = display?.label.match(/^Freio · (\d+)%$/)?.[1];
   const callLabel = brakePercent
     ? uiText('Freio · {0}%', brakePercent)
-    : uiText(display?.label ?? note ?? status);
+    : uiText(display?.label ?? note ?? view.text);
   return (
     <aside
       className="engineer-hud"
@@ -244,6 +244,30 @@ function EngineerHud() {
         {display?.meters != null && <b className="engineer-hud-distance">{display.meters} m</b>}
       </div>
       {display && note && <small>{uiText(note)}</small>}
+      {!display && view.detail && <small>{uiText(view.detail)}</small>}
+      {!display && view.action === 'recordReplay' && (
+        <a
+          className="ui-btn engineer-hud-settings"
+          data-variant="secondary"
+          data-size="sm"
+          data-no-gesture
+          href={routes.capture()}
+        >
+          {uiText('Gravar volta de replay')}
+        </a>
+      )}
+      {!display && view.action === 'pickReference' && (
+        <button
+          type="button"
+          data-no-gesture
+          className="ui-btn engineer-hud-settings"
+          data-variant="secondary"
+          data-size="sm"
+          onClick={toggleMenu}
+        >
+          {uiText('Escolher outra referência')}
+        </button>
+      )}
       {pending && !display && <small>{uiText('Nova referência na próxima volta')}</small>}
       {training && trainingEnabled && controls.trainingProfile !== 'free' && (
         <small>
@@ -259,7 +283,7 @@ function EngineerHud() {
           className="ui-btn engineer-hud-settings"
           data-variant="secondary"
           data-size="sm"
-          disabled={status === WAITING_TELEMETRY || status === STATUS.suspended}
+          disabled={view.key === 'noSignal' || view.key === 'waitingLap'}
           onClick={() => radioEngine.requestSummary()}
         >
           {uiText('Pedir resumo')}

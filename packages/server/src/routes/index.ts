@@ -9,6 +9,7 @@ import { analysisRoutes } from './analysis.ts';
 import { captureRoutes } from './capture.ts';
 import { coachRoutes } from './coach.ts';
 import type { RouteContext } from './context.ts';
+import { currentSessionRoutes } from './current-session.ts';
 import { deviceRoutes } from './devices.ts';
 import { mcpInfoRoutes } from './mcp-info.ts';
 import { sessionRoutes } from './sessions.ts';
@@ -21,6 +22,7 @@ export type RouteModule = (app: FastifyInstance, ctx: RouteContext) => void;
 
 export const ROUTE_MODULES: RouteModule[] = [
   statusRoutes,
+  currentSessionRoutes,
   sessionRoutes,
   trackRoutes,
   deviceRoutes,

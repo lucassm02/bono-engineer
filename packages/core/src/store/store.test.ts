@@ -256,3 +256,121 @@ describe('Gt7Store coach reports', () => {
     await store.close();
   });
 });
+
+describe('Gt7Store.reassignSessionTrack (reconciliação da pista de hoje, spec 06)', () => {
+  const lap = (id: string, patch: Partial<Lap> = {}): Lap => ({
+    id,
+    sessionId: 's1',
+    number: 1,
+    timeMs: 90_000,
+    sectorTimesMs: [30_000, 30_000, 30_000],
+    valid: true,
+    flags: [],
+    isReference: false,
+    referenceMeta: null,
+    startedAt: 1000,
+    carCode: 111,
+    trackId: 'old',
+    fuelUsedL: null,
+    sampleCount: 0,
+    lostPackets: 0,
+    traceFile: null,
+    ...patch,
+  });
+  const track = (id: string) => ({
+    id,
+    name: `Pista ${id}`,
+    layout: null,
+    fingerprint: {} as never,
+    lengthM: 4000,
+    centerline: null,
+    sectorGates: [],
+    corners: [],
+    source: 'auto' as const,
+    createdAt: 1,
+    updatedAt: 1,
+  });
+
+  it('move a sessão e as voltas dela de uma vez, sem mexer nas referências nem em outras sessões', async () => {
+    const store = Gt7Store.open(tempDir());
+    store.insertTrack(track('old'));
+    store.insertTrack(track('new'));
+    const session = (id: string): Session => ({
+      id,
+      trackId: 'old',
+      carCode: 111,
+      startedAt: 1000,
+      endedAt: null,
+      format: 'A',
+      mode: 'live',
+      lapCount: 0,
+      bestLapMs: null,
+      recordingFile: null,
+      notes: null,
+      trackTimeMs: null,
+    });
+    store.saveSession(session('s1'));
+    store.saveSession(session('s2'));
+    store.saveLap(lap('a'));
+    store.saveLap(lap('b', { trackId: null }));
+    store.saveLap(lap('c', { sessionId: 's2' }));
+    store.saveLap(
+      lap('ref', {
+        isReference: true,
+        referenceMeta: {
+          driverName: 'Piloto',
+          source: 'replayCapture',
+          rankingTimeMs: null,
+          capturedAt: 1,
+        },
+      }),
+    );
+
+    expect(store.reassignSessionTrack('s1', 'new')).toBe(2);
+    expect(store.getSession('s1')?.trackId).toBe('new');
+    expect(store.getLap('a')?.trackId).toBe('new');
+    expect(store.getLap('b')?.trackId).toBe('new');
+    // another session and the reference lap stay where they were
+    expect(store.getSession('s2')?.trackId).toBe('old');
+    expect(store.getLap('c')?.trackId).toBe('old');
+    expect(store.getLap('ref')?.trackId).toBe('old');
+    // records follow the laps
+    expect(store.getTrackRecords('new', 111, 3).personalBestLapMs).toBe(90_000);
+    expect(store.getTrackRecords('old', 111, 3).personalBestLapMs).toBe(90_000); // lap c
+
+    // idempotent
+    expect(store.reassignSessionTrack('s1', 'new')).toBe(0);
+    expect(store.getLap('a')?.trackId).toBe('new');
+    await store.close();
+  });
+
+  it('se algo falha no meio nada muda (transação)', async () => {
+    const store = Gt7Store.open(tempDir());
+    store.insertTrack(track('old'));
+    store.saveSession({
+      id: 's1',
+      trackId: 'old',
+      carCode: 111,
+      startedAt: 1000,
+      endedAt: null,
+      format: 'A',
+      mode: 'live',
+      lapCount: 0,
+      bestLapMs: null,
+      recordingFile: null,
+      notes: null,
+      trackTimeMs: null,
+    });
+    store.saveLap(lap('a'));
+    // makes the second UPDATE fail: the first one has to be rolled back
+    store.db.exec(
+      "CREATE TRIGGER boom BEFORE UPDATE ON sessions BEGIN SELECT RAISE(ABORT, 'falha de teste'); END",
+    );
+    expect(() => store.reassignSessionTrack('s1', 'new')).toThrow(/falha de teste/);
+    expect(store.getLap('a')?.trackId).toBe('old');
+    expect(store.getSession('s1')?.trackId).toBe('old');
+    store.db.exec('DROP TRIGGER boom');
+    expect(store.reassignSessionTrack('s1', 'new')).toBe(1);
+    await store.close();
+  });
+});

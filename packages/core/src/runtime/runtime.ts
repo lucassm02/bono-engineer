@@ -29,6 +29,7 @@
 import { EventEmitter } from 'node:events';
 import { Gt7Ingestor, type Gt7IngestorOptions, RecordingWriter } from '@gt7/protocol';
 import {
+  type ApiSessionCurrent,
   type ConsoleConnection,
   type ConsoleIpSource,
   type DeltaReferenceKind,
@@ -44,6 +45,8 @@ import {
   type Session,
   type SessionCaptureStatus,
   type SessionSavedMessage,
+  type TrackHint,
+  type TrackMismatchInfo,
 } from '@gt7/shared';
 import { AnalysisService } from '../analysis-service/analysis-service.ts';
 import { AnalysisCornerHintProvider } from '../analysis-service/corner-hints.ts';
@@ -76,6 +79,19 @@ export const SETTINGS_KEYS = {
   autoCapture: 'autoCapture',
   deltaReference: 'deltaReference',
 } as const;
+
+/**
+ * Raw packet recording (~20 KB/s): off on a new install, unchanged on an existing one. A saved value
+ * always wins; without one, a store that already has sessions keeps the old default (on) and a
+ * brand-new store starts off. The resolved value is saved so it never flips on a later start.
+ */
+export function resolveRecordSetting(store: Gt7Store): boolean {
+  const saved = store.getSetting<boolean>(SETTINGS_KEYS.record);
+  if (typeof saved === 'boolean') return saved;
+  const resolved = store.listSessions({ limit: 1 }).length > 0;
+  store.setSetting(SETTINGS_KEYS.record, resolved);
+  return resolved;
+}
 
 export type RuntimeNotice = Omit<NoticeMessage, 'type'>;
 
@@ -125,7 +141,7 @@ export interface Gt7RuntimeOptions {
   captureRealtimeCheck?: boolean;
   /** Deprecated: `null` disables the automatic format round (same as `autoFormat: false`). */
   formatFallback?: PacketFormat | null;
-  /** Record raw sessions to data/recordings (overrides the persisted setting; default true). */
+  /** Record raw sessions to data/recordings (overrides the persisted setting; default off on a new install, see resolveRecordSetting). */
   record?: boolean;
   /** Save sessions automatically (overrides the persisted `autoCapture` setting; default true). */
   autoCapture?: boolean;
@@ -157,6 +173,8 @@ export interface Gt7RuntimeEvents {
   sessionChanged: [Session | null];
   status: [ServerStatus];
   sessionSaved: [SessionSavedInfo];
+  /** The track the driver chose did not match the first lap; the session was moved (spec 06). */
+  trackMismatch: [TrackMismatchInfo];
   notice: [RuntimeNotice];
   captureStatus: [ReferenceCaptureStatus];
 }
@@ -240,7 +258,7 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
     const savedCapture = s.getSetting<string>(SETTINGS_KEYS.captureFormat);
     this.#captureFormat = opts.captureFormat ?? (isPacketFormat(savedCapture) ? savedCapture : 'B');
     this.#activeCaptureFormat = this.#captureFormat;
-    this.#record = opts.record ?? s.getSetting<boolean>(SETTINGS_KEYS.record, true);
+    this.#record = opts.record ?? resolveRecordSetting(s);
     this.#autoCapture = opts.autoCapture ?? s.getSetting<boolean>(SETTINGS_KEYS.autoCapture, true);
     const savedRef = s.getSetting<{ kind: DeltaReferenceKind; lapId?: Id | null }>(
       SETTINGS_KEYS.deltaReference,
@@ -398,6 +416,32 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
 
   /** What the automatic session capture is doing, with a pt-BR sentence for the UI. */
   getSessionCapture(): SessionCaptureStatus {
+    return { ...this.#sessionCaptureBase(), track: this.engine.trackContext };
+  }
+
+  /** Open session and what is known of its track (`GET /api/session/current`). */
+  getSessionCurrent(): ApiSessionCurrent {
+    return {
+      session: this.engine.session,
+      track: this.engine.trackContext,
+      carCode: this.engine.session?.carCode ?? this.engine.lastFrame?.car.carCode ?? null,
+    };
+  }
+
+  /**
+   * "Pista de hoje" (spec 06): the driver's choice of track for this session; `null` = recognise
+   * by itself. Throws when the track does not exist. In memory only: it ends with the session.
+   */
+  setTrackHint(trackId: Id | null, opts: { force?: boolean } = {}): TrackHint | null {
+    if (trackId !== null && !this.store.getTrack(trackId)) {
+      throw new Error('Pista não encontrada.');
+    }
+    const hint = this.engine.setTrackHint(trackId, { now: Date.now(), force: opts.force === true });
+    this.#emitStatus();
+    return hint;
+  }
+
+  #sessionCaptureBase(): SessionCaptureStatus {
     const info = this.engine.captureInfo;
     const s = info.session;
     const enabled = this.#autoCapture;
@@ -896,6 +940,15 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
       this.#emitStatus();
     });
     e.on('stateChanged', () => this.#emitStatus());
+    e.on('trackChanged', () => this.#emitStatus());
+    e.on('hintChanged', () => this.#emitStatus());
+    e.on('trackMismatch', (info) => {
+      // laps moved between tracks: whatever was cached for either track is stale
+      this.analysis.invalidateTrack(info.hintedTrackId);
+      this.analysis.invalidateTrack(info.detectedTrackId);
+      this.emit('trackMismatch', info);
+      this.#emitStatus();
+    });
     this.capture.on('status', (st) => {
       this.emit('captureStatus', st);
       this.#emitStatus();
@@ -925,7 +978,9 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
     const job = this.analysis
       .onLapCompleted(c)
       .then((changed) => {
+        if (c.lap.trackId) this.engine.markCornersSettled(c.lap.trackId);
         if (changed && this.engine.trackInfo?.id === c.lap.trackId) this.engine.refreshTrack();
+        else this.#emitStatus();
       })
       .catch((err: unknown) => {
         this.#notice(

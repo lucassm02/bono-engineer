@@ -70,6 +70,7 @@ describe('Gt7Runtime over UDP (FakeConsole)', () => {
 
     const runtime = new Gt7Runtime({
       dataDir: join(dir, 'data'),
+      record: true,
       consoleIp: '127.0.0.1',
       liveFormat: 'B',
       formatFallback: null,
@@ -267,7 +268,7 @@ describe('Gt7Runtime automatic session capture (FakeConsole)', () => {
     const dir = mkdtempSync(join(tmpdir(), 'gt7-runtime-cap2-'));
     cleanups.push(() => rmSync(dir, { recursive: true, force: true }));
     const file = await menuToLapRecording(dir, 1);
-    const runtime = capRuntime(dir, { maxRecordingBytes: 40_000 });
+    const runtime = capRuntime(dir, { maxRecordingBytes: 40_000, record: true });
     cleanups.push(() => runtime.close());
     const notices: string[] = [];
     runtime.on('notice', (n) => notices.push(n.code));

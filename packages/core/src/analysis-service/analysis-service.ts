@@ -428,6 +428,15 @@ export class AnalysisService {
     this.#evolution.clear();
   }
 
+  /**
+   * Drops everything cached for a track (comparisons, analyses, events, evolution and its line).
+   * Used when laps moved between tracks (spec 06 reconciliation).
+   */
+  invalidateTrack(trackId: Id): void {
+    this.#invalidateTrackResults(trackId);
+    this.#lines.delete(trackId);
+  }
+
   #invalidateTrackResults(trackId: Id): void {
     this.#comparisons.deleteWhere((k) => k.startsWith(`${trackId}|`));
     this.#lapAnalyses.deleteWhere((k) => k.startsWith(`${trackId}|`));

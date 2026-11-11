@@ -1,13 +1,18 @@
+import { learnedPopupText } from '@gt7/shared';
 import { deltaTone, formatDelta, formatLapTime, formatSectorTime } from '../lib/format.ts';
 import { t as uiText } from '../lib/i18n.ts';
 import { DELTA_REFERENCE_LABELS } from '../lib/labels.ts';
 import { dismissLapPopup } from '../state/actions.ts';
+import { useLiveContext } from '../state/liveContext.ts';
 import { useUi } from '../state/uiStore.ts';
 
 /** 5 s card shown when a lap closes (never changes the current view). */
 export function LapPopup() {
   const ev = useUi((s) => s.lapPopup);
+  const ctx = useLiveContext((s) => s.ctx);
   if (!ev) return null;
+  // the lap that taught the track: say so, and when the corners are ready
+  const learned = ctx?.learning?.stage === 3 && !!ev.trackId && ctx.trackId === ev.trackId;
   const tone = deltaTone(ev.deltaMs);
   const best = ev.bestSectorIndex;
   return (
@@ -66,6 +71,7 @@ export function LapPopup() {
           </span>
         ))}
       </div>
+      {learned && <div className="lap-popup-learned">{uiText(learnedPopupText(ctx.corners))}</div>}
       {best !== null && (
         <div className="lap-popup-best">
           {uiText('Melhor setor contra a referência: S')}

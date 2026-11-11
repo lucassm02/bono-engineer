@@ -1,0 +1,417 @@
+/*
+ * Faixa de contexto do painel ao vivo, guia da volta de reconhecimento, aviso de divergência,
+ * folha "Pista de hoje" e cartão "Qual pista hoje?" (specs 05 e 06). Só tokens: nenhuma cor solta.
+ */
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Faixa (≤ 28 px)                                                                                 */
+/* ---------------------------------------------------------------------------------------------- */
+
+.live-context {
+  position: absolute;
+  top: var(--safe-t);
+  left: var(--safe-l);
+  right: var(--safe-r);
+  z-index: 14;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  height: 28px;
+  min-width: 0;
+  font-size: var(--fs-xs);
+  line-height: 1;
+  color: var(--text-2);
+  pointer-events: none;
+}
+.live-context[data-variant="menu"] {
+  position: static;
+  flex-wrap: wrap;
+  height: auto;
+  min-height: 28px;
+  margin-bottom: var(--sp-3);
+  pointer-events: auto;
+}
+
+/* A tela ganha a altura da faixa no topo (a faixa nunca cobre os números). */
+.app:has(.live-context[data-variant="live"]) .view {
+  padding-top: calc(var(--safe-t) + 32px);
+}
+/* O aviso de pausa desce para não ficar por cima da faixa. */
+.app:has(.live-context[data-variant="live"]) .status-banner[data-kind] {
+  top: calc(var(--safe-t) + 34px);
+}
+
+.lc-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--surface-1) 88%, transparent);
+  color: var(--text-2);
+  font: inherit;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: auto;
+}
+.lc-track {
+  flex: 0 1 auto;
+  color: var(--text);
+}
+.lc-car {
+  flex: 0 1 auto;
+}
+.lc-engineer {
+  flex: 0 1 auto;
+}
+.lc-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lc-note {
+  flex: none;
+  color: var(--text-3);
+  font-weight: 500;
+}
+.lc-dot[data-pulse="1"] {
+  animation: lc-pulse 1.4s ease-in-out infinite;
+}
+@keyframes lc-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* Toque na faixa: alvo de 44 px sem aumentar a faixa. */
+.lc-item[data-action="1"] {
+  cursor: pointer;
+}
+.lc-item[data-action="1"]::after,
+.lc-chip::after {
+  content: "";
+  position: absolute;
+  inset: -9px -4px;
+}
+.lc-item[data-action="1"]:hover {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+.lc-item[data-action="1"]:focus-visible,
+.lc-chip:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+.lc-track[data-kind="new"] {
+  border-color: color-mix(in srgb, var(--warn) 45%, transparent);
+  background: var(--warn-soft);
+}
+.lc-track[data-kind="new"] .lc-note {
+  color: var(--warn);
+  font-weight: 700;
+}
+.lc-engineer[data-tone="ok"] .lc-name {
+  color: var(--text);
+}
+.lc-engineer[data-tone="warn"] {
+  border-color: color-mix(in srgb, var(--warn) 35%, transparent);
+}
+
+/* "Pista de hoje? Toque para escolher": 8 s depois de abrir a sessão. */
+.lc-chip {
+  position: relative;
+  flex: none;
+  height: 26px;
+  padding: 0 12px;
+  border: 1px solid var(--accent-line);
+  border-radius: var(--r-pill);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font: inherit;
+  font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+  pointer-events: auto;
+  animation: lc-chip-in var(--dur) var(--ease);
+}
+@keyframes lc-chip-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (max-width: 560px) {
+  .lc-car {
+    display: none;
+  }
+}
+@media (max-width: 420px) {
+  .lc-prefix {
+    display: none;
+  }
+  .lc-chip {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+/* Celular deitado (pouca altura): só a pista e o estado do engenheiro. */
+@media (orientation: landscape) and (max-height: 430px) {
+  .lc-car,
+  .lc-prefix {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Guia da volta de reconhecimento e aviso de divergência (faixas, nunca bloqueiam)                */
+/* ---------------------------------------------------------------------------------------------- */
+
+.status-banner.learning-guide,
+.status-banner.lc-mismatch {
+  top: calc(var(--safe-t) + 34px);
+  z-index: 13;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  width: max-content;
+  max-width: min(720px, calc(100% - var(--safe-l) - var(--safe-r)));
+  padding: var(--sp-2) var(--sp-3);
+  font-size: var(--fs-sm);
+  box-shadow: var(--shadow-1);
+}
+.status-banner.learning-guide {
+  pointer-events: none;
+}
+.status-banner.learning-guide[data-reduced="1"] {
+  top: calc(var(--safe-t) + 34px);
+  width: fit-content;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 4px var(--sp-3);
+}
+.status-banner.learning-guide[data-reduced="1"] strong {
+  font-size: var(--fs-sm);
+}
+.lg-steps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lg-steps li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--text-3);
+  font-weight: 600;
+}
+.lg-steps li + li::before {
+  content: "→";
+  margin-right: 2px;
+  color: var(--line-strong);
+}
+.lg-n {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  font-size: var(--fs-xs);
+  line-height: 1;
+}
+.lg-steps li[data-state="current"] {
+  color: var(--text);
+}
+.lg-steps li[data-state="current"] .lg-n {
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+.lg-steps li[data-state="done"] .lg-n {
+  border-color: transparent;
+  background: var(--gain-soft);
+  color: var(--gain);
+}
+.lg-label {
+  min-width: 0;
+  white-space: nowrap;
+}
+.lg-message,
+.lg-invalid {
+  margin: 0;
+  line-height: 1.35;
+}
+.lg-message {
+  color: var(--text-2);
+}
+.lg-invalid {
+  color: var(--warn);
+  font-weight: 650;
+}
+@media (max-width: 760px) {
+  .lg-steps li:not([data-state="current"]) .lg-label {
+    display: none;
+  }
+}
+
+.status-banner.lc-mismatch {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  border-color: color-mix(in srgb, var(--warn) 45%, transparent);
+  pointer-events: auto;
+}
+.status-banner.lc-mismatch .status-banner-text {
+  flex: 1 1 260px;
+}
+.lc-mismatch-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Folha "Pista de hoje"                                                                           */
+/* ---------------------------------------------------------------------------------------------- */
+
+.lc-sheet-body {
+  display: grid;
+  gap: var(--sp-3);
+}
+.lc-sheet-car,
+.lc-muted {
+  margin: 0;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+}
+.lc-search {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--text-3);
+}
+.lc-search .ui-input {
+  flex: 1;
+}
+.lc-list {
+  gap: var(--sp-1);
+}
+.ui-list-item.lc-pick {
+  min-height: 68px;
+  align-items: center;
+}
+.ui-list-item > .lc-thumb {
+  width: 52px;
+  height: 52px;
+  flex: none;
+  padding: 0;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-sm);
+  background: var(--surface-1);
+  color: var(--text-3);
+}
+.lc-thumb-line {
+  fill: none;
+  stroke: var(--accent-dim);
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.lc-thumb-start {
+  fill: var(--text);
+  stroke: none;
+}
+.lc-pick-ref {
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+.lc-pick-ref[data-kind="none"] {
+  color: var(--text-3);
+}
+.ui-list-item > .lc-pick-check {
+  color: var(--accent);
+}
+.lc-other {
+  display: grid;
+  gap: var(--sp-2);
+}
+.lc-sheet-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--line-soft);
+}
+
+/* Aviso de volta que ensinou a pista (spec 05 item 3, etapa 3). */
+.lap-popup-learned {
+  margin-top: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--accent-line);
+  border-radius: var(--r-sm);
+  background: var(--accent-soft);
+  color: var(--text);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Cartão "Qual pista hoje?" na tela de menu                                                       */
+/* ---------------------------------------------------------------------------------------------- */
+
+.lc-card {
+  display: grid;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border: 1px solid var(--accent-line);
+  border-radius: var(--r-md);
+  background: linear-gradient(180deg, var(--accent-soft), transparent 70%), var(--surface-3);
+  text-align: left;
+}
+.status-screen .lc-card h2 {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  line-height: 1.25;
+}
+.status-screen .lc-card p {
+  font-size: var(--fs-sm);
+}
+.lc-card-list {
+  display: grid;
+  gap: var(--sp-1);
+}
+.lc-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.lc-card-chosen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2) var(--sp-3);
+}
+.status-screen .lc-card.lc-card-chosen strong {
+  font-size: var(--fs-md);
+}

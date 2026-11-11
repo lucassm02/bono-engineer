@@ -16,6 +16,7 @@ import { trackGeometry } from '../live/trackGeometry.ts';
 import { goToView, showLapPopup } from '../state/actions.ts';
 import { completeEngineerJournal, flushEngineerJournal } from '../state/engineerJournal.ts';
 import { completeEngineerTrainingLap } from '../state/engineerTraining.ts';
+import { noteTrackMismatch } from '../state/liveContext.ts';
 import { recordLap, resetSessionLaps, setSessionId } from '../state/sessionStore.ts';
 import { addNotice, loadLocalProfile, setProfile, useUi } from '../state/uiStore.ts';
 import { setSender } from './transport.ts';
@@ -52,6 +53,9 @@ function handleServerMessage(msg: ServerMessage): void {
       break;
     case 'sessionSaved':
       showSessionSaved(msg);
+      break;
+    case 'trackMismatch':
+      noteTrackMismatch(msg.info);
       break;
     case 'status':
       useUi.setState({ serverStatus: msg.status });

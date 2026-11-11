@@ -22,6 +22,7 @@ import './styles/views-extra.css';
 import './styles/overlays.css';
 import './styles/layout-editor.css';
 import './styles/titlebar.css';
+import './styles/live-context.css';
 
 /** Analysis & settings area: separate chunk, so the live dashboard bundle stays light. */
 const AnalysisApp = lazy(() => import('./analysis/AnalysisApp.tsx'));

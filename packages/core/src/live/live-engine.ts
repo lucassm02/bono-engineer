@@ -37,6 +37,7 @@ import {
   type DeltaReferenceKind,
   type DrivingEventModel,
   decodeFlags,
+  EMPTY_TRACK_CONTEXT,
   type EngineerCue,
   type Id,
   type IngestorState,
@@ -45,10 +46,13 @@ import {
   type LapCompletedEvent,
   type LapFlag,
   type LapTrace,
+  type LearningInvalidReason,
   type LiveCornerPass,
   type LiveEngineerFrame,
   type LiveFrame,
   type LiveGForce,
+  type LiveLearning,
+  type LiveTrackContext,
   type LiveTrackInfo,
   type NextCornerHint,
   pedalToUnit,
@@ -57,11 +61,16 @@ import {
   type Session,
   suggestedGearOf,
   type TelemetryPacket,
+  TRACK_HINT_TTL_MS,
   type Track,
+  type TrackBasis,
+  type TrackHint,
+  type TrackMismatchInfo,
   wheelSlipRatios,
 } from '@gt7/shared';
 import { TraceBuilder } from '../trace/channels.ts';
-import { centerlinePolyline, lapPolyline } from '../track/fingerprint.ts';
+import { centerlinePolyline, lapPolyline, UNKNOWN_TRACK_PREFIX } from '../track/fingerprint.ts';
+import { type CatalogGuess, catalogGuessAtStart } from '../track/start-guess.ts';
 import { newId } from '../util/ids.ts';
 import { clamp, emaAlpha } from '../util/math.ts';
 import { alignToLine, cumulativeDistance, type Polyline } from '../util/polyline.ts';
@@ -233,6 +242,10 @@ export interface LiveEngineEvents {
   sessionUpdated: [Session];
   sessionEnded: [Session, SessionEndInfo];
   trackChanged: [LiveTrackInfo | null];
+  /** The track the driver chose did not match the lap driven; the session moved (spec 06). */
+  trackMismatch: [TrackMismatchInfo];
+  /** The driver's track choice for today changed or expired. */
+  hintChanged: [TrackHint | null];
   stateChanged: [ConnectionState, ConnectionState];
   /** Every accepted packet (only built while someone listens). */
   packet: [EnginePacketInfo];
@@ -406,6 +419,20 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   // track
   #track: Track | null = null;
   #trackConfidence: LiveTrackInfo['confidence'] = 'unknown';
+  #trackBasis: TrackBasis = 'none';
+  /** The driver's choice of track for today (memory only; spec 06). */
+  #hint: TrackHint | null = null;
+  #hintTrack: Track | null = null;
+  /** The driver insisted on the chosen track after a mismatch: laps are not re-identified. */
+  #userLocked = false;
+  /** Guess from the start line against the shipped catalogue; never stored (spec 05). */
+  #catalogGuess: CatalogGuess | null = null;
+  /** Track learned from this session's recognition lap, until the next lap closes. */
+  #learning: { trackId: Id } | null = null;
+  /** The last timed lap on an unknown track did not count. */
+  #invalidLap: LearningInvalidReason | null = null;
+  /** Tracks whose corner detection finished (even with no corner found). */
+  #cornersSettled = new Set<Id>();
   #line: Polyline | null = null;
   #refLine: Polyline | null = null;
   #records: TrackRecords | null = null;
@@ -480,6 +507,152 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
 
   get replayMode(): boolean {
     return this.#replayMode;
+  }
+
+  /** The driver's choice of track for today, null when none is in force. */
+  get trackHint(): TrackHint | null {
+    return this.#hint ? { ...this.#hint } : null;
+  }
+
+  /** What the app knows about the track right now (name, confidence, learning guide, corners). */
+  get trackContext(): LiveTrackContext {
+    const hint = this.trackHint;
+    const t = this.#track;
+    if (t) {
+      return {
+        trackId: t.id,
+        name: t.name,
+        layout: t.layout ?? null,
+        confidence: this.#trackConfidence,
+        basis: this.#trackBasis,
+        trackSource: t.source,
+        needsName: t.source === 'auto' && t.name.startsWith(UNKNOWN_TRACK_PREFIX),
+        corners: this.#cornersOf(t),
+        learning: this.#learningState(),
+        hint,
+      };
+    }
+    const ht = this.#hintTrack;
+    if (!this.#session && ht && hint) {
+      return {
+        trackId: ht.id,
+        name: ht.name,
+        layout: ht.layout ?? null,
+        confidence: 'probable',
+        basis: 'hint',
+        trackSource: ht.source,
+        needsName: false,
+        corners: this.#cornersOf(ht),
+        learning: null,
+        hint,
+      };
+    }
+    const g = this.#catalogGuess;
+    return {
+      ...EMPTY_TRACK_CONTEXT,
+      name: g?.venue ?? null,
+      layout: g?.layout ?? null,
+      confidence: g ? 'probable' : 'unknown',
+      basis: g ? 'catalog' : 'none',
+      learning: this.#learningState(),
+      hint,
+    };
+  }
+
+  #cornersOf(t: Track): 'pending' | 'ready' {
+    return t.corners.length > 0 || this.#cornersSettled.has(t.id) ? 'ready' : 'pending';
+  }
+
+  /** Learning guide of a track the app has never seen (spec 05 item 3); null for known tracks. */
+  #learningState(): LiveLearning | null {
+    if (!this.#session || this.#replayMode) return null;
+    if (this.#learning) return { stage: 3, invalid: null };
+    if (this.#trackConfidence === 'confirmed') return null;
+    if (this.#trackBasis === 'hint' || this.#trackBasis === 'start') return null;
+    return { stage: this.#lap?.timed ? 2 : 1, invalid: this.#invalidLap };
+  }
+
+  /**
+   * "Pista de hoje" (spec 06): the driver says which saved track they will drive. It is a hint, not
+   * a verdict: with it the session opens with the track's line, corners, sectors and reference
+   * loaded; the first closed lap is checked against it. `null` = "Reconhecer sozinho". A session
+   * whose track is already confirmed keeps it (the choice only counts for the next session), unless
+   * `force` (answer to a mismatch: keep the chosen track anyway). Expires with the session, after
+   * 30 min without a signal, or when replaced.
+   */
+  setTrackHint(trackId: Id | null, opts: { now?: number; force?: boolean } = {}): TrackHint | null {
+    if (trackId === null) {
+      const had = this.#hint !== null;
+      this.#hint = null;
+      this.#hintTrack = null;
+      const s = this.#session;
+      if (s && this.#trackBasis === 'hint' && this.#trackConfidence === 'probable') {
+        // "Reconhecer sozinho" in the middle of an unconfirmed session: forget the chosen track
+        s.trackId = null;
+        this.#ctx.saveSession({ ...s });
+        this.#clearActiveTrack();
+        this.emit('sessionUpdated', { ...s });
+      }
+      if (had) this.emit('hintChanged', null);
+      return null;
+    }
+    const track = this.#ctx.getTrack(trackId);
+    if (!track) throw new Error(`Pista ${trackId} não encontrada.`);
+    const now = opts.now ?? Date.now();
+    const hint: TrackHint = {
+      trackId,
+      setAt: now,
+      source: 'user',
+      expiresAt: now + TRACK_HINT_TTL_MS,
+    };
+    this.#hint = hint;
+    this.#hintTrack = track;
+    if (this.#session && !this.#replayMode) {
+      if (opts.force) {
+        this.#userLocked = true;
+        this.#moveSessionToTrack(track, 'confirmed', 'hint');
+      } else if (this.#trackConfidence !== 'confirmed' && !this.#userLocked) {
+        this.#moveSessionToTrack(track, 'probable', 'hint');
+      }
+    }
+    this.emit('hintChanged', { ...hint });
+    return { ...hint };
+  }
+
+  /** Corner detection of a track finished (even if it found nothing): "Curvas prontas". */
+  markCornersSettled(trackId: Id): void {
+    this.#cornersSettled.add(trackId);
+  }
+
+  /** Drops the hint when the console was silent for too long (`lastSignalAt`: last packet). */
+  #expireHint(now: number, lastSignalAt: number | null): void {
+    const h = this.#hint;
+    if (!h) return;
+    if (now - Math.max(h.setAt, lastSignalAt ?? 0) <= TRACK_HINT_TTL_MS) return;
+    this.#hint = null;
+    this.#hintTrack = null;
+    this.emit('hintChanged', null);
+  }
+
+  /**
+   * Moves the open session, and the laps it already stored, to `track` in one step (the context
+   * does it in a transaction) and makes it the active track.
+   */
+  #moveSessionToTrack(
+    track: Track,
+    confidence: LiveTrackInfo['confidence'],
+    basis: TrackBasis,
+  ): number {
+    const s = this.#session;
+    if (!s) return 0;
+    const moved = this.#ctx.reassignSessionTrack?.(s.id, track.id) ?? 0;
+    s.trackId = track.id;
+    this.#ctx.saveSession({ ...s });
+    this.#catalogGuess = null;
+    this.#invalidLap = null;
+    this.#setActiveTrack(track, confidence, basis);
+    this.emit('sessionUpdated', { ...s });
+    return moved;
   }
 
   get deltaReference(): { kind: DeltaReferenceKind; lapId: Id | null; activeLapId: Id | null } {
@@ -574,6 +747,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
    * the car out of the track / paused, for `sessionIdleEndMs`. Call it every few seconds.
    */
   tick(nowMs: number): void {
+    this.#expireHint(nowMs, this.#lastReceivedAt);
     const s = this.#session;
     if (!s) return;
     const idle = this.options.sessionIdleEndMs;
@@ -614,6 +788,8 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     if (!t) return;
     this.#track = t;
     this.#hintCache.clear();
+    // a plan built before the corners existed has no cues: build it again now they do
+    if (this.#engineerPlan && this.#engineerPlan.marks.length === 0) this.#engineerPlan = null;
     this.#refreshRecords();
     this.emit('trackChanged', this.trackInfo);
   }
@@ -659,6 +835,16 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     this.#trackTimeMs = 0;
     this.#runningSince = null;
     this.#lastLapDoneAt = null;
+    // what the driver said about today's track, and what was guessed or learned, ends with the session
+    this.#catalogGuess = null;
+    this.#learning = null;
+    this.#invalidLap = null;
+    this.#userLocked = false;
+    if (this.#hint) {
+      this.#hint = null;
+      this.#hintTrack = null;
+      this.emit('hintChanged', null);
+    }
     this.emit('sessionEnded', { ...s }, { reason, persisted });
   }
 
@@ -721,6 +907,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
 
   /** Forgets the active track (not on a known one any more); no-op without one. */
   #clearActiveTrack(): void {
+    this.#trackBasis = 'none';
     if (this.#track) {
       this.#track = null;
       this.#trackConfidence = 'unknown';
@@ -748,6 +935,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       else dPk = diff;
     }
     const prevReceivedAt = this.#lastReceivedAt;
+    this.#expireHint(receivedAtMs, prevReceivedAt);
     const recvGap = prevReceivedAt === null ? 0 : receivedAtMs - prevReceivedAt;
     const idleEnd = this.options.sessionIdleEndMs;
     // the console was silent for too long (PS5 in rest mode, game closed, Wi-Fi down)
@@ -921,9 +1109,16 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   }
 
   #openSession(carCode: number, format: Session['format'], at: number): void {
+    // the driver's choice of track (spec 06): the session is born with it, replays never use it
+    const hinted = this.#hint && !this.#replayMode ? this.#ctx.getTrack(this.#hint.trackId) : null;
+    if (this.#hint && !hinted && !this.#replayMode) {
+      this.#hint = null;
+      this.#hintTrack = null;
+      this.emit('hintChanged', null);
+    }
     const s: Session = {
       id: this.#newId(),
-      trackId: null,
+      trackId: hinted?.id ?? null,
       carCode,
       startedAt: at,
       endedAt: null,
@@ -942,6 +1137,13 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     this.#lastLapDoneAt = null;
     this.#lastActiveAt = at;
     this.#ctx.saveSession({ ...s });
+    if (hinted) {
+      // centerline, corners, sectors and the reference are loaded before the first lap
+      this.#hintTrack = hinted;
+      this.#setActiveTrack(hinted, 'probable', 'hint');
+      this.emit('sessionStarted', { ...s });
+      return;
+    }
     this.emit('sessionStarted', { ...s });
     this.#reloadReference();
   }
@@ -992,6 +1194,12 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   }
 
   #discard(lap: LapState, reason: LapDiscardedInfo['reason']): void {
+    if (lap.timed && this.#trackConfidence !== 'confirmed') {
+      // the recognition lap did not count: the guide tells the driver why
+      if (reason === 'restart') this.#invalidLap = 'restart';
+      else if (reason === 'leftTrack') this.#invalidLap = 'leftTrack';
+      else if (reason === 'streamReset') this.#invalidLap = 'discontinuity';
+    }
     if (lap.timed || reason === 'restart') {
       this.emit('lapDiscarded', {
         sessionId: this.#session?.id ?? null,
@@ -1090,6 +1298,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     if (!session || (this.#track && !this.#needTrackCheck)) return;
     const t = this.#ctx.findTrackByStart({ x: p.position.x, z: p.position.z }, headingOf(p));
     if (t) {
+      this.#catalogGuess = null;
       if (this.#track?.id === t.id) {
         this.#needTrackCheck = false; // same track as before the break
         return;
@@ -1102,9 +1311,13 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
         );
       }
       this.#needTrackCheck = false;
-      this.#setActiveTrack(t, 'probable');
-    } else if (this.#track) {
-      this.#clearActiveTrack();
+      this.#setActiveTrack(t, 'probable', 'start');
+    } else {
+      if (this.#track) this.#clearActiveTrack();
+      // not a track saved before: maybe one of the catalogue (a guess, never stored)
+      this.#catalogGuess = this.#replayMode
+        ? null
+        : catalogGuessAtStart({ x: p.position.x, z: p.position.z }, headingOf(p));
     }
   }
 
@@ -1430,7 +1643,14 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
 
     // ---- track identification ----
     const complete = !flags.has('discontinuity') && trace.length > 600;
-    if (complete && (this.#trackConfidence !== 'confirmed' || this.#needTrackCheck)) {
+    if (!complete && this.#trackConfidence !== 'confirmed') this.#invalidLap = 'discontinuity';
+    let mismatch: TrackMismatchInfo | null = null;
+    let learnedNow = false;
+    if (
+      complete &&
+      !this.#userLocked &&
+      (this.#trackConfidence !== 'confirmed' || this.#needTrackCheck)
+    ) {
       const line = lapPolyline(xs, zs);
       const res = this.#ctx.identifyTrack({
         line,
@@ -1438,8 +1658,33 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
         y: { s: cumulativeDistance(xs, zs), y: trace.channels.y },
         now: this.#lastReceivedAt ?? Date.now(),
       });
-      // this lap was driven on another track than the session's: it belongs to a new session
-      if (session.trackId && session.trackId !== res.track.id) {
+      const hinted =
+        this.#trackBasis === 'hint' && this.#track && session.trackId === this.#track.id
+          ? this.#track
+          : null;
+      if (hinted && hinted.id !== res.track.id) {
+        // the driver's choice was wrong (spec 06): the session and the laps it stored move to the
+        // track the geometry found, in one transaction, so no lap is lost or mislabelled
+        const lapsMoved = this.#ctx.reassignSessionTrack?.(session.id, res.track.id) ?? 0;
+        session.trackId = res.track.id;
+        this.#ctx.saveSession({ ...session });
+        mismatch = {
+          sessionId: session.id,
+          hintedTrackId: hinted.id,
+          hintedTrackName: hinted.name,
+          detectedTrackId: res.track.id,
+          detectedTrackName: res.track.name,
+          lapNumber: lap.number,
+          lapsMoved,
+          at: this.#lastReceivedAt ?? Date.now(),
+        };
+        if (this.#hint?.trackId === hinted.id) {
+          this.#hint = null;
+          this.#hintTrack = null;
+          this.emit('hintChanged', null);
+        }
+      } else if (session.trackId && session.trackId !== res.track.id) {
+        // this lap was driven on another track than the session's: it belongs to a new session
         this.#switchSession(
           'trackChange',
           lap.startedAt,
@@ -1451,8 +1696,17 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
         session = this.#session ?? session;
       }
       this.#needTrackCheck = false;
-      this.#setActiveTrack(res.track, 'confirmed');
+      this.#catalogGuess = null;
+      this.#invalidLap = null;
+      this.#setActiveTrack(res.track, 'confirmed', 'lap');
+      if (res.created) {
+        this.#learning = { trackId: res.track.id };
+        learnedNow = true;
+      }
+      if (mismatch) this.emit('trackMismatch', mismatch);
     }
+    // the guide of a learned track ends when the lap after it closes
+    if (!learnedNow) this.#learning = null;
     const track = this.#track;
 
     // ---- distance channel aligned to the centerline ----
@@ -1605,9 +1859,10 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     this.#records = this.#ctx.getTrackRecords(this.#track.id, this.#carCode(), count);
   }
 
-  #setActiveTrack(track: Track, confidence: LiveTrackInfo['confidence']): void {
+  #setActiveTrack(track: Track, confidence: LiveTrackInfo['confidence'], basis: TrackBasis): void {
     const same = this.#track?.id === track.id;
     this.#trackConfidence = confidence;
+    this.#trackBasis = basis;
     if (same) {
       this.#track = track;
       this.emit('trackChanged', this.trackInfo);
@@ -1662,7 +1917,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
         const t = this.#ctx.getTrack(stored.lap.trackId);
         if (t) {
           this.#reloading = false;
-          this.#setActiveTrack(t, 'probable');
+          this.#setActiveTrack(t, 'probable', 'start');
           return; // #setActiveTrack reloaded the reference
         }
       }
@@ -1688,7 +1943,10 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       this.#engineerPlan = null;
     }
     if (state !== 'onTrack') return { status: 'suspended' };
-    if (!track || !line || this.#needTrackCheck || this.#trackConfidence !== 'confirmed') {
+    // a track the driver chose (spec 06) lets the engineer work from the first lap; the lap closing
+    // confirms it or moves the session
+    const trusted = this.#trackConfidence === 'confirmed' || this.#trackBasis === 'hint';
+    if (!track || !line || this.#needTrackCheck || !trusted) {
       return { status: 'waitingTrack' };
     }
     if (
@@ -1912,6 +2170,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       distanceM: dist,
       lapFraction: fraction,
       track: this.trackInfo,
+      trackContext: this.trackContext,
       nextCorner: this.#nextCorner(dist),
       engineer: this.#engineerFrame(p, state),
       ...(this.#passes.length ? { cornerPasses: this.#passes } : {}),

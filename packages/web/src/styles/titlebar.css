@@ -63,9 +63,12 @@ html[data-titlebar][data-area="analysis"] body {
 html[data-titlebar] .a-app {
   min-height: calc(100vh - var(--titlebar-h));
 }
-html[data-titlebar] .a-side {
-  top: var(--titlebar-h);
-  height: calc(100vh - var(--titlebar-h));
+/* Só a barra lateral do desktop (acima de 900 px); no celular ela é a barra inferior. */
+@media (min-width: 901px) {
+  html[data-titlebar] .a-side {
+    top: var(--titlebar-h);
+    height: calc(100vh - var(--titlebar-h));
+  }
 }
 html[data-titlebar] .a-mtop {
   top: var(--titlebar-h);

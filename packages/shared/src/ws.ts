@@ -9,6 +9,7 @@
 import type { DeltaReferenceKind, Id, Lap, Session } from './domain.ts';
 import type { ConnectionState, LapCompletedEvent, LiveFrame } from './live.ts';
 import type { IngestorStats, PacketFormat } from './telemetry.ts';
+import type { LiveTrackContext, TrackMismatchInfo } from './track-context.ts';
 import type { DeviceProfile, ViewId } from './ui.ts';
 
 export const WS_PROTOCOL_VERSION = 1;
@@ -135,6 +136,11 @@ export interface SessionCaptureStatus {
   trackTimeMs: number;
   /** Only with `state: 'paused'`: why. */
   detail?: SessionCaptureDetail;
+  /**
+   * Track of the open session (or the one the driver chose for today): name, confidence, source,
+   * corner detection and learning guide. (core, additive)
+   */
+  track?: LiveTrackContext;
   /** pt-BR sentence for the UI. */
   hint: string;
 }
@@ -242,6 +248,12 @@ export interface NoticeMessage {
   ttlMs?: number;
 }
 
+/** The track the driver chose does not match the lap just driven; the session was moved (spec 06). */
+export interface TrackMismatchMessage {
+  type: 'trackMismatch';
+  info: TrackMismatchInfo;
+}
+
 export interface PongMessage {
   type: 'pong';
   /** Echo of the ping timestamp. */
@@ -259,6 +271,7 @@ export type ServerMessage =
   | DeviceProfileMessage
   | ShowViewMessage
   | NoticeMessage
+  | TrackMismatchMessage
   | PongMessage;
 
 // ---------------------------------------------------------------------------------------------
@@ -329,6 +342,16 @@ export interface SetPacketFormatMessage {
   format: PacketFormat;
 }
 
+/**
+ * "Pista de hoje": the driver tells which track they will drive (null = recognise by itself). With
+ * `force` the choice is kept even if the lap geometry disagrees.
+ */
+export interface SetTrackHintMessage {
+  type: 'setTrackHint';
+  trackId: Id | null;
+  force?: boolean;
+}
+
 export interface PingMessage {
   type: 'ping';
   t: number;
@@ -343,6 +366,7 @@ export type ClientMessage =
   | StartReferenceCaptureMessage
   | StopReferenceCaptureMessage
   | SetPacketFormatMessage
+  | SetTrackHintMessage
   | PingMessage;
 
 export type ServerMessageType = ServerMessage['type'];

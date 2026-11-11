@@ -18,6 +18,7 @@ export type ProfileAction =
   | { type: 'setPopups'; enabled: boolean }
   | { type: 'setLocked'; locked: boolean }
   | { type: 'setDeltaReference'; kind: DeltaReferenceKind }
+  | { type: 'setAskTrack'; enabled: boolean }
   | { type: 'setCustomLayout'; layout: WidgetGridLayout }
   | { type: 'reset' };
 
@@ -60,6 +61,10 @@ export function reduceProfile(p: DeviceProfile, a: ProfileAction, now: number): 
     case 'setDeltaReference':
       if (p.deltaReference === a.kind) return p;
       next = { ...p, deltaReference: a.kind };
+      break;
+    case 'setAskTrack':
+      if (p.askTrackOnStart === a.enabled) return p;
+      next = { ...p, askTrackOnStart: a.enabled };
       break;
     case 'setCustomLayout':
       if (p.customLayout === a.layout) return p;

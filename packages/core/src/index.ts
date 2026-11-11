@@ -132,6 +132,7 @@ export {
   type TrackRepository,
   UNKNOWN_TRACK_PREFIX,
 } from './track/fingerprint.ts';
+export { type CatalogGuess, catalogGuessAtStart } from './track/start-guess.ts';
 export {
   DATA_DIR_NAME,
   type DataDirContext,

@@ -16,6 +16,7 @@ import type {
   Vec3,
   Wheels,
 } from './telemetry.ts';
+import type { LiveTrackContext } from './track-context.ts';
 
 /**
  * High-level state shown to the user.
@@ -308,6 +309,11 @@ export interface LiveFrame {
   /** Distance as a fraction of the lap 0–1, null if the track length is unknown. */
   lapFraction: number | null;
   track: LiveTrackInfo | null;
+  /**
+   * What the app knows about the track right now: name, confidence, learning guide, corners.
+   * Absent in frames from servers older than specs 05/06. (core, additive)
+   */
+  trackContext?: LiveTrackContext;
   nextCorner: NextCornerHint | null;
   engineer?: LiveEngineerFrame;
   /**

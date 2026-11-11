@@ -126,6 +126,8 @@ export interface DeviceProfile {
   popupsEnabled: boolean;
   /** Preferred delta reference for this device. */
   deltaReference: DeltaReferenceKind;
+  /** Ask which track the driver will drive when the game goes to the menu (spec 06; default on). */
+  askTrackOnStart: boolean;
   customLayout: WidgetGridLayout;
   updatedAt: number;
 }
@@ -152,6 +154,7 @@ export function createDefaultDeviceProfile(deviceId: string, name = 'Dispositivo
     locked: false,
     popupsEnabled: true,
     deltaReference: 'personalBest',
+    askTrackOnStart: true,
     customLayout: {
       ...DEFAULT_CUSTOM_LAYOUT,
       items: DEFAULT_CUSTOM_LAYOUT.items.map((i) => ({ ...i })),
@@ -207,6 +210,8 @@ export function normalizeDeviceProfile(input: unknown, deviceId: string): Device
     locked: typeof p.locked === 'boolean' ? p.locked : base.locked,
     popupsEnabled: typeof p.popupsEnabled === 'boolean' ? p.popupsEnabled : base.popupsEnabled,
     deltaReference,
+    askTrackOnStart:
+      typeof p.askTrackOnStart === 'boolean' ? p.askTrackOnStart : base.askTrackOnStart,
     customLayout,
     updatedAt: typeof p.updatedAt === 'number' && Number.isFinite(p.updatedAt) ? p.updatedAt : 0,
   };

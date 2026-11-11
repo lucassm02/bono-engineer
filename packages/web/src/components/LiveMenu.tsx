@@ -17,6 +17,7 @@ import {
 import { useUi } from '../state/uiStore.ts';
 import { EngineerControls } from './EngineerControls.tsx';
 import { FullscreenButton } from './FullscreenButton.tsx';
+import { LiveContextBar } from './LiveContextBar.tsx';
 import { ProductBrand } from './ProductBrand.tsx';
 import { ToggleRow } from './ToggleRow.tsx';
 import { Icon, type IconName } from './ui/Icon.tsx';
@@ -302,6 +303,7 @@ export function LiveMenuSheet() {
         </>
       }
     >
+      <LiveContextBar variant="menu" />
       <div
         className="ui-tabs bn-tabs"
         role="tablist"

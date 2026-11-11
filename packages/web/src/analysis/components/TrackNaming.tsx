@@ -220,22 +220,12 @@ export function EditableTrackName({
 // "Nova pista detectada"
 // ---------------------------------------------------------------------------------------------
 
-export function NewTrackPrompt({
-  trackId,
-  lengthM,
-  onSaved,
-  onLater,
-  variant = 'banner',
-}: {
-  trackId: string;
-  lengthM: number;
-  onSaved: () => void;
-  /** "Agora não": hides the prompt for this track on this device. */
-  onLater?: () => void;
-  variant?: 'banner' | 'inline';
-}) {
-  // The server compares the stored driving line with the official layouts. If it cannot answer
-  // (old server, no line), the length window still gives candidates.
+/**
+ * Candidates for naming a track, shared by the "Nova pista detectada" prompt and the live panel's
+ * "Pista de hoje" sheet: the server compares the stored driving line with the official layouts; if it
+ * cannot answer (old server, no line) the length window still gives candidates. Never names anything.
+ */
+export function useTrackSuggestions(trackId: string, lengthM: number) {
   const recognition = useFetch(`recog:${trackId}`, () => api.trackRecognition(trackId));
   const suggestions: TrackRecognitionCandidate[] = useMemo(() => {
     if (recognition.data) return recognition.data.candidates.slice(0, 3);
@@ -254,10 +244,7 @@ export function NewTrackPrompt({
       lookAlikes: [],
     }));
   }, [recognition.data, recognition.error, lengthM]);
-  const [busy, setBusy] = useState(false);
-  const [typing, setTyping] = useState(false);
-  const loadingSuggestions = recognition.loading && !recognition.data && !recognition.error;
-  const showTyping = typing || (!loadingSuggestions && suggestions.length === 0);
+  const loading = recognition.loading && !recognition.data && !recognition.error;
   const byGeometry = suggestions.some((s) => s.basis === 'geometry');
   // A strong geometric match already tells the reverse layout apart (driving direction), so the
   // warning is for length-only suggestions, similar lines and ties.
@@ -266,6 +253,32 @@ export function NewTrackPrompt({
     suggestions.some(
       (s) => s.lookAlikes.length > 0 && !(s.basis === 'geometry' && s.confidence === 'high'),
     );
+  return { suggestions, loading, byGeometry, needsCare };
+}
+
+export function NewTrackPrompt({
+  trackId,
+  lengthM,
+  onSaved,
+  onLater,
+  variant = 'banner',
+}: {
+  trackId: string;
+  lengthM: number;
+  onSaved: () => void;
+  /** "Agora não": hides the prompt for this track on this device. */
+  onLater?: () => void;
+  variant?: 'banner' | 'inline';
+}) {
+  const {
+    suggestions,
+    loading: loadingSuggestions,
+    byGeometry,
+    needsCare,
+  } = useTrackSuggestions(trackId, lengthM);
+  const [busy, setBusy] = useState(false);
+  const [typing, setTyping] = useState(false);
+  const showTyping = typing || (!loadingSuggestions && suggestions.length === 0);
 
   const save = async (name: string, layout: string | null) => {
     setBusy(true);
@@ -347,7 +360,7 @@ export function NewTrackPrompt({
 }
 
 /** Tooltip of a suggestion: why the app thinks so. */
-function candidateTitle(c: TrackRecognitionCandidate): string {
+export function candidateTitle(c: TrackRecognitionCandidate): string {
   const diff = `${(Math.abs(c.lengthErrRel) * 100).toFixed(1).replace('.', ',')}%`;
   const len = uiText(
     'Comprimento oficial: {0} (a volta medida difere {1})',

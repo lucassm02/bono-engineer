@@ -31,6 +31,10 @@ export class StoreEngineContext implements LiveEngineContext {
     this.store.saveLap(lap, trace);
   }
 
+  reassignSessionTrack(sessionId: Id, trackId: Id): number {
+    return this.store.reassignSessionTrack(sessionId, trackId);
+  }
+
   getTrack(trackId: Id): Track | null {
     return this.store.getTrack(trackId);
   }

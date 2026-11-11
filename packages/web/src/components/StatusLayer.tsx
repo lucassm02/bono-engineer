@@ -12,6 +12,7 @@ import { retryServerNow, startMock } from '../net/connection.ts';
 import { rescanConsole } from '../net/consoleActions.ts';
 import { openConnectionPanel, useConsoleConnection } from '../state/consoleLink.ts';
 import { useUi } from '../state/uiStore.ts';
+import { TrackPromptCard } from './TrackPromptCard.tsx';
 import { Icon, type IconName } from './ui/Icon.tsx';
 
 function useCountdown(until: number | null): number | null {
@@ -164,6 +165,7 @@ export function StatusLayer() {
           <>
             <h1>{uiText('No menu')}</h1>
             <p>{uiText('O painel volta sozinho quando o carro estiver na pista.')}</p>
+            <TrackPromptCard />
           </>
         )}
         <p className="status-foot">{uiText('Segure a tela para escolher as telas e ajustes.')}</p>
