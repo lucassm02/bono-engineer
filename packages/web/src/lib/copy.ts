@@ -1,0 +1,131 @@
+/**
+ * Glossário e textos de estado compartilhados (spec 01). Uma palavra para cada coisa, em toda a
+ * interface: o piloto aprende o vocabulário uma vez. Os textos são funções/getters para seguir o
+ * idioma escolhido (`uiText` consulta o idioma na hora do uso).
+ *
+ * Só acrescente aqui; mudar um termo existente muda a tela inteira.
+ */
+
+import { t as uiText } from './i18n.ts';
+
+/** Termos oficiais. */
+export const TERMS = {
+  get live() {
+    return uiText('Ao vivo');
+  },
+  get engineer() {
+    return uiText('Engenheiro');
+  },
+  get referenceLap() {
+    return uiText('Volta de referência');
+  },
+  get recognizeTrack() {
+    return uiText('Reconhecer a pista');
+  },
+  get replayCapture() {
+    return uiText('Gravar volta de replay');
+  },
+  get device() {
+    return uiText('Aparelho');
+  },
+  get devices() {
+    return uiText('Aparelhos');
+  },
+} as const;
+
+/** "Use em vez de": termos antigos que não devem voltar para a interface. */
+export const DISCOURAGED_TERMS: readonly { avoid: string; use: string }[] = [
+  { avoid: 'painel', use: 'Ao vivo' },
+  { avoid: 'dashboard', use: 'Ao vivo' },
+  { avoid: 'rádio', use: 'Engenheiro' },
+  { avoid: 'top capturado', use: 'Volta de referência' },
+  { avoid: 'melhor capturada', use: 'Volta de referência' },
+  { avoid: 'tracking', use: 'Reconhecer a pista' },
+  { avoid: 'fingerprint', use: 'Reconhecer a pista' },
+  { avoid: 'captura de referência', use: 'Gravar volta de replay' },
+  { avoid: 'dispositivo remoto', use: 'Aparelho' },
+  { avoid: 'device', use: 'Aparelho' },
+];
+
+// ---------------------------------------------------------------------------------------------
+// Estado do engenheiro
+// ---------------------------------------------------------------------------------------------
+
+export type EngineerAudioTarget = 'here' | 'discord' | 'other';
+
+export interface EngineerStateInput {
+  enabled: boolean;
+  muted: boolean;
+  /** Nome da voz escolhida, quando conhecido. */
+  voiceName?: string | null;
+  audio: EngineerAudioTarget;
+}
+
+export interface StateText {
+  title: string;
+  detail: string;
+}
+
+const AUDIO_TARGET_TEXT: Record<EngineerAudioTarget, () => string> = {
+  here: () => uiText('fala neste aparelho'),
+  discord: () => uiText('fala pelo Discord'),
+  other: () => uiText('fala em outro aparelho'),
+};
+
+/** Resumo do engenheiro para o resumo de saúde, a faixa de contexto e o menu. */
+export function engineerStateText(i: EngineerStateInput): StateText {
+  if (!i.enabled) {
+    return {
+      title: uiText('Engenheiro desligado'),
+      detail: uiText('Ligue para receber instruções em voz e na tela.'),
+    };
+  }
+  if (i.muted) {
+    return {
+      title: uiText('Engenheiro sem som'),
+      detail: uiText('As instruções aparecem só na tela. Ative o som para ouvir.'),
+    };
+  }
+  const voice = i.voiceName ? uiText('Voz {0}', i.voiceName) : null;
+  return {
+    title: uiText('Engenheiro ligado'),
+    detail: [voice, AUDIO_TARGET_TEXT[i.audio]()].filter(Boolean).join(' · '),
+  };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Gravação das sessões
+// ---------------------------------------------------------------------------------------------
+
+export function recordingStateText(autoCapture: boolean, rawPackets: boolean): StateText {
+  if (!autoCapture) {
+    return {
+      title: uiText('Gravação automática desligada'),
+      detail: uiText('O ao vivo funciona, mas nenhuma sessão, volta ou pista nova é salva.'),
+    };
+  }
+  return {
+    title: uiText('Gravação automática ligada'),
+    detail: rawPackets
+      ? uiText('Salva sessões e voltas sozinha, e guarda também os pacotes brutos.')
+      : uiText('Salva sessões e voltas sozinha quando você entra numa pista.'),
+  };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Aparelhos
+// ---------------------------------------------------------------------------------------------
+
+export function devicesStateText(online: number): StateText {
+  if (online <= 0) {
+    return {
+      title: uiText('Nenhum aparelho conectado'),
+      detail: uiText('Abra o ao vivo no celular ou no tablet pelo QR Code.'),
+    };
+  }
+  return {
+    title:
+      online === 1 ? uiText('1 aparelho online') : uiText('{0} aparelhos online', String(online)),
+    detail: uiText('Cada um mostra as telas que você escolheu para ele.'),
+  };
+}

@@ -7,7 +7,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--sp-4);
-  max-width: 900px;
+  max-width: 1120px;
   min-width: 0;
 }
 .cfg-page > * {
@@ -26,22 +26,93 @@
   color: var(--loss);
 }
 
-/* Navegação por seções */
-.cfg-nav {
+/* Layout: lista de grupos + grupo aberto */
+.cfg-layout {
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  gap: var(--sp-5);
+  align-items: start;
+}
+.cfg-layout[data-mobile="1"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+.cfg-side {
   position: sticky;
-  top: var(--a-mtop-h, 0px); /* abaixo da barra superior do celular, quando existe */
-  z-index: var(--z-chrome);
-  margin: 0 calc(var(--sp-2) * -1);
-  padding: 0 var(--sp-2);
-  background: var(--surface-1);
+  top: var(--sp-5);
+}
+.cfg-groups[data-variant="side"] .ui-list-item {
+  min-height: 44px;
+}
+.cfg-groups[data-variant="side"] .ui-list-item[aria-current="page"] .ui-list-title {
+  color: var(--accent);
+}
+.cfg-groups[data-variant="cards"] {
+  gap: var(--sp-2);
+}
+.cfg-groups[data-variant="cards"] .ui-list-item {
+  min-height: 60px;
+  border-color: var(--line);
+  background: var(--surface-2);
 }
 .cfg-main {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--sp-4);
+  min-width: 0;
 }
 .cfg-main > .pn {
   scroll-margin-top: calc(var(--a-mtop-h, 0px) + 64px);
+}
+.cfg-detail-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.cfg-group-title {
+  margin: 0;
+  font-size: var(--fs-xl);
+  font-weight: 750;
+}
+.cfg-anchor {
+  display: block;
+  height: 0;
+  scroll-margin-top: calc(var(--a-mtop-h, 0px) + 64px);
+}
+
+/* Busca */
+.cfg-search {
+  position: relative;
+  max-width: 520px;
+}
+.cfg-search .ui-input {
+  padding-left: 40px;
+  padding-right: 44px;
+}
+.cfg-search-icon {
+  position: absolute;
+  top: 50%;
+  left: var(--sp-3);
+  translate: 0 -50%;
+  color: var(--text-3);
+  pointer-events: none;
+}
+.cfg-search-clear {
+  position: absolute;
+  top: 50%;
+  right: 3px;
+  translate: 0 -50%;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  background: transparent;
+}
+.cfg-results .ui-list-item {
+  border-color: var(--line);
+  background: var(--surface-2);
+}
+.cfg-results .ui-badge {
+  flex: none;
 }
 
 /* ---------------------------------------------------------------- listas de opções */
@@ -175,6 +246,7 @@
 
 /* Avançado recolhível */
 .cfg-adv {
+  scroll-margin-top: calc(var(--a-mtop-h, 0px) + var(--sp-4));
   margin-top: var(--sp-4);
   border: 1px solid var(--line);
   border-radius: var(--r-sm);
@@ -421,37 +493,6 @@
 }
 
 /* ---------------------------------------------------------------- aparelhos */
-.cfg-table-wrap {
-  overflow-x: auto;
-  border: 1px solid var(--line);
-  border-radius: var(--r-sm);
-  background: var(--surface-1);
-}
-.cfg-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--fs-sm);
-}
-.cfg-table th {
-  padding: var(--sp-2) var(--sp-3);
-  border-bottom: 1px solid var(--line);
-  background: var(--surface-2);
-  font-size: var(--fs-2xs);
-  font-weight: 700;
-  letter-spacing: var(--track-caps);
-  text-align: left;
-  text-transform: uppercase;
-  color: var(--text-3);
-  white-space: nowrap;
-}
-.cfg-table td {
-  padding: var(--sp-3);
-  border-bottom: 1px solid var(--line-soft);
-  vertical-align: middle;
-}
-.cfg-table tbody tr:last-child td {
-  border-bottom: 0;
-}
 .cfg-id {
   font-size: var(--fs-xs);
   overflow-wrap: anywhere;
@@ -466,9 +507,6 @@
   width: auto;
   min-width: 150px;
   flex: 1 1 150px;
-}
-.cfg-cell-label {
-  display: none;
 }
 
 /* ---------------------------------------------------------------- Coach IA */
@@ -516,10 +554,6 @@
 
 /* ---------------------------------------------------------------- responsivo */
 @media (max-width: 640px) {
-  .cfg-nav {
-    margin: 0;
-    padding: 0;
-  }
   .cfg-row {
     flex-direction: column;
     align-items: stretch;
@@ -543,36 +577,259 @@
   .cfg-inputrow .ui-btn {
     flex: 1 1 100%;
   }
-  .cfg-devices .cfg-table thead {
-    position: absolute;
-    clip-path: inset(50%);
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
+}
+
+/* ---------------------------------------------------------------- resumo de saúde (Início) */
+.cfg-health-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2) var(--sp-4);
+  margin-bottom: var(--sp-2);
+}
+.cfg-health-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cfg-health-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+  padding: var(--sp-3) 0;
+}
+.cfg-health-row + .cfg-health-row {
+  border-top: 1px solid var(--line-soft);
+}
+.cfg-health-text {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+.cfg-health-text strong {
+  font-size: var(--fs-md);
+  font-weight: 650;
+}
+.cfg-health-text span {
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+  line-height: 1.4;
+}
+.cfg-health-row .ui-btn {
+  flex: none;
+}
+.cfg-health-row[data-state="off"] .cfg-health-text strong {
+  color: var(--text-2);
+}
+.cfg-health-row .ui-dot[data-busy="1"] {
+  animation: cfg-pulse 1.4s ease-in-out infinite;
+}
+@keyframes cfg-pulse {
+  50% {
+    opacity: 0.35;
   }
-  .cfg-devices .cfg-table tbody {
-    display: block;
+}
+
+/* ---------------------------------------------------------------- PS5 */
+.cfg-status-row {
+  display: grid;
+  gap: var(--sp-3);
+}
+.cfg-status-row .cx-status {
+  flex: 1 1 280px;
+  margin: 0;
+}
+.cfg-status-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.cfg-status-main > .ui-btn {
+  flex: none;
+}
+.cfg-facts-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-5);
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+}
+.cfg-facts-line .num {
+  color: var(--text-2);
+}
+
+/* ---------------------------------------------------------------- linhas com controles largos */
+.cfg-row[data-wide="1"] .cfg-row-control {
+  flex: 0 1 340px;
+  min-width: 0;
+}
+.cfg-select {
+  width: 100%;
+}
+.cfg-voice,
+.cfg-pair {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  align-items: center;
+  justify-content: flex-end;
+}
+.cfg-voice .ui-select {
+  flex: 1 1 200px;
+}
+.cfg-pair .ui-select {
+  flex: 1 1 150px;
+  width: auto;
+}
+.cfg-range {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: min(100%, 240px);
+}
+.cfg-range output {
+  min-width: 3.4ch;
+  text-align: right;
+  color: var(--text-2);
+}
+.cfg-note-line {
+  margin: 0;
+}
+.cfg-adv-flush {
+  margin-top: 0;
+}
+.cfg-adv-body .cfg-delta .bn-card {
+  box-shadow: none;
+  margin-top: var(--sp-3);
+}
+.cfg-list > .bn-note {
+  padding-block: var(--sp-2);
+}
+
+/* ---------------------------------------------------------------- aparelhos (lista compacta) */
+.cfg-devs {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cfg-dev {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface-1);
+}
+.cfg-dev[data-online="0"] .cfg-dev-name strong {
+  color: var(--text-2);
+}
+.cfg-dev-line {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+  padding: var(--sp-2) var(--sp-3);
+}
+.cfg-dev-name {
+  display: grid;
+  flex: 1 1 140px;
+  gap: 1px;
+  min-width: 0;
+}
+.cfg-dev-name strong,
+.cfg-dev-name .cfg-muted {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cfg-dev-preset {
+  flex: 0 1 200px;
+  width: auto;
+  min-width: 0;
+}
+.cfg-dev-detail {
+  padding: var(--sp-1) var(--sp-4) var(--sp-4);
+  border-top: 1px solid var(--line-soft);
+}
+.cfg-dev-detail .cfg-list > :first-child {
+  padding-top: var(--sp-3);
+}
+.cfg-fix {
+  display: grid;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+
+/* ---------------------------------------------------------------- busca: linha destacada */
+[data-flash="1"] {
+  border-radius: var(--r-sm);
+  animation: cfg-flash 1.8s var(--ease);
+}
+@keyframes cfg-flash {
+  0%,
+  60% {
+    background: var(--accent-soft);
+    box-shadow: 0 0 0 6px var(--accent-soft);
   }
-  .cfg-devices .cfg-table tbody tr {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    border-bottom: 1px solid var(--line);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-flash="1"] {
+    animation: none;
+    background: var(--accent-soft);
   }
-  .cfg-devices .cfg-table tbody tr:last-child {
-    border-bottom: 0;
+  .cfg-health-row .ui-dot[data-busy="1"] {
+    animation: none;
   }
-  .cfg-devices .cfg-table td {
-    min-width: 0;
-    border-bottom: 0;
-    white-space: normal;
-    overflow-wrap: anywhere;
+}
+
+@media (max-width: 900px) {
+  .cfg-layout {
+    grid-template-columns: minmax(0, 1fr);
   }
-  .cfg-devices .cfg-table td:nth-child(n + 3) {
-    grid-column: 1 / -1;
+}
+@media (max-width: 640px) {
+  .cfg-row[data-wide="1"] .cfg-row-control {
+    flex: 1 1 auto;
   }
-  .cfg-cell-label {
-    display: block;
-    color: var(--text-3);
-    font-size: var(--fs-xs);
+  .cfg-voice,
+  .cfg-pair {
+    justify-content: stretch;
   }
+  .cfg-range {
+    width: 100%;
+  }
+  .cfg-health-row {
+    flex-wrap: wrap;
+  }
+  .cfg-health-text {
+    flex: 1 1 calc(100% - 28px);
+  }
+  .cfg-health-row .ui-btn {
+    margin-left: 20px;
+    min-height: var(--tap);
+  }
+  .cfg-pending .cfg-health-head .ui-btn {
+    min-height: var(--tap);
+  }
+  .cfg-dev-line {
+    flex-wrap: wrap;
+  }
+  .cfg-dev-name {
+    flex-basis: calc(100% - 80px);
+  }
+  .cfg-dev-preset {
+    flex: 1 1 160px;
+  }
+}
+
+.cfg-search input[type="search"]::-webkit-search-cancel-button,
+.cfg-search input[type="search"]::-webkit-search-decoration {
+  display: none;
+  appearance: none;
 }
