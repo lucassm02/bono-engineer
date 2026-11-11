@@ -2,12 +2,13 @@
 
 import type { ReactNode } from 'react';
 import { Modal } from '../../components/ui/Modal.tsx';
+import { t as uiText } from '../../lib/i18n.ts';
 
 export function ConfirmModal({
   open,
   title,
   message,
-  confirmLabel = 'Apagar',
+  confirmLabel = uiText('Apagar'),
   busy = false,
   onConfirm,
   onClose,
@@ -29,7 +30,7 @@ export function ConfirmModal({
       footer={
         <>
           <button type="button" className="ui-btn" data-variant="secondary" onClick={onClose}>
-            Cancelar
+            {uiText('Cancelar')}
           </button>
           <button
             type="button"

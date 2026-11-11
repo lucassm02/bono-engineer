@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Icon } from '../components/ui/Icon.tsx';
+import { t as uiText } from '../lib/i18n.ts';
 import { sanitizeLayout } from '../lib/widgetLayout.ts';
 import { openLayoutEditor } from '../state/actions.ts';
 import { useUi } from '../state/uiStore.ts';
@@ -14,8 +15,10 @@ export function PersonalizadaView() {
     <div className="view personalizada">
       {layout.items.length === 0 ? (
         <div className="grid-empty">
-          <strong>Grade vazia</strong>
-          <span className="dim">Toque em Editar para escolher os widgets desta tela.</span>
+          <strong>{uiText('Grade vazia')}</strong>
+          <span className="dim">
+            {uiText('Toque em Editar para escolher os widgets desta tela.')}
+          </span>
         </div>
       ) : (
         <div
@@ -49,11 +52,11 @@ export function PersonalizadaView() {
           data-variant="secondary"
           data-size="sm"
           data-no-gesture
-          aria-label="Editar a grade"
+          aria-label={uiText('Editar a grade')}
           onClick={openLayoutEditor}
         >
           <Icon name="layout" size={16} />
-          Editar
+          {uiText('Editar')}
         </button>
       )}
     </div>

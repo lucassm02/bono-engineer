@@ -1,5 +1,11 @@
-import { engineerDisplay, type LiveFrame, type RadioStepEnv } from '@gt7/shared';
+import {
+  engineerDisplay,
+  type LiveFrame,
+  localizedRadioUtterance,
+  type RadioStepEnv,
+} from '@gt7/shared';
 import { useCallback, useEffect, useState } from 'react';
+import { getLanguage, t as uiText } from '../lib/i18n.ts';
 import { RADIO_MODE_LABELS } from '../lib/radioLabels.ts';
 import { type RadioUtterance, utteranceKeys } from '../lib/radioPhrases.ts';
 import { live } from '../live/liveStore.ts';
@@ -20,12 +26,24 @@ import { Icon } from './ui/Icon.tsx';
 
 const STALE_MS = 450;
 const STATUS = {
-  waitingTrack: 'Reconhecendo o traçado',
-  waitingReference: 'Escolha uma volta de referência',
-  incompatible: 'Use uma volta do mesmo carro e traçado',
-  noCues: 'Referência sem pontos de orientação confiáveis',
-  suspended: 'Aguardando volta em pista',
-  ready: 'Rádio pronto',
+  get waitingTrack() {
+    return uiText('Reconhecendo o traçado');
+  },
+  get waitingReference() {
+    return uiText('Escolha uma volta de referência');
+  },
+  get incompatible() {
+    return uiText('Use uma volta do mesmo carro e traçado');
+  },
+  get noCues() {
+    return uiText('Referência sem pontos de orientação confiáveis');
+  },
+  get suspended() {
+    return uiText('Aguardando volta em pista');
+  },
+  get ready() {
+    return uiText('Rádio pronto');
+  },
 };
 const WAITING_TELEMETRY = 'Aguardando telemetria';
 const SUSPENDED: Record<string, string> = {
@@ -50,9 +68,9 @@ export function EngineerHudButton() {
       type="button"
       className="engineer-hud-btn"
       data-no-gesture
-      aria-label="Cartão do rádio"
+      aria-label={uiText('Cartão do rádio')}
       aria-pressed={visible}
-      title={visible ? 'Ocultar cartão do rádio' : 'Mostrar cartão do rádio'}
+      title={visible ? uiText('Ocultar cartão do rádio') : uiText('Mostrar cartão do rádio')}
       onClick={toggleEngineerHud}
     >
       <Icon name="mic" />
@@ -124,14 +142,20 @@ function EngineerHud() {
     };
     const out = radioEngine.step(f, env);
     if (out.stop) stopEngineerVoice();
-    setNote(out.panel?.label ?? null);
+    const language = getLanguage();
+    const panel = out.panel;
+    setNote(
+      panel?.utterance?.length && language !== 'pt-BR'
+        ? localizedRadioUtterance(panel.utterance, language)
+        : (panel?.label ?? null),
+    );
 
     if (out.suspended) {
       setStatus(SUSPENDED[out.suspended] ?? STATUS.suspended);
       setDisplay(null);
       setPending(false);
     } else if (cornerCalls) {
-      setStatus(engineer ? STATUS[engineer.status] : 'Aguardando roteiro da referência');
+      setStatus(engineer ? STATUS[engineer.status] : uiText('Aguardando roteiro da referência'));
       setPending(engineer?.status === 'ready' && engineer.pendingReference);
       const cues =
         engineer?.status === 'ready'
@@ -184,17 +208,25 @@ function EngineerHud() {
   if (!visible) return null;
 
   const mode = RADIO_MODE_LABELS[controls.mode];
+  const brakePercent = display?.label.match(/^Freio · (\d+)%$/)?.[1];
+  const callLabel = brakePercent
+    ? uiText('Freio · {0}%', brakePercent)
+    : uiText(display?.label ?? note ?? status);
   return (
-    <aside className="engineer-hud" data-action={display?.kind} aria-label="Engenheiro ao vivo">
+    <aside
+      className="engineer-hud"
+      data-action={display?.kind}
+      aria-label={uiText('Engenheiro ao vivo')}
+    >
       <div className="engineer-hud-heading">
         <span className="engineer-hud-mode">
           {!audioHere
-            ? `${mode} · áudio em outro aparelho`
+            ? uiText('{0} · áudio em outro aparelho', mode)
             : muted || controls.volume === 0
-              ? `${mode} · sem som`
+              ? uiText('{0} · sem som', mode)
               : voiceError
-                ? `${mode} · áudio indisponível`
-                : `Engenheiro · ${mode}`}
+                ? uiText('{0} · áudio indisponível', mode)
+                : uiText('Engenheiro · {0}', mode)}
         </span>
         <button
           type="button"
@@ -204,18 +236,20 @@ function EngineerHud() {
           data-size="sm"
           onClick={toggleMenu}
         >
-          Ajustar rádio
+          {uiText('Ajustar rádio')}
         </button>
       </div>
       <div className="engineer-hud-call">
-        <strong>{display?.label ?? note ?? status}</strong>
+        <strong>{callLabel}</strong>
         {display?.meters != null && <b className="engineer-hud-distance">{display.meters} m</b>}
       </div>
-      {display && note && <small>{note}</small>}
-      {pending && !display && <small>Nova referência na próxima volta</small>}
+      {display && note && <small>{uiText(note)}</small>}
+      {pending && !display && <small>{uiText('Nova referência na próxima volta')}</small>}
       {training && trainingEnabled && controls.trainingProfile !== 'free' && (
         <small>
-          Treino · {training.laps.length}/{TRAINING_LAPS} voltas válidas
+          {`${uiText('Treino ·')} `}
+          {training.laps.length}/{TRAINING_LAPS}
+          {` ${uiText('voltas válidas')}`}
         </small>
       )}
       {canRequestSummary && (
@@ -228,7 +262,7 @@ function EngineerHud() {
           disabled={status === WAITING_TELEMETRY || status === STATUS.suspended}
           onClick={() => radioEngine.requestSummary()}
         >
-          Pedir resumo
+          {uiText('Pedir resumo')}
         </button>
       )}
     </aside>

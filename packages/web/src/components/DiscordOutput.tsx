@@ -8,6 +8,7 @@
 import { type DesktopDiscordBridge, DISCORD_RADIO_DEVICE_ID } from '@gt7/shared';
 import { useEffect, useState } from 'react';
 import { api } from '../analysis/api.ts';
+import { t as uiText } from '../lib/i18n.ts';
 import { routes } from '../lib/route.ts';
 import { useUi } from '../state/uiStore.ts';
 import { ToggleRow } from './ToggleRow.tsx';
@@ -45,7 +46,7 @@ function Switch({ bridge }: { bridge: DesktopDiscordBridge }) {
     const off = bridge.onStatus((status) => setInfo((cur) => cur && { ...cur, status }));
     void bridge.get().then(
       (value) => mounted && setInfo(value),
-      () => mounted && setError('Não foi possível ler o estado do Discord.'),
+      () => mounted && setError(uiText('Não foi possível ler o estado do Discord.')),
     );
     return () => {
       mounted = false;
@@ -74,7 +75,7 @@ function Switch({ bridge }: { bridge: DesktopDiscordBridge }) {
       setInfo(await bridge.get());
     } catch (cause) {
       const message =
-        cause instanceof Error ? cause.message : 'Não foi possível alterar o Discord.';
+        cause instanceof Error ? cause.message : uiText('Não foi possível alterar o Discord.');
       setError(message.replace(/^Error invoking remote method '[^']+': Error: /, ''));
     } finally {
       setBusy(false);
@@ -84,11 +85,13 @@ function Switch({ bridge }: { bridge: DesktopDiscordBridge }) {
   return (
     <section className="ui-card bn-card" data-tone={on ? 'accent' : undefined}>
       <ToggleRow
-        title="Falar pelo Discord"
+        title={uiText('Falar pelo Discord')}
         description={
           configured
-            ? 'O engenheiro fala no canal de voz e você ouve no PS5. O bot entra quando você entra no canal.'
-            : 'Configure o bot uma vez para ativar a saída pelo Discord.'
+            ? uiText(
+                'O engenheiro fala no canal de voz e você ouve no PS5. O bot entra quando você entra no canal.',
+              )
+            : uiText('Configure o bot uma vez para ativar a saída pelo Discord.')
         }
         checked={on}
         disabled={busy || !info || !configured}
@@ -96,12 +99,12 @@ function Switch({ bridge }: { bridge: DesktopDiscordBridge }) {
       />
       {info && configured && (
         <p className="ui-help" role="status" data-tone={info.status.error ? 'loss' : undefined}>
-          {info.status.message}
+          {uiText(info.status.message)}
         </p>
       )}
       {info && !configured && (
         <p className="ui-help">
-          <a href={routes.config('discord')}>Abrir Configurações → Rádio no Discord</a>
+          <a href={routes.config('discord')}>{uiText('Abrir Configurações → Rádio no Discord')}</a>
         </p>
       )}
       {error && (

@@ -549,6 +549,7 @@ export class RadioEngine {
         ruleId: rule.id,
         priority,
         label: candidate.label,
+        utterance: candidate.panelOnly ? null : candidate.utterance,
         spoken: outcome === 'spoken',
         t: ctx.t,
       };

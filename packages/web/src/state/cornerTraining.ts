@@ -8,6 +8,7 @@
 
 import { create } from 'zustand';
 import type { CornerPass, PassAssessment } from '../lib/cornerPass.ts';
+import { t as uiText } from '../lib/i18n.ts';
 import { speakPtBr, stopSpeech } from '../lib/speech.ts';
 import { loadJson, saveJson } from '../lib/storage.ts';
 import { useEngineer } from './engineer.ts';
@@ -42,7 +43,8 @@ export function setCornerAudio(on: boolean): void {
   useCornerTraining.setState({ audio: on });
   persist();
   // Speaking inside the tap unlocks audio on iOS.
-  if (on && !useEngineer.getState().enabled) speakPtBr('training', 'Áudio do treino ligado');
+  if (on && !useEngineer.getState().enabled)
+    speakPtBr('training', uiText('Áudio do treino ligado'));
   else if (!on) stopSpeech('training');
 }
 

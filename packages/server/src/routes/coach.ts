@@ -3,11 +3,12 @@
  * (`event: start|text|tool|done|error`); reports are persisted in coach_reports.
  */
 
-import type {
-  CoachDebriefRequest,
-  CoachReport,
-  CoachReportSummary,
-  CoachSseEvent,
+import {
+  type CoachDebriefRequest,
+  type CoachReport,
+  type CoachReportSummary,
+  type CoachSseEvent,
+  isLanguage,
 } from '@gt7/shared';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { CoachError, type CoachRun } from '../coach/service.ts';
@@ -123,7 +124,8 @@ export function coachRoutes(app: FastifyInstance, ctx: RouteContext): void {
     if (ref) body.ref = ref;
     if (focusCorner) body.focusCorner = focusCorner;
     if (question) body.question = question;
-    const run = start(() => coach.startDebrief(body));
+    const language = req.headers['accept-language'];
+    const run = start(() => coach.startDebrief(body, isLanguage(language) ? language : undefined));
     await streamRun(req, reply, run);
   });
 
@@ -131,7 +133,10 @@ export function coachRoutes(app: FastifyInstance, ctx: RouteContext): void {
     const b = bodyObject(req.body);
     const reportId = reqString(b, 'reportId', 'reportId', 128);
     const message = reqString(b, 'message', 'message', 4000);
-    const run = start(() => coach.startChat(reportId, message));
+    const language = req.headers['accept-language'];
+    const run = start(() =>
+      coach.startChat(reportId, message, isLanguage(language) ? language : undefined),
+    );
     await streamRun(req, reply, run);
   });
 

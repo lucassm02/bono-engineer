@@ -6,6 +6,7 @@
 import type { Lap } from '@gt7/shared';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { Icon } from '../../components/ui/Icon.tsx';
+import { t as uiText } from '../../lib/i18n.ts';
 import { routes } from '../../lib/route.ts';
 import { addNotice } from '../../state/uiStore.ts';
 import { api } from '../api.ts';
@@ -15,7 +16,13 @@ const MENU_W = 240;
 const MENU_H = 260;
 
 /** Menu flutuante (position: fixed) para não ser cortado pela rolagem das tabelas. */
-export function ActionMenu({ label = 'Mais', children }: { label?: string; children: ReactNode }) {
+export function ActionMenu({
+  label = uiText('Mais'),
+  children,
+}: {
+  label?: string;
+  children: ReactNode;
+}) {
   const [pos, setPos] = useState<{ left: number; top?: number; bottom?: number } | null>(null);
   const btn = useRef<HTMLButtonElement>(null);
   const body = useRef<HTMLDivElement>(null);
@@ -116,9 +123,9 @@ export function LapQuickActions({
     : routes.compare({ lap: lap.id, ref: pbLapId ?? 'personalBest' });
   const compareLabel = isPb
     ? hasTopReference
-      ? ['Comparar', ' com o top']
-      : ['Analisar volta', '']
-    : ['Comparar', ' com minha melhor'];
+      ? [uiText('Comparar'), ' com o top']
+      : [uiText('Analisar volta'), '']
+    : [uiText('Comparar'), ' com minha melhor'];
 
   return (
     <div className="a-row-actions">
@@ -130,9 +137,9 @@ export function LapQuickActions({
         {lap.isReference ? (
           <ConfirmButton
             className="a-menu-item"
-            label="Tirar de referência"
-            question="Deixar de ser referência?"
-            confirmLabel="Sim"
+            label={uiText('Tirar de referência')}
+            question={uiText('Deixar de ser referência?')}
+            confirmLabel={uiText('Sim')}
             onConfirm={async () => {
               try {
                 onChanged(await api.unsetReference(lap.id));
@@ -149,32 +156,32 @@ export function LapQuickActions({
             disabled={!lap.valid}
             title={
               lap.valid
-                ? 'Usa esta volta como alvo do delta ao vivo e das comparações'
-                : 'Só voltas válidas podem ser referência'
+                ? uiText('Usa esta volta como alvo do delta ao vivo e das comparações')
+                : uiText('Só voltas válidas podem ser referência')
             }
             onClick={async () => {
               try {
-                onChanged(await api.setReference(lap.id, { driverName: 'Você' }));
-                addNotice('info', 'Volta definida como referência.');
+                onChanged(await api.setReference(lap.id, { driverName: uiText('Você') }));
+                addNotice('info', uiText('Volta definida como referência.'));
               } catch (e) {
                 addNotice('error', (e as Error).message, 6000);
               }
             }}
           >
-            Definir como referência
+            {uiText('Definir como referência')}
           </button>
         )}
         {extra}
         <hr className="a-menu-sep" />
         <ConfirmButton
           className="a-menu-item a-menu-danger"
-          label="Excluir volta"
-          question="Excluir esta volta?"
-          confirmLabel="Excluir"
+          label={uiText('Excluir volta')}
+          question={uiText('Excluir esta volta?')}
+          confirmLabel={uiText('Excluir')}
           onConfirm={async () => {
             try {
               await api.deleteLap(lap.id);
-              addNotice('info', 'Volta excluída.');
+              addNotice('info', uiText('Volta excluída.'));
               onDeleted();
             } catch (e) {
               addNotice('error', (e as Error).message, 6000);

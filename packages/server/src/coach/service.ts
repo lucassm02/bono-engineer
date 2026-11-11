@@ -21,11 +21,12 @@ import {
   type CoachSseEvent,
   type CoachTranscriptEntry,
   type CoachUsage,
+  type Language,
   type Lap,
   type Session,
 } from '@gt7/shared';
 import { CoachSettings, FALLBACK_MODELS, MAX_TOOL_ITERATIONS } from './config.ts';
-import { buildCoachTask, COACH_SYSTEM_PROMPT, type CoachTarget, coachTitle } from './prompt.ts';
+import { buildCoachTask, type CoachTarget, coachSystemPrompt, coachTitle } from './prompt.ts';
 import { McpToolBridge } from './tools.ts';
 
 type MessageParam = Anthropic.Beta.BetaMessageParam;
@@ -251,7 +252,7 @@ export class CoachService {
   }
 
   /** Validates the request, creates the report row and returns the run (throws CoachError). */
-  startDebrief(req: CoachDebriefRequest): CoachRun {
+  startDebrief(req: CoachDebriefRequest, language: Language = 'pt-BR'): CoachRun {
     const apiKey = this.#apiKey();
     const target = this.#resolveTarget(req);
     const now = Date.now();
@@ -287,12 +288,12 @@ export class CoachService {
     this.runtime.store.saveCoachReport(report);
     return {
       reportId: report.id,
-      execute: (sink, signal) => this.#execute(report, apiKey, true, sink, signal),
+      execute: (sink, signal) => this.#execute(report, apiKey, true, sink, signal, language),
     };
   }
 
   /** Follow-up question in the conversation of a stored report (throws CoachError). */
-  startChat(reportId: string, message: string): CoachRun {
+  startChat(reportId: string, message: string, language: Language = 'pt-BR'): CoachRun {
     const apiKey = this.#apiKey();
     if (!SAFE_ID.test(reportId)) throw new CoachError(400, 'invalidInput', 'Id inválido.');
     const report = this.runtime.store.getCoachReport(reportId);
@@ -311,7 +312,7 @@ export class CoachService {
     this.runtime.store.saveCoachReport(report);
     return {
       reportId,
-      execute: (sink, signal) => this.#execute(report, apiKey, false, sink, signal),
+      execute: (sink, signal) => this.#execute(report, apiKey, false, sink, signal, language),
     };
   }
 
@@ -321,6 +322,7 @@ export class CoachService {
     isDebrief: boolean,
     sink: CoachSink,
     signal: AbortSignal,
+    language: Language,
   ): Promise<void> {
     this.#running.add(report.id);
     const messages = report.messages as MessageParam[];
@@ -333,7 +335,16 @@ export class CoachService {
     let failure: { code: CoachErrorCode; message: string } | null = null;
     sink.send({ event: 'start', data: { reportId: report.id, model: report.model } });
     try {
-      stopReason = await this.#loop(report, apiKey, messages, turn, usage, sink, signal);
+      stopReason = await this.#loop(
+        report,
+        apiKey,
+        messages,
+        turn,
+        usage,
+        sink,
+        signal,
+        coachSystemPrompt(language),
+      );
       if (stopReason === 'refusal') {
         failure = {
           code: 'refused',
@@ -389,6 +400,7 @@ export class CoachService {
     usage: CoachUsage,
     sink: CoachSink,
     signal: AbortSignal,
+    system: string,
   ): Promise<string | null> {
     const client = this.#factory(apiKey);
     const tools = await this.tools.tools();
@@ -402,7 +414,7 @@ export class CoachService {
       const params: CoachStreamParams = {
         model,
         max_tokens: this.#opts.maxTokensPerCall,
-        system: COACH_SYSTEM_PROMPT,
+        system,
         tools,
         messages,
         thinking: { type: 'adaptive' },

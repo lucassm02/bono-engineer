@@ -11,6 +11,7 @@
 
 import { type ReactNode, useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { t as uiText } from '../../lib/i18n.ts';
 import { Icon } from './Icon.tsx';
 
 export interface ModalProps {
@@ -129,7 +130,12 @@ export function Modal({
           </div>
           {headerExtra}
           {!hideClose && (
-            <button type="button" className="ui-icon-btn" aria-label="Fechar" onClick={onClose}>
+            <button
+              type="button"
+              className="ui-icon-btn"
+              aria-label={uiText('Fechar')}
+              onClick={onClose}
+            >
               <Icon name="close" />
             </button>
           )}

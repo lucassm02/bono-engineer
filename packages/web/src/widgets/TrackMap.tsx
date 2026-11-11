@@ -12,6 +12,7 @@
 import type { LiveFrame } from '@gt7/shared';
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { setAttr } from '../lib/dom.ts';
+import { t as uiText } from '../lib/i18n.ts';
 import {
   type Bounds,
   boundsOf,
@@ -410,14 +411,16 @@ export function TrackMap({ interactive = false, details = true, className = '' }
     >
       <canvas ref={canvasRef} className="track-map-canvas" />
       <div className="track-map-empty">
-        {details ? 'Sem traçado ainda: dirija uma volta para desenhar o mapa' : 'Sem mapa'}
+        {details
+          ? uiText('Sem traçado ainda: dirija uma volta para desenhar o mapa')
+          : uiText('Sem mapa')}
       </div>
       {interactive && (
         <div className="map-controls" data-no-gesture>
           <button
             type="button"
             className="ui-icon-btn"
-            aria-label="Aproximar"
+            aria-label={uiText('Aproximar')}
             onClick={() => zoomBy(1.6)}
           >
             +
@@ -425,7 +428,7 @@ export function TrackMap({ interactive = false, details = true, className = '' }
           <button
             type="button"
             className="ui-icon-btn"
-            aria-label="Afastar"
+            aria-label={uiText('Afastar')}
             disabled={!ui.zoomed}
             onClick={() => zoomBy(1 / 1.6)}
           >
@@ -436,8 +439,8 @@ export function TrackMap({ interactive = false, details = true, className = '' }
               type="button"
               className="ui-icon-btn map-follow"
               aria-pressed={ui.follow}
-              aria-label="Seguir o carro"
-              title="Seguir o carro"
+              aria-label={uiText('Seguir o carro')}
+              title={uiText('Seguir o carro')}
               onClick={() => applyView((v) => ({ ...v, follow: !v.follow }))}
             >
               ◎
@@ -447,8 +450,8 @@ export function TrackMap({ interactive = false, details = true, className = '' }
             <button
               type="button"
               className="ui-icon-btn"
-              aria-label="Ver a pista toda"
-              title="Ver a pista toda"
+              aria-label={uiText('Ver a pista toda')}
+              title={uiText('Ver a pista toda')}
               onClick={() => applyView((_v, b) => ({ ...initialView(b), follow: true }))}
             >
               ⤢

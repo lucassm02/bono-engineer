@@ -8,6 +8,7 @@
 import type { ApiTraces, Corner } from '@gt7/shared';
 import { type ReactNode, useEffect, useMemo, useRef } from 'react';
 import uPlot from 'uplot';
+import { t as uiText } from '../../lib/i18n.ts';
 import 'uplot/dist/uPlot.min.css';
 import { formatFixed } from '../../lib/format.ts';
 import { THEME, withAlpha } from '../../lib/theme.ts';
@@ -419,7 +420,7 @@ export function SyncCharts({
   return (
     <div className="cmp-charts" ref={hostRef}>
       <div className="cmp-legend">
-        <ul className="cmp-legend-items" aria-label="Legenda das séries">
+        <ul className="cmp-legend-items" aria-label={uiText('Legenda das séries')}>
           {laps.map((l) => (
             <li key={l.id} className="cmp-legend-item">
               <i
@@ -439,7 +440,7 @@ export function SyncCharts({
           />
           {!toolbar && (
             <span className="cmp-legend-hint">
-              Arraste (ou pince com dois dedos) para dar zoom · duplo clique/toque volta
+              {uiText('Arraste (ou pince com dois dedos) para dar zoom · duplo clique/toque volta')}
             </span>
           )}
         </div>
@@ -468,12 +469,12 @@ export function SyncCharts({
       ))}
       {panels.some((p) => p.empty && !EVENT_PANEL_KEYS.has(p.def.key)) && (
         <p className="cmp-chart-note">
-          Sem dados de{' '}
+          {uiText('Sem dados de')}{' '}
           {panels
             .filter((p) => p.empty && !EVENT_PANEL_KEYS.has(p.def.key))
             .map((p) => p.def.label.toLowerCase())
             .join(', ')}{' '}
-          neste formato de pacote.
+          {uiText('neste formato de pacote.')}
         </p>
       )}
     </div>

@@ -8,6 +8,7 @@
 import { type ClientMessage, type ServerMessage, WS_PATH, WS_PROTOCOL_VERSION } from '@gt7/shared';
 import { showSessionSaved } from '../components/CaptureStatus.tsx';
 import { mockConsoleConnection, parseMockConn } from '../lib/consoleLink.ts';
+import { t as uiText } from '../lib/i18n.ts';
 import { reconcileProfiles } from '../lib/profile.ts';
 import { live } from '../live/liveStore.ts';
 import { MockSession } from '../live/mock.ts';
@@ -167,7 +168,7 @@ function startServer(allowAutoMock: boolean): void {
         if (status === 'open') {
           if (s.source === 'mock') {
             stopMock();
-            addNotice('info', 'Servidor encontrado: saindo da demonstração.');
+            addNotice('info', uiText('Servidor encontrado: saindo da demonstração.'));
           }
           useUi.setState({
             source: 'server',

@@ -17,6 +17,7 @@ import type {
 import { useEffect, useMemo, useState } from 'react';
 import { Icon } from '../../components/ui/Icon.tsx';
 import { formatDelta, formatLapTime } from '../../lib/format.ts';
+import { t as uiText } from '../../lib/i18n.ts';
 import { navigate, type Route, routes } from '../../lib/route.ts';
 import { SERIES_COLORS } from '../../lib/theme.ts';
 import { addNotice } from '../../state/uiStore.ts';
@@ -97,7 +98,7 @@ function CornerRow({
       <td>
         <strong>{corner.id}</strong>
         <div className="dim a-small">
-          {corner.direction === 'left' ? '↰ esq.' : '↱ dir.'}
+          {corner.direction === 'left' ? uiText('↰ esq.') : uiText('↱ dir.')}
           {corner.kind ? ` · ${CORNER_KIND_LABELS[corner.kind]}` : ''}
         </div>
         <div className="num a-small dim">
@@ -108,27 +109,27 @@ function CornerRow({
         <input
           className="a-input"
           value={name}
-          placeholder="Nome (ex.: Eau Rouge)"
+          placeholder={uiText('Nome (ex.: Eau Rouge)')}
           maxLength={60}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && save()}
-          aria-label={`Nome da curva ${corner.id}`}
+          aria-label={uiText('Nome da curva {0}', corner.id)}
         />
       </td>
       <td>
         <input
           className="a-input"
           value={note}
-          placeholder="Marco de frenagem (ex.: placa de 100 m)"
+          placeholder={uiText('Marco de frenagem (ex.: placa de 100 m)')}
           maxLength={200}
           onChange={(e) => setNote(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && save()}
-          aria-label={`Marco de frenagem da curva ${corner.id}`}
+          aria-label={uiText('Marco de frenagem da curva {0}', corner.id)}
         />
       </td>
       <td>
         <button type="button" className="a-btn a-btn-sm" disabled={!dirty || busy} onClick={save}>
-          Salvar
+          {uiText('Salvar')}
         </button>
       </td>
     </tr>
@@ -141,11 +142,46 @@ function CornerRow({
 
 const CONSISTENCY_METRICS: { key: CornerMetricKey; label: string; unit: string; digits: number }[] =
   [
-    { key: 'brakePointM', label: 'Frenagem', unit: 'm', digits: 1 },
-    { key: 'minSpeedKmh', label: 'V-mín', unit: 'km/h', digits: 1 },
-    { key: 'throttlePickupM', label: 'Retomada', unit: 'm', digits: 1 },
-    { key: 'exitSpeedKmh', label: 'Saída', unit: 'km/h', digits: 1 },
-    { key: 'timeInCornerS', label: 'Tempo na curva', unit: 's', digits: 3 },
+    {
+      key: 'brakePointM',
+      get label() {
+        return uiText('Frenagem');
+      },
+      unit: 'm',
+      digits: 1,
+    },
+    {
+      key: 'minSpeedKmh',
+      get label() {
+        return uiText('V-mín');
+      },
+      unit: 'km/h',
+      digits: 1,
+    },
+    {
+      key: 'throttlePickupM',
+      get label() {
+        return uiText('Retomada');
+      },
+      unit: 'm',
+      digits: 1,
+    },
+    {
+      key: 'exitSpeedKmh',
+      get label() {
+        return uiText('Saída');
+      },
+      unit: 'km/h',
+      digits: 1,
+    },
+    {
+      key: 'timeInCornerS',
+      get label() {
+        return uiText('Tempo na curva');
+      },
+      unit: 's',
+      digits: 3,
+    },
   ];
 
 function StatCell({ s, digits }: { s: MetricStats | undefined; digits: number }) {
@@ -153,7 +189,12 @@ function StatCell({ s, digits }: { s: MetricStats | undefined; digits: number })
   return (
     <td
       className="num num-col"
-      title={`média ${fixed(s.mean, digits)} · mín ${fixed(s.min, digits)} · máx ${fixed(s.max, digits)}`}
+      title={uiText(
+        'média {0} · mín {1} · máx {2}',
+        fixed(s.mean, digits),
+        fixed(s.min, digits),
+        fixed(s.max, digits),
+      )}
     >
       ±{fixed(s.stdDev, digits)}
     </td>
@@ -176,19 +217,19 @@ function ConsistencySection({
     <>
       <div className="a-stats">
         <div className="a-stat">
-          <span className="a-stat-k">Voltas analisadas</span>
+          <span className="a-stat-k">{uiText('Voltas analisadas')}</span>
           <span className="a-stat-v num">{report.lapIds.length}</span>
         </div>
         <div className="a-stat">
-          <span className="a-stat-k">Melhor</span>
+          <span className="a-stat-k">{uiText('Melhor')}</span>
           <span className="a-stat-v num">{formatLapTime(lt.min)}</span>
         </div>
         <div className="a-stat">
-          <span className="a-stat-k">Média</span>
+          <span className="a-stat-k">{uiText('Média')}</span>
           <span className="a-stat-v num">{formatLapTime(lt.mean)}</span>
         </div>
         <div className="a-stat">
-          <span className="a-stat-k">Desvio-padrão</span>
+          <span className="a-stat-k">{uiText('Desvio-padrão')}</span>
           <span className="a-stat-v num">±{fixed(lt.stdDev / 1000, 3)} s</span>
         </div>
       </div>
@@ -196,7 +237,8 @@ function ConsistencySection({
         <ol className="a-highlights">
           {report.highlights.slice(0, 6).map((h) => (
             <li key={`${h.cornerId}-${h.metric}`}>
-              {h.message ?? `${name(h.cornerId)}: ${h.metric} varia ±${fixed(h.stdDev, 1)}`}
+              {h.message ??
+                uiText('{0}: {1} varia ±{2}', name(h.cornerId), h.metric, fixed(h.stdDev, 1))}
             </li>
           ))}
         </ol>
@@ -205,7 +247,7 @@ function ConsistencySection({
         <table className="a-table">
           <thead>
             <tr>
-              <th>Curva</th>
+              <th>{uiText('Curva')}</th>
               {CONSISTENCY_METRICS.map((m) => (
                 <th key={m.key} className="num-col">
                   {m.label} <span className="dim">{m.unit}</span>
@@ -226,7 +268,7 @@ function ConsistencySection({
         </table>
       </div>
       <p className="a-section-note">
-        ± = desvio-padrão entre as voltas (passe o mouse para média, mínimo e máximo).
+        {uiText('± = desvio-padrão entre as voltas (passe o mouse para média, mínimo e máximo).')}
       </p>
     </>
   );
@@ -242,11 +284,46 @@ const EVO_METRICS: {
   unit: string;
   digits: number;
 }[] = [
-  { key: 'timeLostMs', label: 'Tempo perdido vs base', unit: 'ms', digits: 0 },
-  { key: 'brakePointDiffM', label: 'Frenagem vs base (+ = mais tarde)', unit: 'm', digits: 0 },
-  { key: 'minSpeedDiffKmh', label: 'V-mín vs base', unit: 'km/h', digits: 1 },
-  { key: 'exitSpeedDiffKmh', label: 'Saída vs base', unit: 'km/h', digits: 1 },
-  { key: 'throttlePickupDiffM', label: 'Retomada vs base (− = antes)', unit: 'm', digits: 0 },
+  {
+    key: 'timeLostMs',
+    get label() {
+      return uiText('Tempo perdido vs base');
+    },
+    unit: 'ms',
+    digits: 0,
+  },
+  {
+    key: 'brakePointDiffM',
+    get label() {
+      return uiText('Frenagem vs base (+ = mais tarde)');
+    },
+    unit: 'm',
+    digits: 0,
+  },
+  {
+    key: 'minSpeedDiffKmh',
+    get label() {
+      return uiText('V-mín vs base');
+    },
+    unit: 'km/h',
+    digits: 1,
+  },
+  {
+    key: 'exitSpeedDiffKmh',
+    get label() {
+      return uiText('Saída vs base');
+    },
+    unit: 'km/h',
+    digits: 1,
+  },
+  {
+    key: 'throttlePickupDiffM',
+    get label() {
+      return uiText('Retomada vs base (− = antes)');
+    },
+    unit: 'm',
+    digits: 0,
+  },
 ];
 
 function EvolutionSection({ evo, corners }: { evo: EvolutionReport; corners: MapCorner[] }) {
@@ -259,9 +336,13 @@ function EvolutionSection({ evo, corners }: { evo: EvolutionReport; corners: Map
   };
   const lapSeries: MiniSeries[] = useMemo(
     () => [
-      { label: 'Melhor volta', color: SERIES_COLORS[0]!, values: evo.days.map((d) => d.bestLapMs) },
       {
-        label: 'Média das 3 melhores',
+        label: uiText('Melhor volta'),
+        color: SERIES_COLORS[0]!,
+        values: evo.days.map((d) => d.bestLapMs),
+      },
+      {
+        label: uiText('Média das 3 melhores'),
         color: SERIES_COLORS[3]!,
         values: evo.days.map((d) => d.top3MeanMs),
         dash: [5, 4],
@@ -269,7 +350,10 @@ function EvolutionSection({ evo, corners }: { evo: EvolutionReport; corners: Map
       ...(evo.baseline
         ? [
             {
-              label: evo.baseline.kind === 'reference' ? 'Referência top' : 'Melhor pessoal',
+              label:
+                evo.baseline.kind === 'reference'
+                  ? uiText('Referência top')
+                  : uiText('Melhor pessoal'),
               color: SERIES_COLORS[1]!,
               values: evo.days.map(() => evo.baseline!.timeMs),
               dash: [2, 4],
@@ -305,20 +389,22 @@ function EvolutionSection({ evo, corners }: { evo: EvolutionReport; corners: Map
   );
 
   if (evo.days.length === 0)
-    return <p className="dim">Ainda não há voltas suas suficientes nesta pista.</p>;
+    return <p className="dim">{uiText('Ainda não há voltas suas suficientes nesta pista.')}</p>;
 
   return (
     <>
       <p className="dim a-small">
-        <CarName carCode={evo.carCode} logoSize={18} /> · base:{' '}
+        <CarName carCode={evo.carCode} logoSize={18} />
+        {` ${uiText('· base:')}`}{' '}
         {evo.baseline
-          ? `${evo.baseline.kind === 'reference' ? 'referência top' : 'melhor pessoal'} ${formatLapTime(evo.baseline.timeMs)}`
-          : 'sem base'}{' '}
-        · {evo.days.length} dia(s)
+          ? `${evo.baseline.kind === 'reference' ? uiText('referência top') : uiText('melhor pessoal')} ${formatLapTime(evo.baseline.timeMs)}`
+          : uiText('sem base')}{' '}
+        · {evo.days.length}
+        {` ${uiText('dia(s)')}`}
       </p>
       <div className="a-evo-grid">
         <div>
-          <h3 className="a-h3">Melhor volta por dia</h3>
+          <h3 className="a-h3">{uiText('Melhor volta por dia')}</h3>
           <MiniChart
             xs={xs}
             series={lapSeries}
@@ -327,9 +413,13 @@ function EvolutionSection({ evo, corners }: { evo: EvolutionReport; corners: Map
           />
         </div>
         <div>
-          <h3 className="a-h3">Curva-chave</h3>
+          <h3 className="a-h3">{uiText('Curva-chave')}</h3>
           <div className="a-controls a-controls-tight">
-            <select value={cid} onChange={(e) => setCornerId(e.target.value)} aria-label="Curva">
+            <select
+              value={cid}
+              onChange={(e) => setCornerId(e.target.value)}
+              aria-label={uiText('Curva')}
+            >
               {corners.map((c) => (
                 <option key={c.id} value={c.id}>
                   {cornerLabel(c)}
@@ -339,7 +429,7 @@ function EvolutionSection({ evo, corners }: { evo: EvolutionReport; corners: Map
             <select
               value={metric}
               onChange={(e) => setMetric(e.target.value as keyof EvolutionCornerPoint)}
-              aria-label="Métrica"
+              aria-label={uiText('Métrica')}
             >
               {EVO_METRICS.map((m) => (
                 <option key={m.key} value={m.key}>
@@ -359,7 +449,7 @@ function EvolutionSection({ evo, corners }: { evo: EvolutionReport; corners: Map
       </div>
       {evo.trends.length > 0 && (
         <>
-          <h3 className="a-h3">Tendências (primeiro × último dia)</h3>
+          <h3 className="a-h3">{uiText('Tendências (primeiro × último dia)')}</h3>
           <ul className="a-trends">
             {evo.trends.slice(0, 8).map((t) => (
               <li key={`${t.cornerId}-${t.metric}`} data-tone={t.improved ? 'gain' : 'loss'}>
@@ -378,11 +468,36 @@ function EvolutionSection({ evo, corners }: { evo: EvolutionReport; corners: Map
 // ---------------------------------------------------------------------------------------------
 
 const TABS = [
-  { id: 'melhores', label: 'Melhores voltas' },
-  { id: 'sessoes', label: 'Sessões' },
-  { id: 'evolucao', label: 'Evolução' },
-  { id: 'referencias', label: 'Referências do top' },
-  { id: 'curvas', label: 'Curvas' },
+  {
+    id: 'melhores',
+    get label() {
+      return uiText('Melhores voltas');
+    },
+  },
+  {
+    id: 'sessoes',
+    get label() {
+      return uiText('Sessões');
+    },
+  },
+  {
+    id: 'evolucao',
+    get label() {
+      return uiText('Evolução');
+    },
+  },
+  {
+    id: 'referencias',
+    get label() {
+      return uiText('Referências do top');
+    },
+  },
+  {
+    id: 'curvas',
+    get label() {
+      return uiText('Curvas');
+    },
+  },
 ] as const;
 type TabId = (typeof TABS)[number]['id'];
 
@@ -428,8 +543,10 @@ function BestLapsTab({ trackId, hasTopReference }: { trackId: string; hasTopRefe
   if (groups.length === 0 && !filtering) {
     return (
       <Empty>
-        <p>Ainda não há voltas válidas nesta pista.</p>
-        <p className="dim">Complete uma volta limpa (sem sair da pista) e ela aparece aqui.</p>
+        <p>{uiText('Ainda não há voltas válidas nesta pista.')}</p>
+        <p className="dim">
+          {uiText('Complete uma volta limpa (sem sair da pista) e ela aparece aqui.')}
+        </p>
       </Empty>
     );
   }
@@ -449,7 +566,7 @@ function BestLapsTab({ trackId, hasTopReference }: { trackId: string; hasTopRefe
       )}
       {groups.length === 0 && (
         <Empty>
-          <p>Nenhuma volta válida com esse carro nesta pista.</p>
+          <p>{uiText('Nenhuma volta válida com esse carro nesta pista.')}</p>
         </Empty>
       )}
       <div className="a-bestgrid">
@@ -461,7 +578,8 @@ function BestLapsTab({ trackId, hasTopReference }: { trackId: string; hasTopRefe
               title={<CarName carCode={g.carCode} logoSize={24} className="carname-wrap" />}
               actions={
                 <span className="a-small dim">
-                  Melhor <strong className="num a-pbtime">{formatLapTime(pb.timeMs)}</strong>
+                  {`${uiText('Melhor')} `}
+                  <strong className="num a-pbtime">{formatLapTime(pb.timeMs)}</strong>
                 </span>
               }
             >
@@ -474,7 +592,9 @@ function BestLapsTab({ trackId, hasTopReference }: { trackId: string; hasTopRefe
                         {formatLapTime(l.timeMs)}
                       </span>
                       <a className="a-toplap-when" href={routes.session(l.sessionId)}>
-                        {formatDateTime(l.startedAt)} · volta {l.number}
+                        {formatDateTime(l.startedAt)}
+                        {` ${uiText('· volta')} `}
+                        {l.number}
                       </a>
                       {l.isReference && <Tag tone="ref">ref</Tag>}
                     </div>
@@ -490,7 +610,8 @@ function BestLapsTab({ trackId, hasTopReference }: { trackId: string; hasTopRefe
               </ol>
               {g.laps.length > TOP_PER_CAR && (
                 <p className="dim a-small">
-                  + {g.laps.length - TOP_PER_CAR} voltas válidas com este carro.
+                  + {g.laps.length - TOP_PER_CAR}
+                  {` ${uiText('voltas válidas com este carro.')}`}
                 </p>
               )}
             </Card>
@@ -514,7 +635,7 @@ function SessionsTab({ sessions }: { sessions: Session[] }) {
   if (sessions.length === 0) {
     return (
       <Empty>
-        <p>Nenhuma sessão nesta pista ainda.</p>
+        <p>{uiText('Nenhuma sessão nesta pista ainda.')}</p>
       </Empty>
     );
   }
@@ -534,7 +655,7 @@ function SessionsTab({ sessions }: { sessions: Session[] }) {
       )}
       {groups.length === 0 && (
         <Empty>
-          <p>Nenhuma sessão com esse carro nesta pista.</p>
+          <p>{uiText('Nenhuma sessão com esse carro nesta pista.')}</p>
         </Empty>
       )}
       {groups.map((g) => (
@@ -552,10 +673,12 @@ function SessionsTab({ sessions }: { sessions: Session[] }) {
                         <CarName carCode={s.carCode} logoSize={20} />
                       </strong>
                       <span className="dim a-small">
-                        {plural(s.lapCount, 'volta', 'voltas')}
+                        {plural(s.lapCount, uiText('volta'), uiText('voltas'))}
                         {dur ? ` · ${dur}` : ''}
-                        {s.endedAt === null && <Tag tone="info">em andamento</Tag>}
-                        {s.mode === 'replayCapture' && <Tag tone="ref">captura de replay</Tag>}
+                        {s.endedAt === null && <Tag tone="info">{uiText('em andamento')}</Tag>}
+                        {s.mode === 'replayCapture' && (
+                          <Tag tone="ref">{uiText('captura de replay')}</Tag>
+                        )}
                       </span>
                     </span>
                     <span className="a-sessionrow-best num">
@@ -568,7 +691,9 @@ function SessionsTab({ sessions }: { sessions: Session[] }) {
           </ul>
         </section>
       ))}
-      <p className="dim a-small">Para apagar uma sessão inteira, abra-a e use “Apagar sessão”.</p>
+      <p className="dim a-small">
+        {uiText('Para apagar uma sessão inteira, abra-a e use “Apagar sessão”.')}
+      </p>
     </>
   );
 }
@@ -593,7 +718,7 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
 
   const data: ApiTrackAnalysis | null = ta.data;
   const track = data?.track ?? trackOnly.data ?? null;
-  useTitle(track?.name ?? 'Pista');
+  useTitle(track?.name ?? uiText('Pista'));
   const sessionList = sessions.data ?? [];
   const sessionId = pickSession(sessionList, route.query.session);
 
@@ -626,7 +751,10 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
     if (trackOnly.error || !trackOnly.loading) {
       return (
         <>
-          <PageHead title="Pista" back={{ href: routes.home(), label: 'Suas pistas' }} />
+          <PageHead
+            title={uiText('Pista')}
+            back={{ href: routes.home(), label: uiText('Suas pistas') }}
+          />
           <ErrorBox error={trackOnly.error ?? ta.error} onRetry={ta.reload} />
         </>
       );
@@ -663,7 +791,7 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
   return (
     <>
       <PageHead
-        back={{ href: routes.home(), label: 'Suas pistas' }}
+        back={{ href: routes.home(), label: uiText('Suas pistas') }}
         title={
           <EditableTrackName
             trackId={id}
@@ -675,17 +803,18 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
         }
         sub={
           <>
-            {formatKm(track.lengthM, 3)} · {track.corners.length} curvas ·{' '}
-            {track.sectorGates.length} setores
+            {formatKm(track.lengthM, 3)} · {track.corners.length}
+            {` ${uiText('curvas ·')}`} {track.sectorGates.length}
+            {` ${uiText('setores')}`}
           </>
         }
         actions={
           <>
             <a className="a-btn a-btn-ghost" href={routes.sessions({ track: id })}>
-              Lista de sessões
+              {uiText('Lista de sessões')}
             </a>
             <a className="a-btn" href={routes.coach()}>
-              Debrief com IA
+              {uiText('Debrief com IA')}
             </a>
           </>
         }
@@ -698,25 +827,25 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
       {data && (
         <div className="a-stats a-track-stats">
           <div className="a-stat" data-emph="1">
-            <span className="a-stat-k">Sua melhor volta</span>
+            <span className="a-stat-k">{uiText('Sua melhor volta')}</span>
             <span className="a-stat-v num">{formatLapTime(anyPb?.personalBestMs ?? null)}</span>
           </div>
           <div className="a-stat">
-            <span className="a-stat-k">Melhor do top</span>
+            <span className="a-stat-k">{uiText('Melhor do top')}</span>
             <span className="a-stat-v num">{bestRef ? formatLapTime(bestRef) : '–'}</span>
           </div>
           <div className="a-stat">
-            <span className="a-stat-k">Sessões</span>
+            <span className="a-stat-k">{uiText('Sessões')}</span>
             <span className="a-stat-v num">{sessions.data ? ownSessions.length : '–'}</span>
           </div>
           <div className="a-stat">
-            <span className="a-stat-k">Voltas</span>
+            <span className="a-stat-k">{uiText('Voltas')}</span>
             <span className="a-stat-v num">{data.lapCount}</span>
           </div>
         </div>
       )}
 
-      <nav className="a-tabs" aria-label="Seções da pista">
+      <nav className="a-tabs" aria-label={uiText('Seções da pista')}>
         {TABS.map((t) => (
           <a
             key={t.id}
@@ -751,13 +880,13 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
       {tab === 'evolucao' && (
         <>
           <Card
-            title="Evolução"
+            title={uiText('Evolução')}
             actions={
               cars.length > 1 && (
                 <select
                   value={car ?? ''}
                   onChange={(e) => setCarCode(Number(e.target.value))}
-                  aria-label="Carro"
+                  aria-label={uiText('Carro')}
                 >
                   {cars.map((c) => (
                     <option key={c.carCode} value={c.carCode}>
@@ -777,7 +906,7 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
             )}
           </Card>
           <Card
-            title="Consistência de uma sessão"
+            title={uiText('Consistência de uma sessão')}
             className="a-mt"
             actions={
               sessionList.length > 0 && (
@@ -786,12 +915,13 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
                   onChange={(e) =>
                     navigate(routes.track(id, { tab: 'evolucao', session: e.target.value }), true)
                   }
-                  aria-label="Sessão"
+                  aria-label={uiText('Sessão')}
                 >
                   {sessionList.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {formatDateTime(s.startedAt)} · {s.lapCount} voltas
-                      {s.mode === 'replayCapture' ? ' · replay' : ''}
+                      {formatDateTime(s.startedAt)} · {s.lapCount}
+                      {` ${uiText('voltas')}`}
+                      {s.mode === 'replayCapture' ? uiText(' · replay') : ''}
                     </option>
                   ))}
                 </select>
@@ -799,7 +929,7 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
             }
           >
             {!sessionId ? (
-              <p className="dim">Nenhuma sessão nesta pista.</p>
+              <p className="dim">{uiText('Nenhuma sessão nesta pista.')}</p>
             ) : consistency.error ? (
               <ErrorBox error={consistency.error} compact />
             ) : !consistency.data ? (
@@ -809,38 +939,41 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
             )}
             {theo.data && (
               <div className="a-theo">
-                <h3 className="a-h3">Volta ideal da sessão</h3>
+                <h3 className="a-h3">{uiText('Volta ideal da sessão')}</h3>
                 <div className="a-stats">
                   <div className="a-stat">
-                    <span className="a-stat-k">Sua melhor</span>
+                    <span className="a-stat-k">{uiText('Sua melhor')}</span>
                     <span className="a-stat-v num">
                       {formatLapTime(theo.data.report.bestLapMs)}
                     </span>
                   </div>
                   <div className="a-stat">
-                    <span className="a-stat-k">Melhores setores</span>
+                    <span className="a-stat-k">{uiText('Melhores setores')}</span>
                     <span className="a-stat-v num">
                       {formatLapTime(theo.data.report.theoreticalBestSectorsMs)}
                     </span>
                   </div>
                   <div className="a-stat">
                     <span className="a-stat-k">
-                      Melhores {theo.data.report.count} microssetores
+                      {`${uiText('Melhores')} `}
+                      {theo.data.report.count}
+                      {` ${uiText('microssetores')}`}
                     </span>
                     <span className="a-stat-v num">
                       {formatLapTime(theo.data.report.theoreticalBestMs)}
                     </span>
                   </div>
                   <div className="a-stat" data-emph="ideal">
-                    <span className="a-stat-k">Ganho possível</span>
+                    <span className="a-stat-k">{uiText('Ganho possível')}</span>
                     <span className="a-stat-v num" data-tone="gain">
                       {formatDelta(theo.data.report.theoreticalBestMs - theo.data.report.bestLapMs)}
                     </span>
                   </div>
                 </div>
                 <p className="dim a-small">
-                  Soma dos melhores trechos de {theo.data.report.laps.length} voltas válidas: o
-                  quanto você já mostrou que consegue andar.
+                  {`${uiText('Soma dos melhores trechos de')} `}
+                  {theo.data.report.laps.length}
+                  {` ${uiText('voltas válidas: o quanto você já mostrou que consegue andar.')}`}
                 </p>
               </div>
             )}
@@ -849,15 +982,15 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
       )}
 
       {tab === 'referencias' && (
-        <Card title="Referências do top mundial">
+        <Card title={uiText('Referências do top mundial')}>
           {data && data.references.length > 0 ? (
             <div className="a-table-wrap">
               <table className="a-table a-table-cards">
                 <thead>
                   <tr>
-                    <th>Piloto</th>
-                    <th>Carro</th>
-                    <th className="num-col">Tempo</th>
+                    <th>{uiText('Piloto')}</th>
+                    <th>{uiText('Carro')}</th>
+                    <th className="num-col">{uiText('Tempo')}</th>
                     <th />
                   </tr>
                 </thead>
@@ -868,7 +1001,7 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
                     return (
                       <tr key={r.lapId}>
                         <td>
-                          <Tag tone="ref">ref</Tag> {r.driverName ?? 'sem nome'}
+                          <Tag tone="ref">ref</Tag> {r.driverName ?? uiText('sem nome')}
                         </td>
                         <td data-label="Carro">
                           <CarName carCode={r.carCode} />
@@ -882,7 +1015,7 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
                               className="a-btn a-btn-ghost a-btn-sm"
                               href={routes.compare({ lap: mine, ref: r.lapId })}
                             >
-                              Comparar com minha melhor
+                              {uiText('Comparar com minha melhor')}
                             </a>
                           )}
                         </td>
@@ -894,14 +1027,15 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
             </div>
           ) : (
             <div className="ui-empty a-empty">
-              <strong>Nenhuma volta do top guardada para esta pista</strong>
+              <strong>{uiText('Nenhuma volta do top guardada para esta pista')}</strong>
               <p>
-                Assista ao replay de um piloto do ranking no Time Trial e o app grava a volta dele
-                como alvo para você comparar.
+                {uiText(
+                  'Assista ao replay de um piloto do ranking no Time Trial e o app grava a volta dele como alvo para você comparar.',
+                )}
               </p>
               <a className="a-btn" href={routes.capture()}>
                 <Icon name="capture" size={18} />
-                Capturar uma referência
+                {uiText('Capturar uma referência')}
               </a>
             </div>
           )}
@@ -924,23 +1058,27 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
                 onCorner={onCorner}
               />
             ) : (
-              <Empty>A pista ainda não tem linha de referência (complete uma volta limpa).</Empty>
+              <Empty>
+                {uiText('A pista ainda não tem linha de referência (complete uma volta limpa).')}
+              </Empty>
             )}
           </div>
           <Card
-            title="Curvas"
+            title={uiText('Curvas')}
             actions={
               <ConfirmButton
                 className="a-btn a-btn-ghost a-btn-sm"
-                label="Redetectar curvas"
-                question="Detectar as curvas de novo? (nomes próximos são mantidos)"
-                confirmLabel="Redetectar"
+                label={uiText('Redetectar curvas')}
+                question={uiText('Detectar as curvas de novo? (nomes próximos são mantidos)')}
+                confirmLabel={uiText('Redetectar')}
                 onConfirm={async () => {
                   try {
                     const r = await api.redetectCorners(id);
                     addNotice(
                       'info',
-                      r.detected ? `${r.corners.length} curvas detectadas.` : 'Nada mudou.',
+                      r.detected
+                        ? uiText('{0} curvas detectadas.', r.corners.length)
+                        : uiText('Nada mudou.'),
                     );
                     reload();
                   } catch (e) {
@@ -951,15 +1089,15 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
             }
           >
             {corners.length === 0 && track.corners.length === 0 ? (
-              <p className="dim">Nenhuma curva detectada ainda.</p>
+              <p className="dim">{uiText('Nenhuma curva detectada ainda.')}</p>
             ) : (
               <div className="a-table-wrap a-corner-edit">
                 <table className="a-table">
                   <thead>
                     <tr>
-                      <th>Curva</th>
-                      <th>Nome</th>
-                      <th>Marco de frenagem</th>
+                      <th>{uiText('Curva')}</th>
+                      <th>{uiText('Nome')}</th>
+                      <th>{uiText('Marco de frenagem')}</th>
                       <th />
                     </tr>
                   </thead>
@@ -986,12 +1124,12 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
                 e.preventDefault();
                 const n = Number(sectors);
                 if (!Number.isInteger(n) || n < 1 || n > 20) {
-                  addNotice('warn', 'Use de 1 a 20 setores.');
+                  addNotice('warn', uiText('Use de 1 a 20 setores.'));
                   return;
                 }
                 try {
                   await api.setSectorCount(id, n);
-                  addNotice('info', `${n} setores de mesmo comprimento.`);
+                  addNotice('info', uiText('{0} setores de mesmo comprimento.', n));
                   reload();
                 } catch (x) {
                   addNotice('error', (x as Error).message, 6000);
@@ -999,7 +1137,7 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
               }}
             >
               <label>
-                Setores (iguais)
+                {uiText('Setores (iguais)')}
                 <input
                   className="a-input a-input-num"
                   type="number"
@@ -1010,10 +1148,10 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
                 />
               </label>
               <button type="submit" className="a-btn a-btn-ghost">
-                Aplicar
+                {uiText('Aplicar')}
               </button>
               <span className="dim a-small">
-                Tempos de setor de voltas antigas não são recalculados.
+                {uiText('Tempos de setor de voltas antigas não são recalculados.')}
               </span>
             </form>
           </Card>

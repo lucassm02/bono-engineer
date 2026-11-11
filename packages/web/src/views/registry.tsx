@@ -1,5 +1,6 @@
 import type { ViewId } from '@gt7/shared';
 import type { ComponentType } from 'react';
+import { t as uiText } from '../lib/i18n.ts';
 import { VIEW_DESCRIPTIONS, VIEW_LABELS } from '../lib/labels.ts';
 import { CombustivelView } from './CombustivelView.tsx';
 import { CorridaView } from './CorridaView.tsx';
@@ -18,7 +19,7 @@ function EmBreveView({ view }: { view: ViewId }) {
   return (
     <div className="view em-breve">
       <div className="em-breve-title">{VIEW_LABELS[view]}</div>
-      <div className="em-breve-tag">Em breve</div>
+      <div className="em-breve-tag">{uiText('Em breve')}</div>
       <p>{VIEW_DESCRIPTIONS[view]}</p>
     </div>
   );

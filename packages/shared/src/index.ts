@@ -44,8 +44,10 @@ export {
   searchKnowledge,
   type TopicRef,
 } from './knowledge/index.ts';
+export * from './language.ts';
 export * from './live.ts';
 export * from './radio/index.ts';
+export { localizedRadioUtterance } from './radio-translations.ts';
 export * from './telemetry.ts';
 export * from './tracks/index.ts';
 export * from './ui.ts';

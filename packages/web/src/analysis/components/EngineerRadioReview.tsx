@@ -1,6 +1,7 @@
 import type { CornerComparisonRow, EngineerRadioCall, EngineerRadioLog } from '@gt7/shared';
 import { isBrake } from '../../lib/engineerRadio.ts';
 import { formatDelta } from '../../lib/format.ts';
+import { t as uiText } from '../../lib/i18n.ts';
 import { routes } from '../../lib/route.ts';
 import { cornerLabel } from '../lib/chartData.ts';
 import { Panel } from './Panel.tsx';
@@ -39,10 +40,12 @@ export function EngineerRadioReview({
   );
   return (
     <Panel
-      title="Chamadas do engenheiro"
+      title={uiText('Chamadas do engenheiro')}
       description={
         calls.length > 0
-          ? 'As linhas azuis nos gráficos indicam onde o áudio começou. A posição dos pedais é comparada à referência. A diferença de tempo é da curva inteira.'
+          ? uiText(
+              'As linhas azuis nos gráficos indicam onde o áudio começou. A posição dos pedais é comparada à referência. A diferença de tempo é da curva inteira.',
+            )
           : undefined
       }
     >
@@ -51,10 +54,10 @@ export function EngineerRadioReview({
           <table className="cmp-table">
             <thead>
               <tr>
-                <th>Curva e chamada</th>
-                <th>Áudio e ponto indicado</th>
-                <th>Ação do piloto</th>
-                <th>Tempo na curva</th>
+                <th>{uiText('Curva e chamada')}</th>
+                <th>{uiText('Áudio e ponto indicado')}</th>
+                <th>{uiText('Ação do piloto')}</th>
+                <th>{uiText('Tempo na curva')}</th>
               </tr>
             </thead>
             <tbody>
@@ -79,12 +82,14 @@ export function EngineerRadioReview({
                       {call.text}
                     </td>
                     <td>
-                      {Math.round(call.distanceM)} m · meta {Math.round(call.actionDistanceM)} m
+                      {Math.round(call.distanceM)}
+                      {` ${uiText('m · meta')} `}
+                      {Math.round(call.actionDistanceM)} m
                     </td>
                     <td>
                       {pedal?.position == null
                         ? '—'
-                        : `${Math.round(pedal.position)} m${delta == null ? '' : ` · ${Math.abs(delta) < 0.5 ? 'no ponto' : `${Math.round(Math.abs(delta))} m ${delta > 0 ? 'depois' : 'antes'}`}`}`}
+                        : `${Math.round(pedal.position)} m${delta == null ? '' : ` · ${Math.abs(delta) < 0.5 ? uiText('no ponto') : `${Math.round(Math.abs(delta))} m ${delta > 0 ? uiText('depois') : uiText('antes')}`}`}`}
                     </td>
                     <td>{row ? formatDelta(row.timeLostMs) : '—'}</td>
                   </tr>
@@ -97,7 +102,7 @@ export function EngineerRadioReview({
       {otherReferences.map((id) => (
         <p key={id} className="cmp-table-note">
           <a href={routes.compare({ lap: lapId, ref: id })}>
-            Ver chamadas com a referência usada no rádio
+            {uiText('Ver chamadas com a referência usada no rádio')}
           </a>
         </p>
       ))}

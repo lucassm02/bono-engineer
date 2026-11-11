@@ -10,6 +10,7 @@ import {
   formatLapTime,
   formatSectorTime,
 } from '../lib/format.ts';
+import { t as uiText } from '../lib/i18n.ts';
 import { DELTA_REFERENCE_LABELS } from '../lib/labels.ts';
 import { useLiveRender } from '../live/raf.ts';
 import { DeltaBar } from '../widgets/DeltaBar.tsx';
@@ -22,14 +23,16 @@ export function trendGlyph(rate: number | null): string {
 }
 
 export function lapCounterText(f: LiveFrame): string {
-  if (f.lap.lap <= 0) return 'Volta de saída';
-  return f.lap.totalLaps ? `Volta ${f.lap.lap}/${f.lap.totalLaps}` : `Volta ${f.lap.lap}`;
+  if (f.lap.lap <= 0) return uiText('Volta de saída');
+  return f.lap.totalLaps
+    ? uiText('Volta {0}/{1}', f.lap.lap, f.lap.totalLaps)
+    : uiText('Volta {0}', f.lap.lap);
 }
 
 export function fuelText(f: LiveFrame): string {
   const laps = f.fuel.lapsRemaining;
-  if (laps === null) return `Comb. ${formatFixed(f.fuel.level, 1)} L`;
-  return `Comb. ${formatFixed(laps, 1)} voltas`;
+  if (laps === null) return uiText('Comb. {0} L', formatFixed(f.fuel.level, 1));
+  return uiText('Comb. {0} voltas', formatFixed(laps, 1));
 }
 
 const SECTORS = [0, 1, 2] as const;
@@ -48,7 +51,9 @@ export function CorridaView() {
     setText(e.trend, trendGlyph(d.rateMsPerS));
     setText(
       e.ref,
-      d.ms === null ? 'sem referência' : `vs ${DELTA_REFERENCE_LABELS[d.reference].toLowerCase()}`,
+      d.ms === null
+        ? uiText('sem referência')
+        : `vs ${DELTA_REFERENCE_LABELS[d.reference].toLowerCase()}`,
     );
     setText(e.gear, formatGear(f.car.gear));
     setText(e.speed, formatInt(f.car.speedKmh));
@@ -73,7 +78,7 @@ export function CorridaView() {
       <div className="corrida-meta">
         <span>
           <span ref={set('lap')} className="meta-strong">
-            Volta –
+            {uiText('Volta –')}
           </span>
           <span
             ref={set('invalid')}
@@ -81,10 +86,10 @@ export function CorridaView() {
             data-tone="loss"
             data-show="0"
           >
-            Volta inválida
+            {uiText('Volta inválida')}
           </span>
         </span>
-        <span ref={set('fuel')}>Comb. –</span>
+        <span ref={set('fuel')}>{uiText('Comb. –')}</span>
       </div>
       <div className="corrida-delta tone-box" ref={set('deltaBox')} data-tone="neutral">
         <div className="readout-label">
@@ -96,7 +101,7 @@ export function CorridaView() {
         </div>
       </div>
       <div className="corrida-gear">
-        <div className="readout-label">Marcha</div>
+        <div className="readout-label">{uiText('Marcha')}</div>
         <div className="gear-value num" ref={set('gear')}>
           –
         </div>
@@ -110,19 +115,19 @@ export function CorridaView() {
       <DeltaBar className="corrida-bar" />
       <div className="corrida-times">
         <div className="time-cell time-cell-key">
-          <div className="readout-label">Prevista</div>
+          <div className="readout-label">{uiText('Prevista')}</div>
           <div className="num" ref={set('predicted')} />
         </div>
         <div className="time-cell">
-          <div className="readout-label">Atual</div>
+          <div className="readout-label">{uiText('Atual')}</div>
           <div className="num" ref={set('current')} />
         </div>
         <div className="time-cell">
-          <div className="readout-label">Última</div>
+          <div className="readout-label">{uiText('Última')}</div>
           <div className="num" ref={set('last')} />
         </div>
         <div className="time-cell">
-          <div className="readout-label">Melhor</div>
+          <div className="readout-label">{uiText('Melhor')}</div>
           <div className="num" ref={set('best')} />
         </div>
       </div>

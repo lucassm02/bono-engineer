@@ -38,6 +38,7 @@ import type {
   ViewId,
 } from '@gt7/shared';
 import { PRODUCT_NAME } from '@gt7/shared';
+import { t as uiText } from '../lib/i18n.ts';
 import type { TracksOverview } from './lib/history.ts';
 
 export class ApiError extends Error {
@@ -72,7 +73,7 @@ const STATUS_MESSAGES: Record<number, string> = {
 /** Turns a non-2xx response into an ApiError (reads `{ error: { code, message } }`). */
 export async function errorFromResponse(res: Response): Promise<ApiError> {
   let code = `http${res.status}`;
-  let message = STATUS_MESSAGES[res.status] ?? `Erro ${res.status} do servidor.`;
+  let message = STATUS_MESSAGES[res.status] ?? uiText('Erro {0} do servidor.', res.status);
   try {
     const text = await res.text();
     if (text) {

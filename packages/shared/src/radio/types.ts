@@ -188,6 +188,8 @@ export interface RadioPanelNote {
   ruleId: string;
   priority: RadioPriority;
   label: string;
+  /** Catalog keys for localizing the same call on screen, absent for panel-only notices. */
+  utterance: RadioUtterance | null;
   spoken: boolean;
   /** Frame time when it was decided. */
   t: number;

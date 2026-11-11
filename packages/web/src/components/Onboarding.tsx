@@ -12,6 +12,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../analysis/api.ts';
 import { copyText } from '../analysis/components/ui.tsx';
 import { agoText, describeLink, hostsProbedText, ipSourceLabel } from '../lib/consoleLink.ts';
+import { t as uiText } from '../lib/i18n.ts';
 import { GT7_INTEGRATION } from '../lib/integrations.ts';
 import {
   HELP_AFTER_MS,
@@ -63,23 +64,31 @@ function HelpChecklist({ status }: { status: ApiStatus | null }) {
   const [showIp, setShowIp] = useState(false);
   const fw = status?.firewall;
   return (
-    <section className="ui-card ob-help" data-tone="warn" aria-label="Ajuda para achar o PS5">
-      <h3 className="ui-card-title">Ainda não achei o PS5. Vamos conferir:</h3>
+    <section
+      className="ui-card ob-help"
+      data-tone="warn"
+      aria-label={uiText('Ajuda para achar o PS5')}
+    >
+      <h3 className="ui-card-title">{uiText('Ainda não achei o PS5. Vamos conferir:')}</h3>
       <ul>
         <li>
-          <strong>PS5 ligado e na mesma rede.</strong> Ele precisa estar no mesmo Wi-Fi (ou no mesmo
-          roteador) que este PC. Evite a rede “convidado”.
+          <strong>{uiText('PS5 ligado e na mesma rede.')}</strong>
+          {' ' +
+            uiText(
+              'Ele precisa estar no mesmo Wi-Fi (ou no mesmo roteador) que este PC. Evite a rede “convidado”.',
+            )}
         </li>
         <li>
-          <strong>Gran Turismo 7 aberto numa pista.</strong> No menu o PS5 não envia dados. Entre
-          num Time Trial, treino livre ou replay.
+          <strong>{uiText('Gran Turismo 7 aberto numa pista.')}</strong>
+          {' ' +
+            uiText('No menu o PS5 não envia dados. Entre num Time Trial, treino livre ou replay.')}
         </li>
         <li>
-          <strong>Firewall do Windows.</strong>{' '}
+          <strong>{uiText('Firewall do Windows.')}</strong>{' '}
           {!fw ? (
-            'Verificando…'
+            uiText('Verificando…')
           ) : fw.state === 'ok' ? (
-            'Tudo liberado ✓'
+            uiText('Tudo liberado ✓')
           ) : (
             <>
               {fw.message}
@@ -94,7 +103,7 @@ function HelpChecklist({ status }: { status: ApiStatus | null }) {
                     onClick={() => void copyText(fw.powershellCommands.join('\n'))}
                   >
                     <Icon name="copy" size={16} />
-                    Copiar comandos
+                    {uiText('Copiar comandos')}
                   </button>
                 </>
               )}
@@ -102,14 +111,14 @@ function HelpChecklist({ status }: { status: ApiStatus | null }) {
           )}
         </li>
         <li>
-          <strong>Nenhum outro programa de telemetria aberto</strong> (SimHub, GT7 Dashboard…): só
-          um deles pode falar com o PS5 por vez.
+          <strong>{uiText('Nenhum outro programa de telemetria aberto')}</strong>
+          {` ${uiText('(SimHub, GT7 Dashboard…): só um deles pode falar com o PS5 por vez.')}`}
         </li>
       </ul>
       <div className="cx-actions">
         <button type="button" className="ui-btn" onClick={() => void rescanConsole()}>
           <Icon name="refresh" size={18} />
-          Procurar de novo
+          {uiText('Procurar de novo')}
         </button>
         <button
           type="button"
@@ -118,7 +127,7 @@ function HelpChecklist({ status }: { status: ApiStatus | null }) {
           aria-expanded={showIp}
           onClick={() => setShowIp((v) => !v)}
         >
-          Último recurso: informar o IP
+          {uiText('Último recurso: informar o IP')}
         </button>
       </div>
       {showIp && <IpForm autoFocus />}
@@ -152,8 +161,9 @@ function SearchStep({ startedAt }: { startedAt: number }) {
     <div className="ob-step">
       <Radar found={false} />
       <p className="ob-lead">
-        No PS5, <strong>abra o Gran Turismo 7 e entre em uma pista</strong> (ou num replay). O resto
-        é comigo.
+        {`${uiText('No PS5,')} `}
+        <strong>{uiText('abra o Gran Turismo 7 e entre em uma pista')}</strong>
+        {` ${uiText('(ou num replay). O resto é comigo.')}`}
       </p>
       <div className="ui-card ob-live" data-tone={view.tone} role="status" aria-live="polite">
         <LinkDot tone={view.tone} busy={view.busy} />
@@ -163,8 +173,8 @@ function SearchStep({ startedAt }: { startedAt: number }) {
             <span className="ob-live-sub">
               {conn.hostsProbed > 0 ? `${hostsProbedText(conn.hostsProbed)} · ` : ''}
               {agoText(conn.lastScanAt) === 'nunca'
-                ? 'começando…'
-                : `varredura ${agoText(conn.lastScanAt)}`}
+                ? uiText('começando…')
+                : uiText('varredura {0}', agoText(conn.lastScanAt))}
             </span>
           )}
         </div>
@@ -174,8 +184,9 @@ function SearchStep({ startedAt }: { startedAt: number }) {
       </div>
       {!help && (
         <p className="ui-help">
-          Pode levar alguns segundos. Se demorar mais de {Math.round(HELP_AFTER_MS / 1000)} s, eu
-          mostro o que conferir.
+          {`${uiText('Pode levar alguns segundos. Se demorar mais de')} `}
+          {Math.round(HELP_AFTER_MS / 1000)}
+          {` ${uiText('s, eu mostro o que conferir.')}`}
         </p>
       )}
       {help && <HelpChecklist status={status} />}
@@ -204,19 +215,20 @@ function FoundStep() {
       <p className="ob-lead">
         {conn?.consoleIp ? (
           <>
-            Console em <span className="num">{conn.consoleIp}</span> ({ipSourceLabel(conn.source)}).
+            {`${uiText('Console em')} `}
+            <span className="num">{conn.consoleIp}</span> ({ipSourceLabel(conn.source)}).
           </>
         ) : (
-          'Console encontrado.'
+          uiText('Console encontrado.')
         )}{' '}
         {conn?.state === 'receiving'
-          ? 'Os dados já estão chegando.'
-          : 'Assim que você entrar numa pista, os dados começam a chegar.'}
+          ? uiText('Os dados já estão chegando.')
+          : uiText('Assim que você entrar numa pista, os dados começam a chegar.')}
       </p>
       <div className="ui-card ob-live" data-tone={view.tone} role="status" aria-live="polite">
         <LinkDot tone={view.tone} busy={view.busy} />
         <div>
-          <strong>{conn?.state === 'found' ? 'Aguardando o jogo' : view.title}</strong>
+          <strong>{conn?.state === 'found' ? uiText('Aguardando o jogo') : view.title}</strong>
         </div>
       </div>
       {lan?.qr && (
@@ -224,13 +236,14 @@ function FoundStep() {
           <img
             className="ob-qr"
             src={lan.qr}
-            alt="QR Code para abrir o painel em outro dispositivo"
+            alt={uiText('QR Code para abrir o painel em outro dispositivo')}
           />
           <div>
-            <h3 className="ui-card-title">Quer abrir o painel em outro dispositivo?</h3>
+            <h3 className="ui-card-title">{uiText('Quer abrir o painel em outro dispositivo?')}</h3>
             <p className="ui-help">
-              Escaneie o QR Code com a câmera do dispositivo. Ele abre o mesmo painel (dispositivo
-              remoto e PC no mesmo Wi-Fi).
+              {uiText(
+                'Escaneie o QR Code com a câmera do dispositivo. Ele abre o mesmo painel (dispositivo remoto e PC no mesmo Wi-Fi).',
+              )}
             </p>
             {lan.url && (
               <p className="ob-url">
@@ -246,7 +259,7 @@ function FoundStep() {
                   }}
                 >
                   <Icon name={copied ? 'check' : 'copy'} size={16} />
-                  {copied ? 'Copiado ✓' : 'Copiar'}
+                  {copied ? uiText('Copiado ✓') : uiText('Copiar')}
                 </button>
               </p>
             )}
@@ -261,19 +274,26 @@ function ReadyStep() {
   return (
     <div className="ob-step">
       <Radar found />
-      <p className="ob-lead">Agora é só pilotar. O painel ao vivo mostra tudo em tempo real.</p>
+      <p className="ob-lead">
+        {uiText('Agora é só pilotar. O painel ao vivo mostra tudo em tempo real.')}
+      </p>
       <ul className="ob-tips">
         <li>
-          <strong>Deslize</strong> para os lados para trocar de tela.
+          <strong>{uiText('Deslize')}</strong>
+          {` ${uiText('para os lados para trocar de tela.')}`}
         </li>
         <li>
-          <strong>Toque duas vezes</strong> para trocar a referência do delta.
+          <strong>{uiText('Toque duas vezes')}</strong>
+          {` ${uiText('para trocar a referência do delta.')}`}
         </li>
         <li>
-          <strong>Segure</strong> a tela para escolher telas e ajustes.
+          <strong>{uiText('Segure')}</strong>
+          {` ${uiText('a tela para escolher telas e ajustes.')}`}
         </li>
         <li>
-          Depois da sessão, abra <strong>Início</strong> para ver suas pistas e onde ganhar tempo.
+          {`${uiText('Depois da sessão, abra')} `}
+          <strong>{uiText('Início')}</strong>
+          {` ${uiText('para ver suas pistas e onde ganhar tempo.')}`}
         </li>
       </ul>
     </div>
@@ -281,9 +301,13 @@ function ReadyStep() {
 }
 
 const TITLES: Record<OnboardingStep, string> = {
-  search: `Conecte o ${GT7_INTEGRATION.name}`,
+  get search() {
+    return uiText('Conecte o {0}', GT7_INTEGRATION.name);
+  },
   found: 'PS5 encontrado ✓',
-  ready: 'Tudo pronto!',
+  get ready() {
+    return uiText('Tudo pronto!');
+  },
 };
 
 export default function Onboarding() {
@@ -304,11 +328,14 @@ export default function Onboarding() {
       onClose={() => finishOnboarding(false)}
       className="bn-modal-text ob-modal"
       title={TITLES[step]}
-      subtitle={`Primeiros passos · ${idx + 1} de ${ONBOARDING_STEPS.length}`}
+      subtitle={uiText('Primeiros passos · {0} de {1}', idx + 1, ONBOARDING_STEPS.length)}
       hideClose
       dismissOnBackdrop={false}
       headerExtra={
-        <ol className="ob-steps" aria-label={`Passo ${idx + 1} de ${ONBOARDING_STEPS.length}`}>
+        <ol
+          className="ob-steps"
+          aria-label={uiText('Passo {0} de {1}', idx + 1, ONBOARDING_STEPS.length)}
+        >
           {ONBOARDING_STEPS.map((s, i) => (
             <li key={s} data-state={i < idx ? 'done' : i === idx ? 'current' : 'todo'} />
           ))}
@@ -323,7 +350,7 @@ export default function Onboarding() {
               data-variant="ghost"
               onClick={() => finishOnboarding(false)}
             >
-              Pular
+              {uiText('Pular')}
             </button>
           )}
           {step === 'ready' && (
@@ -334,18 +361,18 @@ export default function Onboarding() {
               onClick={() => setStep('found')}
             >
               <Icon name="back" size={18} />
-              Voltar
+              {uiText('Voltar')}
             </button>
           )}
           {step === 'found' && (
             <button type="button" className="ui-btn" onClick={() => setStep('ready')}>
-              Continuar
+              {uiText('Continuar')}
               <Icon name="chevron-right" size={18} />
             </button>
           )}
           {step === 'ready' && (
             <button type="button" className="ui-btn" onClick={() => finishOnboarding(true)}>
-              Ir para o painel ao vivo
+              {uiText('Ir para o painel ao vivo')}
             </button>
           )}
         </>

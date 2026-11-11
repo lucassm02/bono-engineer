@@ -9,6 +9,7 @@
 import type { TrackRecognitionCandidate } from '@gt7/shared';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { type Gt7Track, trackDisplayName } from '../../data/gt7Tracks.ts';
+import { t as uiText } from '../../lib/i18n.ts';
 import { addNotice } from '../../state/uiStore.ts';
 import { api } from '../api.ts';
 import { formatKm } from '../lib/history.ts';
@@ -37,12 +38,12 @@ export async function saveTrackName(
 export function TrackNameField({
   initial = '',
   lengthM,
-  placeholder = 'Digite o nome da pista (ex.: Monza, Suzuka, Spa)…',
+  placeholder = uiText('Digite o nome da pista (ex.: Monza, Suzuka, Spa)…'),
   autoFocus,
   busy,
   onSubmit,
   onCancel,
-  submitLabel = 'Salvar',
+  submitLabel = uiText('Salvar'),
 }: {
   initial?: string;
   lengthM?: number;
@@ -95,7 +96,7 @@ export function TrackNameField({
           aria-expanded={open && options.length > 0}
           aria-controls={listId}
           aria-autocomplete="list"
-          aria-label="Nome da pista"
+          aria-label={uiText('Nome da pista')}
           onChange={(e) => {
             setText(e.target.value);
             setOpen(true);
@@ -131,7 +132,7 @@ export function TrackNameField({
         </button>
         {onCancel && (
           <button type="button" className="a-btn a-btn-ghost" onClick={onCancel}>
-            Cancelar
+            {uiText('Cancelar')}
           </button>
         )}
       </div>
@@ -203,7 +204,7 @@ export function EditableTrackName({
     <button
       type="button"
       className="a-title-edit"
-      title="Clique para renomear"
+      title={uiText('Clique para renomear')}
       onClick={() => setEditing(true)}
     >
       <span>{name}</span>
@@ -271,21 +272,30 @@ export function NewTrackPrompt({
     const ok = await saveTrackName(trackId, name, layout);
     setBusy(false);
     if (ok) {
-      addNotice('info', `Pista salva como “${name}”.`);
+      addNotice('info', uiText('Pista salva como “{0}”.', name));
       onSaved();
     }
   };
 
   return (
-    <section className="a-newtrack" data-variant={variant} aria-label="Nova pista detectada">
+    <section
+      className="a-newtrack"
+      data-variant={variant}
+      aria-label={uiText('Nova pista detectada')}
+    >
       <div className="a-newtrack-head">
-        <strong>Nova pista detectada — qual é?</strong>
-        <span className="dim a-small num">volta de {formatKm(lengthM)}</span>
+        <strong>{uiText('Nova pista detectada — qual é?')}</strong>
+        <span className="dim a-small num">
+          {`${uiText('volta de')} `}
+          {formatKm(lengthM)}
+        </span>
       </div>
       {suggestions.length > 0 && (
         <div className="a-newtrack-sugg">
           <span className="dim a-small">
-            {byGeometry ? 'O traçado se parece com:' : 'Parece ser (só pelo tamanho):'}
+            {byGeometry
+              ? uiText('O traçado se parece com:')
+              : uiText('Parece ser (só pelo tamanho):')}
           </span>
           {suggestions.map((s) => (
             <button
@@ -298,21 +308,24 @@ export function NewTrackPrompt({
             >
               {s.displayName}
               <span className="a-suggest-sub">
-                {s.basis === 'geometry' && s.confidence === 'high' ? 'traçado confere' : 'é essa'}
+                {s.basis === 'geometry' && s.confidence === 'high'
+                  ? uiText('traçado confere')
+                  : uiText('é essa')}
               </span>
             </button>
           ))}
           {!showTyping && (
             <button type="button" className="a-link-btn a-small" onClick={() => setTyping(true)}>
-              Outra pista…
+              {uiText('Outra pista…')}
             </button>
           )}
         </div>
       )}
       {suggestions.length > 0 && needsCare && (
         <p className="dim a-small a-newtrack-note">
-          Há layouts parecidos (reverso, com ou sem chicane…): confira qual você correu antes de
-          confirmar.
+          {uiText(
+            'Há layouts parecidos (reverso, com ou sem chicane…): confira qual você correu antes de confirmar.',
+          )}
         </p>
       )}
       {showTyping && (
@@ -326,7 +339,7 @@ export function NewTrackPrompt({
       )}
       {onLater && (
         <button type="button" className="a-link-btn a-small a-newtrack-later" onClick={onLater}>
-          Agora não
+          {uiText('Agora não')}
         </button>
       )}
     </section>
@@ -336,12 +349,16 @@ export function NewTrackPrompt({
 /** Tooltip of a suggestion: why the app thinks so. */
 function candidateTitle(c: TrackRecognitionCandidate): string {
   const diff = `${(Math.abs(c.lengthErrRel) * 100).toFixed(1).replace('.', ',')}%`;
-  const len = `Comprimento oficial: ${formatKm(c.officialLengthM)} (a volta medida difere ${diff})`;
+  const len = uiText(
+    'Comprimento oficial: {0} (a volta medida difere {1})',
+    formatKm(c.officialLengthM),
+    diff,
+  );
   const turns = c.turns > 0 ? ` · ${c.turns} curvas` : '';
   const geo =
     c.basis === 'geometry' && c.meanDevM !== null
-      ? `Traçado: desvio médio de ${c.meanDevM.toFixed(1).replace('.', ',')} m. `
+      ? uiText('Traçado: desvio médio de {0} m. ', c.meanDevM.toFixed(1).replace('.', ','))
       : '';
-  const alike = c.lookAlikes.length ? ` · Parecidas: ${c.lookAlikes.join('; ')}` : '';
+  const alike = c.lookAlikes.length ? uiText(' · Parecidas: {0}', c.lookAlikes.join('; ')) : '';
   return `${geo}${len}${turns}${alike}`;
 }

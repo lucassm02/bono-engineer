@@ -6,7 +6,7 @@ O Bono Engineer é um engenheiro de pista para simuladores. A integração dispo
 
 ## Capturas de tela
 
-Capturas do aplicativo em português do Brasil, com telemetria de demonstração.
+Capturas do aplicativo em português do Brasil, com telemetria de demonstração. Em **Configurações → Idioma**, escolha português do Brasil, inglês ou espanhol para a interface e o rádio.
 
 | Painel ao vivo | Engenheiro de rádio |
 | --- | --- |
@@ -31,7 +31,7 @@ Capturas do aplicativo em português do Brasil, com telemetria de demonstração
 - **Treino** tem os perfis Aprender pista, Ganhar tempo, Consistência e Livre. Com uma referência disponível, Aprender pista pode orientar no modo básico (“Freada leve em 100 metros”) ou detalhado (“50% de freio em 100 metros”).
 - **Classificação** alerta sobre pneus frios na volta de preparação, fica em silêncio durante a volta rápida e informa o resultado depois da linha. **Corrida** prioriza alertas de pneus e combustível quando a telemetria permite. Ambos os modos funcionam sem volta de referência.
 - Escolha o nível de fala Essencial, Detalhado ou Mudo. Configure o resumo de volta, o reforço positivo e a antecipação das chamadas. O botão de microfone ao lado do menu e do cadeado mostra ou oculta o cartão do rádio, mantendo a saída de áudio ativa.
-- Selecione as vozes Alex, Santa ou Bruno, disponíveis em português do Brasil. O rádio ao vivo segue regras de telemetria e pode registrar as decisões para análise e reprodução.
+- Escolha entre três vozes neurais por idioma. O mesmo catálogo de chamadas está disponível no áudio local e no Discord. O rádio segue regras de telemetria e pode registrar as decisões para análise e reprodução.
 - Envie as chamadas de Aprender pista para um **canal de voz do Discord** e ouça no headset do PS5. O app Windows usa o armazenamento seguro do sistema para criptografar o token. O teste com dez bipes mede o atraso até o headset, e o Bono usa o atraso e a velocidade recente para adiantar as chamadas. Veja o [guia de configuração do Discord](radio-discord.md).
 
 ### Sessões, referências e análise

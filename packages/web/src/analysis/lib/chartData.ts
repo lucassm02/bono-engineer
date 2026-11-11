@@ -12,6 +12,8 @@ import type {
   DrivingEvent,
   MicrosectorColor,
 } from '@gt7/shared';
+import { formatFixed } from '../../lib/format.ts';
+import { t as uiText } from '../../lib/i18n.ts';
 
 // ---------------------------------------------------------------------------------------------
 // Traces
@@ -54,20 +56,69 @@ export interface PanelDef {
 }
 
 export const COMPARE_PANELS: PanelDef[] = [
-  { key: 'speed', label: 'Velocidade', unit: 'km/h', scale: 1, height: 190, digits: 0 },
+  {
+    key: 'speed',
+    get label() {
+      return uiText('Velocidade');
+    },
+    unit: 'km/h',
+    scale: 1,
+    height: 190,
+    digits: 0,
+  },
   {
     key: 'throttle',
-    label: 'Acelerador',
+    get label() {
+      return uiText('Acelerador');
+    },
     unit: '%',
     scale: 100,
     height: 90,
     range: [0, 100],
     digits: 0,
   },
-  { key: 'brake', label: 'Freio', unit: '%', scale: 100, height: 90, range: [0, 100], digits: 0 },
-  { key: 'gear', label: 'Marcha', unit: '', scale: 1, height: 80, stepped: true, digits: 0 },
-  { key: 'steering', label: 'Volante', unit: '°', scale: 180 / Math.PI, height: 90, digits: 0 },
-  { key: 'delta', label: 'Delta acumulado', unit: 's', scale: 1, height: 120, digits: 3 },
+  {
+    key: 'brake',
+    get label() {
+      return uiText('Freio');
+    },
+    unit: '%',
+    scale: 100,
+    height: 90,
+    range: [0, 100],
+    digits: 0,
+  },
+  {
+    key: 'gear',
+    get label() {
+      return uiText('Marcha');
+    },
+    unit: '',
+    scale: 1,
+    height: 80,
+    stepped: true,
+    digits: 0,
+  },
+  {
+    key: 'steering',
+    get label() {
+      return uiText('Volante');
+    },
+    unit: '°',
+    scale: 180 / Math.PI,
+    height: 90,
+    digits: 0,
+  },
+  {
+    key: 'delta',
+    get label() {
+      return uiText('Delta acumulado');
+    },
+    unit: 's',
+    scale: 1,
+    height: 120,
+    digits: 3,
+  },
 ];
 
 /**
@@ -75,10 +126,21 @@ export const COMPARE_PANELS: PanelDef[] = [
  * are loaded ({@link mergeEventTraces}).
  */
 export const EVENT_PANELS: PanelDef[] = [
-  { key: 'yawRate', label: 'Guinada', unit: '°/s', scale: 180 / Math.PI, height: 90, digits: 0 },
+  {
+    key: 'yawRate',
+    get label() {
+      return uiText('Guinada');
+    },
+    unit: '°/s',
+    scale: 180 / Math.PI,
+    height: 90,
+    digits: 0,
+  },
   {
     key: 'slipFront',
-    label: 'Escorregamento dianteiro',
+    get label() {
+      return uiText('Escorregamento dianteiro');
+    },
     unit: '%',
     scale: 100,
     height: 80,
@@ -86,7 +148,9 @@ export const EVENT_PANELS: PanelDef[] = [
   },
   {
     key: 'slipRear',
-    label: 'Escorregamento traseiro',
+    get label() {
+      return uiText('Escorregamento traseiro');
+    },
     unit: '%',
     scale: 100,
     height: 80,
@@ -279,38 +343,60 @@ export interface MetricDef {
 export const CORNER_METRICS: MetricDef[] = [
   {
     key: 'brakePointM',
-    label: 'Ponto de frenagem',
-    short: 'Frenagem',
+    get label() {
+      return uiText('Ponto de frenagem');
+    },
+    get short() {
+      return uiText('Frenagem');
+    },
     unit: 'm',
     digits: 0,
     better: 'higher',
     deadband: 5,
-    hint: '+ = você freia mais tarde que a referência',
+    get hint() {
+      return uiText('+ = você freia mais tarde que a referência');
+    },
   },
   {
     key: 'minSpeedKmh',
-    label: 'Velocidade mínima',
-    short: 'V-mín',
+    get label() {
+      return uiText('Velocidade mínima');
+    },
+    get short() {
+      return uiText('V-mín');
+    },
     unit: 'km/h',
     digits: 1,
     better: 'higher',
     deadband: 2,
-    hint: '+ = você contorna mais rápido',
+    get hint() {
+      return uiText('+ = você contorna mais rápido');
+    },
   },
   {
     key: 'throttlePickupM',
-    label: 'Retomada do acelerador',
-    short: 'Retomada',
+    get label() {
+      return uiText('Retomada do acelerador');
+    },
+    get short() {
+      return uiText('Retomada');
+    },
     unit: 'm',
     digits: 0,
     better: 'lower',
     deadband: 8,
-    hint: '− = você acelera antes',
+    get hint() {
+      return uiText('− = você acelera antes');
+    },
   },
   {
     key: 'coastingS',
-    label: 'Roda livre',
-    short: 'Roda livre',
+    get label() {
+      return uiText('Roda livre');
+    },
+    get short() {
+      return uiText('Roda livre');
+    },
     unit: 's',
     digits: 2,
     better: 'lower',
@@ -319,13 +405,19 @@ export const CORNER_METRICS: MetricDef[] = [
   },
   {
     key: 'exitSpeedKmh',
-    label: 'Velocidade de saída',
-    short: 'Saída',
+    get label() {
+      return uiText('Velocidade de saída');
+    },
+    get short() {
+      return uiText('Saída');
+    },
     unit: 'km/h',
     digits: 1,
     better: 'higher',
     deadband: 3,
-    hint: '+ = você sai mais rápido',
+    get hint() {
+      return uiText('+ = você sai mais rápido');
+    },
   },
   {
     key: 'trailBrakingS',
@@ -385,10 +477,9 @@ export function signed(v: number | null | undefined, digits = 0): string {
   if (v === null || v === undefined || !Number.isFinite(v)) return '–';
   const r = Number(Math.abs(v).toFixed(digits));
   const s = r === 0 ? '±' : v > 0 ? '+' : '−';
-  return `${s}${r.toFixed(digits).replace('.', ',')}`;
+  return `${s}${formatFixed(r, digits)}`;
 }
 
 export function fixed(v: number | null | undefined, digits = 0): string {
-  if (v === null || v === undefined || !Number.isFinite(v)) return '–';
-  return v.toFixed(digits).replace('.', ',');
+  return formatFixed(v, digits);
 }

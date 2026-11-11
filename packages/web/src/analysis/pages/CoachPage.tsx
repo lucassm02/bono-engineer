@@ -8,6 +8,7 @@ import type { CoachConfig, CoachReport, CoachReportSummary, Lap, Session } from 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '../../components/ui/Icon.tsx';
 import { formatLapTime } from '../../lib/format.ts';
+import { t as uiText } from '../../lib/i18n.ts';
 import { navigate, type Route, routes } from '../../lib/route.ts';
 import { addNotice } from '../../state/uiStore.ts';
 import { api } from '../api.ts';
@@ -30,14 +31,14 @@ interface Entry {
 const REF_OPTIONS = ['auto', 'bestReference', 'personalBest', 'sessionBest'] as const;
 
 function sessionLabel(s: Session, trackNames: Map<string, string>): string {
-  const t = s.trackId ? (trackNames.get(s.trackId) ?? 'Pista') : 'Pista ?';
+  const t = s.trackId ? (trackNames.get(s.trackId) ?? uiText('Pista')) : uiText('Pista ?');
   return `${formatDateTime(s.startedAt)} · ${t} · ${s.lapCount} voltas${s.mode === 'replayCapture' ? ' · replay' : ''}`;
 }
 
 function ToolChips({ tools }: { tools: CoachToolCall[] }) {
   if (!tools.length) return null;
   return (
-    <ul className="coach-tools" aria-label="Ferramentas usadas">
+    <ul className="coach-tools" aria-label={uiText('Ferramentas usadas')}>
       {tools.map((t) => (
         <li key={t.id} data-status={t.status} title={t.summary}>
           {t.status === 'running' ? (
@@ -56,22 +57,28 @@ function NoKey() {
   return (
     <Panel
       tone="accent"
-      title="Configure o coach de IA"
-      description="O coach usa a API do Claude com as mesmas ferramentas de análise do app."
+      title={uiText('Configure o coach de IA')}
+      description={uiText(
+        'O coach usa a API do Claude com as mesmas ferramentas de análise do app.',
+      )}
     >
       <div className="coach-nokey">
         <p>
-          Para usar aqui dentro, informe uma chave da API da Anthropic em{' '}
-          <a href={routes.config('coach')}>Configurações → Coach IA</a> (ou defina a variável{' '}
-          <code>ANTHROPIC_API_KEY</code> antes de iniciar o servidor).
+          {uiText('Para usar aqui dentro, informe uma chave da API da Anthropic em')}{' '}
+          <a href={routes.config('coach')}>{uiText('Configurações → Coach IA')}</a>
+          {` ${uiText('(ou defina a variável')}`} <code>ANTHROPIC_API_KEY</code>
+          {` ${uiText('antes de iniciar o servidor).')}`}
         </p>
         <p className="coach-muted">
-          Sem chave? As mesmas ferramentas funcionam no <strong>Claude Desktop</strong> ou no{' '}
-          <strong>Claude Code</strong> pelo MCP — veja{' '}
-          <a href={routes.config('mcp')}>como conectar</a> e use o prompt “debrief_sessao”.
+          {`${uiText('Sem chave? As mesmas ferramentas funcionam no')} `}
+          <strong>Claude Desktop</strong>
+          {` ${uiText('ou no')}`} <strong>Claude Code</strong>
+          {` ${uiText('pelo MCP — veja')}`}{' '}
+          <a href={routes.config('mcp')}>{uiText('como conectar')}</a>
+          {` ${uiText('e use o prompt “debrief_sessao”.')}`}
         </p>
         <a className="ui-btn" href={routes.config('coach')}>
-          Abrir Configurações
+          {uiText('Abrir Configurações')}
         </a>
       </div>
     </Panel>
@@ -81,7 +88,7 @@ function NoKey() {
 function Thinking() {
   return (
     <div className="coach-thinking" role="status">
-      <Loading text="Pensando…" />
+      <Loading text={uiText('Pensando…')} />
       <div className="coach-skel" aria-hidden="true">
         <span />
         <span />
@@ -92,7 +99,7 @@ function Thinking() {
 }
 
 export function CoachPage({ route }: { route: Route }) {
-  useTitle('Coach IA');
+  useTitle(uiText('Coach IA'));
   const reportId = route.params.id ?? null;
   const q = route.query;
   const cfg = useFetch('coachcfg', () => api.coachConfig());
@@ -256,7 +263,7 @@ export function CoachPage({ route }: { route: Route }) {
           updateLast((e) => ({
             ...e,
             streaming: false,
-            error: code === 'aborted' ? 'Interrompido.' : message,
+            error: code === 'aborted' ? uiText('Interrompido.') : message,
             tools: e.tools.map((t) => (t.status === 'running' ? { ...t, status: 'error' } : t)),
           }));
           if (code === 'noKey' || code === 'invalidKey') cfg.reload();
@@ -275,9 +282,12 @@ export function CoachPage({ route }: { route: Route }) {
 
   const startDebrief = () => {
     const parts = [
-      corner ? `Foco na curva ${corner}` : 'Debrief da sessão',
+      corner ? uiText('Foco na curva {0}', corner) : uiText('Debrief da sessão'),
       lapId ? 'volta escolhida' : 'melhor volta',
-      `referência: ${REFERENCE_KIND_LABELS[ref as keyof typeof REFERENCE_KIND_LABELS] ?? 'volta escolhida'}`,
+      uiText(
+        'referência: {0}',
+        REFERENCE_KIND_LABELS[ref as keyof typeof REFERENCE_KIND_LABELS] ?? 'volta escolhida',
+      ),
     ];
     void run(
       '/api/coach/debrief',
@@ -326,8 +336,10 @@ export function CoachPage({ route }: { route: Route }) {
   return (
     <div className="coach-page">
       <PageHead
-        title="Coach IA"
-        sub="Debrief com números e uma ação por curva, a partir das mesmas métricas da página de análise."
+        title={uiText('Coach IA')}
+        sub={uiText(
+          'Debrief com números e uma ação por curva, a partir das mesmas métricas da página de análise.',
+        )}
         actions={
           currentId && (
             <a
@@ -336,7 +348,7 @@ export function CoachPage({ route }: { route: Route }) {
               href={routes.coach()}
               onClick={() => abortRef.current?.abort()}
             >
-              Novo debrief
+              {uiText('Novo debrief')}
             </a>
           )
         }
@@ -356,8 +368,10 @@ export function CoachPage({ route }: { route: Route }) {
 
           {!currentId && entries.length === 0 && (
             <Panel
-              title="Pedir um debrief"
-              description="Escolha o que o coach deve olhar. Sem escolher nada, ele analisa a melhor volta da sessão mais recente."
+              title={uiText('Pedir um debrief')}
+              description={uiText(
+                'Escolha o que o coach deve olhar. Sem escolher nada, ele analisa a melhor volta da sessão mais recente.',
+              )}
             >
               <form
                 className="coach-form"
@@ -367,7 +381,7 @@ export function CoachPage({ route }: { route: Route }) {
                 }}
               >
                 <label className="ui-field coach-span2">
-                  <span className="ui-label">Sessão</span>
+                  <span className="ui-label">{uiText('Sessão')}</span>
                   <select
                     className="ui-select"
                     value={effectiveSession}
@@ -377,7 +391,7 @@ export function CoachPage({ route }: { route: Route }) {
                       setCorner('');
                     }}
                   >
-                    {!sessions.data?.length && <option value="">Mais recente</option>}
+                    {!sessions.data?.length && <option value="">{uiText('Mais recente')}</option>}
                     {(sessions.data ?? []).map((s) => (
                       <option key={s.id} value={s.id}>
                         {sessionLabel(s, trackNames)}
@@ -386,24 +400,25 @@ export function CoachPage({ route }: { route: Route }) {
                   </select>
                 </label>
                 <label className="ui-field">
-                  <span className="ui-label">Volta</span>
+                  <span className="ui-label">{uiText('Volta')}</span>
                   <select
                     className="ui-select"
                     value={lapId}
                     onChange={(e) => setLapId(e.target.value)}
                   >
-                    <option value="">Melhor volta da sessão</option>
+                    <option value="">{uiText('Melhor volta da sessão')}</option>
                     {laps.map((l) => (
                       <option key={l.id} value={l.id}>
-                        Volta {l.number} · {formatLapTime(l.timeMs)}
-                        {l.valid ? '' : ' (inválida)'}
-                        {l.isReference ? ' · ref' : ''}
+                        {`${uiText('Volta')} `}
+                        {l.number} · {formatLapTime(l.timeMs)}
+                        {l.valid ? '' : uiText(' (inválida)')}
+                        {l.isReference ? uiText(' · ref') : ''}
                       </option>
                     ))}
                   </select>
                 </label>
                 <label className="ui-field">
-                  <span className="ui-label">Referência</span>
+                  <span className="ui-label">{uiText('Referência')}</span>
                   <select
                     className="ui-select"
                     value={ref}
@@ -415,18 +430,18 @@ export function CoachPage({ route }: { route: Route }) {
                       </option>
                     ))}
                     {!(REF_OPTIONS as readonly string[]).includes(ref) && (
-                      <option value={ref}>Volta escolhida na comparação</option>
+                      <option value={ref}>{uiText('Volta escolhida na comparação')}</option>
                     )}
                   </select>
                 </label>
                 <label className="ui-field coach-span2">
-                  <span className="ui-label">Foco</span>
+                  <span className="ui-label">{uiText('Foco')}</span>
                   <select
                     className="ui-select"
                     value={corner}
                     onChange={(e) => setCorner(e.target.value)}
                   >
-                    <option value="">Volta inteira (debrief)</option>
+                    <option value="">{uiText('Volta inteira (debrief)')}</option>
                     {(track.data?.corners ?? []).map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.id}
@@ -439,23 +454,26 @@ export function CoachPage({ route }: { route: Route }) {
                   </select>
                 </label>
                 <label className="ui-field coach-span2">
-                  <span className="ui-label">Pergunta (opcional)</span>
+                  <span className="ui-label">{uiText('Pergunta (opcional)')}</span>
                   <textarea
                     className="ui-input"
                     rows={3}
                     maxLength={1000}
                     value={question}
-                    placeholder="ex.: por que perco tanto na saída da T3?"
+                    placeholder={uiText('ex.: por que perco tanto na saída da T3?')}
                     onChange={(e) => setQuestion(e.target.value)}
                   />
                 </label>
                 <div className="coach-actions coach-span2">
                   <button type="submit" className="ui-btn" data-size="lg" disabled={!canGenerate}>
-                    Gerar debrief
+                    {uiText('Gerar debrief')}
                   </button>
                   <span className="coach-muted">
                     {config
-                      ? `Modelo: ${config.models.find((m) => m.id === config.model)?.label ?? config.model}`
+                      ? uiText(
+                          'Modelo: {0}',
+                          config.models.find((m) => m.id === config.model)?.label ?? config.model,
+                        )
                       : ''}
                   </span>
                 </div>
@@ -477,12 +495,12 @@ export function CoachPage({ route }: { route: Route }) {
                   )}
                 </div>
               )}
-              {entries.length === 0 && <Loading text="Abrindo o relatório…" />}
+              {entries.length === 0 && <Loading text={uiText('Abrindo o relatório…')} />}
               {entries.map((e, i) =>
                 e.role === 'user' ? (
                   // biome-ignore lint/suspicious/noArrayIndexKey: append-only conversation
                   <div key={i} className="coach-msg coach-msg-user">
-                    <span className="coach-who">Você</span>
+                    <span className="coach-who">{uiText('Você')}</span>
                     {e.text}
                   </div>
                 ) : (
@@ -492,10 +510,10 @@ export function CoachPage({ route }: { route: Route }) {
                       <span className="coach-avatar" aria-hidden="true">
                         <Icon name="coach" size={16} />
                       </span>
-                      <span className="coach-who">Coach IA</span>
+                      <span className="coach-who">{uiText('Coach IA')}</span>
                       {e.streaming && (
                         <span className="ui-badge" data-tone="accent">
-                          respondendo
+                          {uiText('respondendo')}
                         </span>
                       )}
                     </header>
@@ -514,7 +532,7 @@ export function CoachPage({ route }: { route: Route }) {
                           {/chave|key/i.test(e.error) && (
                             <>
                               {' '}
-                              <a href={routes.config('coach')}>Configurar</a>
+                              <a href={routes.config('coach')}>{uiText('Configurar')}</a>
                             </>
                           )}
                         </p>
@@ -532,7 +550,7 @@ export function CoachPage({ route }: { route: Route }) {
                     onClick={() => abortRef.current?.abort()}
                   >
                     <Icon name="stop" size={16} />
-                    Parar
+                    {uiText('Parar')}
                   </button>
                 </div>
               ) : (
@@ -549,8 +567,8 @@ export function CoachPage({ route }: { route: Route }) {
                       rows={2}
                       value={chat}
                       maxLength={2000}
-                      aria-label="Pergunta de acompanhamento"
-                      placeholder="Pergunte mais (ex.: e na T5? como treino isso?)"
+                      aria-label={uiText('Pergunta de acompanhamento')}
+                      placeholder={uiText('Pergunte mais (ex.: e na T5? como treino isso?)')}
                       onChange={(e) => setChat(e.target.value)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
@@ -560,7 +578,7 @@ export function CoachPage({ route }: { route: Route }) {
                       }}
                     />
                     <button type="submit" className="ui-btn" disabled={!chat.trim()}>
-                      Enviar
+                      {uiText('Enviar')}
                     </button>
                   </form>
                 )
@@ -570,15 +588,18 @@ export function CoachPage({ route }: { route: Route }) {
         </div>
 
         <aside className="coach-side">
-          <Panel title="Relatórios" description="Debriefs salvos, do mais recente ao mais antigo.">
+          <Panel
+            title={uiText('Relatórios')}
+            description={uiText('Debriefs salvos, do mais recente ao mais antigo.')}
+          >
             {reports.error && !reports.data ? (
               <p className="coach-muted">
-                {noCoachEndpoint ? 'Indisponível neste servidor.' : reports.error.message}
+                {noCoachEndpoint ? uiText('Indisponível neste servidor.') : reports.error.message}
               </p>
             ) : !reports.data ? (
               <Loading />
             ) : reportList.length === 0 ? (
-              <p className="coach-muted">Nenhum relatório ainda.</p>
+              <p className="coach-muted">{uiText('Nenhum relatório ainda.')}</p>
             ) : (
               <ul className="coach-reports">
                 {reportList.map((r) => (
@@ -594,7 +615,7 @@ export function CoachPage({ route }: { route: Route }) {
                               className="ui-badge"
                               data-tone={r.status === 'error' ? 'loss' : 'accent'}
                             >
-                              {r.status === 'error' ? 'erro' : 'em andamento'}
+                              {r.status === 'error' ? uiText('erro') : uiText('em andamento')}
                             </span>
                           </>
                         )}
@@ -604,8 +625,8 @@ export function CoachPage({ route }: { route: Route }) {
                     <button
                       type="button"
                       className="ui-icon-btn coach-report-del"
-                      aria-label={`Apagar o relatório ${r.title}`}
-                      title="Apagar"
+                      aria-label={uiText('Apagar o relatório {0}', r.title)}
+                      title={uiText('Apagar')}
                       onClick={() => setToDelete(r)}
                     >
                       <Icon name="trash" size={16} />
@@ -619,16 +640,17 @@ export function CoachPage({ route }: { route: Route }) {
       </div>
       <ConfirmModal
         open={!!toDelete}
-        title="Apagar este relatório?"
+        title={uiText('Apagar este relatório?')}
         message={
           <>
             <p>
-              <strong>{toDelete?.title}</strong> será apagado junto com os gráficos que ele guardou.
+              <strong>{toDelete?.title}</strong>
+              {` ${uiText('será apagado junto com os gráficos que ele guardou.')}`}
             </p>
-            <p>Essa ação não pode ser desfeita.</p>
+            <p>{uiText('Essa ação não pode ser desfeita.')}</p>
           </>
         }
-        confirmLabel="Apagar relatório"
+        confirmLabel={uiText('Apagar relatório')}
         busy={deleting}
         onClose={() => setToDelete(null)}
         onConfirm={() => void confirmDelete()}

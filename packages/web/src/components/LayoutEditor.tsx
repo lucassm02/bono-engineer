@@ -6,6 +6,7 @@
 
 import { WIDGET_IDS, type WidgetGridLayout } from '@gt7/shared';
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { t as uiText } from '../lib/i18n.ts';
 import {
   GRID_COLUMNS_MAX,
   GRID_COLUMNS_MIN,
@@ -44,7 +45,7 @@ function Stepper({
         <button
           type="button"
           className="ui-icon-btn"
-          aria-label={`${label}: diminuir`}
+          aria-label={uiText('{0}: diminuir', label)}
           disabled={lessDisabled}
           onClick={onLess}
         >
@@ -54,7 +55,7 @@ function Stepper({
         <button
           type="button"
           className="ui-icon-btn"
-          aria-label={`${label}: aumentar`}
+          aria-label={uiText('{0}: aumentar', label)}
           disabled={moreDisabled}
           onClick={onMore}
         >
@@ -117,7 +118,7 @@ export function LayoutEditor() {
       onClose={closeLayoutEditor}
       size="xl"
       className="bn-editor-modal"
-      title="Tela Personalizada"
+      title={uiText('Tela Personalizada')}
       subtitle="Monte a sua grade de widgets. As alterações são salvas na hora, neste aparelho."
       footer={
         <>
@@ -130,17 +131,17 @@ export function LayoutEditor() {
               setSelected(null);
             }}
           >
-            Restaurar grade padrão
+            {uiText('Restaurar grade padrão')}
           </button>
           <button type="button" className="ui-btn" onClick={closeLayoutEditor}>
-            Concluir
+            {uiText('Concluir')}
           </button>
         </>
       }
     >
       <div className="bn-editor">
-        <section className="bn-editor-preview-wrap" aria-label="Pré-visualização">
-          <h3 className="ui-eyebrow">Pré-visualização</h3>
+        <section className="bn-editor-preview-wrap" aria-label={uiText('Pré-visualização')}>
+          <h3 className="ui-eyebrow">{uiText('Pré-visualização')}</h3>
           <div
             className="editor-preview"
             style={{
@@ -161,20 +162,22 @@ export function LayoutEditor() {
                 onClick={() => setSelected(it.key === selected ? null : it.key)}
               >
                 <span className="editor-cell-n num">{i + 1}</span>
-                {WIDGET_META[it.widget].label}
+                {uiText(WIDGET_META[it.widget].label)}
               </button>
             ))}
             {layout.items.length === 0 && (
-              <div className="editor-cell-empty">Adicione widgets ao lado</div>
+              <div className="editor-cell-empty">{uiText('Adicione widgets ao lado')}</div>
             )}
           </div>
-          <p className="ui-help">Cada caixa é um widget; o número é a ordem em que aparece.</p>
+          <p className="ui-help">
+            {uiText('Cada caixa é um widget; o número é a ordem em que aparece.')}
+          </p>
         </section>
 
         <section className="bn-editor-controls">
           <div className="ui-card bn-card">
             <Stepper
-              label="Colunas"
+              label={uiText('Colunas')}
               value={layout.columns}
               lessDisabled={layout.columns <= GRID_COLUMNS_MIN}
               moreDisabled={layout.columns >= GRID_COLUMNS_MAX}
@@ -188,13 +191,13 @@ export function LayoutEditor() {
             data-empty={sel ? '0' : '1'}
             data-tone={sel ? 'accent' : undefined}
             ref={selectedRef}
-            aria-label="Widget selecionado"
+            aria-label={uiText('Widget selecionado')}
           >
             {sel ? (
               <>
                 <div className="ui-card-head">
                   <h3 className="ui-card-title">
-                    {idx + 1}. {WIDGET_META[sel.widget].label}
+                    {idx + 1}. {uiText(WIDGET_META[sel.widget].label)}
                   </h3>
                   <span className="ui-badge num">
                     {sel.w}×{sel.h}
@@ -202,25 +205,25 @@ export function LayoutEditor() {
                 </div>
                 <div className="bn-fields">
                   <div className="bn-stepper-row">
-                    <span className="bn-stepper-label">Ordem</span>
+                    <span className="bn-stepper-label">{uiText('Ordem')}</span>
                     <div className="stepper">
                       <MoveButton
                         icon="back"
-                        label="Mover para antes"
+                        label={uiText('Mover para antes')}
                         disabled={idx <= 0}
                         onClick={() => apply({ type: 'move', key: sel.key, by: -1 })}
                       />
                       <span className="num stepper-value">{idx + 1}</span>
                       <MoveButton
                         icon="chevron-right"
-                        label="Mover para depois"
+                        label={uiText('Mover para depois')}
                         disabled={idx >= layout.items.length - 1}
                         onClick={() => apply({ type: 'move', key: sel.key, by: 1 })}
                       />
                     </div>
                   </div>
                   <Stepper
-                    label="Largura"
+                    label={uiText('Largura')}
                     value={sel.w}
                     lessDisabled={sel.w <= 1}
                     moreDisabled={sel.w >= layout.columns}
@@ -228,7 +231,7 @@ export function LayoutEditor() {
                     onMore={() => apply({ type: 'resize', key: sel.key, dw: 1, dh: 0 })}
                   />
                   <Stepper
-                    label="Altura"
+                    label={uiText('Altura')}
                     value={sel.h}
                     lessDisabled={sel.h <= 1}
                     moreDisabled={sel.h >= WIDGET_H_MAX}
@@ -246,20 +249,20 @@ export function LayoutEditor() {
                     }}
                   >
                     <Icon name="trash" size={16} />
-                    Remover da grade
+                    {uiText('Remover da grade')}
                   </button>
                 </div>
               </>
             ) : (
               <p className="ui-help">
-                Toque num widget da grade para mover, redimensionar ou remover.
+                {uiText('Toque num widget da grade para mover, redimensionar ou remover.')}
               </p>
             )}
           </section>
 
           <div className="ui-card bn-card">
             <div className="ui-card-head">
-              <h3 className="ui-card-title">Adicionar widget</h3>
+              <h3 className="ui-card-title">{uiText('Adicionar widget')}</h3>
               <span className="ui-badge num">
                 {layout.items.length}/{LAYOUT_MAX_ITEMS}
               </span>
@@ -277,7 +280,7 @@ export function LayoutEditor() {
                   }}
                 >
                   <Icon name="plus" size={14} />
-                  {WIDGET_META[w].label}
+                  {uiText(WIDGET_META[w].label)}
                 </button>
               ))}
             </div>

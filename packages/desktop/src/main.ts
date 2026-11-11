@@ -11,7 +11,7 @@ import { cpSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { publishMigratedFolder } from '@gt7/core';
 import { parseConfig, type RunningServer, StartServerError, startServer } from '@gt7/server';
-import { BRAND_SURFACE, PRODUCT_NAME, WS_PATH } from '@gt7/shared';
+import { BRAND_SURFACE, isLanguage, PRODUCT_NAME, WS_PATH } from '@gt7/shared';
 import {
   app,
   BrowserWindow,
@@ -26,6 +26,7 @@ import {
   shell,
   Tray,
 } from 'electron';
+import { translateMessage } from '../../web/src/lib/messages.ts';
 import { DesktopDiscord } from './discord.ts';
 import { initLog, log, logFilePath } from './log.ts';
 import { errorHtml, splashHtml, toDataUrl } from './pages.ts';
@@ -80,6 +81,8 @@ let phoneUrl: string | null = null;
 let quitting = false;
 let booting = false;
 let state: DesktopState = readDesktopState(STATE_FILE);
+const uiText = (message: string, ...values: unknown[]) =>
+  translateMessage(state.language ?? 'pt-BR', message, ...values);
 
 // A stray exception (a bad UDP packet, a closed socket) must not end a session in the middle of
 // a race: log it and keep going, like the CLI does.
@@ -109,31 +112,47 @@ const discord = new DesktopDiscord(
   },
 );
 
-function registerDiscordHandlers(): void {
+function checkLocalSender(event: Electron.IpcMainInvokeEvent): void {
+  const frame = event.senderFrame;
+  if (
+    !win ||
+    event.sender !== win.webContents ||
+    !frame ||
+    frame.parent ||
+    !inServerPage(frame.url) ||
+    !serverUrlNow ||
+    frame.origin !== new URL(serverUrlNow).origin
+  )
+    throw new Error(uiText('Abra as configurações no aplicativo Bono.'));
+}
+
+function registerDesktopHandlers(): void {
   const actions = {
     get: () => discord.get(),
     save: (settings: unknown) => discord.save(settings),
     'set-enabled': (enabled: unknown) => discord.setEnabled(enabled),
+    'set-voice': (pack: unknown) => discord.setVoice(pack),
     test: () => discord.test(),
     'stop-test': () => discord.resume(),
     remove: () => discord.remove(),
   };
   for (const [name, action] of Object.entries(actions)) {
     ipcMain.handle(`bono:discord:${name}`, (event, input: unknown) => {
-      const frame = event.senderFrame;
-      if (
-        !win ||
-        event.sender !== win.webContents ||
-        !frame ||
-        frame.parent ||
-        !inServerPage(frame.url) ||
-        !serverUrlNow ||
-        frame.origin !== new URL(serverUrlNow).origin
-      )
-        throw new Error('Abra as configurações no aplicativo Bono.');
+      checkLocalSender(event);
       return action(input);
     });
   }
+  ipcMain.handle('bono:language', (event, language: unknown) => {
+    checkLocalSender(event);
+    if (!isLanguage(language) || language === state.language) return;
+    state = { ...state, language };
+    writeDesktopState(STATE_FILE, state);
+    refreshTrayTooltip();
+  });
+  ipcMain.handle('bono:language:get', (event) => {
+    checkLocalSender(event);
+    return state.language;
+  });
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -286,7 +305,9 @@ function createWindow(): BrowserWindow {
         state = { ...state, trayHintShown: true };
         writeDesktopState(STATE_FILE, state);
         balloon(
-          'O app continua em segundo plano (ícone perto do relógio). Clique nele para abrir.',
+          uiText(
+            'O app continua em segundo plano (ícone perto do relógio). Clique nele para abrir.',
+          ),
         );
       }
     }
@@ -310,16 +331,19 @@ function showWindow(): void {
 /** Re-creating the window after it was destroyed: show whatever state the app is in. */
 async function loadCurrent(w: BrowserWindow): Promise<void> {
   if (serverUrlNow) await w.loadURL(serverUrlNow);
-  else await w.loadURL(toDataUrl(splashHtml()));
+  else await w.loadURL(toDataUrl(splashHtml(state.language)));
 }
 
 function showError(message: string, detail?: string): void {
   if (!win || win.isDestroyed()) win = createWindow();
-  const page = errorHtml({
-    message,
-    ...(detail ? { detail } : {}),
-    ...(logFilePath() ? { logFile: logFilePath() as string } : {}),
-  });
+  const page = errorHtml(
+    {
+      message,
+      ...(detail ? { detail } : {}),
+      ...(logFilePath() ? { logFile: logFilePath() as string } : {}),
+    },
+    state.language,
+  );
   void win.loadURL(toDataUrl(page));
   win.show(); // an error is worth interrupting the "start hidden" mode
 }
@@ -377,7 +401,7 @@ async function boot(): Promise<void> {
   try {
     await stopServer();
     if (!win || win.isDestroyed()) win = createWindow();
-    await win.loadURL(toDataUrl(splashHtml()));
+    await win.loadURL(toDataUrl(splashHtml(state.language)));
     if (!START_HIDDEN || !tray) win.show();
 
     // Same code and same zero-config rules as `npm start`; the window is the "browser".
@@ -454,19 +478,19 @@ function balloon(content: string): void {
 
 function buildTrayMenu(): Menu {
   const items: MenuItemConstructorOptions[] = [
-    { label: `Abrir ${PRODUCT_NAME}`, click: showWindow },
+    { label: uiText('Abrir {0}', PRODUCT_NAME), click: showWindow },
     phoneUrl
       ? {
-          label: 'Copiar endereço para acesso remoto',
+          label: uiText('Copiar endereço para acesso remoto'),
           click: () => {
             clipboard.writeText(phoneUrl as string);
-            balloon(`Endereço copiado: ${phoneUrl}`);
+            balloon(uiText('Endereço copiado: {0}', phoneUrl));
           },
         }
-      : { label: 'Endereço para acesso remoto indisponível', enabled: false },
+      : { label: uiText('Endereço para acesso remoto indisponível'), enabled: false },
     { type: 'separator' },
     {
-      label: 'Iniciar com o Windows',
+      label: uiText('Iniciar com o Windows'),
       type: 'checkbox',
       checked: autoStartEnabled(),
       // Registering the dev Electron binary as a login item would be wrong.
@@ -474,14 +498,16 @@ function buildTrayMenu(): Menu {
       click: (item) => setAutoStart(item.checked),
     },
     { type: 'separator' },
-    { label: 'Sair', click: () => void quitApp() },
+    { label: uiText('Sair'), click: () => void quitApp() },
   ];
   return Menu.buildFromTemplate(items);
 }
 
 function refreshTrayTooltip(): void {
   if (!tray) return;
-  tray.setToolTip(phoneUrl ? `${PRODUCT_NAME}\nAcesso remoto: ${phoneUrl}` : PRODUCT_NAME);
+  tray.setToolTip(
+    phoneUrl ? `${PRODUCT_NAME}\n${uiText('Acesso remoto: {0}', phoneUrl)}` : PRODUCT_NAME,
+  );
 }
 
 function createTray(): void {
@@ -549,7 +575,7 @@ if (!app.requestSingleInstanceLock()) {
   void app.whenReady().then(async () => {
     Menu.setApplicationMenu(null);
     lockdownSession();
-    registerDiscordHandlers();
+    registerDesktopHandlers();
     createTray();
     log(`iniciado (Electron ${process.versions.electron}, Node ${process.versions.node})`);
     await boot();

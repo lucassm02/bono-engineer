@@ -19,11 +19,8 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import {
-  RADIO_CATALOG,
-  RADIO_SEQUENCE_GAP_MS,
-  type RadioEntry,
-} from '../../src/lib/radioPhrases.ts';
+import { radioCatalog } from '../../../shared/src/radio-translations.ts';
+import { RADIO_SEQUENCE_GAP_MS, type RadioEntry } from '../../src/lib/radioPhrases.ts';
 import { RADIO_VOICES } from '../../src/lib/radioVoices.ts';
 import {
   activeRms,
@@ -108,13 +105,14 @@ function generate(): void {
   const gap = new Float32Array(Math.round((SAMPLE_RATE * SPRITE_GAP_MS) / 1000));
   mkdirSync(OUT_DIR, { recursive: true });
   for (const { voice, source } of sources) {
-    console.log(`${voice.name} (${voice.pack}): ${RADIO_CATALOG.length} clipes`);
+    const catalog = radioCatalog(voice.language);
+    console.log(`${voice.name} (${voice.pack}): ${catalog.length} clipes`);
     const clips: Record<string, [number, number]> = {};
     const pieces: Float32Array[] = [];
     let at = 0;
     let limited = 0;
     let pitchSum = 0;
-    for (const entry of RADIO_CATALOG) {
+    for (const entry of catalog) {
       const clip = renderEntry(synth, source.recipe, entry);
       if (
         db(peak(clip)) > LOUDNESS.peakDb - 0.05 &&
@@ -139,7 +137,7 @@ function generate(): void {
     voices[voice.pack] = { file, clips };
     console.log(
       `  ${file}: ${(sprite.length / SAMPLE_RATE).toFixed(1)} s, ${(wav.length / 1048576).toFixed(2)} MiB,` +
-        ` F0 médio ${(pitchSum / RADIO_CATALOG.length).toFixed(0)} Hz, limitador em ${limited} clipes`,
+        ` F0 médio ${(pitchSum / catalog.length).toFixed(0)} Hz, limitador em ${limited} clipes`,
     );
   }
   const manifest = {
@@ -167,7 +165,7 @@ function writeCredits(
   sources: { voice: (typeof RADIO_VOICES)[number]; source: { credits: string[] } }[],
 ) {
   const lines = [
-    'Clipes de rádio em português do Brasil pré-gerados para o Bono Engineer.',
+    'Clipes de rádio em português do Brasil, inglês e espanhol pré-gerados para o Bono Engineer.',
     'Áudio sintético (voz gerada por computador), gerado offline com sherpa-onnx',
     `(https://github.com/k2-fsa/sherpa-onnx, Apache-2.0), sherpa-onnx-node ${SHERPA_VERSION}.`,
     'Regenerar: npm run radio:voices (packages/web/scripts/radio-voices).',

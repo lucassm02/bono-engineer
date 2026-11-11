@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { distanceToBrake } from '../lib/cornerPass.ts';
 import { setAttr, setText } from '../lib/dom.ts';
 import { deltaTone, formatDelta, formatInt } from '../lib/format.ts';
+import { t as uiText } from '../lib/i18n.ts';
 import { DELTA_REFERENCE_LABELS } from '../lib/labels.ts';
 import { derived } from '../live/derived.ts';
 import { useLiveRender } from '../live/raf.ts';
@@ -10,8 +11,12 @@ import { lapCounterText } from './CorridaView.tsx';
 
 const SOURCE_TEXT = {
   server: '',
-  mock: 'Traçado da demonstração',
-  live: 'Traçado montado com as suas voltas',
+  get mock() {
+    return uiText('Traçado da demonstração');
+  },
+  get live() {
+    return uiText('Traçado montado com as suas voltas');
+  },
 } as const;
 
 export function cornerLabel(id: string, name: string | null): string {
@@ -31,7 +36,9 @@ export function MapaView() {
     setAttr(e.deltaBox, 'data-tone', deltaTone(d.ms));
     setText(
       e.ref,
-      d.ms === null ? 'sem referência' : `vs ${DELTA_REFERENCE_LABELS[d.reference].toLowerCase()}`,
+      d.ms === null
+        ? uiText('sem referência')
+        : `vs ${DELTA_REFERENCE_LABELS[d.reference].toLowerCase()}`,
     );
     setText(e.lap, lapCounterText(f));
     const h = f.nextCorner;
@@ -40,15 +47,17 @@ export function MapaView() {
       setText(e.cornerName, cornerLabel(h.cornerId, h.name));
       setAttr(e.cornerName, 'data-dir', h.direction);
       const b = distanceToBrake(h, f.distanceM, f.track?.lengthM ?? null);
-      setText(e.brakeLabel, b.kind === 'brake' ? 'Frenagem em' : 'Entrada em');
+      setText(e.brakeLabel, b.kind === 'brake' ? uiText('Frenagem em') : uiText('Entrada em'));
       setText(e.brakeDist, `${formatInt(Math.max(0, b.meters))} m`);
       setText(
         e.target,
         h.referenceMinSpeedKmh === null
           ? ''
-          : `V-mín ${formatInt(h.referenceMinSpeedKmh)} km/h${
-              h.referenceGearAtApex ? ` · ${h.referenceGearAtApex}ª` : ''
-            }`,
+          : uiText(
+              'V-mín {0} km/h{1}',
+              formatInt(h.referenceMinSpeedKmh),
+              h.referenceGearAtApex ? ` · ${h.referenceGearAtApex}ª` : '',
+            ),
       );
     }
     const g = derived.geometry();
@@ -66,7 +75,7 @@ export function MapaView() {
           <div className="num mapa-delta-value" ref={set('delta')} />
         </div>
         <div className="mapa-corner" ref={set('corner')} data-show="0">
-          <div className="readout-label">Próxima curva</div>
+          <div className="readout-label">{uiText('Próxima curva')}</div>
           <div className="mapa-corner-name" ref={set('cornerName')} data-dir="left" />
           <div className="mapa-brake">
             <span className="readout-label" ref={set('brakeLabel')} />
@@ -75,9 +84,9 @@ export function MapaView() {
           <div className="dim mapa-target num" ref={set('target')} />
         </div>
         <div className="mapa-legend">
-          <span className="lg lg-gain">Ganhando</span>
-          <span className="lg lg-loss">Perdendo</span>
-          <span className="lg lg-ref">Frenagem da ref.</span>
+          <span className="lg lg-gain">{uiText('Ganhando')}</span>
+          <span className="lg lg-loss">{uiText('Perdendo')}</span>
+          <span className="lg lg-ref">{uiText('Frenagem da ref.')}</span>
         </div>
         <div className="dim mapa-foot">
           <span ref={set('lap')} />

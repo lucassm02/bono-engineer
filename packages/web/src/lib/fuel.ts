@@ -7,6 +7,7 @@ import {
   type LiveLapTiming,
 } from '@gt7/shared';
 import { formatFixed } from './format.ts';
+import { t as uiText } from './i18n.ts';
 
 export { raceLapsLeft } from '@gt7/shared';
 
@@ -31,32 +32,41 @@ export function fuelPlan(fuel: LiveFuel, lap: LiveLapTiming, lapFraction: number
   if (perLap === null) {
     warnings.push({
       level: 'info',
-      text: 'O consumo médio aparece depois da primeira volta completa.',
+      text: uiText('O consumo médio aparece depois da primeira volta completa.'),
     });
   }
   if (missing !== null && missing > 0.05) {
     warnings.push({
       level: 'error',
-      text: `Não chega ao fim: faltam ${formatFixed(missing, 1)} L. Reabasteça ou economize ${formatFixed(savePerLap ?? 0, 2)} L por volta.`,
+      text: uiText(
+        'Não chega ao fim: faltam {0} L. Reabasteça ou economize {1} L por volta.',
+        formatFixed(missing, 1),
+        formatFixed(savePerLap ?? 0, 2),
+      ),
     });
   } else if (lapsOfFuel !== null && lapsOfFuel < 2 && (left === null || left > lapsOfFuel)) {
     warnings.push({
       level: 'warn',
-      text: `Reserva: combustível para ${formatFixed(lapsOfFuel, 1)} volta(s).`,
+      text: uiText('Reserva: combustível para {0} volta(s).', formatFixed(lapsOfFuel, 1)),
     });
   } else if (surplus !== null && left !== null && perLap !== null) {
     warnings.push({
       level: 'info',
-      text: `Dá para terminar: sobram ~${formatFixed(surplus, 1)} L (${formatFixed(surplus / perLap, 1)} volta${surplus / perLap >= 2 ? 's' : ''}).`,
+      text: uiText(
+        'Dá para terminar: sobram ~{0} L ({1} volta{2}).',
+        formatFixed(surplus, 1),
+        formatFixed(surplus / perLap, 1),
+        surplus / perLap >= 2 ? 's' : '',
+      ),
     });
   }
   if (perLap === null && level / capacity < 0.1) {
-    warnings.push({ level: 'warn', text: 'Tanque abaixo de 10%.' });
+    warnings.push({ level: 'warn', text: uiText('Tanque abaixo de 10%.') });
   }
   if (left === null) {
     warnings.push({
       level: 'info',
-      text: 'Sem número de voltas (treino ou time trial): mostrando só a autonomia.',
+      text: uiText('Sem número de voltas (treino ou time trial): mostrando só a autonomia.'),
     });
   }
   return { ...projection, fraction: Math.min(1, level / capacity), warnings };

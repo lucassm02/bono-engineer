@@ -4,6 +4,7 @@
  */
 
 import type { Session } from '@gt7/shared';
+import { getLanguage, t as uiText } from '../../lib/i18n.ts';
 import { carMatchesFilter, isCarFiltering } from './carFilter.ts';
 
 // ---------------------------------------------------------------------------------------------
@@ -153,35 +154,30 @@ export function groupSessionsByDay(sessions: readonly Session[]): DayGroup<Sessi
   return groupByDay(sessions, (s) => s.startedAt);
 }
 
-const weekdayDate = new Intl.DateTimeFormat('pt-BR', {
+const weekdayDate: Intl.DateTimeFormatOptions = {
   weekday: 'long',
   day: '2-digit',
   month: 'long',
-});
-const weekdayDateYear = new Intl.DateTimeFormat('pt-BR', {
-  weekday: 'long',
-  day: '2-digit',
-  month: 'long',
-  year: 'numeric',
-});
+};
 
 /** "Hoje", "Ontem" or "sábado, 08 de novembro" for a `YYYY-MM-DD` key. */
 export function dayHeading(key: string, now = Date.now()): string {
-  if (key === dayKey(now)) return 'Hoje';
-  if (key === dayKey(now - 86_400_000)) return 'Ontem';
+  if (key === dayKey(now)) return uiText('Hoje');
+  if (key === dayKey(now - 86_400_000)) return uiText('Ontem');
   const [y, m, d] = key.split('-').map(Number);
   if (!y || !m || !d) return key;
   const date = new Date(y, m - 1, d);
   const same = y === new Date(now).getFullYear();
-  const text = (same ? weekdayDate : weekdayDateYear).format(date);
+  const text = date.toLocaleDateString(
+    getLanguage(),
+    same ? weekdayDate : { ...weekdayDate, year: 'numeric' },
+  );
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-const timeFmt = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' });
-
 /** Local "14:32". */
 export function formatClock(ms: number): string {
-  return timeFmt.format(new Date(ms));
+  return new Date(ms).toLocaleTimeString(getLanguage(), { hour: '2-digit', minute: '2-digit' });
 }
 
 /** Session duration "42 min" / "1 h 05" (null while running or unknown). */
@@ -212,12 +208,16 @@ export function whenLabel(ms: number | null | undefined, now = Date.now()): stri
   const days = Math.floor(
     (new Date(dayKey(now)).getTime() - new Date(dayKey(ms)).getTime()) / 86_400_000,
   );
-  if (days <= 0) return 'hoje';
-  if (days === 1) return 'ontem';
-  if (days < 30) return `há ${days} dias`;
+  if (days <= 0) return uiText('hoje');
+  if (days === 1) return uiText('ontem');
+  if (days < 30) return uiText('há {0} dias', days);
   if (days < 365)
-    return `há ${Math.round(days / 30)} ${Math.round(days / 30) === 1 ? 'mês' : 'meses'}`;
-  return new Date(ms).toLocaleDateString('pt-BR');
+    return uiText(
+      'há {0} {1}',
+      Math.round(days / 30),
+      Math.round(days / 30) === 1 ? uiText('mês') : uiText('meses'),
+    );
+  return new Date(ms).toLocaleDateString(getLanguage());
 }
 
 export function trendLabel(
@@ -225,7 +225,7 @@ export function trendLabel(
 ): { text: string; tone: 'gain' | 'loss' | 'flat' } | null {
   if (t.kind === 'none' || t.deltaMs === null) return null;
   const abs = (Math.abs(t.deltaMs) / 1000).toFixed(3).replace('.', ',');
-  if (t.kind === 'improved') return { text: `Melhorou ${abs} s`, tone: 'gain' };
-  if (t.kind === 'worsened') return { text: `Piorou ${abs} s`, tone: 'loss' };
-  return { text: 'Estável', tone: 'flat' };
+  if (t.kind === 'improved') return { text: uiText('Melhorou {0} s', abs), tone: 'gain' };
+  if (t.kind === 'worsened') return { text: uiText('Piorou {0} s', abs), tone: 'loss' };
+  return { text: uiText('Estável'), tone: 'flat' };
 }

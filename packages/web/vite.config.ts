@@ -51,9 +51,9 @@ export default defineConfig({
         navigateFallbackDenylist: [/^\/ws/, /^\/api/, /^\/mcp/],
         runtimeCaching: [
           {
-            urlPattern: /\/radio\/[a-z0-9]+-[0-9a-f]+\.wav$/,
+            urlPattern: /\/radio\/[a-z0-9-]+-[0-9a-f]+\.wav$/,
             handler: 'CacheFirst',
-            options: { cacheName: 'bono-radio', expiration: { maxEntries: 6 } },
+            options: { cacheName: 'bono-radio', expiration: { maxEntries: 9 } },
           },
         ],
         cleanupOutdatedCaches: true,

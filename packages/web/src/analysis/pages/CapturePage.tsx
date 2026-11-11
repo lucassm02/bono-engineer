@@ -12,6 +12,7 @@ import { type Lap, makerOfCar, type ReferenceCaptureStatus, type Track } from '@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '../../components/ui/Icon.tsx';
 import { formatLapTime } from '../../lib/format.ts';
+import { t as uiText } from '../../lib/i18n.ts';
 import { routes } from '../../lib/route.ts';
 import { useUi } from '../../state/uiStore.ts';
 import { api } from '../api.ts';
@@ -59,7 +60,17 @@ function CarChip({ carCode, text }: { carCode: number | null; text: string }) {
 }
 
 const DETECT_TONE = { ok: 'gain', warn: 'warn', idle: undefined } as const;
-const DETECT_BADGE = { ok: 'Pronto', warn: 'Atenção', idle: 'Aguardando' } as const;
+const DETECT_BADGE = {
+  get ok() {
+    return uiText('Pronto');
+  },
+  get warn() {
+    return uiText('Atenção');
+  },
+  get idle() {
+    return uiText('Aguardando');
+  },
+} as const;
 
 /** Estado do replay: detectado, aguardando ou com problema. */
 function DetectionBanner({ view }: { view: DetectionView }) {
@@ -95,11 +106,16 @@ function ProgressBar({ status }: { status: ReferenceCaptureStatus }) {
       <div
         className="cap-steps"
         role="progressbar"
-        aria-label="Andamento da captura"
+        aria-label={uiText('Andamento da captura')}
         aria-valuemin={1}
         aria-valuemax={p.steps.length}
         aria-valuenow={p.step + 1}
-        aria-valuetext={`Passo ${p.step + 1} de ${p.steps.length}: ${p.steps[p.step]?.label}`}
+        aria-valuetext={uiText(
+          'Passo {0} de {1}: {2}',
+          p.step + 1,
+          p.steps.length,
+          uiText(p.steps[p.step]?.label ?? ''),
+        )}
       >
         {p.steps.map((s, i) => (
           <div
@@ -114,7 +130,7 @@ function ProgressBar({ status }: { status: ReferenceCaptureStatus }) {
                 i === 2 ? { ['--fill' as string]: `${p.recordingFraction * 100}%` } : undefined
               }
             />
-            <span className="cap-seg-label">{s.label}</span>
+            <span className="cap-seg-label">{uiText(s.label)}</span>
           </div>
         ))}
       </div>
@@ -134,7 +150,7 @@ function Issues({ issues }: { issues: string[] }) {
   if (issues.length === 0) return null;
   return (
     <div className="ui-card cap-rejected" data-tone="loss" role="alert">
-      <strong>A última volta foi descartada:</strong>
+      <strong>{uiText('A última volta foi descartada:')}</strong>
       <ul>
         {issues.map((i) => (
           <li key={i}>{captureIssueLabel(i)}</li>
@@ -169,41 +185,41 @@ function SavedCard({
         <span className="cap-ok" aria-hidden="true">
           <Icon name="check" size={16} />
         </span>
-        Volta salva como referência
+        {uiText('Volta salva como referência')}
       </p>
       <p className="cap-saved-time num">{lap ? formatLapTime(lap.timeMs) : '…'}</p>
       <dl className="cap-facts">
         <div>
-          <dt>Piloto</dt>
+          <dt>{uiText('Piloto')}</dt>
           <dd>{meta?.driverName ?? status?.driverName ?? '—'}</dd>
         </div>
         <div>
-          <dt>Carro</dt>
+          <dt>{uiText('Carro')}</dt>
           <dd>{lap && carText ? <CarChip carCode={lap.carCode} text={carText} /> : '—'}</dd>
         </div>
         <div>
-          <dt>Pista</dt>
+          <dt>{uiText('Pista')}</dt>
           <dd>{trackName ?? status?.trackName ?? '—'}</dd>
         </div>
         <div>
-          <dt>Origem do tempo</dt>
+          <dt>{uiText('Origem do tempo')}</dt>
           <dd>{timeOriginLabel(meta)}</dd>
         </div>
       </dl>
       {measured != null && (
         <dl className="cap-facts cap-timecheck num">
           <div>
-            <dt>Estimado pela telemetria</dt>
+            <dt>{uiText('Estimado pela telemetria')}</dt>
             <dd>{formatLapTime(measured)}</dd>
           </div>
           {typed != null && (
             <>
               <div>
-                <dt>Digitado (ranking)</dt>
+                <dt>{uiText('Digitado (ranking)')}</dt>
                 <dd>{formatLapTime(typed)}</dd>
               </div>
               <div>
-                <dt>Diferença</dt>
+                <dt>{uiText('Diferença')}</dt>
                 <dd>{diff != null ? signedMs(diff) : '—'}</dd>
               </div>
             </>
@@ -212,26 +228,27 @@ function SavedCard({
       )}
       {typed == null && measured != null && (
         <p className="cap-saved-note">
-          O tempo salvo é uma estimativa entre as duas passagens pela linha de chegada.
+          {uiText('O tempo salvo é uma estimativa entre as duas passagens pela linha de chegada.')}
         </p>
       )}
       <div className="cap-saved-actions">
         {lap && myBest ? (
           <a className="ui-btn" href={routes.compare({ lap: myBest.id, ref: lap.id })}>
-            Comparar com o meu melhor ({formatLapTime(myBest.timeMs)})
+            {uiText('Comparar com o meu melhor (')}
+            {formatLapTime(myBest.timeMs)})
           </a>
         ) : lap?.trackId ? (
           <a className="ui-btn" href={routes.track(lap.trackId)}>
-            Ver a pista
+            {uiText('Ver a pista')}
           </a>
         ) : null}
         <button type="button" className="ui-btn" data-variant="secondary" onClick={onAgain}>
-          Capturar outra
+          {uiText('Capturar outra')}
         </button>
       </div>
       {lap && !myBest && (
         <p className="cap-saved-note">
-          Ainda não há volta sua válida com este carro nesta pista para comparar.
+          {uiText('Ainda não há volta sua válida com este carro nesta pista para comparar.')}
         </p>
       )}
     </div>
@@ -243,7 +260,7 @@ function SavedCard({
 // ---------------------------------------------------------------------------------------------
 
 export function CapturePage() {
-  useTitle('Capturar referência');
+  useTitle(uiText('Capturar referência'));
   const [driver, setDriver] = useState('');
   const [rankingText, setRankingText] = useState('');
   const [carChoice, setCarChoice] = useState<CarChoice>('auto');
@@ -374,7 +391,7 @@ export function CapturePage() {
 
   const detectedCar = liveCar.carCode;
   const detectedCarName =
-    resolvedCarName(detectedCar) ?? (detectedCar ? `Carro #${detectedCar}` : null);
+    resolvedCarName(detectedCar) ?? (detectedCar ? uiText('Carro #{0}', detectedCar) : null);
   const effectiveCar: number | null =
     carChoice === 'auto' ? detectedCar : carChoice === 'none' ? null : carChoice;
   const effectiveCarText =
@@ -445,14 +462,16 @@ export function CapturePage() {
   return (
     <div className="cap-page">
       <PageHead
-        title="Capturar referência"
-        sub="Assista ao replay de um piloto do topo no jogo e grave a volta dele como referência para o delta ao vivo, a comparação e o coach."
+        title={uiText('Capturar referência')}
+        sub={uiText(
+          'Assista ao replay de um piloto do topo no jogo e grave a volta dele como referência para o delta ao vivo, a comparação e o coach.',
+        )}
       />
 
       <DetectionBanner view={detection} />
 
       {phase === 'saved' ? (
-        <Panel title="Resultado" tone="gain">
+        <Panel title={uiText('Resultado')} tone="gain">
           <SavedCard
             lap={savedLap}
             status={status}
@@ -463,29 +482,36 @@ export function CapturePage() {
         </Panel>
       ) : phase === 'running' ? (
         <Panel
-          title="Capturando"
-          description="Deixe o replay tocar a 1×, sem pausar. O app grava e salva sozinho."
+          title={uiText('Capturando')}
+          description={uiText(
+            'Deixe o replay tocar a 1×, sem pausar. O app grava e salva sozinho.',
+          )}
           tone="accent"
         >
           {status ? (
             !active ? (
-              <p className="cap-now">Iniciando a captura…</p>
+              <p className="cap-now">{uiText('Iniciando a captura…')}</p>
             ) : (
               <>
                 <ProgressBar status={status} />
                 {status.trackName && (
                   <p className="cap-running-meta">
-                    Pista: <strong>{status.trackName}</strong>
+                    {`${uiText('Pista:')} `}
+                    <strong>{status.trackName}</strong>
                   </p>
                 )}
                 <Issues issues={issues} />
                 {status.state === 'recording' && discards > 0 && (
                   <p className="cap-running-meta">
-                    Uma tentativa anterior foi descartada; esta é a próxima volta, gravando sozinho.
+                    {uiText(
+                      'Uma tentativa anterior foi descartada; esta é a próxima volta, gravando sozinho.',
+                    )}
                   </p>
                 )}
                 {status.state === 'waitingLapStart' && issues.length > 0 && (
-                  <p className="cap-running-meta">O app vai gravar a próxima volta sozinho.</p>
+                  <p className="cap-running-meta">
+                    {uiText('O app vai gravar a próxima volta sozinho.')}
+                  </p>
                 )}
               </>
             )
@@ -508,14 +534,16 @@ export function CapturePage() {
               disabled={busy}
               onClick={stop}
             >
-              Parar a captura
+              {uiText('Parar a captura')}
             </button>
           </div>
         </Panel>
       ) : (
         <Panel
-          title="Capturar esta volta"
-          description="Três passos curtos. O app reconhece replay, carro e pista sozinho; o tempo do ranking e o piloto são opcionais."
+          title={uiText('Capturar esta volta')}
+          description={uiText(
+            'Três passos curtos. O app reconhece replay, carro e pista sozinho; o tempo do ranking e o piloto são opcionais.',
+          )}
         >
           <form
             className="cap-form"
@@ -529,13 +557,13 @@ export function CapturePage() {
                 <span className="cap-n" aria-hidden="true">
                   1
                 </span>
-                Dados do ranking
-                <span className="ui-badge">opcional</span>
+                {uiText('Dados do ranking')}
+                <span className="ui-badge">{uiText('opcional')}</span>
               </h3>
               <div className="cap-fields">
                 <div className="ui-field">
                   <label className="ui-label" htmlFor="cap-ranking">
-                    Tempo do ranking
+                    {uiText('Tempo do ranking')}
                   </label>
                   <input
                     id="cap-ranking"
@@ -561,14 +589,19 @@ export function CapturePage() {
                     {ranking.kind === 'invalid'
                       ? ranking.message
                       : ranking.kind === 'ok'
-                        ? `Vamos salvar ${ranking.shown} se a estimativa da telemetria ficar a até 0,3 s desse tempo.`
-                        : 'Copie o tempo oficial do jogo (ex.: 1:30.960). Se deixar em branco, salvamos a estimativa da telemetria.'}
+                        ? uiText(
+                            'Vamos salvar {0} se a estimativa da telemetria ficar a até 0,3 s desse tempo.',
+                            ranking.shown,
+                          )
+                        : uiText(
+                            'Copie o tempo oficial do jogo (ex.: 1:30.960). Se deixar em branco, salvamos a estimativa da telemetria.',
+                          )}
                   </span>
                 </div>
 
                 <div className="ui-field">
                   <label className="ui-label" htmlFor="cap-driver">
-                    Piloto
+                    {uiText('Piloto')}
                   </label>
                   <input
                     id="cap-driver"
@@ -577,7 +610,7 @@ export function CapturePage() {
                     value={driver}
                     maxLength={80}
                     autoComplete="off"
-                    placeholder="Piloto do replay"
+                    placeholder={uiText('Piloto do replay')}
                     onChange={(e) => setDriver(e.target.value)}
                   />
                   <datalist id="cap-drivers">
@@ -585,7 +618,9 @@ export function CapturePage() {
                       <option key={d} value={d} />
                     ))}
                   </datalist>
-                  <span className="ui-help">Nome que aparece na lista de referências.</span>
+                  <span className="ui-help">
+                    {uiText('Nome que aparece na lista de referências.')}
+                  </span>
                 </div>
               </div>
             </section>
@@ -595,37 +630,41 @@ export function CapturePage() {
                 <span className="cap-n" aria-hidden="true">
                   2
                 </span>
-                Detectado automaticamente
+                {uiText('Detectado automaticamente')}
               </h3>
-              <ul className="cap-auto" aria-label="Detectado automaticamente">
+              <ul className="cap-auto" aria-label={uiText('Detectado automaticamente')}>
                 <li>
-                  <span className="cap-auto-k">Carro</span>
+                  <span className="cap-auto-k">{uiText('Carro')}</span>
                   {effectiveCarText ? (
                     <CarChip carCode={effectiveCar} text={effectiveCarText} />
                   ) : (
                     <span className="cap-auto-muted">
-                      {carChoice === 'none' ? 'não informado' : 'será reconhecido pelo replay'}
+                      {carChoice === 'none'
+                        ? uiText('não informado')
+                        : uiText('será reconhecido pelo replay')}
                     </span>
                   )}
                   {carChoice === 'auto' && detectedCar !== null && (
                     <span className="ui-badge" data-tone="gain">
-                      detectado
+                      {uiText('detectado')}
                     </span>
                   )}
                 </li>
                 <li>
-                  <span className="cap-auto-k">Pista</span>
+                  <span className="cap-auto-k">{uiText('Pista')}</span>
                   {chosenTrack ? (
                     <span>{trackLabel(chosenTrack)}</span>
                   ) : status?.trackName ? (
                     <>
                       <span>{status.trackName}</span>
                       <span className="ui-badge" data-tone="gain">
-                        detectada
+                        {uiText('detectada')}
                       </span>
                     </>
                   ) : (
-                    <span className="cap-auto-muted">será reconhecida pela posição do carro</span>
+                    <span className="cap-auto-muted">
+                      {uiText('será reconhecida pela posição do carro')}
+                    </span>
                   )}
                 </li>
               </ul>
@@ -635,11 +674,11 @@ export function CapturePage() {
                 open={moreOpen}
                 onToggle={(e) => setMoreOpen((e.currentTarget as HTMLDetailsElement).open)}
               >
-                <summary>Mais detalhes (corrigir carro ou pista, notas)</summary>
+                <summary>{uiText('Mais detalhes (corrigir carro ou pista, notas)')}</summary>
                 <div className="cap-more-body">
                   <div className="ui-field">
                     <label className="ui-label" htmlFor="cap-car">
-                      Carro
+                      {uiText('Carro')}
                     </label>
                     <CarSelect
                       id="cap-car"
@@ -650,20 +689,21 @@ export function CapturePage() {
                         {
                           value: 'auto',
                           label: detectedCarName
-                            ? `Detectado: ${detectedCarName}`
-                            : 'Automático (pelo carro do replay)',
+                            ? uiText('Detectado: {0}', detectedCarName)
+                            : uiText('Automático (pelo carro do replay)'),
                         },
-                        { value: 'none', label: 'Não informar' },
+                        { value: 'none', label: uiText('Não informar') },
                       ]}
                     />
                     <span id="cap-car-help" className="ui-help">
-                      Só mude se o detectado estiver errado. Ao escolher um carro, a volta só vale
-                      se o replay for desse carro.
+                      {uiText(
+                        'Só mude se o detectado estiver errado. Ao escolher um carro, a volta só vale se o replay for desse carro.',
+                      )}
                     </span>
                   </div>
                   <div className="ui-field">
                     <label className="ui-label" htmlFor="cap-track">
-                      Escolher outra pista
+                      {uiText('Escolher outra pista')}
                     </label>
                     <select
                       id="cap-track"
@@ -671,7 +711,7 @@ export function CapturePage() {
                       value={trackId}
                       onChange={(e) => setTrackId(e.target.value)}
                     >
-                      <option value="">Descobrir sozinho (recomendado)</option>
+                      <option value="">{uiText('Descobrir sozinho (recomendado)')}</option>
                       {tracks.map((t) => (
                         <option key={t.id} value={t.id}>
                           {trackLabel(t)}
@@ -679,12 +719,14 @@ export function CapturePage() {
                       ))}
                     </select>
                     <span className="ui-help">
-                      O app só reconhece pistas em que você já completou uma volta ao vivo.
+                      {uiText(
+                        'O app só reconhece pistas em que você já completou uma volta ao vivo.',
+                      )}
                     </span>
                   </div>
                   <div className="ui-field">
                     <label className="ui-label" htmlFor="cap-notes">
-                      Notas
+                      {uiText('Notas')}
                     </label>
                     <textarea
                       id="cap-notes"
@@ -692,7 +734,7 @@ export function CapturePage() {
                       rows={2}
                       maxLength={500}
                       value={notes}
-                      placeholder="acerto, pneus, condições…"
+                      placeholder={uiText('acerto, pneus, condições…')}
                       onChange={(e) => setNotes(e.target.value)}
                     />
                   </div>
@@ -705,7 +747,7 @@ export function CapturePage() {
                 <span className="cap-n" aria-hidden="true">
                   3
                 </span>
-                Iniciar a captura
+                {uiText('Iniciar a captura')}
               </h3>
               {error && (
                 <p className="ui-error" role="alert">
@@ -714,17 +756,19 @@ export function CapturePage() {
               )}
               {phase === 'stopped' && (
                 <div className="cap-stopped">
-                  <p>A captura terminou sem salvar nenhuma volta.</p>
+                  <p>{uiText('A captura terminou sem salvar nenhuma volta.')}</p>
                   {status && <Issues issues={status.issues} />}
                 </div>
               )}
               <button type="submit" className="ui-btn cap-go" data-size="lg" disabled={busy}>
-                Capturar esta volta
+                {uiText('Capturar esta volta')}
               </button>
               <p className="cap-go-help">
                 {detection.kind === 'replay' || detection.kind === 'replayUnknownTrack'
-                  ? 'Replay pronto: toque e deixe tocar, sem pausar nem avançar.'
-                  : 'Pode tocar agora: o app espera o replay começar e grava a próxima volta completa.'}
+                  ? uiText('Replay pronto: toque e deixe tocar, sem pausar nem avançar.')
+                  : uiText(
+                      'Pode tocar agora: o app espera o replay começar e grava a próxima volta completa.',
+                    )}
               </p>
             </section>
           </form>
@@ -732,23 +776,29 @@ export function CapturePage() {
       )}
 
       <details className="cap-how">
-        <summary>Como funciona e limites</summary>
+        <summary>{uiText('Como funciona e limites')}</summary>
         <div className="cap-how-body">
           <ol className="cap-howto">
             <li>
-              No jogo, abra o <strong>replay da volta</strong> (Time Trial › Ranking › Replay) e dê
-              play. O app percebe sozinho.
+              {`${uiText('No jogo, abra o')} `}
+              <strong>{uiText('replay da volta')}</strong>
+              {` ${uiText('(Time Trial › Ranking › Replay) e dê play. O app percebe sozinho.')}`}
             </li>
             <li>
-              Deixe tocar a <strong>1×</strong>: <strong>não pause, não volte e não avance</strong>.
-              Qualquer salto descarta a volta.
+              {`${uiText('Deixe tocar a')} `}
+              <strong>1×</strong>: <strong>{uiText('não pause, não volte e não avance')}</strong>
+              {uiText('. Qualquer salto descarta a volta.')}
             </li>
-            <li>O app grava a volta entre duas passagens pela linha de largada e salva sozinho.</li>
+            <li>
+              {uiText(
+                'O app grava a volta entre duas passagens pela linha de largada e salva sozinho.',
+              )}
+            </li>
           </ol>
           <p className="cap-limits">
-            Se o replay começar no meio da volta, a parte inicial é ignorada e a próxima volta
-            completa é gravada. Replays são suavizados: ótimos para aprender frenagens e traçado,
-            não para contar milésimos.
+            {uiText(
+              'Se o replay começar no meio da volta, a parte inicial é ignorada e a próxima volta completa é gravada. Replays são suavizados: ótimos para aprender frenagens e traçado, não para contar milésimos.',
+            )}
           </p>
         </div>
       </details>

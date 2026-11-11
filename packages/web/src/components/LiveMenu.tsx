@@ -5,6 +5,7 @@
  */
 
 import { type KeyboardEvent, useId, useState } from 'react';
+import { t as uiText } from '../lib/i18n.ts';
 import { routes } from '../lib/route.ts';
 import {
   closeMenu,
@@ -29,29 +30,54 @@ interface Entry {
 }
 
 const AREAS: readonly Entry[] = [
-  { icon: 'home', label: 'Início', hint: 'Suas pistas, sessões e voltas', href: routes.home() },
+  {
+    icon: 'home',
+    get label() {
+      return uiText('Início');
+    },
+    get hint() {
+      return uiText('Suas pistas, sessões e voltas');
+    },
+    href: routes.home(),
+  },
   {
     icon: 'compare',
-    label: 'Comparar voltas',
-    hint: 'Curva a curva, com gráficos',
+    get label() {
+      return uiText('Comparar voltas');
+    },
+    get hint() {
+      return uiText('Curva a curva, com gráficos');
+    },
     href: routes.compare({}),
   },
   {
     icon: 'capture',
-    label: 'Captura de referência',
-    hint: 'Gravar a volta de um replay',
+    get label() {
+      return uiText('Captura de referência');
+    },
+    get hint() {
+      return uiText('Gravar a volta de um replay');
+    },
     href: routes.capture(),
   },
   {
     icon: 'coach',
-    label: 'Coach de IA',
-    hint: 'Análise e dicas da sua sessão',
+    get label() {
+      return uiText('Coach de IA');
+    },
+    get hint() {
+      return uiText('Análise e dicas da sua sessão');
+    },
     href: routes.coach(),
   },
   {
     icon: 'guide',
-    label: 'Guia de pilotagem',
-    hint: 'Técnicas por classe de carro',
+    get label() {
+      return uiText('Guia de pilotagem');
+    },
+    get hint() {
+      return uiText('Técnicas por classe de carro');
+    },
     href: routes.guide(),
   },
 ];
@@ -59,23 +85,46 @@ const AREAS: readonly Entry[] = [
 const SETUP: readonly Entry[] = [
   {
     icon: 'config',
-    label: 'Configurações',
-    hint: 'Console, dispositivos, dados e IA',
+    get label() {
+      return uiText('Configurações');
+    },
+    get hint() {
+      return uiText('Console, dispositivos, dados e IA');
+    },
     href: routes.config(),
   },
   {
     icon: 'remote',
-    label: 'Dispositivo remoto',
-    hint: 'QR Code e endereço para abrir o painel em outro aparelho',
+    get label() {
+      return uiText('Dispositivo remoto');
+    },
+    get hint() {
+      return uiText('QR Code e endereço para abrir o painel em outro aparelho');
+    },
     href: routes.config('acesso-remoto'),
   },
 ];
 
 type TabId = 'nav' | 'engineer' | 'panel';
 const TABS: readonly { id: TabId; label: string }[] = [
-  { id: 'nav', label: 'Navegar' },
-  { id: 'engineer', label: 'Engenheiro' },
-  { id: 'panel', label: 'Painel' },
+  {
+    id: 'nav',
+    get label() {
+      return uiText('Navegar');
+    },
+  },
+  {
+    id: 'engineer',
+    get label() {
+      return uiText('Engenheiro');
+    },
+  },
+  {
+    id: 'panel',
+    get label() {
+      return uiText('Painel');
+    },
+  },
 ];
 
 /** Botão flutuante, à esquerda do cadeado. */
@@ -86,7 +135,7 @@ export function MenuButton() {
       type="button"
       className="live-menu-btn"
       data-no-gesture
-      aria-label="Menu: histórico, comparação, captura e ajustes"
+      aria-label={uiText('Menu: histórico, comparação, captura e ajustes')}
       aria-haspopup="dialog"
       aria-expanded={open}
       onClick={() => useUi.setState({ menuOpen: !open, overlayVisible: false })}
@@ -128,13 +177,13 @@ function NavigateTab() {
     <div className="bn-stack">
       <section className="bn-section" aria-labelledby="bn-areas">
         <h3 id="bn-areas" className="ui-eyebrow">
-          Áreas do app
+          {uiText('Áreas do app')}
         </h3>
         <LinkList entries={AREAS} />
       </section>
       <section className="bn-section" aria-labelledby="bn-setup">
         <h3 id="bn-setup" className="ui-eyebrow">
-          Aparelhos e ajustes
+          {uiText('Aparelhos e ajustes')}
         </h3>
         <LinkList entries={SETUP} />
       </section>
@@ -145,12 +194,12 @@ function NavigateTab() {
 function PanelTab() {
   const locked = useUi((s) => s.profile.locked);
   const popups = useUi((s) => s.profile.popupsEnabled);
-  const hint = locked ? 'Destrave os gestos para abrir' : null;
+  const hint = locked ? uiText('Destrave os gestos para abrir') : null;
   return (
     <div className="bn-stack">
       <section className="bn-section" aria-labelledby="bn-screens">
         <h3 id="bn-screens" className="ui-eyebrow">
-          Telas
+          {uiText('Telas')}
         </h3>
         <ul className="ui-list">
           <li>
@@ -165,8 +214,8 @@ function PanelTab() {
             >
               <ListItemBody
                 icon="live"
-                title="Telas do painel ao vivo"
-                hint={hint ?? 'Escolher e ordenar as telas deste aparelho'}
+                title={uiText('Telas do painel ao vivo')}
+                hint={hint ?? uiText('Escolher e ordenar as telas deste aparelho')}
               />
             </button>
           </li>
@@ -182,8 +231,8 @@ function PanelTab() {
             >
               <ListItemBody
                 icon="layout"
-                title="Editar tela Personalizada"
-                hint={hint ?? 'Montar a sua grade de widgets'}
+                title={uiText('Editar tela Personalizada')}
+                hint={hint ?? uiText('Montar a sua grade de widgets')}
               />
             </button>
           </li>
@@ -192,19 +241,19 @@ function PanelTab() {
       <section className="ui-card bn-card" aria-labelledby="bn-behavior">
         <div className="ui-card-head">
           <h3 id="bn-behavior" className="ui-card-title">
-            Comportamento
+            {uiText('Comportamento')}
           </h3>
         </div>
         <ToggleRow
-          title="Travar gestos"
-          description="Evita trocar de tela sem querer. Segure o cadeado para destravar."
+          title={uiText('Travar gestos')}
+          description={uiText('Evita trocar de tela sem querer. Segure o cadeado para destravar.')}
           checked={locked}
           onChange={setLocked}
         />
         <hr className="ui-divider" />
         <ToggleRow
-          title="Cartão ao fechar a volta"
-          description="Mostra o tempo e os setores quando você completa uma volta."
+          title={uiText('Cartão ao fechar a volta')}
+          description={uiText('Mostra o tempo e os setores quando você completa uma volta.')}
           checked={popups}
           onChange={(enabled) => dispatchProfile({ type: 'setPopups', enabled })}
         />
@@ -235,7 +284,7 @@ export function LiveMenuSheet() {
       className="bn-drawer"
       title={
         <>
-          <span className="bn-sr-only">Menu · </span>
+          <span className="bn-sr-only">{`${uiText('Menu ·')} `}</span>
           <ProductBrand />
         </>
       }
@@ -243,11 +292,12 @@ export function LiveMenuSheet() {
       footer={
         <>
           <p className="bn-foot-hint">
-            <kbd className="ui-kbd">M</kbd> abre e fecha o menu · <kbd className="ui-kbd">Esc</kbd>{' '}
-            fecha
+            <kbd className="ui-kbd">M</kbd>
+            {` ${uiText('abre e fecha o menu ·')} `}
+            <kbd className="ui-kbd">Esc</kbd> {uiText('fecha')}
           </p>
           <button type="button" className="ui-btn" onClick={closeMenu}>
-            Voltar ao painel
+            {uiText('Voltar ao painel')}
           </button>
         </>
       }
@@ -255,7 +305,7 @@ export function LiveMenuSheet() {
       <div
         className="ui-tabs bn-tabs"
         role="tablist"
-        aria-label="Seções do menu"
+        aria-label={uiText('Seções do menu')}
         onKeyDown={onTabKey}
       >
         {TABS.map((t) => (

@@ -9,6 +9,7 @@ import { ConsoleChip, ConsolePanelHost } from '../components/ConsoleLink.tsx';
 import { ProductBrand } from '../components/ProductBrand.tsx';
 import { UpdateNotice } from '../components/UpdateNotice.tsx';
 import { Icon, type IconName } from '../components/ui/Icon.tsx';
+import { t as uiText } from '../lib/i18n.ts';
 import type { Route } from '../lib/route.ts';
 import { routes } from '../lib/route.ts';
 import { dismissNotice, useUi } from '../state/uiStore.ts';
@@ -46,8 +47,12 @@ const LIVE: NavItem = {
   icon: 'live',
   names: [],
   href: routes.live(),
-  label: 'Ao vivo',
-  short: 'Ao vivo',
+  get label() {
+    return uiText('Ao vivo');
+  },
+  get short() {
+    return uiText('Ao vivo');
+  },
 };
 
 const MAIN_NAV: NavItem[] = [
@@ -55,30 +60,54 @@ const MAIN_NAV: NavItem[] = [
     icon: 'home',
     names: ['home', 'sessions', 'session', 'track'],
     href: routes.home(),
-    label: 'Início',
-    short: 'Início',
+    get label() {
+      return uiText('Início');
+    },
+    get short() {
+      return uiText('Início');
+    },
   },
   {
     icon: 'compare',
     names: ['compare'],
     href: routes.compare({}),
-    label: 'Comparar voltas',
-    short: 'Comparar',
+    get label() {
+      return uiText('Comparar voltas');
+    },
+    get short() {
+      return uiText('Comparar');
+    },
   },
   {
     icon: 'capture',
     names: ['capture'],
     href: routes.capture(),
-    label: 'Captura de referência',
-    short: 'Captura',
+    get label() {
+      return uiText('Captura de referência');
+    },
+    get short() {
+      return uiText('Captura');
+    },
   },
-  { icon: 'coach', names: ['coach'], href: routes.coach(), label: 'Coach IA', short: 'Coach' },
+  {
+    icon: 'coach',
+    names: ['coach'],
+    href: routes.coach(),
+    get label() {
+      return uiText('Coach IA');
+    },
+    short: 'Coach',
+  },
   {
     icon: 'guide',
     names: ['guide'],
     href: routes.guide(),
-    label: 'Guia de pilotagem',
-    short: 'Guia',
+    get label() {
+      return uiText('Guia de pilotagem');
+    },
+    get short() {
+      return uiText('Guia');
+    },
   },
 ];
 
@@ -86,8 +115,12 @@ const SETTINGS: NavItem = {
   icon: 'config',
   names: ['config'],
   href: routes.config(),
-  label: 'Configurações',
-  short: 'Ajustes',
+  get label() {
+    return uiText('Configurações');
+  },
+  get short() {
+    return uiText('Ajustes');
+  },
 };
 
 class PageBoundary extends Component<
@@ -105,10 +138,10 @@ class PageBoundary extends Component<
     if (this.state.error) {
       return (
         <div className="ui-card a-error" data-tone="loss" role="alert">
-          <strong>Esta página falhou ao desenhar</strong>
+          <strong>{uiText('Esta página falhou ao desenhar')}</strong>
           <p>{this.state.error.message}</p>
           <button type="button" className="a-btn a-btn-ghost" onClick={() => location.reload()}>
-            Recarregar
+            {uiText('Recarregar')}
           </button>
         </div>
       );
@@ -124,7 +157,7 @@ function ConnectionPill() {
   if (source !== 'mock' && ws !== 'open') {
     return (
       <span className="a-pill" data-state="bad">
-        Sem servidor
+        {uiText('Sem servidor')}
       </span>
     );
   }
@@ -159,14 +192,14 @@ function Toasts() {
 function NotFound() {
   return (
     <div className="ui-empty a-empty">
-      <h1>Página não encontrada</h1>
-      <p>Esse endereço não existe na área de análise.</p>
+      <h1>{uiText('Página não encontrada')}</h1>
+      <p>{uiText('Esse endereço não existe na área de análise.')}</p>
       <div className="a-actions">
         <a className="a-btn" href={routes.home()}>
-          Ir para o início
+          {uiText('Ir para o início')}
         </a>
         <a className="a-btn a-btn-ghost" href={routes.live()}>
-          Voltar ao painel ao vivo
+          {uiText('Voltar ao painel ao vivo')}
         </a>
       </div>
     </div>
@@ -233,10 +266,10 @@ export default function AnalysisApp({ route }: { route: Route }) {
         <a className="a-brand" href={routes.home()}>
           <ProductBrand />
         </a>
-        <nav className="a-nav" aria-label="Seções">
+        <nav className="a-nav" aria-label={uiText('Seções')}>
           <NavLink item={LIVE} route={route} />
           <p className="a-nav-group" aria-hidden="true">
-            Histórico e análise
+            {uiText('Histórico e análise')}
           </p>
           {MAIN_NAV.map((n) => (
             <NavLink key={n.label} item={n} route={route} />

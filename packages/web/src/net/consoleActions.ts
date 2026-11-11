@@ -2,11 +2,12 @@
 
 import { api } from '../analysis/api.ts';
 import { isValidIpv4 } from '../lib/consoleLink.ts';
+import { t as uiText } from '../lib/i18n.ts';
 import { addNotice, useUi } from '../state/uiStore.ts';
 
 function inDemo(): boolean {
   if (useUi.getState().source !== 'mock') return false;
-  addNotice('info', 'Na demonstração não há console de verdade: nada foi enviado.');
+  addNotice('info', uiText('Na demonstração não há console de verdade: nada foi enviado.'));
   return true;
 }
 
@@ -23,8 +24,8 @@ export async function rescanConsole(): Promise<boolean> {
     addNotice(
       r.started ? 'info' : 'warn',
       r.started
-        ? 'Procurando o PS5 de novo…'
-        : 'A telemetria está parada, então não há o que procurar agora.',
+        ? uiText('Procurando o PS5 de novo…')
+        : uiText('A telemetria está parada, então não há o que procurar agora.'),
     );
     return r.started;
   } catch (e) {
@@ -37,7 +38,11 @@ export async function rescanConsole(): Promise<boolean> {
 export async function pinConsoleIp(ip: string): Promise<boolean> {
   const value = ip.trim();
   if (!isValidIpv4(value)) {
-    addNotice('warn', 'Esse endereço não parece um IP válido (exemplo: 192.168.0.20).', 5000);
+    addNotice(
+      'warn',
+      uiText('Esse endereço não parece um IP válido (exemplo: 192.168.0.20).'),
+      5000,
+    );
     return false;
   }
   if (inDemo()) return false;
@@ -56,7 +61,7 @@ export async function backToAutomatic(): Promise<boolean> {
   if (inDemo()) return false;
   try {
     await api.patchSettings({ consoleIp: null });
-    addNotice('info', 'Voltou ao automático: o app procura o PS5 sozinho.');
+    addNotice('info', uiText('Voltou ao automático: o app procura o PS5 sozinho.'));
     return true;
   } catch (e) {
     addNotice('error', (e as Error).message, 7000);

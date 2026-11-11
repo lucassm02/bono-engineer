@@ -1,6 +1,7 @@
 /** Ranked coaching findings (one per corner, costliest first) with the action to try next. */
 
 import type { Corner, CornerFinding } from '@gt7/shared';
+import { t as uiText } from '../../lib/i18n.ts';
 import { cornerLabel, fixed } from '../lib/chartData.ts';
 import { CONFIDENCE_LABELS } from '../lib/labels.ts';
 import { Tag } from './ui.tsx';
@@ -19,13 +20,17 @@ export function FindingsPanel({ findings, corners, referenceIsReplay, onCorner, 
     <div className="a-findings">
       {referenceIsReplay && (
         <p className="a-note">
-          Referência capturada de <strong>replay</strong>: as entradas (freio, volante) são
-          suavizadas. Pontos de frenagem e traçado têm precisão de alguns metros — use para
-          tendências, não para milissegundos.
+          {`${uiText('Referência capturada de')} `}
+          <strong>{uiText('replay')}</strong>
+          {uiText(
+            ': as entradas (freio, volante) são suavizadas. Pontos de frenagem e traçado têm precisão de alguns metros — use para tendências, não para milissegundos.',
+          )}
         </p>
       )}
       {list.length === 0 ? (
-        <p className="dim">Nenhum ponto relevante: você está no ritmo da referência nesta volta.</p>
+        <p className="dim">
+          {uiText('Nenhum ponto relevante: você está no ritmo da referência nesta volta.')}
+        </p>
       ) : (
         <ol className="a-finding-list">
           {list.map((f, i) => {
@@ -34,9 +39,12 @@ export function FindingsPanel({ findings, corners, referenceIsReplay, onCorner, 
               <li key={`${f.cornerId}-${f.kind}-${f.value}`} className="a-finding">
                 <div className="a-finding-head">
                   <span className="a-finding-rank num">{i + 1}</span>
-                  <strong>{corner ? cornerLabel(corner) : (f.cornerId ?? 'Volta')}</strong>
+                  <strong>{corner ? cornerLabel(corner) : (f.cornerId ?? uiText('Volta'))}</strong>
                   {typeof f.costMs === 'number' && f.costMs > 0 && (
-                    <span className="a-finding-cost num" title="Custo estimado desta causa">
+                    <span
+                      className="a-finding-cost num"
+                      title={uiText('Custo estimado desta causa')}
+                    >
                       ≈ {fixed(f.costMs / 1000, 2)} s
                     </span>
                   )}
@@ -63,7 +71,7 @@ export function FindingsPanel({ findings, corners, referenceIsReplay, onCorner, 
                     className="a-btn a-btn-ghost a-btn-sm"
                     onClick={() => onCorner(f.cornerId!)}
                   >
-                    Ver no gráfico
+                    {uiText('Ver no gráfico')}
                   </button>
                 )}
               </li>

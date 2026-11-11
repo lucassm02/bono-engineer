@@ -2,16 +2,22 @@
 
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { isLanguage, type Language } from '@gt7/shared';
 import { parseWindowState, type WindowState } from './window-state.ts';
 
 export interface DesktopState {
   window: WindowState | null;
   trayHintShown: boolean;
+  language?: Language;
 }
 
 export function parseDesktopState(raw: unknown): DesktopState {
   const r = (typeof raw === 'object' && raw !== null ? raw : {}) as Record<string, unknown>;
-  return { window: parseWindowState(r.window), trayHintShown: r.trayHintShown === true };
+  return {
+    window: parseWindowState(r.window),
+    trayHintShown: r.trayHintShown === true,
+    ...(isLanguage(r.language) ? { language: r.language } : {}),
+  };
 }
 
 export function readDesktopState(file: string): DesktopState {

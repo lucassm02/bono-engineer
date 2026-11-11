@@ -7,6 +7,7 @@ export interface DesktopDiscordSettings {
   delay: string;
   enabled: boolean;
   brakePercent: boolean;
+  voice: string;
 }
 
 export interface DesktopDiscordStatus {
@@ -24,6 +25,7 @@ export interface DesktopDiscordBridge {
   save(settings: DesktopDiscordSettings & { token: string }): Promise<void>;
   /** Liga ou desliga o bot salvo, sem reabrir as configurações. Falha se ainda não houver configuração. */
   setEnabled(enabled: boolean): Promise<void>;
+  setVoice(pack: string): Promise<void>;
   test(): Promise<void>;
   stopTest(): Promise<void>;
   remove(): Promise<void>;

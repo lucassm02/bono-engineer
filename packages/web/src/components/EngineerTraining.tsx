@@ -2,6 +2,7 @@ import type { Lap, Track } from '@gt7/shared';
 import { useState } from 'react';
 import { cornerLabel } from '../analysis/lib/chartData.ts';
 import { formatDelta } from '../lib/format.ts';
+import { t as uiText } from '../lib/i18n.ts';
 import { routes } from '../lib/route.ts';
 import { live } from '../live/liveStore.ts';
 import { setEngineerEnabled, useEngineer } from '../state/engineer.ts';
@@ -62,7 +63,7 @@ export function EngineerTraining({
   return (
     <details className="ui-card bn-card engineer-training bn-training">
       <summary>
-        <span className="ui-card-title">Treino por curvas</span>
+        <span className="ui-card-title">{uiText('Treino por curvas')}</span>
         {run && (
           <span className="ui-badge" data-tone={active ? 'accent' : 'gain'}>
             {run.laps.length}/{TRAINING_LAPS}
@@ -75,13 +76,13 @@ export function EngineerTraining({
           <>
             <p className="ui-help">
               {active
-                ? `${run.laps.length} de ${TRAINING_LAPS} voltas válidas`
-                : 'Treino concluído'}{' '}
+                ? uiText('{0} de {1} voltas válidas', run.laps.length, TRAINING_LAPS)
+                : uiText('Treino concluído')}{' '}
               · {run.corners.map((corner) => corner.name).join(' e ')}
             </p>
             {run.notice && (
               <p className="bn-note" data-tone="info" role="status">
-                {run.notice}
+                {uiText(run.notice)}
               </p>
             )}
             {run.laps.length > 0 && (
@@ -89,11 +90,11 @@ export function EngineerTraining({
                 {run.laps.map((lap) => (
                   <li key={lap.id}>
                     <a href={routes.compare({ lap: lap.id, ref: run.referenceId })}>
-                      Abrir comparação
+                      {uiText('Abrir comparação')}
                     </a>
                     <span>
                       {lap.failed
-                        ? 'Análise indisponível'
+                        ? uiText('Análise indisponível')
                         : lap.results
                           ? run.corners
                               .map(
@@ -101,7 +102,7 @@ export function EngineerTraining({
                                   `${corner.name} ${formatDelta(lap.results?.[corner.id])}`,
                               )
                               .join(' · ')
-                          : 'Analisando…'}
+                          : uiText('Analisando…')}
                     </span>
                   </li>
                 ))}
@@ -118,8 +119,11 @@ export function EngineerTraining({
                 const spread = Math.max(...values) - Math.min(...values);
                 return (
                   <p className="ui-help" key={corner.id}>
-                    {corner.name} · última vs. primeira {formatDelta(change)} · variação entre
-                    voltas {formatDelta(spread)}
+                    {corner.name}
+                    {` ${uiText('· última vs. primeira')} `}
+                    {formatDelta(change)}
+                    {` ${uiText('· variação entre voltas')} `}
+                    {formatDelta(spread)}
                   </p>
                 );
               })}
@@ -130,34 +134,34 @@ export function EngineerTraining({
               data-size="sm"
               onClick={() => useEngineerTraining.setState({ run: null })}
             >
-              {active ? 'Encerrar treino' : 'Novo treino'}
+              {active ? uiText('Encerrar treino') : uiText('Novo treino')}
             </button>
           </>
         ) : (
           <>
             <p className="ui-help">
-              Escolha até duas curvas. O rádio foca nelas por cinco voltas válidas e compara todas
-              com a mesma referência. No perfil Aprender pista, escolher uma curva reativa a ajuda
-              nela.
+              {uiText(
+                'Escolha até duas curvas. O rádio foca nelas por cinco voltas válidas e compara todas com a mesma referência. No perfil Aprender pista, escolher uma curva reativa a ajuda nela.',
+              )}
             </p>
             {!audioHere && (
               <p className="bn-note" data-tone="warn">
-                Inicie o treino no aparelho que toca o rádio.
+                {uiText('Inicie o treino no aparelho que toca o rádio.')}
               </p>
             )}
             {!recording && (
               <p className="bn-note" data-tone="warn">
-                Ative a gravação automática para analisar as voltas do treino.
+                {uiText('Ative a gravação automática para analisar as voltas do treino.')}
               </p>
             )}
             {!reference && (
               <p className="bn-note" data-tone="info">
-                Escolha uma volta compatível para fixar a referência do treino.
+                {uiText('Escolha uma volta compatível para fixar a referência do treino.')}
               </p>
             )}
             {track?.corners.length ? (
               <fieldset className="engineer-training-corners bn-corners">
-                <legend className="ui-label">Curvas do treino</legend>
+                <legend className="ui-label">{uiText('Curvas do treino')}</legend>
                 <div className="bn-corner-grid">
                   {track.corners.map((corner) => (
                     <label key={corner.id} className="bn-check">
@@ -179,7 +183,7 @@ export function EngineerTraining({
                 </div>
               </fieldset>
             ) : (
-              <p className="ui-help">Aguardando as curvas do traçado atual.</p>
+              <p className="ui-help">{uiText('Aguardando as curvas do traçado atual.')}</p>
             )}
             <button
               type="button"
@@ -189,7 +193,7 @@ export function EngineerTraining({
               onClick={() => void start()}
             >
               <Icon name="play" size={16} />
-              {starting ? 'Preparando treino…' : 'Iniciar treino de 5 voltas'}
+              {starting ? uiText('Preparando treino…') : uiText('Iniciar treino de 5 voltas')}
             </button>
           </>
         )}

@@ -15,6 +15,7 @@ import {
 } from '@gt7/shared';
 import { useEffect, useMemo, useState } from 'react';
 import { Icon } from '../../components/ui/Icon.tsx';
+import { getLanguage, t as uiText } from '../../lib/i18n.ts';
 import type { Route } from '../../lib/route.ts';
 import { Markdown } from '../components/Markdown.tsx';
 import { Panel } from '../components/Panel.tsx';
@@ -30,12 +31,24 @@ import {
 import '../../styles/guide.css';
 
 const KIND_TAGS: Record<TopicRef['kind'], string> = {
-  geral: 'Princípio',
-  classe: 'Classe',
-  diagnostico: 'Diagnóstico',
-  afinacao: 'Afinação',
-  glossario: 'Glossário',
-  fonte: 'Fontes',
+  get geral() {
+    return uiText('Princípio');
+  },
+  get classe() {
+    return uiText('Classe');
+  },
+  get diagnostico() {
+    return uiText('Diagnóstico');
+  },
+  get afinacao() {
+    return uiText('Afinação');
+  },
+  get glossario() {
+    return uiText('Glossário');
+  },
+  get fonte() {
+    return uiText('Fontes');
+  },
 };
 
 const KIND_TONES: Partial<Record<TopicRef['kind'], string>> = {
@@ -75,7 +88,7 @@ function Topic({
           </span>
           {evidenceLow && (
             <span className="ui-badge" data-tone="warn">
-              pouca evidência
+              {uiText('pouca evidência')}
             </span>
           )}
         </span>
@@ -87,7 +100,7 @@ function Topic({
 }
 
 export function GuidePage({ route }: { route: Route }) {
-  useTitle('Guia de pilotagem');
+  useTitle(uiText('Guia de pilotagem'));
   const [query, setQuery] = useState(route.query.q ?? '');
   const [kind, setKind] = useState<GuideKind>(parseGuideKind(route.query.topico));
   const [group, setGroup] = useState<CarGroup | null>(parseGuideGroup(route.query.classe));
@@ -113,13 +126,18 @@ export function GuidePage({ route }: { route: Route }) {
   return (
     <div className="g-page">
       <PageHead
-        title="Guia de pilotagem"
-        sub="A base de conhecimento que o coach de IA usa: princípios, classes de carro, o que cada diagnóstico do app significa, mapa de afinação e fontes."
+        title={uiText('Guia de pilotagem')}
+        sub={uiText(
+          'A base de conhecimento que o coach de IA usa: princípios, classes de carro, o que cada diagnóstico do app significa, mapa de afinação e fontes.',
+        )}
       />
 
-      <section className="ui-card g-controls" aria-label="Busca e filtros">
+      {getLanguage() !== 'pt-BR' && (
+        <p className="dim">{uiText('Conteúdo do guia em português do Brasil.')}</p>
+      )}
+      <section className="ui-card g-controls" aria-label={uiText('Busca e filtros')}>
         <label className="g-search" htmlFor="g-q">
-          <span className="ui-label">Buscar no guia</span>
+          <span className="ui-label">{uiText('Buscar no guia')}</span>
           <span className="g-search-box">
             <Icon name="search" size={20} />
             <input
@@ -128,7 +146,7 @@ export function GuidePage({ route }: { route: Route }) {
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="trail braking, subesterço, TCS…"
+              placeholder={uiText('trail braking, subesterço, TCS…')}
               enterKeyHint="search"
               autoComplete="off"
               spellCheck={false}
@@ -137,7 +155,7 @@ export function GuidePage({ route }: { route: Route }) {
         </label>
         <div className="g-filters">
           <fieldset className="g-filter">
-            <legend className="ui-label">Tipo de conteúdo</legend>
+            <legend className="ui-label">{uiText('Tipo de conteúdo')}</legend>
             <div className="g-chips">
               {GUIDE_KINDS.map((k) => (
                 <button
@@ -153,7 +171,7 @@ export function GuidePage({ route }: { route: Route }) {
             </div>
           </fieldset>
           <fieldset className="g-filter">
-            <legend className="ui-label">Classe do carro</legend>
+            <legend className="ui-label">{uiText('Classe do carro')}</legend>
             <div className="g-chips">
               <button
                 type="button"
@@ -161,7 +179,7 @@ export function GuidePage({ route }: { route: Route }) {
                 aria-pressed={group === null}
                 onClick={() => setGroup(null)}
               >
-                Todas
+                {uiText('Todas')}
               </button>
               {GUIDE_GROUPS.map((g) => (
                 <button
@@ -182,8 +200,8 @@ export function GuidePage({ route }: { route: Route }) {
       {brief && (
         <details className="g-brief">
           <summary>
-            O que o coach recebe sobre a classe {groupLabel(group)} ({brief.markdown.length}{' '}
-            caracteres)
+            {`${uiText('O que o coach recebe sobre a classe')} `}
+            {groupLabel(group)} ({brief.markdown.length} {uiText('caracteres)')}
           </summary>
           <Markdown className="g-md" text={brief.markdown} />
         </details>
@@ -192,8 +210,8 @@ export function GuidePage({ route }: { route: Route }) {
       <div className="g-count-row">
         <p className="g-count" aria-live="polite">
           {topics.length === 0
-            ? 'Nenhum tópico encontrado.'
-            : `${topics.length} ${topics.length === 1 ? 'tópico' : 'tópicos'}${group ? ` · diagnósticos filtrados para ${groupLabel(group)}` : ''}`}
+            ? uiText('Nenhum tópico encontrado.')
+            : `${topics.length} ${topics.length === 1 ? uiText('tópico') : uiText('tópicos')}${group ? uiText(' · diagnósticos filtrados para {0}', groupLabel(group)) : ''}`}
         </p>
         {filtered && topics.length > 0 && (
           <button
@@ -207,16 +225,18 @@ export function GuidePage({ route }: { route: Route }) {
               setGroup(null);
             }}
           >
-            Limpar filtros
+            {uiText('Limpar filtros')}
           </button>
         )}
       </div>
 
       {topics.length === 0 ? (
         <div className="ui-empty">
-          <strong>Nada encontrado</strong>
+          <strong>{uiText('Nada encontrado')}</strong>
           <p>
-            Nada para “{query}”. Tente outra palavra (a busca ignora acentos) ou limpe os filtros.
+            {uiText('Nada para “')}
+            {query}
+            {uiText('”. Tente outra palavra (a busca ignora acentos) ou limpe os filtros.')}
           </p>
           <button
             type="button"
@@ -228,7 +248,7 @@ export function GuidePage({ route }: { route: Route }) {
               setGroup(null);
             }}
           >
-            Limpar filtros
+            {uiText('Limpar filtros')}
           </button>
         </div>
       ) : (
@@ -246,29 +266,43 @@ export function GuidePage({ route }: { route: Route }) {
 
       <Panel
         className="g-notice"
-        title="Como ler este guia"
-        description="Regra geral não é lei: serve de ponto de partida, e o que vale são os números das suas voltas."
+        title={uiText('Como ler este guia')}
+        description={uiText(
+          'Regra geral não é lei: serve de ponto de partida, e o que vale são os números das suas voltas.',
+        )}
       >
         <ul>
           <li>
-            Cada afirmação diz se é <strong>regra geral</strong>, <strong>depende do carro</strong>,{' '}
-            <strong>segundo uma fonte</strong> (com link) ou tem <strong>pouca evidência</strong>.
+            {`${uiText('Cada afirmação diz se é')} `}
+            <strong>{uiText('regra geral')}</strong>, <strong>{uiText('depende do carro')}</strong>,{' '}
+            <strong>{uiText('segundo uma fonte')}</strong>
+            {` ${uiText('(com link) ou tem')} `}
+            <strong>{uiText('pouca evidência')}</strong>.
           </li>
           <li>
-            <strong>O app não tem pontos de frenagem por pista.</strong> Só existem os medidos nas
-            suas voltas e nas referências capturadas; o guia nunca os inventa.
+            <strong>{uiText('O app não tem pontos de frenagem por pista.')}</strong>
+            {' ' +
+              uiText(
+                'Só existem os medidos nas suas voltas e nas referências capturadas; o guia nunca os inventa.',
+              )}
           </li>
           <li>
-            Gr.2, Gr.B, carros de rua (N) e especiais (X) quase não têm fonte publicada: o texto
-            deles é síntese de princípios gerais.
+            {uiText(
+              'Gr.2, Gr.B, carros de rua (N) e especiais (X) quase não têm fonte publicada: o texto deles é síntese de princípios gerais.',
+            )}
           </li>
         </ul>
       </Panel>
 
       <p className="g-foot">
-        {stats.topics} tópicos · {stats.diagnostics} diagnósticos · {KNOWLEDGE_SOURCES.length}{' '}
-        fontes (consultadas em 2026-11-09). Resumos em palavras próprias; os links levam aos textos
-        originais.
+        {stats.topics}
+        {` ${uiText('tópicos ·')} `}
+        {stats.diagnostics}
+        {` ${uiText('diagnósticos ·')} `}
+        {KNOWLEDGE_SOURCES.length}{' '}
+        {uiText(
+          'fontes (consultadas em 2026-11-09). Resumos em palavras próprias; os links levam aos textos originais.',
+        )}
       </p>
     </div>
   );

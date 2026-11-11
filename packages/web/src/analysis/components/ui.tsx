@@ -3,6 +3,7 @@
 import { PRODUCT_NAME } from '@gt7/shared';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { Icon } from '../../components/ui/Icon.tsx';
+import { t as uiText } from '../../lib/i18n.ts';
 import { routes } from '../../lib/route.ts';
 import type { ApiError } from '../api.ts';
 
@@ -69,7 +70,7 @@ export function Card({
   );
 }
 
-export function Loading({ text = 'Carregando…' }: { text?: string }) {
+export function Loading({ text = uiText('Carregando…') }: { text?: string }) {
   return (
     <div className="a-loading" role="status">
       <span className="a-spinner" aria-hidden="true" />
@@ -95,17 +96,18 @@ export function ErrorBox({
       data-tone="loss"
       role="alert"
     >
-      <strong>{offline ? 'Servidor fora do ar' : 'Algo deu errado'}</strong>
-      <p>{msg}</p>
+      <strong>{offline ? uiText('Servidor fora do ar') : uiText('Algo deu errado')}</strong>
+      <p>{uiText(msg)}</p>
       {offline && !compact && (
         <p className="dim">
-          O painel ao vivo continua funcionando em modo demonstração (<a href="/?mock=1">abrir</a>
-          ), mas a análise precisa dos dados gravados no servidor.
+          {uiText('O painel ao vivo continua funcionando em modo demonstração (')}
+          <a href="/?mock=1">{uiText('abrir')}</a>
+          {uiText('), mas a análise precisa dos dados gravados no servidor.')}
         </p>
       )}
       {onRetry && (
         <button type="button" className="a-btn a-btn-ghost" onClick={onRetry}>
-          Tentar de novo
+          {uiText('Tentar de novo')}
         </button>
       )}
     </div>
@@ -119,8 +121,8 @@ export function Empty({ children }: { children: ReactNode }) {
 /** Two-step destructive button: first click asks, second confirms (no blocking dialogs). */
 export function ConfirmButton({
   label,
-  confirmLabel = 'Confirmar',
-  question = 'Tem certeza?',
+  confirmLabel = uiText('Confirmar'),
+  question = uiText('Tem certeza?'),
   onConfirm,
   className = 'a-btn a-btn-danger',
   disabled,
@@ -171,7 +173,7 @@ export function ConfirmButton({
         {confirmLabel}
       </button>
       <button type="button" className="a-btn a-btn-ghost" onClick={() => setAsking(false)}>
-        Cancelar
+        {uiText('Cancelar')}
       </button>
     </span>
   );
@@ -203,7 +205,7 @@ export async function copyText(text: string): Promise<boolean> {
   }
 }
 
-export function CopyButton({ text, label = 'Copiar' }: { text: string; label?: string }) {
+export function CopyButton({ text, label = uiText('Copiar') }: { text: string; label?: string }) {
   const [state, setState] = useState<'idle' | 'ok' | 'fail'>('idle');
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => void (timer.current && clearTimeout(timer.current)), []);
@@ -218,7 +220,11 @@ export function CopyButton({ text, label = 'Copiar' }: { text: string; label?: s
         timer.current = setTimeout(() => setState('idle'), 1800);
       }}
     >
-      {state === 'ok' ? 'Copiado ✓' : state === 'fail' ? 'Selecione e copie' : label}
+      {state === 'ok'
+        ? uiText('Copiado ✓')
+        : state === 'fail'
+          ? uiText('Selecione e copie')
+          : label}
     </button>
   );
 }
@@ -257,7 +263,8 @@ export function Tag({
 export function NoKeyHint() {
   return (
     <p className="dim">
-      Configure a chave da API em <a href={routes.config('coach')}>Configurações</a>.
+      {`${uiText('Configure a chave da API em')} `}
+      <a href={routes.config('coach')}>{uiText('Configurações')}</a>.
     </p>
   );
 }

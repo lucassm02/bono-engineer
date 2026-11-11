@@ -7,6 +7,7 @@
 import type { LiveFrame } from '@gt7/shared';
 import { useRef } from 'react';
 import { gScale } from '../lib/gStats.ts';
+import { t as uiText } from '../lib/i18n.ts';
 import { THEME, withAlpha } from '../lib/theme.ts';
 import { derived } from '../live/derived.ts';
 import { live } from '../live/liveStore.ts';
@@ -132,7 +133,7 @@ export function GCircle({
       ref={canvasRef}
       className={`g-circle ${className}`}
       role="img"
-      aria-label="Círculo de forças G"
+      aria-label={uiText('Círculo de forças G')}
     />
   );
 }

@@ -5,6 +5,7 @@
  * widgets keep working with the replay's data (speed, pedals, map).
  */
 
+import { t as uiText } from '../lib/i18n.ts';
 import { routes } from '../lib/route.ts';
 import { useUi } from '../state/uiStore.ts';
 import '../styles/capture-status.css';
@@ -20,12 +21,12 @@ export function ReplayNotice() {
       <span className="ui-dot" data-tone="accent" aria-hidden="true" />
       <span className="replay-text">
         {armed
-          ? (capture?.hint ?? 'Captura de referência em andamento.')
-          : 'Não conta como sessão: nada é gravado nos seus tempos.'}
+          ? (capture?.hint ?? uiText('Captura de referência em andamento.'))
+          : uiText('Não conta como sessão: nada é gravado nos seus tempos.')}
       </span>
       {source === 'server' && (
         <a className="replay-link" href={routes.capture()}>
-          {armed ? 'Ver a captura' : 'Capturar esta volta como referência'}
+          {armed ? uiText('Ver a captura') : uiText('Capturar esta volta como referência')}
         </a>
       )}
     </div>

@@ -145,36 +145,37 @@ export type Synthesize = (recipe: Recipe, text: string) => Audio;
 export function createSynthesizer(recipes: readonly Recipe[]): Synthesize {
   const lib = loadSherpa();
   const kokoroRecipes = recipes.filter((r) => r.engine === 'kokoro');
-  let kokoro: { tts: SherpaTts; sid: Map<Recipe, number> } | undefined;
+  let voices: ReturnType<typeof kokoroVoices> | undefined;
+  const kokoro = new Map<string, SherpaTts>();
   const vits = new Map<string, SherpaTts>();
   let supertonic: SherpaTts | undefined;
   const threads = 4;
 
   return (recipe, text) => {
     if (recipe.engine === 'kokoro') {
-      if (!kokoro) {
+      const lang = recipe.lang ?? 'pt-br';
+      let tts = kokoro.get(lang);
+      if (!tts) {
         const dir = requireModel('kokoro');
-        const voices = kokoroVoices(kokoroRecipes);
-        kokoro = {
-          sid: voices.sid,
-          tts: new lib.OfflineTts({
-            model: {
-              kokoro: {
-                model: join(dir, 'model.onnx'),
-                voices: voices.path,
-                tokens: join(dir, 'tokens.txt'),
-                dataDir: join(dir, 'espeak-ng-data'),
-                lang: 'pt-br',
-              },
-              numThreads: threads,
+        voices ??= kokoroVoices(kokoroRecipes);
+        tts = new lib.OfflineTts({
+          model: {
+            kokoro: {
+              model: join(dir, 'model.onnx'),
+              voices: voices.path,
+              tokens: join(dir, 'tokens.txt'),
+              dataDir: join(dir, 'espeak-ng-data'),
+              lang,
             },
-            maxNumSentences: 1,
-          }),
-        };
+            numThreads: threads,
+          },
+          maxNumSentences: 1,
+        });
+        kokoro.set(lang, tts);
       }
-      const sid = kokoro.sid.get(recipe);
+      const sid = voices?.sid.get(recipe);
       if (sid === undefined) throw new Error('Receita Kokoro fora do lote');
-      return kokoro.tts.generate({ text, sid, speed: recipe.speed });
+      return tts.generate({ text, sid, speed: recipe.speed });
     }
     if (recipe.engine === 'vits') {
       let tts = vits.get(recipe.model);

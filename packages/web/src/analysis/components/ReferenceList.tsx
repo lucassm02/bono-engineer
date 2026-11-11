@@ -13,6 +13,7 @@ import {
 } from '@gt7/shared';
 import { useEffect, useMemo, useState } from 'react';
 import { formatLapTime } from '../../lib/format.ts';
+import { getLanguage, t as uiText } from '../../lib/i18n.ts';
 import { routes } from '../../lib/route.ts';
 import { addNotice } from '../../state/uiStore.ts';
 import { api } from '../api.ts';
@@ -28,7 +29,7 @@ import { CarSelect } from './CarSelect.tsx';
 import { Card, ConfirmButton, Empty, ErrorBox, Loading, Tag } from './ui.tsx';
 
 const whenText = (ms: number) =>
-  new Date(ms).toLocaleString('pt-BR', {
+  new Date(ms).toLocaleString(getLanguage(), {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -76,7 +77,7 @@ function RefEditor({
       if (choice === 'none') body.carName = null;
       else if (typeof choice === 'number') body.carName = resolvedCarName(choice) ?? current;
       const saved = await api.setReference(lap.id, body);
-      addNotice('info', 'Referência atualizada.');
+      addNotice('info', uiText('Referência atualizada.'));
       onDone(saved);
     } catch (e) {
       addNotice('error', (e as Error).message, 6000);
@@ -94,7 +95,7 @@ function RefEditor({
       }}
     >
       <label className="cap-field" htmlFor={`${id}-driver`}>
-        Piloto
+        {uiText('Piloto')}
         <input
           id={`${id}-driver`}
           className="a-input"
@@ -106,26 +107,26 @@ function RefEditor({
         />
       </label>
       <label className="cap-field" htmlFor={`${id}-car`}>
-        Carro
+        {uiText('Carro')}
         <CarSelect
           id={`${id}-car`}
           value={car}
           onChange={setCar}
           lead={[
-            { value: 'keep', label: `Manter: ${current}` },
-            { value: 'none', label: 'Sem nome de carro' },
+            { value: 'keep', label: uiText('Manter: {0}', current) },
+            { value: 'none', label: uiText('Sem nome de carro') },
           ]}
         />
       </label>
       <label className="cap-field" htmlFor={`${id}-notes`}>
-        Notas
+        {uiText('Notas')}
         <textarea
           id={`${id}-notes`}
           className="a-input"
           rows={2}
           maxLength={500}
           value={notes}
-          placeholder="acerto, pneus, condições…"
+          placeholder={uiText('acerto, pneus, condições…')}
           onChange={(e) => setNotes(e.target.value)}
         />
       </label>
@@ -136,7 +137,7 @@ function RefEditor({
       </datalist>
       <div className="a-actions">
         <button type="submit" className="a-btn cap-btn" disabled={busy}>
-          Salvar
+          {uiText('Salvar')}
         </button>
         <button
           type="button"
@@ -144,7 +145,7 @@ function RefEditor({
           disabled={busy}
           onClick={() => onDone(null)}
         >
-          Cancelar
+          {uiText('Cancelar')}
         </button>
       </div>
     </form>
@@ -200,20 +201,22 @@ export function ReferenceList({
   };
 
   return (
-    <Card title="Referências capturadas" className="cap-refs" id="referencias">
+    <Card title={uiText('Referências capturadas')} className="cap-refs" id="referencias">
       {error && !refs ? (
         <ErrorBox error={error} onRetry={onReload} compact />
       ) : !refs ? (
         <Loading />
       ) : groups.length === 0 ? (
         <Empty>
-          Nenhuma referência ainda. Capture a volta de um replay acima e ela aparece aqui.
+          {uiText(
+            'Nenhuma referência ainda. Capture a volta de um replay acima e ela aparece aqui.',
+          )}
         </Empty>
       ) : (
         <>
           <p className="dim a-small cap-refs-intro">
-            O delta ao vivo usa a volta mais rápida de cada carro na pista (marcada com{' '}
-            <Tag tone="ref">delta</Tag>). {loading ? 'Atualizando…' : ''}
+            {uiText('O delta ao vivo usa a volta mais rápida de cada carro na pista (marcada com')}{' '}
+            <Tag tone="ref">delta</Tag>). {loading ? uiText('Atualizando…') : ''}
           </p>
           {groups.map((g) => (
             <section key={g.trackId || 'sem-pista'} className="cap-group">
@@ -240,7 +243,8 @@ export function ReferenceList({
                         </div>
                       </div>
                       <p className="dim a-small cap-ref-meta">
-                        Tempo: {timeOriginLabel(meta)} · {whenText(meta.capturedAt)}
+                        {`${uiText('Tempo:')} `}
+                        {timeOriginLabel(meta)} · {whenText(meta.capturedAt)}
                         {meta.notes ? ` · ${meta.notes}` : ''}
                       </p>
                       {editing === lap.id ? (
@@ -259,11 +263,13 @@ export function ReferenceList({
                               className="a-btn a-btn-ghost cap-btn"
                               href={routes.compare({ lap: myBest.id, ref: lap.id })}
                             >
-                              Comparar com o meu melhor
+                              {uiText('Comparar com o meu melhor')}
                             </a>
                           ) : (
                             <span className="dim a-small">
-                              Sem volta sua válida com este carro nesta pista para comparar.
+                              {uiText(
+                                'Sem volta sua válida com este carro nesta pista para comparar.',
+                              )}
                             </span>
                           )}
                           <button
@@ -271,17 +277,17 @@ export function ReferenceList({
                             className="a-btn a-btn-ghost cap-btn"
                             onClick={() => setEditing(lap.id)}
                           >
-                            Renomear
+                            {uiText('Renomear')}
                           </button>
                           <ConfirmButton
                             className="a-btn a-btn-danger cap-btn"
-                            label="Excluir"
-                            question="Excluir esta volta?"
-                            confirmLabel="Sim, excluir"
+                            label={uiText('Excluir')}
+                            question={uiText('Excluir esta volta?')}
+                            confirmLabel={uiText('Sim, excluir')}
                             onConfirm={async () => {
                               try {
                                 await api.deleteLap(lap.id);
-                                addNotice('info', 'Referência excluída.');
+                                addNotice('info', uiText('Referência excluída.'));
                                 onReload();
                               } catch (e) {
                                 addNotice('error', (e as Error).message, 6000);

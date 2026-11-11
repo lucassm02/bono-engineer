@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import uPlot from 'uplot';
+import { t as uiText } from '../lib/i18n.ts';
 import 'uplot/dist/uPlot.min.css';
 import { TIMINGS } from '../config.ts';
 import { setAttr, setStyle, setText } from '../lib/dom.ts';
@@ -18,7 +19,7 @@ const CHART_COLORS = {
 
 /** Steering text: degrees and side (+ = left in the shared convention). */
 export function steeringText(rad: number | null): string {
-  if (rad === null) return 'Indisponível';
+  if (rad === null) return uiText('Indisponível');
   const deg = Math.round((rad * 180) / Math.PI);
   if (deg === 0) return '0°';
   return `${Math.abs(deg)}° ${deg > 0 ? 'esq.' : 'dir.'}`;
@@ -175,9 +176,9 @@ export function InputsView() {
   return (
     <div className="view inputs">
       <div className="inputs-pedals">
-        {bar('thr', 'Acelerador', true)}
-        {bar('brk', 'Freio', true)}
-        {bar('clu', 'Embreagem', false)}
+        {bar('thr', uiText('Acelerador'), true)}
+        {bar('brk', uiText('Freio'), true)}
+        {bar('clu', uiText('Embreagem'), false)}
       </div>
       <div className="inputs-wheel" ref={set('wheelBox')} data-available="1">
         <svg viewBox="0 0 120 120" className="wheel-svg" aria-hidden="true">
@@ -200,9 +201,9 @@ export function InputsView() {
       </div>
       <InputsChart />
       <div className="inputs-legend" aria-hidden="true">
-        <span className="lg lg-thr">Acelerador</span>
-        <span className="lg lg-brk">Freio</span>
-        <span className="lg lg-spd">Velocidade (km/h)</span>
+        <span className="lg lg-thr">{uiText('Acelerador')}</span>
+        <span className="lg lg-brk">{uiText('Freio')}</span>
+        <span className="lg lg-spd">{uiText('Velocidade (km/h)')}</span>
       </div>
     </div>
   );

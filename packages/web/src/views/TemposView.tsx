@@ -1,6 +1,7 @@
 import { useMemo, useRef } from 'react';
 import { setText } from '../lib/dom.ts';
 import { formatDelta, formatLapTime, formatSectorTime } from '../lib/format.ts';
+import { t as uiText } from '../lib/i18n.ts';
 import {
   bestSectors,
   consistency,
@@ -43,7 +44,7 @@ export function TemposView() {
   useLiveRender((f) => {
     const e = r.current;
     setText(e.current, formatLapTime(f.lap.currentLapMs));
-    setText(e.lapNo, f.lap.lap > 0 ? `Volta ${f.lap.lap}` : 'Volta de saída');
+    setText(e.lapNo, f.lap.lap > 0 ? uiText('Volta {0}', f.lap.lap) : uiText('Volta de saída'));
   });
 
   const pb = pbMs !== null && stats.best ? Math.min(pbMs, stats.best.timeMs) : (pbMs ?? null);
@@ -54,33 +55,37 @@ export function TemposView() {
     <div className="view tempos">
       <section className="tempos-summary">
         <div className="tempos-stat">
-          <span className="readout-label">Melhor pessoal</span>
+          <span className="readout-label">{uiText('Melhor pessoal')}</span>
           <span className="num tempos-pb">{formatLapTime(pb)}</span>
         </div>
         <div className="tempos-stat">
-          <span className="readout-label">Melhor da sessão</span>
+          <span className="readout-label">{uiText('Melhor da sessão')}</span>
           <span className="num tempos-sb">{formatLapTime(sb)}</span>
         </div>
         <div className="tempos-stat">
-          <span className="readout-label">Ideal teórica</span>
+          <span className="readout-label">{uiText('Ideal teórica')}</span>
           <span className="num">{formatLapTime(stats.theoretical)}</span>
           {stats.theoretical !== null && sb !== null && (
             <span className="num dim tempos-sub">
-              {formatDelta(stats.theoretical - sb)} da melhor
+              {formatDelta(stats.theoretical - sb)}
+              {` ${uiText('da melhor')}`}
             </span>
           )}
         </div>
         <div className="tempos-stat">
-          <span className="readout-label">Consistência</span>
+          <span className="readout-label">{uiText('Consistência')}</span>
           <span className="num">
             {stats.consistency ? `± ${formatSectorTime(stats.consistency.stddevMs)}` : '–'}
           </span>
           {stats.consistency && (
-            <span className="dim tempos-sub">{stats.consistency.count} voltas válidas</span>
+            <span className="dim tempos-sub">
+              {stats.consistency.count}
+              {` ${uiText('voltas válidas')}`}
+            </span>
           )}
         </div>
         <div className="tempos-stat tempos-trend" data-trend={stats.trend.label ?? 'none'}>
-          <span className="readout-label">Últimas 3</span>
+          <span className="readout-label">{uiText('Últimas 3')}</span>
           <span className="num tempos-trend-laps">
             {stats.trend.laps.length > 0
               ? stats.trend.laps.map((l) => formatLapTime(l.timeMs, true)).join('  ')
@@ -97,26 +102,26 @@ export function TemposView() {
           <span className="num" ref={set('current')} />
         </div>
       </section>
-      <section className="tempos-table-wrap" aria-label="Voltas da sessão">
+      <section className="tempos-table-wrap" aria-label={uiText('Voltas da sessão')}>
         {stats.rows.length === 0 ? (
           <div className="tempos-empty">
-            <strong>Nenhuma volta completa nesta sessão</strong>
+            <strong>{uiText('Nenhuma volta completa nesta sessão')}</strong>
             <span className="dim">
               {remote === 'loading'
-                ? 'Carregando voltas do servidor…'
-                : 'As voltas aparecem aqui assim que cruzar a linha.'}
+                ? uiText('Carregando voltas do servidor…')
+                : uiText('As voltas aparecem aqui assim que cruzar a linha.')}
             </span>
           </div>
         ) : (
           <table className="tempos-table num">
             <thead>
               <tr>
-                <th>Volta</th>
-                <th>Tempo</th>
+                <th>{uiText('Volta')}</th>
+                <th>{uiText('Tempo')}</th>
                 {sectorIdx.map((i) => (
                   <th key={i}>S{i + 1}</th>
                 ))}
-                <th>Δ melhor</th>
+                <th>{uiText('Δ melhor')}</th>
               </tr>
             </thead>
             <tbody>
@@ -167,7 +172,7 @@ export function TemposView() {
                             : 'loss'
                       }
                     >
-                      {sb === null ? '–' : isBest ? 'melhor' : formatDelta(row.timeMs - sb)}
+                      {sb === null ? '–' : isBest ? uiText('melhor') : formatDelta(row.timeMs - sb)}
                     </td>
                   </tr>
                 );

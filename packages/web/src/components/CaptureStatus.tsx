@@ -13,6 +13,7 @@ import {
   describeReferenceCapture,
   savedToastText,
 } from '../lib/captureStatus.ts';
+import { t as uiText } from '../lib/i18n.ts';
 import { routes } from '../lib/route.ts';
 import { useUi } from '../state/uiStore.ts';
 import { Icon } from './ui/Icon.tsx';
@@ -83,10 +84,10 @@ export function CaptureStatus({ variant }: { variant: 'live' | 'bar' }) {
         data-variant={variant}
         data-tone="off"
         data-no-gesture
-        title="Demonstração: nada é gravado."
+        title={uiText('Demonstração: nada é gravado.')}
       >
         <CaptureDot tone="off" />
-        <span className="cs-text">Demo · não grava</span>
+        <span className="cs-text">{uiText('Demo · não grava')}</span>
       </span>
     );
   }
@@ -105,7 +106,7 @@ export function CaptureStatus({ variant }: { variant: 'live' | 'bar' }) {
         data-tone={view.tone}
         data-no-gesture
         href={routes.capture()}
-        title={`${view.title} Abrir a captura de referência.`}
+        title={uiText('{0} Abrir a captura de referência.', view.title)}
       >
         {inner}
       </a>
@@ -119,7 +120,7 @@ export function CaptureStatus({ variant }: { variant: 'live' | 'bar' }) {
         data-tone={view.tone}
         data-no-gesture
         href={routes.session(view.sessionId)}
-        title={`${view.title} Abrir a sessão em andamento.`}
+        title={uiText('{0} Abrir a sessão em andamento.', view.title)}
       >
         {inner}
       </a>
@@ -160,12 +161,12 @@ export function SessionSavedToast() {
         href={routes.session(toast.sessionId)}
         onClick={dismissSessionSaved}
       >
-        Ver
+        {uiText('Ver')}
       </a>
       <button
         type="button"
         className="ui-icon-btn cs-toast-x"
-        aria-label="Fechar aviso"
+        aria-label={uiText('Fechar aviso')}
         onClick={dismissSessionSaved}
       >
         <Icon name="close" size={16} />

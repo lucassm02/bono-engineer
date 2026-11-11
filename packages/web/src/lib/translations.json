@@ -1,0 +1,2738 @@
+{
+  " — referência automática": [" — automatic reference", " — referencia automática"],
+  " · {0} abas": [" · {0} tabs", " · {0} pestañas"],
+  " · acesso com senha (token)": [" · token required", " · se requiere token"],
+  " · diagnósticos filtrados para {0}": [
+    " · diagnoses filtered for {0}",
+    " · diagnósticos filtrados para {0}"
+  ],
+  " · oval": [" · oval", " · óvalo"],
+  " · Parecidas: {0}": [" · Similar: {0}", " · Similares: {0}"],
+  " · ref": [" · ref", " · ref"],
+  " · replay": [" · replay", " · repetición"],
+  " (desligada)": [" (disabled)", " (desactivada)"],
+  " (inválida)": [" (invalid)", " (no válida)"],
+  " (padrão)": [" (default)", " (predeterminado)"],
+  " (sentido inverso)": [" (reverse)", " (sentido inverso)"],
+  " A conexão caiu.": [" The connection dropped.", " Se perdió la conexión."],
+  " com o filtro": [" with this filter", " con este filtro"],
+  " Em uso agora: {0}.": [" In use: {0}.", " En uso: {0}."],
+  " Fixado em {0}.": [" Locked to {0}.", " Fijado en {0}."],
+  " Talvez você ainda não tenha voltas com esse carro.": [
+    " You may not have any laps in this car yet.",
+    " Puede que todavía no tengas vueltas con este coche."
+  ],
+  "— dados: gt7info, gt7-datalogger-track-data e gt-telemetry (licenças livres).": [
+    "— data from gt7info, gt7-datalogger-track-data and gt-telemetry (open licences).",
+    "— datos de gt7info, gt7-datalogger-track-data y gt-telemetry (licencias libres)."
+  ],
+  "; não precisa instalar nada.": [
+    ". No installation required.",
+    ". No requiere instalación adicional."
+  ],
+  ": as entradas (freio, volante) são suavizadas. Pontos de frenagem e traçado têm precisão de alguns metros — use para tendências, não para milissegundos.": [
+    ": brake and steering inputs are smoothed. Braking points and lines are accurate to a few metres. Use them to study trends.",
+    ": las entradas de freno y volante están suavizadas. Los puntos de frenada y las trazadas tienen una precisión de unos metros. Úsalos para estudiar tendencias."
+  ],
+  ". Formato pedido:": [". Requested format:", ". Formato solicitado:"],
+  ". Qualquer salto descarta a volta.": [
+    ". Seeking discards the lap.",
+    ". Si saltas, se descarta la vuelta."
+  ],
+  "· base:": ["· baseline:", "· base:"],
+  "· diferença (verde = a seu favor, vermelho = custa tempo). Frenagem e retomada são posições na volta (m); frenagem + = você freia mais tarde.": [
+    "· difference (green = gained, red = lost). Braking and throttle points are lap positions (m). A positive braking difference means you braked later.",
+    "· diferencia (verde = ganancia, rojo = pérdida). Los puntos de frenada y aceleración son posiciones en la vuelta (m). Una diferencia de frenada positiva indica que frenaste más tarde."
+  ],
+  "· porta": ["· port", "· puerto"],
+  "· referência:": ["· reference:", "· referencia:"],
+  "· última vs. primeira": ["· latest vs first", "· última frente a primera"],
+  "· variação entre voltas": ["· variation between laps", "· variación entre vueltas"],
+  "· volta": ["· lap", "· vuelta"],
+  "”. Tente outra palavra (a busca ignora acentos) ou limpe os filtros.": [
+    "”. Try another word or clear the filters. Search ignores accents.",
+    "». Prueba otra palabra o quita los filtros. La búsqueda ignora los acentos."
+  ],
+  "(com link) ou tem": ["(linked), or has", "(con enlace), o tiene"],
+  "(ou defina a variável": ["(or set the", "(o configura la variable"],
+  "(ou num replay). O resto é comigo.": [
+    "(or play a replay). Bono handles the rest.",
+    "(o reproduce una repetición). Bono se encarga del resto."
+  ],
+  "(SimHub, GT7 Dashboard…): só um deles pode falar com o PS5 por vez.": [
+    "(SimHub, GT7 Dashboard…). Only one can connect to the PS5 at a time.",
+    "(SimHub, GT7 Dashboard…). Solo una puede conectarse a la PS5 a la vez."
+  ],
+  "(Time Trial › Ranking › Replay) e dê play. O app percebe sozinho.": [
+    "(Time Trial › Rankings › Replay) and play it. Bono detects it automatically.",
+    "(Contrarreloj › Clasificación › Repetición) y reprodúcela. Bono la detecta automáticamente."
+  ],
+  "(toque duplo troca)": ["(double-tap to change)", "(toca dos veces para cambiar)"],
+  "), mas a análise precisa dos dados gravados no servidor.": [
+    "), but analysis requires recorded data on the server.",
+    "), pero el análisis requiere datos grabados en el servidor."
+  ],
+  "), sem misturar com os reais.": ["), apart from real data.", "), aparte de los datos reales."],
+  "{0} · áudio em outro aparelho": [
+    "{0} · audio on another device",
+    "{0} · audio en otro dispositivo"
+  ],
+  "{0} · áudio indisponível": ["{0} · audio unavailable", "{0} · audio no disponible"],
+  "{0} · sem som": ["{0} · muted", "{0} · sin sonido"],
+  "{0} ({1}). Diferença: {2}": ["{0} ({1}). Difference: {2}", "{0} ({1}). Diferencia: {2}"],
+  "{0} Abrir a captura de referência.": [
+    "{0} Open reference capture.",
+    "{0} Abrir captura de referencia."
+  ],
+  "{0} Abrir a sessão em andamento.": [
+    "{0} Open the current session.",
+    "{0} Abrir la sesión en curso."
+  ],
+  "{0} até agora. Abra o Gran Turismo 7 no PS5 e entre numa pista.": [
+    "{0} so far. Open Gran Turismo 7 on PS5 and enter a track.",
+    "{0} hasta ahora. Abre Gran Turismo 7 en PS5 y entra en pista."
+  ],
+  "{0} curvas detectadas.": ["{0} corners detected.", "{0} curvas detectadas."],
+  "{0} de {1}": ["{0} of {1}", "{0} de {1}"],
+  "{0} de {1} voltas válidas": ["{0} of {1} valid laps", "{0} de {1} vueltas válidas"],
+  "{0} setores de mesmo comprimento.": [
+    "{0} sectors of equal length.",
+    "{0} sectores de igual longitud."
+  ],
+  "{0} volta(s) marcada(s){1}": ["{0} lap(s) selected{1}", "{0} vuelta(s) seleccionada(s){1}"],
+  "{0}: {1} varia ±{2}": ["{0}: {1} varies by ±{2}", "{0}: {1} varía ±{2}"],
+  "{0}: aumentar": ["Increase {0}", "Aumentar {0}"],
+  "{0}: diminuir": ["Decrease {0}", "Reducir {0}"],
+  "↰ esq.": ["↰ left", "↰ izq."],
+  "↱ dir.": ["↱ right", "↱ der."],
+  "+ = você contorna mais rápido": [
+    "+ = you carry more speed through the corner",
+    "+ = pasas la curva más rápido"
+  ],
+  "+ = você freia mais tarde que a referência": [
+    "+ = you brake later than the reference",
+    "+ = frenas más tarde que la referencia"
+  ],
+  "+ = você perdeu tempo nesta curva (zona de frenagem → saída)": [
+    "+ = time lost in this corner (braking zone to exit)",
+    "+ = tiempo perdido en esta curva (de la frenada a la salida)"
+  ],
+  "+ = você sai mais rápido": ["+ = you exit faster", "+ = sales más rápido"],
+  "± = desvio-padrão entre as voltas (passe o mouse para média, mínimo e máximo).": [
+    "± = standard deviation across laps (hover for mean, minimum and maximum).",
+    "± = desviación estándar entre vueltas (pasa el cursor para ver media, mínimo y máximo)."
+  ],
+  "~ (recomendado ao vivo)": ["~ (recommended for live telemetry)", "~ (recomendado en directo)"],
+  "− = você acelera antes": ["− = you get on the throttle earlier", "− = aceleras antes"],
+  "A (básico)": ["A (basic)", "A (básico)"],
+  "A base de conhecimento que o coach de IA usa: princípios, classes de carro, o que cada diagnóstico do app significa, mapa de afinação e fontes.": [
+    "The AI Coach’s driving knowledge base: principles, car classes, explanations of diagnoses, tuning and sources.",
+    "La base de conocimientos de Coach IA: principios, clases de coches, explicaciones de diagnósticos, reglajes y fuentes."
+  ],
+  "A captura de referência (replay) usa o formato acima: ela não troca mais o formato do pacote, porque o formato atual já entrega os dados do replay.": [
+    "Reference capture uses the format above, which already provides replay data.",
+    "La captura de referencias usa el formato de arriba, que ya proporciona datos de repetición."
+  ],
+  "A captura precisa do app rodando no PC. Confira se ele está aberto.": [
+    "Capture requires Bono to be running on the PC. Check that it’s open.",
+    "La captura requiere que Bono esté abierto en el PC."
+  ],
+  "A captura terminou sem salvar nenhuma volta.": [
+    "Capture ended without saving a lap.",
+    "La captura terminó sin guardar ninguna vuelta."
+  ],
+  "A chave fica só no PC (banco local) e nunca volta para o navegador — aqui aparecem só os 4 últimos caracteres. Crie uma em console.anthropic.com.": [
+    "The key stays in the PC’s local database. The browser only receives the last four characters. Create a key at console.anthropic.com.",
+    "La clave queda en la base de datos local del PC. El navegador solo recibe los últimos cuatro caracteres. Crea una clave en console.anthropic.com."
+  ],
+  "A chave salva neste PC será apagada e o coach de IA deixa de funcionar aqui.": [
+    "Bono will delete the key saved on this PC and AI Coach will stop working here.",
+    "Bono borrará la clave guardada en este PC y Coach IA dejará de funcionar aquí."
+  ],
+  "A demonstração mostra o painel ao vivo com um piloto simulado. Para ver o histórico preenchido com voltas de exemplo, rode": [
+    "The demo shows the live dashboard with a simulated driver. To see history with sample laps, run",
+    "La demostración muestra el panel en directo con un piloto simulado. Para ver el historial con vueltas de ejemplo, ejecuta"
+  ],
+  "A pista ainda não tem linha de referência (complete uma volta limpa).": [
+    "No reference line yet. Complete a clean lap.",
+    "Aún no hay trazada de referencia. Completa una vuelta limpia."
+  ],
+  "A pista é identificada assim que você tocar em “Capturar esta volta”.": [
+    "Bono identifies the track when you select “Capture this lap”.",
+    "Bono identifica el circuito cuando eliges «Capturar esta vuelta»."
+  ],
+  "A porta de telemetria está ocupada por outro programa.": [
+    "Another program is using the telemetry port.",
+    "Otro programa está usando el puerto de telemetría."
+  ],
+  "A referência não está disponível para este carro e traçado.": [
+    "This reference is unavailable for this car and layout.",
+    "La referencia no está disponible para este coche y trazado."
+  ],
+  "A sessão, o carro ou o traçado mudou. Inicie um novo treino para continuar.": [
+    "Session, car or layout changed. Start a new practice to continue.",
+    "Cambió la sesión, el coche o el trazado. Inicia un entrenamiento nuevo para continuar."
+  ],
+  "a seu favor": ["in your favour", "a tu favor"],
+  "a tela para escolher telas e ajustes.": [
+    "the screen to choose views and settings.",
+    "la pantalla para elegir vistas y ajustes."
+  ],
+  "A telemetria está parada, então não há o que procurar agora.": [
+    "Telemetry is stopped. Search is unavailable for now.",
+    "La telemetría está detenida. La búsqueda no está disponible por ahora."
+  ],
+  "A última volta foi descartada:": [
+    "The last lap was discarded:",
+    "Se descartó la última vuelta:"
+  ],
+  "A volta analisada fica fixa. Escolha contra qual referência medir e, se quiser, sobreponha até duas outras voltas nos gráficos.": [
+    "The analysed lap stays fixed. Choose a reference and overlay up to two more laps on the charts.",
+    "La vuelta analizada permanece fija. Elige una referencia y superpón hasta dos vueltas más en las gráficas."
+  ],
+  "Abra as configurações no aplicativo Bono.": [
+    "Open Settings in the Bono desktop app.",
+    "Abre Configuración en el app de escritorio Bono."
+  ],
+  "Abra o Gran Turismo 7 e dê algumas voltas: cada volta completa aparece aqui sozinha.": [
+    "Open Gran Turismo 7 and drive a few laps. Every complete lap appears here automatically.",
+    "Abre Gran Turismo 7 y da unas vueltas. Cada vuelta completa aparece aquí automáticamente."
+  ],
+  "abra o Gran Turismo 7 e entre em uma pista": [
+    "open Gran Turismo 7 and enter a track",
+    "abre Gran Turismo 7 y entra en pista"
+  ],
+  "Abra o Gran Turismo 7 no PS5 e entre numa pista.": [
+    "Open Gran Turismo 7 on PS5 and enter a track.",
+    "Abre Gran Turismo 7 en PS5 y entra en pista."
+  ],
+  "Abra o painel no celular ou tablet pela rede local.": [
+    "Open the dashboard on your phone or tablet over the local network.",
+    "Abre el panel en tu móvil o tableta por la red local."
+  ],
+  "Abra o replay da volta (Time Trial › Ranking › Replay) e dê play.": [
+    "Open the lap replay (Time Trial › Rankings › Replay) and play it.",
+    "Abre la repetición de la vuelta (Contrarreloj › Clasificación › Repetición) y reprodúcela."
+  ],
+  "Abra o replay no jogo": ["Open the replay in the game", "Abre la repetición en el juego"],
+  "Abra o replay no jogo — eu detecto sozinho": [
+    "Open the replay in the game. Bono detects it automatically.",
+    "Abre la repetición en el juego. Bono la detecta automáticamente."
+  ],
+  "abre e fecha o menu ·": ["opens and closes the menu ·", "abre y cierra el menú ·"],
+  "Abrindo o relatório…": ["Opening report…", "Abriendo informe…"],
+  "abrir": ["open", "abrir"],
+  "Abrir {0}": ["Open {0}", "Abrir {0}"],
+  "Abrir comparação": ["Open comparison", "Abrir comparación"],
+  "Abrir Configurações": ["Open Settings", "Abrir configuración"],
+  "Abrir Configurações → Rádio no Discord": [
+    "Open Settings → Discord radio",
+    "Abrir Configuración → Radio en Discord"
+  ],
+  "Abrir o painel ao vivo": ["Open the live dashboard", "Abrir el panel en directo"],
+  "Abrir painel ao vivo": ["Open live dashboard", "Abrir panel en directo"],
+  "absoluta.": ["URL.", "absoluta."],
+  "Ação do piloto": ["Driver action", "Acción del piloto"],
+  "Aceleração": ["Acceleration", "Aceleración"],
+  "Acelerador": ["Throttle", "Acelerador"],
+  "Acelerador, freio, volante e gráfico de 10 s": [
+    "Throttle, brake, steering and a ten-second chart",
+    "Acelerador, freno, volante y gráfica de diez segundos"
+  ],
+  "Acelere progressivamente": ["Ease onto the throttle", "Acelera progresivamente"],
+  "acerto, pneus, condições…": ["setup, tyres, conditions…", "reglajes, neumáticos, condiciones…"],
+  "Acesso remoto: {0}": ["Remote access: {0}", "Acceso remoto: {0}"],
+  "Ações": ["Actions", "Acciones"],
+  "Acrescenta volante e forças G.": [
+    "Adds steering and G-forces.",
+    "Añade datos del volante y fuerzas G."
+  ],
+  "Aderindo": ["Gripping", "Con adherencia"],
+  "Adicionar widget": ["Add widget", "Añadir widget"],
+  "Adicione ao ~/.codex/config.toml e reinicie o Codex": [
+    "Add to ~/.codex/config.toml and restart Codex",
+    "Añade a ~/.codex/config.toml y reinicia Codex"
+  ],
+  "Adicione widgets ao lado": ["Add widgets from the side", "Añade widgets desde el lateral"],
+  "Afastar": ["Zoom out", "Alejar"],
+  "Afinação": ["Tuning", "Reglajes"],
+  "agora": ["just now", "ahora"],
+  "Agora é só pilotar. O painel ao vivo mostra tudo em tempo real.": [
+    "You’re ready to drive. The live dashboard shows your data in real time.",
+    "Ya puedes conducir. El panel muestra tus datos en tiempo real."
+  ],
+  "Agora não": ["Not now", "Ahora no"],
+  "Aguardando": ["Waiting", "En espera"],
+  "Aguardando a linha de largada": ["Waiting for the start line", "Esperando la línea de salida"],
+  "Aguardando as curvas do traçado atual.": [
+    "Waiting for corners on this layout.",
+    "Esperando las curvas del trazado actual."
+  ],
+  "Aguardando conexão com o Bono. Confira a porta e o acesso local.": [
+    "Waiting for Bono. Check the port and local access.",
+    "Esperando a Bono. Comprueba el puerto y el acceso local."
+  ],
+  "Aguardando o carro cruzar a linha de largada. Não pause, não volte e não avance.": [
+    "Waiting for the car to cross the start line. Keep the replay at normal speed without seeking.",
+    "Esperando que el coche cruce la línea de salida. Mantén la reproducción a velocidad normal y sin saltos."
+  ],
+  "Aguardando o jogo": ["Waiting for the game", "Esperando el juego"],
+  "Aguardando o piloto no canal.": [
+    "Waiting for the driver to join the channel.",
+    "Esperando al piloto en el canal."
+  ],
+  "Aguardando o piloto. Margem de áudio: {0} ms.": [
+    "Waiting for the driver. Audio lead time: {0} ms.",
+    "Esperando al piloto. Anticipación de audio: {0} ms."
+  ],
+  "Aguardando o replay": ["Waiting for the replay", "Esperando la repetición"],
+  "Aguardando o replay: abra o replay da volta no jogo e dê play.": [
+    "Waiting for the replay. Open the lap replay in the game and play it.",
+    "Esperando la repetición. Ábrela en el juego y reprodúcela."
+  ],
+  "Aguardando pista": ["Waiting for track", "Esperando pista"],
+  "Aguardando roteiro da referência": [
+    "Waiting for reference calls",
+    "Esperando instrucciones de referencia"
+  ],
+  "Aguardando telemetria": ["Waiting for telemetry", "Esperando telemetría"],
+  "Aguardando volta em pista": ["Waiting for a lap on track", "Esperando una vuelta en pista"],
+  "Aguarde o servidor do Bono iniciar.": [
+    "Wait for the Bono server to start.",
+    "Espera a que se inicie el servidor de Bono."
+  ],
+  "Ainda não achei o PS5. Vamos conferir:": [
+    "Bono hasn’t found the PS5 yet. Check the following:",
+    "Bono aún no ha encontrado la PS5. Comprueba lo siguiente:"
+  ],
+  "ainda não encontrado": ["not found yet", "aún sin detectar"],
+  "Ainda não há volta sua válida com este carro nesta pista para comparar.": [
+    "You don’t have a valid lap with this car and track to compare yet.",
+    "Todavía no tienes una vuelta válida con este coche y circuito para comparar."
+  ],
+  "Ainda não há voltas suas suficientes nesta pista.": [
+    "You don’t have enough laps on this track yet.",
+    "Aún no tienes suficientes vueltas en este circuito."
+  ],
+  "Ainda não há voltas válidas nesta pista.": [
+    "No valid laps on this track yet.",
+    "Aún no hay vueltas válidas en este circuito."
+  ],
+  "Ainda sem nome: abra a pista para dizer qual é": [
+    "Unnamed. Open the track to identify it.",
+    "Sin nombre. Abre el circuito para identificarlo."
+  ],
+  "Ainda sem volta válida.": ["No valid lap yet.", "Aún no hay vueltas válidas."],
+  "Ajuda para achar o PS5": ["Help finding the PS5", "Ayuda para encontrar la PS5"],
+  "Ajustar rádio": ["Radio settings", "Ajustar radio"],
+  "Ajustes": ["Settings", "Ajustes"],
+  "Algo deu errado": ["Something went wrong", "Algo salió mal"],
+  "Alternativa (netsh, prompt de administrador)": [
+    "Alternative (netsh, administrator prompt)",
+    "Alternativa (netsh, consola de administrador)"
+  ],
+  "Alto (análise mais profunda)": ["High (deeper analysis)", "Alto (análisis más profundo)"],
+  "Altura": ["Height", "Alto"],
+  "Altura da suspensão": ["Suspension height", "Altura de suspensión"],
+  "Alvo": ["Target", "Objetivo"],
+  "Alvo: sua passagem anterior (sem referência)": [
+    "Target: previous pass (no reference)",
+    "Objetivo: paso anterior (sin referencia)"
+  ],
+  "Alvo: volta de referência": ["Target: reference lap", "Objetivo: vuelta de referencia"],
+  "Analisando…": ["Analysing…", "Analizando…"],
+  "Analisar volta": ["Analyse lap", "Analizar vuelta"],
+  "Análise e dicas da sua sessão": [
+    "Session analysis and advice",
+    "Análisis y consejos de tu sesión"
+  ],
+  "Análise indisponível": ["Analysis unavailable", "Análisis no disponible"],
+  "Andamento da captura": ["Capture progress", "Progreso de captura"],
+  "Antecipação": ["Call lead time", "Anticipación"],
+  "antes": ["earlier", "antes"],
+  "antes de iniciar o servidor).": [
+    "before starting the server).",
+    "antes de iniciar el servidor)."
+  ],
+  "Antes: {0}": ["Before: {0}", "Antes: {0}"],
+  "Ao vivo": ["Live", "En directo"],
+  "Apagar": ["Delete", "Borrar"],
+  "Apagar a configuração do Discord?": [
+    "Delete Discord configuration?",
+    "¿Borrar la configuración de Discord?"
+  ],
+  "Apagar a sessão e todas as voltas?": [
+    "Delete the session and all its laps?",
+    "¿Borrar la sesión y todas sus vueltas?"
+  ],
+  "Apagar configuração": ["Delete configuration", "Borrar configuración"],
+  "Apagar este relatório?": ["Delete this report?", "¿Borrar este informe?"],
+  "Apagar o relatório {0}": ["Delete report {0}", "Borrar informe {0}"],
+  "Apagar relatório": ["Delete report", "Borrar informe"],
+  "Apagar sessão": ["Delete session", "Borrar sesión"],
+  "Aparece tracejada nos gráficos (até": [
+    "Shown as a dashed line on the charts (up to",
+    "Se muestra con línea discontinua en las gráficas (hasta"
+  ],
+  "Aparelho": ["Device", "Dispositivo"],
+  "Aparelho que toca o rádio": ["Radio output device", "Dispositivo de salida de radio"],
+  "Aparelho selecionado · desconectado": [
+    "Selected device · disconnected",
+    "Dispositivo elegido · desconectado"
+  ],
+  "Aparelhos": ["Devices", "Dispositivos"],
+  "Aparelhos conectados": ["Connected devices", "Dispositivos conectados"],
+  "Aparelhos e ajustes": ["Devices and settings", "Dispositivos y ajustes"],
+  "Aplicar": ["Apply", "Aplicar"],
+  "Aprender pista": ["Learn Track", "Aprender circuito"],
+  "Aproximar": ["Zoom in", "Acercar"],
+  "Aquecendo": ["Warming up", "Calentando"],
+  "Áreas do app": ["App areas", "Secciones del app"],
+  "Areia": ["Sand", "Arena"],
+  "Arraste (ou pince com dois dedos) para dar zoom · duplo clique/toque volta": [
+    "Drag or pinch to zoom · double-click or double-tap to reset",
+    "Arrastra o pellizca para ampliar · haz doble clic o toca dos veces para restablecer"
+  ],
+  "As curvas que mais custam tempo, com uma ação para cada.": [
+    "The corners that cost the most time, with one action for each.",
+    "Las curvas que más tiempo cuestan, con una acción para cada una."
+  ],
+  "As linhas azuis nos gráficos indicam onde o áudio começou. A posição dos pedais é comparada à referência. A diferença de tempo é da curva inteira.": [
+    "Blue lines show where audio started. Pedal positions are compared with the reference. The time difference covers the full corner.",
+    "Las líneas azules muestran dónde empezó el audio. Las posiciones de los pedales se comparan con la referencia. La diferencia de tiempo abarca toda la curva."
+  ],
+  "As voltas aparecem aqui assim que cruzar a linha.": [
+    "Laps appear here when you cross the line.",
+    "Las vueltas aparecen aquí al cruzar la línea."
+  ],
+  "Asfalto": ["Asphalt", "Asfalto"],
+  "Aspirado": ["Naturally aspirated", "Atmosférico"],
+  "Assim que você entrar numa pista, os dados começam a chegar.": [
+    "Data will arrive when you enter a track.",
+    "Los datos llegarán al entrar en pista."
+  ],
+  "Assista ao replay de um piloto do ranking no Time Trial e o app grava a volta dele como alvo para você comparar.": [
+    "Watch a Time Trial leaderboard replay. Bono records it as a comparison target.",
+    "Mira una repetición de la clasificación de Contrarreloj. Bono la graba como referencia."
+  ],
+  "Assista ao replay de um piloto do topo no jogo e grave a volta dele como referência para o delta ao vivo, a comparação e o coach.": [
+    "Watch a leaderboard replay in the game and save the lap as a reference for live delta, comparisons and coaching.",
+    "Mira una repetición de la clasificación y guarda la vuelta como referencia para el delta en directo, las comparaciones y el coach."
+  ],
+  "Assistente de boas-vindas": ["Welcome assistant", "Asistente de bienvenida"],
+  "Até": ["Up to", "Hasta"],
+  "até a curva fixada": ["to pinned corner", "hasta la curva fijada"],
+  "até a entrada": ["to corner entry", "hasta la entrada"],
+  "até a frenagem": ["to braking", "hasta la frenada"],
+  "até a frenagem da ref.": ["to reference braking", "hasta la frenada de referencia"],
+  "até o fim": ["to finish", "hasta el final"],
+  "Atenção": ["Attention", "Atención"],
+  "Ativar o rádio do Discord ao abrir o Bono": [
+    "Enable Discord radio when Bono starts",
+    "Activar la radio en Discord al abrir Bono"
+  ],
+  "Ativar som": ["Unmute", "Activar sonido"],
+  "Ative a gravação automática para analisar as voltas do treino.": [
+    "Enable automatic recording to analyse practice laps.",
+    "Activa la grabación automática para analizar las vueltas del entrenamiento."
+  ],
+  "Ative a gravação automática para retomar a contagem do treino.": [
+    "Enable automatic recording to resume counting practice laps.",
+    "Activa la grabación automática para seguir contando vueltas de entrenamiento."
+  ],
+  "Ative o engenheiro no aparelho escolhido para ouvir o rádio.": [
+    "Enable the engineer on the selected device to hear the radio.",
+    "Activa el ingeniero en el dispositivo seleccionado para oír la radio."
+  ],
+  "Atraso medido em ms": ["Measured delay in ms", "Retardo medido en ms"],
+  "Atual": ["Current", "Actual"],
+  "Atualizando…": ["Updating…", "Actualizando…"],
+  "Atualizar": ["Update", "Actualizar"],
+  "Áudio do rádio indisponível. As instruções continuam na tela.": [
+    "Radio audio unavailable. Instructions remain on screen.",
+    "Audio de radio no disponible. Las instrucciones siguen en pantalla."
+  ],
+  "Áudio do treino ligado": ["Practice audio on", "Audio de entrenamiento activado"],
+  "Áudio e ponto indicado": ["Audio and target point", "Audio y punto indicado"],
+  "Áudio: desligado": ["Audio off", "Audio desactivado"],
+  "Áudio: ligado": ["Audio on", "Audio activado"],
+  "Automática (top → melhor pessoal → sessão)": [
+    "Automatic (leaderboard → personal best → session best)",
+    "Automática (clasificación → mejor personal → sesión)"
+  ],
+  "Automático (pelo carro do replay)": [
+    "Automatic (from the replay car)",
+    "Automático (coche de la repetición)"
+  ],
+  "Automático (recomendado)": ["Automatic (recommended)", "Automático (recomendado)"],
+  "Auxílios e alertas": ["Assists and alerts", "Ayudas y avisos"],
+  "Avançado: esforço e relatórios guardados": [
+    "Advanced: effort and saved reports",
+    "Avanzado: esfuerzo e informes guardados"
+  ],
+  "Avançado: formato do pacote": ["Advanced: packet format", "Avanzado: formato de paquete"],
+  "Avançado: outras formas de conectar": [
+    "Advanced: other ways to connect",
+    "Avanzado: otras formas de conectar"
+  ],
+  "Baixar CSV": ["Download CSV", "Descargar CSV"],
+  "Baixar gravação (.gt7rec)": ["Download recording (.gt7rec)", "Descargar grabación (.gt7rec)"],
+  "Baixar trace (JSON)": ["Download trace (JSON)", "Descargar traza (JSON)"],
+  "Baixo (rápido e barato)": ["Low (fast and economical)", "Bajo (rápido y económico)"],
+  "Barra de delta": ["Delta bar", "Barra de delta"],
+  "Básicas · freada leve, forte ou normal": [
+    "Basic · light, hard or normal braking",
+    "Básicas · frenada suave, fuerte o normal"
+  ],
+  "Bem antes (+0,7 s)": ["Much earlier (+0.7 s)", "Mucho antes (+0,7 s)"],
+  "BIP {0}": ["BEEP {0}", "PITIDO {0}"],
+  "Busca": ["Search", "Búsqueda"],
+  "Busca e filtros": ["Search and filters", "Búsqueda y filtros"],
+  "Busca por pista": ["Track search", "Búsqueda de circuito"],
+  "Buscando referências do top": [
+    "Looking for leaderboard references",
+    "Buscando referencias de la clasificación"
+  ],
+  "Buscar": ["Search", "Buscar"],
+  "Buscar carro da {0}…": ["Search {0} cars…", "Buscar coches de {0}…"],
+  "Buscar marca ou carro (ex.: supra, gt-r, civic)": [
+    "Search make or car (e.g. Supra, GT-R, Civic)",
+    "Buscar marca o coche (p. ej., Supra, GT-R, Civic)"
+  ],
+  "Buscar no guia": ["Search the guide", "Buscar en la guía"],
+  "Buscar pista": ["Search track", "Buscar circuito"],
+  "C (experimental)": ["C (experimental)", "C (experimental)"],
+  "Cada afirmação diz se é": [
+    "Each statement is marked as a",
+    "Cada afirmación se identifica como"
+  ],
+  "Cada aparelho ainda pode trocar com toque duplo no painel.": [
+    "Each device can still change it by double-tapping the dashboard.",
+    "Cada dispositivo puede cambiarla tocando dos veces el panel."
+  ],
+  "Cada aparelho controla o próprio som": [
+    "Each device controls its own audio",
+    "Cada dispositivo controla su audio"
+  ],
+  "Cada caixa é um widget; o número é a ordem em que aparece.": [
+    "Each box is a widget. The number is its position in the grid.",
+    "Cada cuadro es un widget. El número indica su posición en la cuadrícula."
+  ],
+  "Calculando microssetores": ["Calculating microsectors", "Calculando microsectores"],
+  "Calmo": ["Slow", "Lento"],
+  "Cancelar": ["Cancel", "Cancelar"],
+  "Captura": ["Capture", "Captura"],
+  "Captura automática de sessões": ["Automatic session capture", "Captura automática de sesiones"],
+  "Captura de referência": ["Capture reference", "Capturar referencia"],
+  "Captura de referência em andamento": [
+    "Reference capture in progress",
+    "Captura de referencia en curso"
+  ],
+  "Captura de referência em andamento.": [
+    "Reference capture in progress.",
+    "Captura de referencia en curso."
+  ],
+  "captura de replay": ["replay capture", "captura de repetición"],
+  "Captura de replay": ["Replay capture", "Captura de repetición"],
+  "Captura parada": ["Capture stopped", "Captura detenida"],
+  "Capturando": ["Capturing", "Capturando"],
+  "Capturando · aguardando linha de largada": [
+    "Capturing · waiting for start line",
+    "Capturando · esperando la línea de salida"
+  ],
+  "Capturando · aguardando o replay": [
+    "Capturing · waiting for replay",
+    "Capturando · esperando repetición"
+  ],
+  "Capturando · gravando volta {0}": [
+    "Capturing · recording lap {0}",
+    "Capturando · grabando vuelta {0}"
+  ],
+  "Capturando · identificando a pista": [
+    "Capturing · identifying track",
+    "Capturando · identificando circuito"
+  ],
+  "Capturando · pista desconhecida": [
+    "Capturing · unknown track",
+    "Capturando · circuito desconocido"
+  ],
+  "Capturando · validando": ["Capturing · validating", "Capturando · validando"],
+  "Capturar esta volta": ["Capture this lap", "Capturar esta vuelta"],
+  "Capturar esta volta como referência": [
+    "Capture this lap as a reference",
+    "Capturar esta vuelta como referencia"
+  ],
+  "Capturar outra": ["Capture another", "Capturar otra"],
+  "Capturar referência": ["Capture reference", "Capturar referencia"],
+  "Capturar uma referência": ["Capture a reference", "Capturar una referencia"],
+  "caracteres)": ["characters)", "caracteres)"],
+  "Carregando a análise…": ["Loading analysis…", "Cargando análisis…"],
+  "Carregando os traces…": ["Loading traces…", "Cargando gráficas…"],
+  "Carregando suas pistas…": ["Loading your tracks…", "Cargando tus circuitos…"],
+  "Carregando voltas do servidor…": ["Loading laps from server…", "Cargando vueltas del servidor…"],
+  "Carregando…": ["Loading…", "Cargando…"],
+  "carro": ["car", "coche"],
+  "Carro": ["Car", "Coche"],
+  "Carro #{0}": ["Car #{0}", "Coche n.º {0}"],
+  "Carro visto de cima": ["Top view of car", "Vista superior del coche"],
+  "carros": ["cars", "coches"],
+  "Carros": ["Cars", "Coches"],
+  "Carros que ainda não estão na lista do jogo (DLC novo?)": [
+    "Cars not yet in the game catalogue (new DLC?)",
+    "Coches que aún no están en el catálogo del juego (¿nuevo DLC?)"
+  ],
+  "Cartão ao fechar a volta": ["Lap finish card", "Tarjeta de fin de vuelta"],
+  "Cartão do rádio": ["Radio card", "Tarjeta de radio"],
+  "Chamada da referência": ["Reference call", "Llamada de referencia"],
+  "Chamadas do engenheiro": ["Engineer calls", "Llamadas del ingeniero"],
+  "Chave da API": ["API key", "Clave de API"],
+  "Chave da API da Anthropic": ["Anthropic API key", "Clave de API de Anthropic"],
+  "Chave removida.": ["Key removed.", "Clave eliminada."],
+  "Chave salva.": ["Key saved.", "Clave guardada."],
+  "Circuito real": ["Real circuit", "Circuito real"],
+  "Círculo de forças G": ["G-force circle", "Círculo de fuerzas G"],
+  "Círculo de G com rastro": ["G-force circle with a trail", "Círculo de fuerzas G con rastro"],
+  "Classe": ["Class", "Clase"],
+  "Classe do carro": ["Car class", "Clase del coche"],
+  "Classes": ["Classes", "Clases"],
+  "Classificação": ["Qualifying", "Clasificación"],
+  "Claude Code (com o app aberto — inclui o estado ao vivo)": [
+    "Claude Code (Bono open, includes live data)",
+    "Claude Code (Bono abierto, incluye datos en directo)"
+  ],
+  "Claude Code (lê os dados salvos)": [
+    "Claude Code (reads saved data)",
+    "Claude Code (lee datos guardados)"
+  ],
+  "Claude Desktop (lê os dados salvos, mesmo com o app fechado)": [
+    "Claude Desktop (reads saved data with Bono closed)",
+    "Claude Desktop (lee datos guardados con Bono cerrado)"
+  ],
+  "Clique numa curva para dar zoom nos gráficos e no mapa.": [
+    "Select a corner to zoom in on the charts and map.",
+    "Elige una curva para ampliar las gráficas y el mapa."
+  ],
+  "Clique para renomear": ["Click to rename", "Haz clic para renombrar"],
+  "Coach de IA": ["AI Coach", "Coach IA"],
+  "Coach IA": ["AI Coach", "Coach IA"],
+  "Coach IA (Claude)": ["AI Coach (Claude)", "Coach IA (Claude)"],
+  "Codex (com o app aberto — inclui o estado ao vivo)": [
+    "Codex (Bono open, includes live data)",
+    "Codex (Bono abierto, incluye datos en directo)"
+  ],
+  "Cole em {0} e reinicie o Claude Desktop": [
+    "Paste into {0} and restart Claude Desktop",
+    "Pega en {0} y reinicia Claude Desktop"
+  ],
+  "Cole no terminal": ["Paste into the terminal", "Pega en la terminal"],
+  "Colunas": ["Columns", "Columnas"],
+  "Comb. ": ["Fuel ", "Comb. "],
+  "Comb. –": ["Fuel –", "Comb. –"],
+  "Comb. {0} L": ["Fuel {0} L", "Comb. {0} L"],
+  "Comb. {0} voltas": ["Fuel {0} laps", "Comb. {0} vueltas"],
+  "Combinada": ["Combined", "Combinada"],
+  "Combinada (g)": ["Combined (g)", "Combinada (g)"],
+  "Combustível": ["Fuel", "Combustible"],
+  "começando…": ["starting…", "iniciando…"],
+  "como conectar": ["how to connect", "cómo conectarte"],
+  "Como funciona e limites": ["How it works and limitations", "Funcionamiento y límites"],
+  "Como ler este guia": ["How to read this guide", "Cómo leer esta guía"],
+  "Como o app recebe os dados do jogo e o que ele guarda.": [
+    "How Bono receives and stores game data.",
+    "Cómo recibe y guarda Bono los datos del juego."
+  ],
+  "Como o rádio ajuda": ["Radio coaching", "Asistencia de radio"],
+  "Comparação": ["Comparison", "Comparación"],
+  "Comparação de voltas": ["Lap comparison", "Comparación de vueltas"],
+  "Comparando as voltas…": ["Comparing laps…", "Comparando vueltas…"],
+  "Comparando voltas": ["Comparing laps", "Comparando vueltas"],
+  "Comparar": ["Compare", "Comparar"],
+  "Comparar com minha melhor": ["Compare with my best", "Comparar con mi mejor vuelta"],
+  "Comparar com o meu melhor": ["Compare with my best", "Comparar con mi mejor vuelta"],
+  "Comparar com o meu melhor (": ["Compare with my best (", "Comparar con mi mejor vuelta ("],
+  "Comparar o painel com": ["Dashboard reference", "Referencia del panel"],
+  "Comparar voltas": ["Compare laps", "Comparar vueltas"],
+  "Complete uma volta limpa (sem sair da pista) e ela aparece aqui.": [
+    "Complete a clean lap within track limits to see it here.",
+    "Completa una vuelta limpia dentro de los límites para verla aquí."
+  ],
+  "Comportamento": ["Behaviour", "Comportamiento"],
+  "Comprimento": ["Length", "Longitud"],
+  "Comprimento oficial: {0} (a volta medida difere {1})": [
+    "Official length: {0} (measured lap differs by {1})",
+    "Longitud oficial: {0} (la vuelta medida difiere en {1})"
+  ],
+  "Concluir": ["Done", "Listo"],
+  "Conectando ao Discord…": ["Connecting to Discord…", "Conectando a Discord…"],
+  "Conectando ao servidor…": ["Connecting to server…", "Conectando al servidor…"],
+  "Conecte o {0}": ["Connect your {0}", "Conecta tu {0}"],
+  "Conexão": ["Connection", "Conexión"],
+  "Conexão com o PS5": ["PS5 connection", "Conexión con PS5"],
+  "Conexão com o PS5: {0}. Abrir detalhes.": [
+    "PS5 connection: {0}. Open details.",
+    "Conexión con PS5: {0}. Abrir detalles."
+  ],
+  "Conferindo a volta": ["Checking lap", "Comprobando vuelta"],
+  "Confiança alta": ["High confidence", "Confianza alta"],
+  "Confiança baixa": ["Low confidence", "Confianza baja"],
+  "Confiança média": ["Medium confidence", "Confianza media"],
+  "Configuração e token do Discord removidos.": [
+    "Discord configuration and token removed.",
+    "Configuración y token de Discord eliminados."
+  ],
+  "Configuração inválida.": ["Invalid configuration.", "Configuración no válida."],
+  "Configurações": ["Settings", "Configuración"],
+  "Configurações → Coach IA": ["Settings → AI Coach", "Configuración → Coach IA"],
+  "configurada": ["configured", "configurada"],
+  "Configurar": ["Configure", "Configurar"],
+  "Configurar a integração de telemetria": [
+    "Set up telemetry integration",
+    "Configurar la integración de telemetría"
+  ],
+  "Configure a chave da API em": ["Set the API key in", "Configura la clave de API en"],
+  "Configure o bot do Discord em Configurações antes de ativar.": [
+    "Set up the Discord bot in Settings before enabling it.",
+    "Configura el bot de Discord antes de activarlo."
+  ],
+  "Configure o bot uma vez para ativar a saída pelo Discord.": [
+    "Set up the bot to enable Discord output.",
+    "Configura el bot para activar la salida por Discord."
+  ],
+  "Configure o coach de IA": ["Set up AI Coach", "Configura el Coach IA"],
+  "Confira a configuração e o token salvos no Bono.": [
+    "Check the Discord configuration and token saved in Bono.",
+    "Comprueba la configuración y el token de Discord guardados en Bono."
+  ],
+  "Confira o ID do canal e as permissões do bot.": [
+    "Check the channel ID and bot permissions.",
+    "Comprueba el ID del canal y los permisos del bot."
+  ],
+  "Confira os campos de configuração do Discord.": [
+    "Check the Discord settings fields.",
+    "Comprueba los campos de configuración de Discord."
+  ],
+  "Confira se o servidor está rodando no PC.": [
+    "Check that the server is running on the PC.",
+    "Comprueba que el servidor esté abierto en el PC."
+  ],
+  "Confirmar": ["Confirm", "Confirmar"],
+  "Conflito com o estado atual do servidor.": [
+    "Conflict with the current server state.",
+    "Conflicto con el estado actual del servidor."
+  ],
+  "Consistência": ["Consistency", "Consistencia"],
+  "Consistência de uma sessão": ["Session consistency", "Consistencia de una sesión"],
+  "Consistência e evolução": ["Consistency and progress", "Consistencia y evolución"],
+  "Console desconectado": ["Console disconnected", "Consola desconectada"],
+  "Console em": ["Console at", "Consola en"],
+  "Console encontrado — abra o Gran Turismo 7 e entre numa pista": [
+    "Console found. Open Gran Turismo 7 and enter a track.",
+    "Consola encontrada. Abre Gran Turismo 7 y entra en pista."
+  ],
+  "Console encontrado ({0}) — abra o Gran Turismo 7 e entre numa pista": [
+    "Console found ({0}). Open Gran Turismo 7 and enter a track.",
+    "Consola encontrada ({0}). Abre Gran Turismo 7 y entra en pista."
+  ],
+  "Console encontrado.": ["Console found.", "Consola encontrada."],
+  "Console encontrado. Abra o Gran Turismo 7 e entre numa pista.": [
+    "Console found. Open Gran Turismo 7 and enter a track.",
+    "Consola encontrada. Abre Gran Turismo 7 y entra en pista."
+  ],
+  "console simulado (demonstração)": [
+    "simulated console (demo)",
+    "consola simulada (demostración)"
+  ],
+  "Console, dispositivos, dados e IA": [
+    "Console, devices, data and AI",
+    "Consola, dispositivos, datos e IA"
+  ],
+  "Consultando a base de pilotagem": [
+    "Consulting the driving guide",
+    "Consultando la guía de conducción"
+  ],
+  "Consultando a evolução": ["Reviewing progress", "Consultando la evolución"],
+  "Consumo por volta": ["Fuel per lap", "Consumo por vuelta"],
+  "Consumo por volta aparece após a 1ª volta": [
+    "Fuel per lap appears after the first lap",
+    "El consumo por vuelta aparece tras la primera vuelta"
+  ],
+  "Consumo, voltas restantes e energia": [
+    "Consumption, remaining laps and energy",
+    "Consumo, vueltas restantes y energía"
+  ],
+  "Contador de voltas": ["Lap counter", "Contador de vueltas"],
+  "Conteúdo do guia em português do Brasil.": [
+    "Guide articles are in Brazilian Portuguese.",
+    "Los artículos de la guía están en portugués de Brasil."
+  ],
+  "Continuar": ["Continue", "Continuar"],
+  "Contra {0}": ["Against {0}", "Frente a {0}"],
+  "Controle remoto: a tela {0} está desligada aqui.": [
+    "Remote control: {0} is disabled on this device.",
+    "Control remoto: la vista {0} está desactivada en este dispositivo."
+  ],
+  "Copiado": ["Copied", "Copiado"],
+  "Copiado ✓": ["Copied ✓", "Copiado ✓"],
+  "Copiar": ["Copy", "Copiar"],
+  "Copiar caminho": ["Copy path", "Copiar ruta"],
+  "Copiar comandos": ["Copy commands", "Copiar comandos"],
+  "Copiar endereço para acesso remoto": [
+    "Copy remote access address",
+    "Copiar dirección de acceso remoto"
+  ],
+  "Copie o tempo oficial do jogo (ex.: 1:30.960). Se deixar em branco, salvamos a estimativa da telemetria.": [
+    "Copy the official game time (e.g. 1:30.960). Leave blank to use the telemetry estimate.",
+    "Copia el tiempo oficial del juego (p. ej., 1:30.960). Déjalo vacío para usar la estimación por telemetría."
+  ],
+  "Corrida": ["Race", "Carrera"],
+  "Curva": ["Corner", "Curva"],
+  "Curva a curva": ["Corner by corner", "Curva por curva"],
+  "Curva a curva, com gráficos": ["Corner by corner with charts", "Curva por curva con gráficas"],
+  "Curva e chamada": ["Corner and call", "Curva y llamada"],
+  "Curva-chave": ["Key corner", "Curva clave"],
+  "Curvas": ["Corners", "Curvas"],
+  "curvas ·": ["corners ·", "curvas ·"],
+  "Curvas do treino": ["Practice corners", "Curvas del entrenamiento"],
+  "custa tempo": ["costs time", "cuesta tiempo"],
+  "Custo estimado desta causa": ["Estimated time cost", "Pérdida de tiempo estimada"],
+  "da melhor": ["from best", "de la mejor"],
+  "Dá para terminar: sobram ~{0} L ({1} volta{2}).": [
+    "Enough to finish: ~{0} L ({1} lap{2}) left.",
+    "Suficiente para terminar: sobran ~{0} L ({1} vuelta{2})."
+  ],
+  "Dados": ["Data", "Datos"],
+  "Dados do ranking": ["Leaderboard details", "Datos de la clasificación"],
+  "Dados gerados pelo simulador, não são suas voltas reais": [
+    "Data from the simulator demo driver",
+    "Datos del piloto de demostración"
+  ],
+  "dados incompletos": ["incomplete data", "datos incompletos"],
+  "Data": ["Date", "Fecha"],
+  "de outro PC da rede": ["from another PC on the network", "desde otro PC en la red"],
+  "Debrief com IA": ["AI debrief", "Informe con IA"],
+  "Debrief com números e uma ação por curva, a partir das mesmas métricas da página de análise.": [
+    "A debrief with metrics and one action per corner, based on the same data as the analysis page.",
+    "Un informe con métricas y una acción por curva, basado en los mismos datos de la página de análisis."
+  ],
+  "Debrief da sessão": ["Session debrief", "Informe de sesión"],
+  "Debrief desta volta": ["Debrief this lap", "Informe de esta vuelta"],
+  "Debriefs salvos, do mais recente ao mais antigo.": [
+    "Saved debriefs, newest first.",
+    "Informes guardados, del más reciente al más antiguo."
+  ],
+  "Defina": ["Set", "Define"],
+  "Definir como referência": ["Set as reference", "Usar como referencia"],
+  "Deixar de ser referência?": ["Remove this reference?", "¿Quitar esta referencia?"],
+  "Deixe o replay tocar": ["Let the replay play", "Deja correr la repetición"],
+  "Deixe o replay tocar a 1×, sem pausar. O app grava e salva sozinho.": [
+    "Play the replay at 1× without pausing. Bono records and saves automatically.",
+    "Reproduce la repetición a 1× sin pausas. Bono graba y guarda automáticamente."
+  ],
+  "Deixe o replay tocar até o fim da volta. Não pause, não volte e não avance.": [
+    "Let the replay run until the lap ends, without pausing or seeking.",
+    "Deja correr la repetición hasta que termine la vuelta, sin pausas ni saltos."
+  ],
+  "Deixe rolar": ["Let it roll", "Deja rodar"],
+  "Deixe tocar a": ["Play it at", "Reprodúcela a"],
+  "Delta acumulado": ["Cumulative delta", "Delta acumulado"],
+  "Delta contra": ["Delta against", "Delta frente a"],
+  "Delta contra: {0}": ["Delta against: {0}", "Delta frente a: {0}"],
+  "Delta contra: {0}.": ["Delta against: {0}.", "Delta frente a: {0}."],
+  "Delta grande": ["Large delta", "Delta grande"],
+  "Delta por setor": ["Sector delta", "Delta por sector"],
+  "Delta total": ["Total delta", "Delta total"],
+  "Delta, tempos, setores, marcha e velocidade": [
+    "Delta, lap times, sectors, gear and speed",
+    "Delta, tiempos, sectores, marcha y velocidad"
+  ],
+  "Demo · não grava": ["Demo · no recording", "Demostración · sin grabación"],
+  "demonstração": ["demo", "demostración"],
+  "Demonstração": ["Demo", "Demostración"],
+  "Demonstração (sem console)": ["Demo (no console)", "Demostración (sin consola)"],
+  "Demonstração (sem servidor)": ["Demo (no server)", "Demostración (sin servidor)"],
+  "Demonstração: nada é gravado.": [
+    "Demo mode. No laps are recorded.",
+    "Modo de demostración. No se graban vueltas."
+  ],
+  "Dentro da pasta do repositório": [
+    "Inside the repository folder",
+    "Dentro de la carpeta del repositorio"
+  ],
+  "depende do carro": ["depends on the car", "depende del coche"],
+  "depois": ["later", "después"],
+  "Depois da sessão, abra": ["After the session, open", "Después de la sesión, abre"],
+  "Descobrir sozinho (recomendado)": [
+    "Detect automatically (recommended)",
+    "Detectar automáticamente (recomendado)"
+  ],
+  "Desligadas": ["Disabled", "Desactivadas"],
+  "Desligado": ["Off", "Desactivado"],
+  "Desligado: o painel mostra tudo ao vivo, mas nenhuma sessão, volta ou pista nova é salva.": [
+    "When disabled, the live dashboard still works. Bono saves no new sessions, laps or tracks.",
+    "Al desactivarlo, el panel sigue funcionando en directo. Bono no guarda sesiones, vueltas ni circuitos nuevos."
+  ],
+  "Desligar {0}": ["Disable {0}", "Desactivar {0}"],
+  "Deslize": ["Swipe", "Desliza"],
+  "Deslize para trocar de tela. Toque: nome da tela. Toque duplo: troca a referência do delta. Segure: abre este painel.": [
+    "Swipe to change view. Tap to show the view name. Double-tap to change the delta reference. Hold to open this menu.",
+    "Desliza para cambiar de vista. Toca para ver el nombre. Toca dos veces para cambiar la referencia del delta. Mantén pulsado para abrir este menú."
+  ],
+  "Desnível": ["Elevation change", "Desnivel"],
+  "Destravar gestos (segure)": ["Unlock gestures (hold)", "Desbloquear gestos (mantén pulsado)"],
+  "Destrave os gestos para abrir": ["Unlock gestures to open", "Desbloquea los gestos para abrir"],
+  "Desvio lateral do seu traçado em relação à linha da referência (+ = à esquerda): entrada / ápice / saída": [
+    "Lateral offset from the reference line (+ = left): entry / apex / exit",
+    "Desplazamiento lateral respecto a la trazada de referencia (+ = izquierda): entrada / vértice / salida"
+  ],
+  "Desvio-padrão": ["Standard deviation", "Desviación estándar"],
+  "Detalhadas · percentual do pedal": [
+    "Detailed · pedal percentage",
+    "Detalladas · porcentaje del pedal"
+  ],
+  "Detalhado": ["Detailed", "Detallado"],
+  "Detalhes": ["Details", "Detalles"],
+  "Detalhes em": ["Details in", "Detalles en"],
+  "Detalhes técnicos:": ["Technical details:", "Detalles técnicos:"],
+  "detectada": ["detected", "detectado"],
+  "detectadas (": ["detected (", "detectadas ("],
+  "detectado": ["detected", "detectado"],
+  "Detectado automaticamente": ["Detected automatically", "Detectado automáticamente"],
+  "Detectado: {0}": ["Detected: {0}", "Detectado: {0}"],
+  "Detectados nos sinais do carro (volante, guinada, trajetória e rotação das rodas). Confiança média ou baixa indica um diagnóstico provável: confira nos traços.": [
+    "Detected from steering, yaw, trajectory and wheel speed. Medium or low confidence indicates a probable diagnosis. Check the traces.",
+    "Se detectan con el volante, la guiñada, la trayectoria y la velocidad de las ruedas. La confianza media o baja indica un diagnóstico probable. Comprueba las gráficas."
+  ],
+  "Detectar as curvas de novo? (nomes próximos são mantidos)": [
+    "Detect corners again? Nearby names are kept.",
+    "¿Volver a detectar las curvas? Se conservan los nombres cercanos."
+  ],
+  "dia(s)": ["day(s)", "día(s)"],
+  "Diagnóstico": ["Diagnosis", "Diagnóstico"],
+  "Diagnósticos": ["Diagnostics", "Diagnósticos"],
+  "diagnósticos ·": ["diagnoses ·", "diagnósticos ·"],
+  "Dica: desative o bloqueio automático da tela para ela não apagar.": [
+    "Tip: disable automatic screen lock to keep the dashboard visible.",
+    "Consejo: desactiva el bloqueo automático para mantener el panel visible."
+  ],
+  "Diferença": ["Difference", "Diferencia"],
+  "Digitado (ranking)": ["Entered from leaderboard", "Introducido desde la clasificación"],
+  "Digite o nome da pista (ex.: Monza, Suzuka, Spa)…": [
+    "Enter the track name (e.g. Monza, Suzuka, Spa)…",
+    "Escribe el nombre del circuito (p. ej., Monza, Suzuka, Spa)…"
+  ],
+  "Digite para trocar a chave": [
+    "Enter a new key to replace it",
+    "Introduce una clave nueva para sustituirla"
+  ],
+  "Digite quatro números de 0 a 255 separados por pontos, como 192.168.0.20.": [
+    "Enter four numbers from 0 to 255 separated by dots, like 192.168.0.20.",
+    "Introduce cuatro números del 0 al 255 separados por puntos, como 192.168.0.20."
+  ],
+  "Dirija essa pista ao vivo primeiro (uma volta completa) e depois capture o replay.": [
+    "Drive a full live lap here before capturing a replay.",
+    "Completa una vuelta en directo antes de capturar la repetición."
+  ],
+  "Dispensar o aviso de nova versão": [
+    "Dismiss the update notice",
+    "Cerrar el aviso de actualización"
+  ],
+  "Dispositivo": ["Device", "Dispositivo"],
+  "Dispositivo remoto": ["Remote device", "Dispositivo remoto"],
+  "Duração": ["Duration", "Duración"],
+  "é essa": ["confirm", "confirmar"],
+  "e use o prompt “debrief_sessao”.": [
+    "and use the “debrief_sessao” prompt.",
+    "y usa el prompt «debrief_sessao»."
+  ],
+  "Editar": ["Edit", "Editar"],
+  "Editar a grade": ["Edit grid", "Editar cuadrícula"],
+  "Editar a tela Personalizada": ["Edit custom view", "Editar vista personalizada"],
+  "Editar tela Personalizada": ["Edit custom view", "Editar vista personalizada"],
+  "Ele precisa estar no mesmo Wi-Fi (ou no mesmo roteador) que este PC. Evite a rede “convidado”.": [
+    "Use the same Wi-Fi or router as this PC. Avoid guest networks.",
+    "Usa el mismo Wi-Fi o router que el PC. Evita redes de invitados."
+  ],
+  "em andamento": ["in progress", "en curso"],
+  "Em breve": ["Coming soon", "Próximamente"],
+  "Em cada métrica:": ["For each metric:", "En cada métrica:"],
+  "Embreagem": ["Clutch", "Embrague"],
+  "Encerrar teste": ["End test", "Terminar prueba"],
+  "Encerrar treino": ["End practice", "Terminar entrenamiento"],
+  "Endereço copiado: {0}": ["Address copied: {0}", "Dirección copiada: {0}"],
+  "Endereço do PS5": ["PS5 address", "Dirección de la PS5"],
+  "Endereço IP do PS5": ["PS5 IP address", "Dirección IP de la PS5"],
+  "endereço neste PC": ["address on this PC", "dirección en este PC"],
+  "Endereço para acesso remoto indisponível": [
+    "Remote access address unavailable",
+    "Dirección de acceso remoto no disponible"
+  ],
+  "endereço testado": ["address checked", "dirección comprobada"],
+  "endereços testados": ["addresses checked", "direcciones comprobadas"],
+  "Engenheiro": ["Engineer", "Ingeniero"],
+  "Engenheiro · {0}": ["Engineer · {0}", "Ingeniero · {0}"],
+  "Engenheiro ao vivo": ["Live engineer", "Ingeniero en directo"],
+  "entrada": ["entry", "entrada"],
+  "Entrada em": ["Entry in", "Entrada en"],
+  "Entre em uma pista no simulador conectado e dê algumas voltas. Seus tempos aparecem aqui, organizados por pista.": [
+    "Enter a track in the connected sim and drive a few laps. Your times appear here, grouped by track.",
+    "Entra en pista en el simulador conectado y da unas vueltas. Tus tiempos aparecen aquí agrupados por circuito."
+  ],
+  "Enviar": ["Send", "Enviar"],
+  "erro": ["error", "error"],
+  "Erro {0} do servidor.": ["Server error {0}.", "Error {0} del servidor."],
+  "Erro interno do servidor.": ["Internal server error.", "Error interno del servidor."],
+  "Erro na conexão do bot.": ["Bot connection error.", "Error de conexión del bot."],
+  "Escaneie o QR Code com a câmera do dispositivo remoto ou abra um dos endereços abaixo no navegador. Os dois dispositivos precisam estar na mesma rede local.": [
+    "Scan the QR code with the remote device or open one of these addresses in its browser. Both devices must be on the same local network.",
+    "Escanea el código QR con el dispositivo remoto o abre una de estas direcciones en su navegador. Ambos dispositivos deben estar en la misma red local."
+  ],
+  "Escaneie o QR Code com a câmera do dispositivo. Ele abre o mesmo painel (dispositivo remoto e PC no mesmo Wi-Fi).": [
+    "Scan the QR code with the device camera. It opens the same dashboard when the device and PC are on the same Wi-Fi.",
+    "Escanea el código QR con la cámara del dispositivo. Abre el mismo panel cuando el dispositivo y el PC están en el mismo Wi-Fi."
+  ],
+  "Escolha a marca e depois o carro": [
+    "Choose the make, then the car",
+    "Elige la marca y después el coche"
+  ],
+  "Escolha até duas curvas. O rádio foca nelas por cinco voltas válidas e compara todas com a mesma referência. No perfil Aprender pista, escolher uma curva reativa a ajuda nela.": [
+    "Choose up to two corners. The radio focuses on them for five valid laps and compares each lap against the same reference. In Learn Track, choosing a corner restores calls for it.",
+    "Elige hasta dos curvas. La radio se centra en ellas durante cinco vueltas válidas y compara cada vuelta con la misma referencia. En Aprender circuito, elegir una curva reactiva sus instrucciones."
+  ],
+  "Escolha o que o coach deve olhar. Sem escolher nada, ele analisa a melhor volta da sessão mais recente.": [
+    "Choose what the coach reviews. By default it analyses the best lap of the latest session.",
+    "Elige qué revisará el coach. De forma predeterminada analiza la mejor vuelta de la última sesión."
+  ],
+  "Escolha uma pista para ver seus melhores tempos, a evolução e onde ainda dá para ganhar.": [
+    "Choose a track to see your best times, your progress and where you can still gain time.",
+    "Elige un circuito para ver tus mejores tiempos, tu evolución y dónde puedes ganar tiempo."
+  ],
+  "Escolha uma volta compatível para fixar a referência do treino.": [
+    "Select a compatible lap to lock the practice reference.",
+    "Elige una vuelta compatible para fijar la referencia del entrenamiento."
+  ],
+  "Escolha uma volta de referência": ["Select a reference lap", "Elige una vuelta de referencia"],
+  "Escolha uma volta para comparar com a sua melhor ou com a de um piloto do top.": [
+    "Choose a lap to compare against your best or a leaderboard driver’s lap.",
+    "Elige una vuelta para compararla con tu mejor vuelta o la de un piloto de la clasificación."
+  ],
+  "Escolher carro": ["Choose car", "Elegir coche"],
+  "Escolher e ordenar as telas deste aparelho": [
+    "Choose and order views on this device",
+    "Elige y ordena las vistas de este dispositivo"
+  ],
+  "Escolher outra pista": ["Choose another track", "Elegir otro circuito"],
+  "Escolher uma pista": ["Choose a track", "Elegir circuito"],
+  "Escolher…": ["Choose…", "Elegir…"],
+  "Esconder demonstração": ["Hide demo data", "Ocultar demostración"],
+  "Escorregamento dianteiro": ["Front slip", "Deslizamiento delantero"],
+  "Escorregamento traseiro": ["Rear slip", "Deslizamiento trasero"],
+  "Esforço": ["Effort", "Esfuerzo"],
+  "Esforço salvo.": ["Effort saved.", "Esfuerzo guardado."],
+  "Essa ação não pode ser desfeita.": ["This action is permanent.", "Esta acción es permanente."],
+  "Esse endereço não existe na área de análise.": [
+    "This address doesn’t exist in the analysis area.",
+    "Esta dirección no existe en el área de análisis."
+  ],
+  "Esse endereço não parece um IP válido (exemplo: 192.168.0.20).": [
+    "Enter a valid IP address (e.g. 192.168.0.20).",
+    "Introduce una dirección IP válida (p. ej., 192.168.0.20)."
+  ],
+  "Essencial": ["Essential", "Esencial"],
+  "Esta página falhou ao desenhar": ["This page couldn’t load", "Esta página no se pudo cargar"],
+  "Esta pista ainda não tem curvas detectadas.": [
+    "No corners have been detected on this track yet.",
+    "Aún no se han detectado curvas en este circuito."
+  ],
+  "Esta sessão ainda não tem voltas completas.": [
+    "This session has no complete laps yet.",
+    "Esta sesión aún no tiene vueltas completas."
+  ],
+  "Estável": ["Steady", "Estable"],
+  "este": ["this one", "este"],
+  "Este servidor ainda não tem o coach de IA (endpoint /api/coach/config ausente).": [
+    "This server does not provide AI Coach (missing /api/coach/config).",
+    "Este servidor no ofrece Coach IA (falta /api/coach/config)."
+  ],
+  "Estimado pela telemetria": ["Estimated from telemetry", "Estimado por telemetría"],
+  "Eventos de pilotagem": ["Driving events", "Eventos de conducción"],
+  "Evita trocar de tela sem querer. Segure o cadeado para destravar.": [
+    "Prevents accidental view changes. Hold the lock to unlock.",
+    "Evita cambiar de vista por error. Mantén pulsado el candado para desbloquear."
+  ],
+  "Evolução": ["Progress", "Evolución"],
+  "Ex.: 280,300,315": ["E.g. 280,300,315", "P. ej., 280,300,315"],
+  "Ex.: Monza, Suzuka…": ["E.g. Monza, Suzuka…", "P. ej., Monza, Suzuka…"],
+  "ex.: por que perco tanto na saída da T3?": [
+    "e.g. why do I lose so much time exiting T3?",
+    "p. ej., ¿por qué pierdo tanto tiempo al salir de T3?"
+  ],
+  "Excluir": ["Delete", "Eliminar"],
+  "Excluir esta volta?": ["Delete this lap?", "¿Eliminar esta vuelta?"],
+  "Excluir volta": ["Delete lap", "Eliminar vuelta"],
+  "F ref": ["Ref brake", "Freno ref."],
+  "Falar o percentual de freio em Aprender pista": [
+    "Announce brake percentage in Learn Track",
+    "Anunciar el porcentaje de freno en Aprender circuito"
+  ],
+  "Falar pelo Discord": ["Speak through Discord", "Hablar por Discord"],
+  "Falha na reprodução.": ["Audio playback failed.", "Error al reproducir el audio."],
+  "Falha no login do bot. Confira o token e a conexão com o Discord.": [
+    "Bot sign-in failed. Check the token and Discord connection.",
+    "Falló el inicio de sesión del bot. Comprueba el token y la conexión con Discord."
+  ],
+  "Faltam": ["Short by", "Faltan"],
+  "faltam regras": ["rules missing", "faltan reglas"],
+  "fecha": ["closes", "cierra"],
+  "Fechar": ["Close", "Cerrar"],
+  "Fechar aviso": ["Dismiss notice", "Cerrar aviso"],
+  "Fechar o app": ["Close app", "Cerrar el app"],
+  "Ferramentas usadas": ["Tools used", "Herramientas usadas"],
+  "Ficha da pista": ["Track details", "Ficha del circuito"],
+  "Fictícia (criada pela Polyphony)": [
+    "Fictional (created by Polyphony)",
+    "Ficticio (creado por Polyphony)"
+  ],
+  "Firewall do Windows": ["Windows Firewall", "Firewall de Windows"],
+  "Firewall do Windows.": ["Windows Firewall.", "Firewall de Windows."],
+  "Firewall verificado.": ["Firewall checked.", "Firewall comprobado."],
+  "fixado por você": ["set manually", "fijado manualmente"],
+  "Fixar esta curva": ["Pin this corner", "Fijar esta curva"],
+  "Foco": ["Focus", "Enfoque"],
+  "Foco na curva {0}": ["Focus on corner {0}", "Enfoque en la curva {0}"],
+  "Fonte das voltas": ["Lap source", "Origen de las vueltas"],
+  "Fontes": ["Sources", "Fuentes"],
+  "fontes (consultadas em 2026-11-09). Resumos em palavras próprias; os links levam aos textos originais.": [
+    "sources (accessed 2026-11-09). Links open the original texts.",
+    "fuentes (consultadas el 09-11-2026). Los enlaces abren los textos originales."
+  ],
+  "fora da pista": ["off track", "fuera de pista"],
+  "Fora da pista": ["Off track", "Fuera de pista"],
+  "Fora do catálogo": ["Outside the catalogue", "Fuera del catálogo"],
+  "Forças G": ["G-forces", "Fuerzas G"],
+  "Formato ao vivo": ["Live format", "Formato en directo"],
+  "Formato automático ligado.": ["Automatic format enabled.", "Formato automático activado."],
+  "Formato do pacote: automático (recomendado)": [
+    "Packet format: automatic (recommended)",
+    "Formato de paquete: automático (recomendado)"
+  ],
+  "freada": ["braking", "frenada"],
+  "Freada": ["Braking", "Frenada"],
+  "Freie": ["Brake", "Frena"],
+  "Freio": ["Brake", "Freno"],
+  "Freio · {0}%": ["Brake · {0}%", "Freno · {0}%"],
+  "Freio forte": ["Brake hard", "Frena fuerte"],
+  "Freio leve": ["Light braking", "Frenada suave"],
+  "FREIO MÃO": ["HANDBRAKE", "FRENO DE MANO"],
+  "frenagem": ["braking", "frenada"],
+  "Frenagem": ["Braking", "Frenada"],
+  "Frenagem da ref.": ["Ref. braking", "Frenada de ref."],
+  "Frenagem em": ["Braking in", "Frenada en"],
+  "Frenagem vs base (+ = mais tarde)": [
+    "Braking vs baseline (+ = later)",
+    "Frenada frente a la base (+ = más tarde)"
+  ],
+  "Frio": ["Cold", "Frío"],
+  "ganha tempo": ["time gained", "ganancia de tiempo"],
+  "Ganhando": ["Gaining", "Ganando"],
+  "Ganhar tempo": ["Gain Time", "Ganar tiempo"],
+  "Ganho possível": ["Possible gain", "Ganancia posible"],
+  "Gerando o gráfico": ["Generating the chart", "Generando la gráfica"],
+  "Gerar debrief": ["Generate debrief", "Generar informe"],
+  "Gerar gráfico (PNG)": ["Generate chart (PNG)", "Generar gráfica (PNG)"],
+  "Gestos destravados.": ["Gestures unlocked.", "Gestos desbloqueados."],
+  "Gestos do painel": ["Dashboard gestures", "Gestos del panel"],
+  "Gestos travados. Segure o cadeado para destravar.": [
+    "Gestures locked. Hold the lock to unlock.",
+    "Gestos bloqueados. Mantén pulsado el candado para desbloquear."
+  ],
+  "giro além da trajetória {0}°": [
+    "yaw beyond the path {0}°",
+    "giro respecto a la trayectoria {0}°"
+  ],
+  "Glossário": ["Glossary", "Glosario"],
+  "Gr.2, Gr.B, carros de rua (N) e especiais (X) quase não têm fonte publicada: o texto deles é síntese de princípios gerais.": [
+    "Published sources for Gr.2, Gr.B, road cars (N) and specials (X) are scarce. Those entries summarise general principles.",
+    "Hay pocas fuentes publicadas para Gr.2, Gr.B, coches de calle (N) y especiales (X). Esas entradas resumen principios generales."
+  ],
+  "Gr.N (carros de rua)": ["Gr.N (road cars)", "Gr.N (coches de calle)"],
+  "Gr.X (especiais)": ["Gr.X (specials)", "Gr.X (especiales)"],
+  "Grade de widgets montada por você": [
+    "Build your own widget grid",
+    "Crea tu propia cuadrícula de widgets"
+  ],
+  "Grade vazia": ["Empty grid", "Cuadrícula vacía"],
+  "Grama": ["Grass", "Césped"],
+  "grampo": ["hairpin", "horquilla"],
+  "Gran Turismo 7 aberto numa pista (no menu o PS5 não envia dados).": [
+    "Gran Turismo 7 open on track. The PS5 doesn’t send data in the menu.",
+    "Gran Turismo 7 abierto en pista. La PS5 no envía datos en el menú."
+  ],
+  "Gran Turismo 7 aberto numa pista.": [
+    "Gran Turismo 7 open on track.",
+    "Gran Turismo 7 abierto en pista."
+  ],
+  "Gravação automática desligada.": [
+    "Automatic recording disabled.",
+    "Grabación automática desactivada."
+  ],
+  "Gravação automática ligada.": ["Automatic recording enabled.", "Grabación automática activada."],
+  "Gravação desligada": ["Recording disabled", "Grabación desactivada"],
+  "Gravação desligada.": ["Recording disabled.", "Grabación desactivada."],
+  "Gravação ligada.": ["Recording enabled.", "Grabación activada."],
+  "Gravando": ["Recording", "Grabando"],
+  "Gravando · {0}": ["Recording · {0}", "Grabando · {0}"],
+  "Gravando a volta": ["Recording lap", "Grabando vuelta"],
+  "Gravando a volta…": ["Recording lap…", "Grabando vuelta…"],
+  "Gravar a volta de um replay": [
+    "Record a lap from a replay",
+    "Grabar una vuelta de una repetición"
+  ],
+  "Gravar sessões automaticamente": [
+    "Record sessions automatically",
+    "Grabar sesiones automáticamente"
+  ],
+  "Gravar sessões brutas": ["Record raw sessions", "Grabar sesiones sin procesar"],
+  "Guarda todo pacote (~20 KB/s) para reprocessar depois e baixar o .gt7rec. Ocupa espaço em disco; deixe desligado se não precisar.": [
+    "Save all packets (~20 KB/s) for reprocessing and .gt7rec downloads. This uses disk space.",
+    "Guarda todos los paquetes (~20 KB/s) para reprocesarlos y descargar archivos .gt7rec. Esto ocupa espacio en disco."
+  ],
+  "Guia": ["Guide", "Guía"],
+  "Guia de pilotagem": ["Driving guide", "Guía de conducción"],
+  "Guinada": ["Yaw", "Guiñada"],
+  "há {0} {1}": ["{0} {1} ago", "hace {0} {1}"],
+  "há {0} dias": ["{0} days ago", "hace {0} días"],
+  "há {0} h": ["{0} h ago", "hace {0} h"],
+  "há {0} min": ["{0} min ago", "hace {0} min"],
+  "há {0} s": ["{0} s ago", "hace {0} s"],
+  "Há layouts parecidos (reverso, com ou sem chicane…): confira qual você correu antes de confirmar.": [
+    "Some layouts look alike (reverse, with or without a chicane). Check which one you drove before confirming.",
+    "Algunos trazados se parecen (inverso, con o sin chicane). Comprueba cuál usaste antes de confirmar."
+  ],
+  "Histórico e ajustes": ["History and settings", "Historial y ajustes"],
+  "Histórico e análise": ["History and analysis", "Historial y análisis"],
+  "hoje": ["today", "hoy"],
+  "Hoje": ["Today", "Hoy"],
+  "Houve um salto no replay (avanço, retrocesso ou troca de câmera/carro).": [
+    "The replay skipped (seeking or a camera or car change).",
+    "Hubo un salto en la repetición (avance, retroceso o cambio de cámara o coche)."
+  ],
+  "ID do canal de voz": ["Voice channel ID", "ID del canal de voz"],
+  "Ideal": ["Optimal", "Óptimo"],
+  "Ideal teórica": ["Theoretical best", "Ideal teórica"],
+  "Identificando a pista": ["Identifying track", "Identificando circuito"],
+  "Identificando a pista pela posição do carro…": [
+    "Identifying the track from the car’s position…",
+    "Identificando el circuito por la posición del coche…"
+  ],
+  "Idioma": ["Language", "Idioma"],
+  "Idioma do app e do rádio": ["App and radio language", "Idioma del app y de la radio"],
+  "Ignora deslizar, tocar e segurar. Segure o cadeado para destravar.": [
+    "Ignores swipes, taps and holds. Hold the lock to unlock.",
+    "Ignora deslizamientos, toques y pulsaciones largas. Mantén pulsado el candado para desbloquear."
+  ],
+  "Inclui superfície (asfalto/zebra/grama). Ainda não verificado no console.": [
+    "Includes surface type (asphalt, kerbs and grass). Console verification is pending.",
+    "Incluye el tipo de superficie (asfalto, pianos y césped). Pendiente de verificar en consola."
+  ],
+  "Indisponível": ["Unavailable", "No disponible"],
+  "Indisponível neste servidor.": [
+    "Unavailable on this server.",
+    "No disponible en este servidor."
+  ],
+  "Informe o atraso medido em Configurações → Rádio no Discord.": [
+    "Enter the measured delay in Settings → Discord radio.",
+    "Introduce el retardo medido en Configuración → Radio en Discord."
+  ],
+  "Iniciando": ["Starting", "Iniciando"],
+  "Iniciando a captura…": ["Starting capture…", "Iniciando captura…"],
+  "Iniciando…": ["Starting…", "Iniciando…"],
+  "Iniciar a captura": ["Start capture", "Iniciar captura"],
+  "Iniciar com o Windows": ["Start with Windows", "Iniciar con Windows"],
+  "Iniciar treino de 5 voltas": [
+    "Start five-lap practice",
+    "Iniciar entrenamiento de cinco vueltas"
+  ],
+  "Inicie o treino no aparelho que toca o rádio.": [
+    "Start practice on the device playing the radio.",
+    "Inicia el entrenamiento en el dispositivo que reproduce la radio."
+  ],
+  "Início": ["Home", "Inicio"],
+  "Inputs": ["Inputs", "Mandos"],
+  "Instruções de freada": ["Braking calls", "Instrucciones de frenada"],
+  "Instruções em voz e na tela. Quando tudo corre bem, o rádio fica em silêncio.": [
+    "Voice and on-screen instructions. The radio stays quiet when things are going well.",
+    "Instrucciones por voz y en pantalla. La radio guarda silencio cuando todo va bien."
+  ],
+  "Integração com IA": ["AI integration", "Integración con IA"],
+  "Integração com IA (MCP)": ["AI integration (MCP)", "Integración con IA (MCP)"],
+  "Integração de telemetria": ["Telemetry integration", "Integración de telemetría"],
+  "Integração disponível": ["Available integration", "Integración disponible"],
+  "Interrompido.": ["Stopped.", "Interrumpido."],
+  "inválida": ["invalid", "no válida"],
+  "Inválida": ["Invalid", "No válida"],
+  "Ir para o início": ["Go to home", "Ir al inicio"],
+  "Ir para o painel ao vivo": ["Go to live dashboard", "Ir al panel en directo"],
+  "Largura": ["Width", "Ancho"],
+  "Latência": ["Latency", "Latencia"],
+  "Lateral dir.": ["Lateral right", "Lateral der."],
+  "Lateral esq.": ["Lateral left", "Lateral izq."],
+  "Legenda das séries": ["Series legend", "Leyenda de series"],
+  "Lendo a pista": ["Reading track data", "Leyendo el circuito"],
+  "Lendo o estado ao vivo": ["Reading live data", "Leyendo datos en directo"],
+  "Lendo os traces": ["Reading telemetry traces", "Leyendo gráficas de telemetría"],
+  "lenta": ["slow", "lenta"],
+  "liberada no Firewall do Windows (rede privada).": [
+    "allowed by Windows Firewall (private network).",
+    "permitido por el Firewall de Windows (red privada)."
+  ],
+  "liberado": ["allowed", "permitido"],
+  "Ligar {0}": ["Enable {0}", "Activar {0}"],
+  "Limite de relatórios salvo.": ["Report limit saved.", "Límite de informes guardado."],
+  "Limpar": ["Clear", "Limpiar"],
+  "Limpar a busca": ["Clear search", "Borrar búsqueda"],
+  "Limpar filtros": ["Clear filters", "Quitar filtros"],
+  "Linha de comando": ["Command line", "Línea de comandos"],
+  "Linha de largada": ["Start line", "Línea de salida"],
+  "Lista de sessões": ["Session list", "Lista de sesiones"],
+  "Listando pistas": ["Listing tracks", "Listando circuitos"],
+  "Listando sessões": ["Listing sessions", "Listando sesiones"],
+  "Listando voltas": ["Listing laps", "Listando vueltas"],
+  "litros": ["litres", "litros"],
+  "Livre · só alertas do carro": [
+    "Free practice · car alerts only",
+    "Libre · solo avisos del coche"
+  ],
+  "Longitudinal (g)": ["Longitudinal (g)", "Longitudinal (g)"],
+  "m · meta": ["m · target", "m · objetivo"],
+  "Maior reta": ["Longest straight", "Recta más larga"],
+  "Mais": ["More", "Más"],
+  "Mais cedo (+0,35 s)": ["Earlier (+0.35 s)", "Antes (+0,35 s)"],
+  "Mais detalhes (corrigir carro ou pista, notas)": [
+    "More details (correct car or track, notes)",
+    "Más detalles (corregir coche o circuito, notas)"
+  ],
+  "Mais recente": ["Most recent", "Más reciente"],
+  "Mais recentes primeiro": ["Newest first", "Más recientes primero"],
+  "Mais tempo perdido": ["Most time lost", "Mayor pérdida de tiempo"],
+  "Manter: {0}": ["Keep: {0}", "Mantener: {0}"],
+  "Mapa": ["Map", "Mapa"],
+  "Mapa da pista": ["Track map", "Mapa del circuito"],
+  "Mapa da pista com os traçados": [
+    "Track map with racing lines",
+    "Mapa del circuito con las trazadas"
+  ],
+  "Marca": ["Make", "Marca"],
+  "Marcas": ["Makes", "Marcas"],
+  "Marcas roxas: máximas desta volta.": [
+    "Purple marks show peak values for this lap.",
+    "Las marcas moradas indican los máximos de esta vuelta."
+  ],
+  "Marcha": ["Gear", "Marcha"],
+  "Marcha no ápice: você / referência": [
+    "Gear at apex: you / reference",
+    "Marcha en el vértice: tú / referencia"
+  ],
+  "Marco de frenagem": ["Braking marker", "Referencia de frenada"],
+  "Marco de frenagem (ex.: placa de 100 m)": [
+    "Braking marker (e.g. 100 m board)",
+    "Referencia de frenada (p. ej., cartel de 100 m)"
+  ],
+  "Marco de frenagem da curva {0}": [
+    "Braking marker for corner {0}",
+    "Referencia de frenada de la curva {0}"
+  ],
+  "Marque de 1 a 3 voltas para comparar (a 1ª é a sua, a 2ª a referência).": [
+    "Select one to three laps. The first is your lap and the second is the reference.",
+    "Selecciona de una a tres vueltas. La primera es la tuya y la segunda es la referencia."
+  ],
+  "Máxima estimada": ["Estimated top speed", "Velocidad máxima estimada"],
+  "Máximas (g)": ["Peak values (g)", "Máximas (g)"],
+  "média": ["medium", "media"],
+  "Média": ["Mean", "Media"],
+  "média {0} · mín {1} · máx {2}": [
+    "mean {0} · min {1} · max {2}",
+    "media {0} · mín. {1} · máx. {2}"
+  ],
+  "Média das 3 melhores": ["Average of the best three", "Media de las tres mejores"],
+  "Média por volta": ["Average per lap", "Media por vuelta"],
+  "medido (": ["measured (", "medida ("],
+  "Medindo a consistência": ["Measuring consistency", "Midiendo la consistencia"],
+  "Médio": ["Medium", "Medio"],
+  "meio da curva": ["mid-corner", "mitad de la curva"],
+  "melhor": ["best", "mejor"],
+  "Melhor": ["Best", "Mejor"],
+  "melhor da sessão": ["session best", "mejor de la sesión"],
+  "Melhor da sessão": ["Session best", "Mejor de la sesión"],
+  "Melhor do top": ["Best leaderboard lap", "Mejor vuelta de la clasificación"],
+  "melhor pessoal": ["personal best", "mejor personal"],
+  "Melhor pessoal": ["Personal best", "Mejor personal"],
+  "Melhor referência top": [
+    "Fastest leaderboard reference",
+    "Mejor referencia de la clasificación"
+  ],
+  "Melhor setor contra a referência: S": [
+    "Best sector against the reference: S",
+    "Mejor sector frente a la referencia: S"
+  ],
+  "Melhor volta": ["Best lap", "Mejor vuelta"],
+  "Melhor volta com o filtro": ["Best lap with this filter", "Mejor vuelta con este filtro"],
+  "Melhor volta da sessão": ["Best lap of the session", "Mejor vuelta de la sesión"],
+  "Melhor volta da última sessão contra a sessão anterior com o mesmo carro": [
+    "Latest session’s best lap compared with the previous session in the same car",
+    "Mejor vuelta de la última sesión frente a la anterior con el mismo coche"
+  ],
+  "Melhor volta por dia": ["Best lap by day", "Mejor vuelta por día"],
+  "Melhores": ["Best", "Mejores"],
+  "Melhores setores": ["Best sectors", "Mejores sectores"],
+  "Melhores voltas": ["Best laps", "Mejores vueltas"],
+  "Melhorou {0} s": ["Improved by {0} s", "Mejoró {0} s"],
+  "Menu ·": ["Menu ·", "Menú ·"],
+  "Menu: histórico, comparação, captura e ajustes": [
+    "Menu: history, comparison, capture and settings",
+    "Menú: historial, comparación, captura y ajustes"
+  ],
+  "mês": ["month", "mes"],
+  "meses": ["months", "meses"],
+  "Meta por volta, em segundos": [
+    "Target lap time in seconds",
+    "Tiempo objetivo por vuelta en segundos"
+  ],
+  "Metas da próxima curva contra a referência": [
+    "Targets for the next corner against the reference",
+    "Objetivos para la próxima curva frente a la referencia"
+  ],
+  "Métrica": ["Metric", "Métrica"],
+  "microssetores": ["microsectors", "microsectores"],
+  "Mini-mapa": ["Mini-map", "Minimapa"],
+  "Modelo": ["Model", "Modelo"],
+  "Modelo salvo.": ["Model saved.", "Modelo guardado."],
+  "Modelo: {0}": ["Model: {0}", "Modelo: {0}"],
+  "Modo": ["Mode", "Modo"],
+  "Modo demonstração: o console é simulado dentro do app.": [
+    "Demo mode: Bono simulates the console.",
+    "Modo de demostración: Bono simula la consola."
+  ],
+  "Momentos da volta em que o carro escapou ou o piloto deixou tempo na pista.": [
+    "Moments when the car broke traction or the driver lost time.",
+    "Momentos en los que el coche perdió adherencia o el piloto dejó tiempo en pista."
+  ],
+  "Montar a sua grade de widgets": ["Build your widget grid", "Crea tu cuadrícula de widgets"],
+  "Mostra de novo como encontrar o PS5 e abrir o painel em outro dispositivo.": [
+    "See how to find the PS5 and open the dashboard on another device.",
+    "Consulta cómo encontrar la PS5 y abrir el panel en otro dispositivo."
+  ],
+  "Mostra o tempo e os setores por alguns segundos.": [
+    "Shows the time and sectors for a few seconds.",
+    "Muestra el tiempo y los sectores durante unos segundos."
+  ],
+  "Mostra o tempo e os setores quando você completa uma volta.": [
+    "Shows the time and sectors when you finish a lap.",
+    "Muestra el tiempo y los sectores al terminar una vuelta."
+  ],
+  "Mostrando os": ["Showing the first", "Se muestran los primeros"],
+  "Mostrar a demonstração": ["Show demo data", "Mostrar demostración"],
+  "Mostrar cartão do rádio": ["Show radio card", "Mostrar tarjeta de radio"],
+  "Mostrar no aparelho": ["Show on device", "Mostrar en dispositivo"],
+  "Mostrar tela": ["Show view", "Mostrar vista"],
+  "Mostrar todos": ["Show all", "Mostrar todos"],
+  "Mostrar todos os carros (limpar filtro)": [
+    "Show all cars (clear filter)",
+    "Mostrar todos los coches (quitar filtro)"
+  ],
+  "Motor e câmbio": ["Engine and gearbox", "Motor y cambio"],
+  "Mover {0} para baixo": ["Move {0} down", "Bajar {0}"],
+  "Mover {0} para cima": ["Move {0} up", "Subir {0}"],
+  "Mover para antes": ["Move earlier", "Mover antes"],
+  "Mover para depois": ["Move later", "Mover después"],
+  "Mudo · só painel": ["Muted · dashboard only", "Silenciado · solo panel"],
+  "Na demonstração não há console de verdade: nada foi enviado.": [
+    "Demo mode uses a simulated console. Nothing was sent.",
+    "La demostración usa una consola simulada. No se envió nada."
+  ],
+  "Na pista": ["On track", "En pista"],
+  "Nada combina com esse filtro.": [
+    "Nothing matches this filter.",
+    "Nada coincide con este filtro."
+  ],
+  "Nada encontrado": ["No results", "Sin resultados"],
+  "Nada encontrado para “{0}”. Tente só parte do nome (ex.: “skyl” ou “civic”).": [
+    "No results for “{0}”. Try part of the name, such as “skyl” or “civic”.",
+    "No hay resultados para «{0}». Prueba con parte del nombre, como «skyl» o «civic»."
+  ],
+  "Nada mudou.": ["No changes.", "Sin cambios."],
+  "Nada para “": ["No results for “", "Sin resultados para «"],
+  "Não chega ao fim: faltam {0} L. Reabasteça ou economize {1} L por volta.": [
+    "Short of fuel to finish: {0} L needed. Refuel or save {1} L per lap.",
+    "Falta combustible para terminar: {0} L. Reposta o ahorra {1} L por vuelta."
+  ],
+  "Não conheço esta pista ainda. Dirija essa pista ao vivo primeiro (uma volta completa) e depois capture o replay.": [
+    "Unknown track. Drive a full live lap here before capturing a replay.",
+    "Circuito desconocido. Completa una vuelta en directo antes de capturar la repetición."
+  ],
+  "Não consegui abrir o painel do servidor local.": [
+    "Couldn’t open the local dashboard.",
+    "No se pudo abrir el panel local."
+  ],
+  "Não conta como sessão: nada é gravado nos seus tempos.": [
+    "Replay activity is excluded from your session times.",
+    "La repetición no se incluye en los tiempos de sesión."
+  ],
+  "Não é erro: o PS5 só envia dados com o jogo aberto numa pista (ou replay).": [
+    "The PS5 sends data while on track or during a replay.",
+    "La PS5 envía datos en pista o durante una repetición."
+  ],
+  "Não encontrado (o servidor pode ser de uma versão sem este recurso).": [
+    "Not found. The server version may not support this feature.",
+    "No encontrado. Es posible que la versión del servidor no admita esta función."
+  ],
+  "Não encontrei uma porta livre para o servidor. Feche outros programas que usem a rede e tente de novo.": [
+    "Couldn’t find a free port for the server. Close other network apps and try again.",
+    "No se encontró un puerto libre para el servidor. Cierra otras aplicaciones de red y vuelve a intentarlo."
+  ],
+  "Não entendi esse tempo. Use minutos:segundos.milésimos, por exemplo 1:30.960.": [
+    "Invalid lap time. Use minutes:seconds.milliseconds, for example 1:30.960.",
+    "Tiempo de vuelta no válido. Usa minutos:segundos.milisegundos, por ejemplo 1:30.960."
+  ],
+  "Não foi possível abrir o {0}": ["Couldn’t open {0}", "No se pudo abrir {0}"],
+  "Não foi possível alterar o aparelho do rádio.": [
+    "Couldn’t change the radio output device.",
+    "No se pudo cambiar el dispositivo de salida de radio."
+  ],
+  "Não foi possível alterar o Discord.": [
+    "Couldn’t change the Discord setting.",
+    "No se pudo cambiar el ajuste de Discord."
+  ],
+  "Não foi possível alternar a tela cheia neste aparelho.": [
+    "Couldn’t switch fullscreen on this device.",
+    "No se pudo cambiar a pantalla completa en este dispositivo."
+  ],
+  "Não foi possível aplicar a configuração.": [
+    "Couldn’t apply the settings.",
+    "No se pudo aplicar la configuración."
+  ],
+  "Não foi possível atualizar a voz no Discord.": [
+    "Couldn’t update the Discord voice.",
+    "No se pudo actualizar la voz de Discord."
+  ],
+  "Não foi possível ler a configuração do Discord.": [
+    "Couldn’t read the Discord settings.",
+    "No se pudo leer la configuración de Discord."
+  ],
+  "Não foi possível ler o estado do Discord.": [
+    "Couldn’t read the Discord status.",
+    "No se pudo leer el estado de Discord."
+  ],
+  "Não foi possível listar as referências salvas.": [
+    "Couldn’t list saved references.",
+    "No se pudieron listar las referencias guardadas."
+  ],
+  "Não foi possível manter a tela ligada: desative o bloqueio automático": [
+    "Couldn’t keep the screen awake. Disable automatic screen lock.",
+    "No se pudo mantener la pantalla encendida. Desactiva el bloqueo automático."
+  ],
+  "Não foi possível preparar a captura.": [
+    "Couldn’t prepare the capture.",
+    "No se pudo preparar la captura."
+  ],
+  "Não foi possível trocar a referência.": [
+    "Couldn’t change the reference.",
+    "No se pudo cambiar la referencia."
+  ],
+  "não informado": ["unspecified", "sin indicar"],
+  "Não informar": ["Leave unspecified", "Dejar sin indicar"],
+  "não pause, não volte e não avance": ["without pausing or seeking", "sin pausar ni saltar"],
+  "não verificado": ["unchecked", "sin comprobar"],
+  "Navegar": ["Navigate", "Navegar"],
+  "Necessário até o fim": ["Needed to finish", "Necesario hasta el final"],
+  "Nenhum carro da {0} combina com “{1}”.": [
+    "No {0} car matches “{1}”.",
+    "Ningún coche de {0} coincide con «{1}»."
+  ],
+  "Nenhum carro para mostrar com esse filtro.": [
+    "No cars match this filter.",
+    "Ningún coche coincide con este filtro."
+  ],
+  "Nenhum endereço de rede disponível. Conecte o PC e o dispositivo remoto à mesma rede local.": [
+    "No network address available. Connect the PC and remote device to the same local network.",
+    "No hay dirección de red disponible. Conecta el PC y el dispositivo remoto a la misma red local."
+  ],
+  "Nenhum evento nesta volta: sem saída de frente, de traseira, travamento ou perda de tração.": [
+    "No events on this lap: no understeer, oversteer, lock-up or loss of traction.",
+    "No hubo subviraje, sobreviraje, bloqueo ni pérdida de tracción en esta vuelta."
+  ],
+  "Nenhum outro programa de telemetria aberto": [
+    "Close other telemetry apps",
+    "Cierra otras aplicaciones de telemetría"
+  ],
+  "Nenhum painel conectado ainda": ["No dashboards connected yet", "Aún no hay paneles conectados"],
+  "Nenhum ponto relevante: você está no ritmo da referência nesta volta.": [
+    "Nothing significant to correct. You’re on reference pace this lap.",
+    "No hay correcciones importantes. Estás al ritmo de la referencia en esta vuelta."
+  ],
+  "Nenhum relatório ainda.": ["No reports yet.", "Todavía no hay informes."],
+  "Nenhum tópico encontrado.": ["No topics found.", "No se encontraron temas."],
+  "Nenhuma curva detectada ainda.": ["No corners detected yet.", "Aún no se han detectado curvas."],
+  "Nenhuma pista encontrada": ["No tracks found", "No se encontraron circuitos"],
+  "nenhuma rede local encontrada neste PC": [
+    "no local network found on this PC",
+    "no se encontró ninguna red local en este PC"
+  ],
+  "Nenhuma referência ainda. Capture a volta de um replay acima e ela aparece aqui.": [
+    "No references yet. Capture a replay lap above to see it here.",
+    "Aún no hay referencias. Captura arriba una vuelta de una repetición para verla aquí."
+  ],
+  "Nenhuma sessão com esse carro nesta pista.": [
+    "No sessions with this car on this track.",
+    "No hay sesiones con este coche en este circuito."
+  ],
+  "Nenhuma sessão com esses filtros": [
+    "No sessions match these filters",
+    "Ninguna sesión coincide con estos filtros"
+  ],
+  "Nenhuma sessão gravada ainda": ["No sessions recorded yet", "Aún no hay sesiones grabadas"],
+  "Nenhuma sessão nesta pista ainda.": [
+    "No sessions on this track yet.",
+    "Aún no hay sesiones en este circuito."
+  ],
+  "Nenhuma sessão nesta pista.": [
+    "No sessions on this track.",
+    "No hay sesiones en este circuito."
+  ],
+  "Nenhuma volta completa nesta sessão": [
+    "No complete laps this session",
+    "No hay vueltas completas en esta sesión"
+  ],
+  "Nenhuma volta do top guardada para esta pista": [
+    "No leaderboard laps saved for this track",
+    "No hay vueltas de clasificación guardadas para este circuito"
+  ],
+  "Nenhuma volta escolhida": ["No lap selected", "Ninguna vuelta elegida"],
+  "Nenhuma volta válida com esse carro nesta pista.": [
+    "No valid laps with this car on this track.",
+    "No hay vueltas válidas con este coche en este circuito."
+  ],
+  "neste formato de pacote.": ["in this packet format.", "en este formato de paquete."],
+  "Neve": ["Snow", "Nieve"],
+  "Nível de fala": ["Speech level", "Nivel de habla"],
+  "no ambiente do Codex com o mesmo token de acesso do app.": [
+    "in the Codex environment with the same access token as Bono.",
+    "en el entorno de Codex con el mismo token de acceso de Bono."
+  ],
+  "No jogo, abra o": ["In the game, open the", "En el juego, abre la"],
+  "No jogo: Time Trial › Ranking › escolha o piloto › Replay. Dê play: esta faixa muda quando o replay começar.": [
+    "In GT7, go to Time Trial › Rankings › choose a driver › Replay. Play it and this status will change.",
+    "En GT7, ve a Contrarreloj › Clasificación › elige un piloto › Repetición. Reprodúcela y este estado cambiará."
+  ],
+  "No menu": ["In menu", "En el menú"],
+  "No menu o PS5 não envia dados. Entre num Time Trial, treino livre ou replay.": [
+    "The PS5 doesn’t send data in the menu. Enter Time Trial, free practice or a replay.",
+    "La PS5 no envía datos en el menú. Entra en Contrarreloj, práctica libre o una repetición."
+  ],
+  "No meu histórico": ["In my history", "En mi historial"],
+  "no PC.": ["on the PC.", "en el PC."],
+  "no ponto": ["on target", "en el punto"],
+  "No PS5,": ["On PS5,", "En PS5,"],
+  "No PS5: Configurações › Rede › Ver status da conexão › Endereço IPv4.": [
+    "On PS5: Settings › Network › View Connection Status › IPv4 Address.",
+    "En PS5: Ajustes › Red › Ver estado de conexión › Dirección IPv4."
+  ],
+  "Nome": ["Name", "Nombre"],
+  "Nome (ex.: Eau Rouge)": ["Name (e.g. Eau Rouge)", "Nombre (p. ej., Eau Rouge)"],
+  "Nome da curva {0}": ["Name of corner {0}", "Nombre de la curva {0}"],
+  "Nome da pista": ["Track name", "Nombre del circuito"],
+  "Nome que aparece na lista de referências.": [
+    "Name shown in the reference list.",
+    "Nombre que aparece en la lista de referencias."
+  ],
+  "Normal": ["Normal", "Normal"],
+  "Notas": ["Notes", "Notas"],
+  "Nova pista detectada": ["New track detected", "Nuevo circuito detectado"],
+  "Nova pista detectada — qual é?": [
+    "New track detected. Which one is it?",
+    "Nuevo circuito detectado. ¿Cuál es?"
+  ],
+  "Nova referência na próxima volta": [
+    "New reference next lap",
+    "Nueva referencia en la próxima vuelta"
+  ],
+  "Nova tentativa em {0} s": ["Retrying in {0} s", "Nuevo intento en {0} s"],
+  "Nova versão disponível": ["New version available", "Nueva versión disponible"],
+  "Novo debrief": ["New debrief", "Nuevo informe"],
+  "Novo treino": ["New practice", "Nuevo entrenamiento"],
+  "O app continua em segundo plano (ícone perto do relógio). Clique nele para abrir.": [
+    "Bono is still running in the background. Click its icon in the notification area to reopen it.",
+    "Bono sigue funcionando en segundo plano. Haz clic en su icono del área de notificación para abrirlo."
+  ],
+  "O app descobre sozinho o formato que o seu console aceita.": [
+    "Bono detects the format supported by your console.",
+    "Bono detecta el formato compatible con tu consola."
+  ],
+  "O app grava a volta entre duas passagens pela linha de largada e salva sozinho.": [
+    "Bono records the lap between two crossings of the start line and saves it automatically.",
+    "Bono graba la vuelta entre dos cruces de la línea de salida y la guarda automáticamente."
+  ],
+  "O app mede a linha que o carro percorreu, em geral cerca de 1 % menor que a medida oficial (feita pelo eixo da pista).": [
+    "Bono measures the line the car drove, usually about 1% shorter than the official centreline distance.",
+    "Bono mide la trazada del coche, normalmente cerca de un 1 % más corta que la distancia oficial por el eje del circuito."
+  ],
+  "O app não está ouvindo o console. Feche outros programas de telemetria (SimHub, GT7 Dashboard) e reinicie o app.": [
+    "Bono isn’t listening to the console. Close other telemetry apps (SimHub, GT7 Dashboard) and restart Bono.",
+    "Bono no escucha la consola. Cierra otras aplicaciones de telemetría (SimHub, GT7 Dashboard) y reinicia Bono."
+  ],
+  "O app não tem pontos de frenagem por pista.": [
+    "Track-specific braking points come from recorded laps.",
+    "Los puntos de frenada de cada circuito proceden de vueltas grabadas."
+  ],
+  "O app só reconhece pistas em que você já completou uma volta ao vivo.": [
+    "Bono recognises tracks where you’ve already completed a live lap.",
+    "Bono reconoce circuitos en los que ya completaste una vuelta en directo."
+  ],
+  "O app vai gravar a próxima volta sozinho.": [
+    "Bono will record the next lap automatically.",
+    "Bono grabará la siguiente vuelta automáticamente."
+  ],
+  "O armazenamento seguro do sistema não está disponível.": [
+    "Secure system storage is unavailable.",
+    "El almacenamiento seguro del sistema no está disponible."
+  ],
+  "O carro do replay é diferente do carro esperado.": [
+    "The car in the replay differs from the expected car.",
+    "El coche de la repetición es distinto del esperado."
+  ],
+  "O coach usa a API do Claude com as mesmas ferramentas de análise do app.": [
+    "The coach uses the Claude API and Bono’s analysis tools.",
+    "El coach usa la API de Claude y las herramientas de análisis de Bono."
+  ],
+  "O comprimento da volta não bate com a pista (volta incompleta ou pista errada).": [
+    "The lap distance doesn’t match the track. The lap may be incomplete or from another track.",
+    "La longitud de vuelta no coincide con el circuito. La vuelta puede estar incompleta o ser de otro circuito."
+  ],
+  "O console precisa de uns 15 s sem sinal para aceitar o novo formato.": [
+    "The console needs about 15 seconds without a signal to accept the new format.",
+    "La consola necesita unos 15 segundos sin señal para aceptar el nuevo formato."
+  ],
+  "O consumo médio aparece depois da primeira volta completa.": [
+    "Average consumption appears after the first complete lap.",
+    "El consumo medio aparece después de la primera vuelta completa."
+  ],
+  "O debrief em linguagem natural usa a API da Anthropic com a sua chave.": [
+    "Natural-language debriefs use your key with the Anthropic API.",
+    "Los informes en lenguaje natural usan tu clave con la API de Anthropic."
+  ],
+  "O delta ao vivo usa a volta mais rápida de cada carro na pista (marcada com": [
+    "Live delta uses the fastest lap for each car and track (marked with",
+    "El delta en directo usa la vuelta más rápida de cada coche y circuito (marcada con"
+  ],
+  "O engenheiro fala no canal de voz e você ouve no PS5. O bot entra quando você entra no canal.": [
+    "The engineer speaks in the voice channel on PS5. The bot joins when you enter the channel.",
+    "El ingeniero habla en el canal de voz de PS5. El bot entra cuando entras al canal."
+  ],
+  "O executável do app roda o servidor MCP como Node graças a": [
+    "The Bono executable runs the MCP server as Node using",
+    "El ejecutable de Bono ejecuta el servidor MCP como Node mediante"
+  ],
+  "O mais completo (acelerador/freio crus, volante). Também entrega os dados do replay.": [
+    "Most complete format, with raw throttle, brake and steering. Also carries replay data.",
+    "Formato más completo, con datos directos de acelerador, freno y volante. También incluye datos de repetición."
+  ],
+  "O painel ao vivo continua funcionando em modo demonstração (": [
+    "The live dashboard still works in demo mode (",
+    "El panel en directo sigue funcionando en modo de demostración ("
+  ],
+  "O painel mostra os detalhes assim que encontrar a volta para o carro e traçado atuais.": [
+    "The dashboard shows details when Bono finds the lap for the current car and layout.",
+    "El panel muestra los detalles al encontrar la vuelta para el coche y trazado actuales."
+  ],
+  "O painel não encontrou o servidor em": [
+    "The dashboard couldn’t find the server at",
+    "El panel no encontró el servidor en"
+  ],
+  "O painel volta sozinho quando o carro estiver na pista.": [
+    "The dashboard resumes when the car returns to the track.",
+    "El panel se reanuda cuando el coche vuelve a pista."
+  ],
+  "O PC e o dispositivo remoto precisam estar na mesma rede local.": [
+    "The PC and remote device must be on the same local network.",
+    "El PC y el dispositivo remoto deben estar en la misma red local."
+  ],
+  "O PS5 parou de enviar dados. Se o jogo está aberto, confira se o console continua na mesma rede.": [
+    "The PS5 stopped sending data. If the game is open, check that the console is still on the same network.",
+    "La PS5 dejó de enviar datos. Si el juego está abierto, comprueba que la consola siga en la misma red."
+  ],
+  "O que o coach recebe sobre a classe": [
+    "What the coach receives about the class",
+    "Qué recibe el coach sobre la clase"
+  ],
+  "O que treinar": ["What to practise", "Qué practicar"],
+  "O rádio mudou de aparelho. Selecione este aparelho para retomar o treino.": [
+    "The radio output changed. Select this device to resume practice.",
+    "Cambió la salida de radio. Elige este dispositivo para reanudar el entrenamiento."
+  ],
+  "O rádio no Discord deixa de funcionar até você configurar de novo.": [
+    "Discord radio will be unavailable until it is configured again.",
+    "La radio en Discord dejará de funcionar hasta que la configures de nuevo."
+  ],
+  "O rádio também avisa quando você acerta a curva.": [
+    "The radio also tells you when you get a corner right.",
+    "La radio también avisa cuando haces bien una curva."
+  ],
+  "O replay não estava em velocidade 1× (use a velocidade normal, sem câmera lenta).": [
+    "The replay wasn’t playing at 1×. Use normal speed.",
+    "La repetición no estaba a 1×. Usa la velocidad normal."
+  ],
+  "O servidor ainda não informou o estado da conexão com o PS5.": [
+    "The server hasn’t reported the PS5 connection status yet.",
+    "El servidor aún no ha indicado el estado de conexión de la PS5."
+  ],
+  "O som sai pelo canal do Discord. O Bono para Windows precisa estar aberto com o rádio do Discord ativado.": [
+    "Audio plays in the Discord channel. Bono for Windows must be running with Discord radio enabled.",
+    "El audio se reproduce en el canal de Discord. Bono para Windows debe estar abierto con la radio en Discord activada."
+  ],
+  "O tempo medido pelos pacotes não bate com o tempo do ranking digitado (tolerância ±0,3 s).": [
+    "The packet time doesn’t match the entered leaderboard time (tolerance ±0.3 s).",
+    "El tiempo de los paquetes no coincide con el introducido de la clasificación (tolerancia ±0,3 s)."
+  ],
+  "O tempo salvo é uma estimativa entre as duas passagens pela linha de chegada.": [
+    "The saved time is estimated between the two crossings of the finish line.",
+    "El tiempo guardado se estima entre los dos cruces de la línea de meta."
+  ],
+  "O token do bot e os IDs salvos neste PC serão apagados.": [
+    "The bot token and IDs saved on this PC will be deleted.",
+    "Se borrarán el token del bot y los ID guardados en este PC."
+  ],
+  "O traçado se parece com:": ["The layout resembles:", "El trazado se parece a:"],
+  "O treino precisa de uma pista identificada com curvas detectadas. As metas vêm da volta de referência do delta.": [
+    "Corner practice needs an identified track with detected corners. Targets come from the delta reference lap.",
+    "El entrenamiento requiere un circuito identificado con curvas detectadas. Los objetivos proceden de la vuelta de referencia del delta."
+  ],
+  "Ocultar cartão do rádio": ["Hide radio card", "Ocultar tarjeta de radio"],
+  "oficiais": ["official", "oficiales"],
+  "oficial": ["official", "oficial"],
+  "Óleo": ["Oil", "Aceite"],
+  "Óleo (bar)": ["Oil (bar)", "Aceite (bar)"],
+  "Olhando a curva de perto": ["Inspecting the corner", "Analizando la curva"],
+  "Onde você mais perde tempo (clique para dar zoom)": [
+    "Where you lose the most time (click to zoom)",
+    "Dónde pierdes más tiempo (haz clic para ampliar)"
+  ],
+  "ontem": ["yesterday", "ayer"],
+  "Ontem": ["Yesterday", "Ayer"],
+  "opcional": ["optional", "opcional"],
+  "Opcional. Permite que o Codex ou o Claude consultem suas voltas e análises. Copie o trecho para o seu cliente; os endereços e caminhos correspondem a esta instalação.": [
+    "Optional. Allows Codex or Claude to read laps and analysis. Copy the snippet to your client. The addresses and paths are for this installation.",
+    "Opcional. Permite que Codex o Claude consulten vueltas y análisis. Copia el fragmento en tu cliente. Las direcciones y rutas corresponden a esta instalación."
+  ],
+  "Ordem": ["Order", "Orden"],
+  "Ordem da pista": ["Track order", "Orden en pista"],
+  "Ordenar curvas": ["Sort corners", "Ordenar curvas"],
+  "Orienta e corrige conforme o perfil.": [
+    "Guidance and corrections based on the practice profile.",
+    "Orientación y correcciones según el perfil de entrenamiento."
+  ],
+  "Origem do tempo": ["Time source", "Origen del tiempo"],
+  "Os dados já estão chegando.": ["Data is already coming in.", "Ya llegan los datos."],
+  "Os mais antigos são apagados ao terminar um novo (cada um guarda os gráficos).": [
+    "Bono deletes the oldest reports when a new one finishes. Each report includes its charts.",
+    "Bono borra los informes más antiguos al terminar uno nuevo. Cada informe incluye sus gráficas."
+  ],
+  "ou no": ["or", "o"],
+  "Outra pista…": ["Another track…", "Otro circuito…"],
+  "Outra volta desta pista": ["Another lap on this track", "Otra vuelta en este circuito"],
+  "Pacote": ["Packet", "Paquete"],
+  "Pacote original: sem volante nem pedais crus. Use só se os outros falharem.": [
+    "Original format without raw steering or pedal inputs. Use if the other formats fail.",
+    "Formato original sin datos directos del volante ni de los pedales. Úsalo si fallan los demás."
+  ],
+  "Pacotes perdidos demais (Wi-Fi instável?): a volta ficou com buracos.": [
+    "Too many packets were lost, leaving gaps in the lap. Check the Wi-Fi.",
+    "Se perdieron demasiados paquetes y quedaron huecos en la vuelta. Comprueba el Wi-Fi."
+  ],
+  "Pacotes recebidos:": ["Packets received:", "Paquetes recibidos:"],
+  "Padrão": ["Default", "Predeterminado"],
+  "Página não encontrada": ["Page not found", "Página no encontrada"],
+  "página oculta": ["page hidden", "página oculta"],
+  "Painéis abertos agora e a tela que cada um está mostrando.": [
+    "Open dashboards and the view each one is showing.",
+    "Paneles abiertos y la vista que muestra cada uno."
+  ],
+  "Painel": ["Dashboard", "Panel"],
+  "País": ["Country", "País"],
+  "Para apagar uma sessão inteira, abra-a e use “Apagar sessão”.": [
+    "To remove a whole session, open it and select “Delete session”.",
+    "Para borrar una sesión entera, ábrela y elige «Borrar sesión»."
+  ],
+  "Para calibrar, salve com o rádio desligado, entre no canal pelo PS5 e inicie o teste. Para ouvir as instruções, escolha Discord · PS5 em Aparelho que toca o rádio no painel ao vivo.": [
+    "To calibrate, save with the radio off, join the channel on PS5 and start the test. To hear calls, select Discord · PS5 as the radio output on the live dashboard.",
+    "Para calibrar, guarda con la radio apagada, entra al canal desde la PS5 e inicia la prueba. Para oír las llamadas, elige Discord · PS5 como salida de radio en el panel en directo."
+  ],
+  "Para fazer uma cópia de segurança, feche o app e copie essa pasta inteira. Ela fica fora da pasta do programa, então atualizar ou reinstalar o app não apaga nada.": [
+    "To back up your data, close Bono and copy this entire folder. It is separate from the program folder, so updates and reinstalls preserve it.",
+    "Para hacer una copia de seguridad, cierra Bono y copia toda esta carpeta. Está separada de la carpeta del programa y se conserva al actualizar o reinstalar."
+  ],
+  "Para fixar um formato, abra “Avançado”.": [
+    "Open “Advanced” to lock the format.",
+    "Abre «Avanzado» para fijar el formato."
+  ],
+  "para os lados para trocar de tela.": [
+    "left or right to change view.",
+    "a izquierda o derecha para cambiar de vista."
+  ],
+  "para trocar a referência do delta.": [
+    "to change the delta reference.",
+    "para cambiar la referencia del delta."
+  ],
+  "Para usar aqui dentro, informe uma chave da API da Anthropic em": [
+    "To use it in Bono, enter an Anthropic API key in",
+    "Para usarlo en Bono, introduce una clave de API de Anthropic en"
+  ],
+  "para ver suas pistas e onde ganhar tempo.": [
+    "to see your tracks and where you can gain time.",
+    "para ver tus circuitos y dónde puedes ganar tiempo."
+  ],
+  "Parado": ["Idle", "En espera"],
+  "Parar": ["Stop", "Detener"],
+  "Parar a captura": ["Stop capture", "Detener captura"],
+  "Parar prévia": ["Stop preview", "Detener muestra"],
+  "Parece ser (só pelo tamanho):": [
+    "Likely match (length only):",
+    "Coincidencia probable (solo por longitud):"
+  ],
+  "Passe por uma curva para ver o resultado: frenagem, V-mín e retomada contra a referência.": [
+    "Drive through a corner to see the result: braking, minimum speed and throttle pickup against the reference.",
+    "Pasa por una curva para ver el resultado: frenada, velocidad mínima y aceleración frente a la referencia."
+  ],
+  "Passo {0} de {1}": ["Step {0} of {1}", "Paso {0} de {1}"],
+  "Passo {0} de {1}: {2}": ["Step {0} of {1}: {2}", "Paso {0} de {1}: {2}"],
+  "Pasta do repositório:": ["Repository folder:", "Carpeta del repositorio:"],
+  "Pasta dos dados": ["Data folder", "Carpeta de datos"],
+  "Patinagem": ["Slip", "Deslizamiento"],
+  "Patinando": ["Slipping", "Deslizamiento"],
+  "pausa": ["paused", "pausa"],
+  "Pausado": ["Paused", "En pausa"],
+  "Pedais": ["Pedals", "Pedales"],
+  "Pedir resumo": ["Request summary", "Pedir resumen"],
+  "Pedir um debrief": ["Request a debrief", "Solicitar un informe"],
+  "pelo MCP — veja": ["through MCP. See", "mediante MCP. Consulta"],
+  "Pensando…": ["Thinking…", "Pensando…"],
+  "Perda de tração na saída": ["Loss of traction on exit", "Pérdida de tracción en la salida"],
+  "perde tempo": ["time lost", "pérdida de tiempo"],
+  "Perdendo": ["Losing", "Perdiendo"],
+  "Perfil do treino": ["Practice profile", "Perfil de entrenamiento"],
+  "Pergunta (opcional)": ["Question (optional)", "Pregunta (opcional)"],
+  "Pergunta de acompanhamento": ["Follow-up question", "Pregunta de seguimiento"],
+  "Pergunte mais (ex.: e na T5? como treino isso?)": [
+    "Ask more (e.g. what about T5? How can I practise that?)",
+    "Pregunta más (p. ej., ¿y en T5? ¿Cómo puedo practicarlo?)"
+  ],
+  "Personalizada": ["Custom", "Personalizada"],
+  "Piloto": ["Driver", "Piloto"],
+  "Piloto do replay": ["Replay driver", "Piloto de la repetición"],
+  "Piorou {0} s": ["Slower by {0} s", "Empeoró {0} s"],
+  "pista": ["track", "circuito"],
+  "Pista": ["Track", "Circuito"],
+  "Pista ?": ["Unknown track", "Circuito desconocido"],
+  "Pista desconhecida": ["Unknown track", "Circuito desconocido"],
+  "Pista desconhecida — dirija essa pista ao vivo primeiro (uma volta completa) e depois capture o replay.": [
+    "Unknown track. Drive a full live lap here before capturing a replay.",
+    "Circuito desconocido. Completa una vuelta en directo antes de capturar la repetición."
+  ],
+  "pista não identificada": ["unidentified track", "circuito sin identificar"],
+  "Pista não identificada": ["Unidentified track", "Circuito sin identificar"],
+  "Pista salva como “{0}”.": ["Track saved as “{0}”.", "Circuito guardado como «{0}»."],
+  "Pista:": ["Track:", "Circuito:"],
+  "Pista: {0}": ["Track: {0}", "Circuito: {0}"],
+  "pistas": ["tracks", "circuitos"],
+  "Pistas": ["Tracks", "Circuitos"],
+  "Pneus": ["Tyres", "Neumáticos"],
+  "Pneus °C": ["Tyres °C", "Neumáticos °C"],
+  "Pneus na volta de preparação, silêncio na volta rápida e o resultado após a linha.": [
+    "Tyre guidance on the out-lap, silence on the flying lap, and the result after the line.",
+    "Avisos de neumáticos en la vuelta de salida, silencio en la vuelta rápida y resultado tras la meta."
+  ],
+  "Pode levar alguns segundos. Se demorar mais de": [
+    "This may take a few seconds. After",
+    "Puede tardar unos segundos. Después de"
+  ],
+  "Pode tocar agora: o app espera o replay começar e grava a próxima volta completa.": [
+    "You can play now. Bono waits for the replay to start and records the next full lap.",
+    "Ya puedes reproducirla. Bono espera a que empiece y graba la siguiente vuelta completa."
+  ],
+  "Ponto de frenagem": ["Braking point", "Punto de frenada"],
+  "Por bloco": ["Per block", "Por bloque"],
+  "Por volta": ["Per lap", "Por vuelta"],
+  "Porta UDP": ["UDP port", "Puerto UDP"],
+  "pouca evidência": ["limited evidence", "evidencia limitada"],
+  "PowerShell como administrador": ["PowerShell as administrator", "PowerShell como administrador"],
+  "Pré-visualização": ["Preview", "Vista previa"],
+  "precisa ser uma URL": ["must be an absolute", "debe ser una URL"],
+  "Preencha o token do bot, o ID do canal e o ID da sua conta Discord.": [
+    "Enter the bot token, the channel ID and your Discord user ID.",
+    "Introduce el token del bot, el ID del canal y tu ID de usuario de Discord."
+  ],
+  "preferida": ["preferred", "preferida"],
+  "Preparando": ["Preparing", "Preparando"],
+  "Preparando a captura": ["Preparing capture", "Preparando captura"],
+  "Preparando a captura…": ["Preparing capture…", "Preparando captura…"],
+  "Preparando áudio…": ["Preparing audio…", "Preparando audio…"],
+  "Preparando o servidor e o painel.": [
+    "Preparing the server and dashboard.",
+    "Preparando el servidor y el panel."
+  ],
+  "Preparando treino…": ["Preparing practice…", "Preparando entrenamiento…"],
+  "Pressão do óleo": ["Oil pressure", "Presión de aceite"],
+  "Prevista": ["Predicted", "Prevista"],
+  "Prevista {0}": ["Predicted {0}", "Prevista {0}"],
+  "Primeiros passos · {0} de {1}": ["Getting started · {0} of {1}", "Primeros pasos · {0} de {1}"],
+  "primeiros. Escreva mais do nome para refinar.": [
+    "results. Type more of the name to narrow the list.",
+    "resultados. Escribe más letras para acotar la lista."
+  ],
+  "Princípio": ["Principle", "Principio"],
+  "Princípios": ["Principles", "Principios"],
+  "Problema na validação ({0}).": ["Validation issue ({0}).", "Problema de validación ({0})."],
+  "Procurando o console": ["Searching for console", "Buscando consola"],
+  "Procurando o PlayStation na rede. Abra o Gran Turismo 7 no PS5 e entre numa pista.": [
+    "Looking for the PlayStation on the network. Open Gran Turismo 7 on PS5 and enter a track.",
+    "Buscando la PlayStation en la red. Abre Gran Turismo 7 en PS5 y entra en pista."
+  ],
+  "Procurando o PS5 de novo…": ["Searching for the PS5 again…", "Buscando de nuevo la PS5…"],
+  "Procurando o PS5 na rede…": ["Searching the network for the PS5…", "Buscando la PS5 en la red…"],
+  "Procurando o PS5…": ["Searching for the PS5…", "Buscando la PS5…"],
+  "Procurar de novo": ["Search again", "Volver a buscar"],
+  "Projeto pessoal, sem relação com a Polyphony Digital. O protocolo de telemetria do GT7 não tem documentação oficial; vem de engenharia reversa da comunidade.": [
+    "Personal project with no affiliation with Polyphony Digital. The community reverse-engineered the GT7 telemetry protocol.",
+    "Proyecto personal sin afiliación con Polyphony Digital. La comunidad obtuvo el protocolo de telemetría de GT7 mediante ingeniería inversa."
+  ],
+  "Pronto": ["Ready", "Listo"],
+  "Próxima curva": ["Next corner", "Próxima curva"],
+  "Próxima tela": ["Next view", "Vista siguiente"],
+  "PS5 encontrado": ["PS5 found", "PS5 encontrada"],
+  "PS5 ligado e na mesma rede (Wi-Fi) que este PC.": [
+    "PS5 on and on the same network (Wi-Fi) as this PC.",
+    "PS5 encendida y en la misma red (Wi-Fi) que este PC."
+  ],
+  "PS5 ligado e na mesma rede.": [
+    "PS5 on and connected to the same network.",
+    "PS5 encendida y conectada a la misma red."
+  ],
+  "Pular": ["Skip", "Omitir"],
+  "QR Code e endereço para abrir o painel em outro aparelho": [
+    "QR code and address to open the dashboard on another device",
+    "Código QR y dirección para abrir el panel en otro dispositivo"
+  ],
+  "QR Code para abrir o painel em outro dispositivo": [
+    "QR code to open the dashboard on another device",
+    "Código QR para abrir el panel en otro dispositivo"
+  ],
+  "Quando o app salva sessões, voltas e pistas por conta própria.": [
+    "When Bono automatically saves sessions, laps and tracks.",
+    "Cuándo guarda Bono automáticamente las sesiones, las vueltas y los circuitos."
+  ],
+  "Quando você entra numa pista no jogo, o app abre a sessão sozinho e a salva quando você sai. Não há botão de iniciar.": [
+    "Bono starts a session when you enter a track and saves it when you leave.",
+    "Bono inicia una sesión al entrar en pista y la guarda al salir."
+  ],
+  "Quente": ["Hot", "Caliente"],
+  "Quer abrir o painel em outro dispositivo?": [
+    "Open the dashboard on another device?",
+    "¿Abrir el panel en otro dispositivo?"
+  ],
+  "Rádio conectado ao Discord.": ["Radio connected to Discord.", "Radio conectada a Discord."],
+  "rádio desligado": ["radio off", "radio apagada"],
+  "Rádio do Discord desligado.": ["Discord radio off.", "Radio en Discord apagada."],
+  "Rádio no Discord": ["Discord radio", "Radio en Discord"],
+  "Rádio pronto": ["Radio ready", "Radio lista"],
+  "rápida": ["fast", "rápida"],
+  "Rápido": ["Fast", "Rápido"],
+  "Recarregar": ["Reload", "Recargar"],
+  "Recebendo telemetria": ["Receiving telemetry", "Recibiendo telemetría"],
+  "Reconhecendo o traçado": ["Identifying track layout", "Identificando trazado"],
+  "Recuperação de energia": ["Energy recovery", "Recuperación de energía"],
+  "Redes verificadas": ["Networks checked", "Redes comprobadas"],
+  "Redetectar": ["Redetect", "Volver a detectar"],
+  "Redetectar curvas": ["Redetect corners", "Volver a detectar curvas"],
+  "Ref · {0} · {1}": ["Ref · {0} · {1}", "Ref · {0} · {1}"],
+  "ref. do top": ["leaderboard refs", "ref. de clasificación"],
+  "referência": ["reference", "referencia"],
+  "Referência": ["Reference", "Referencia"],
+  "referência ·": ["reference ·", "referencia ·"],
+  "Referência ·": ["Reference ·", "Referencia ·"],
+  "Referência atualizada.": ["Reference updated.", "Referencia actualizada."],
+  "Referência capturada de": ["Reference captured from", "Referencia capturada de"],
+  "Referência com detalhes…": ["Reference with details…", "Referencia con detalles…"],
+  "Referência de replay: entradas suavizadas, precisão de alguns metros.": [
+    "Replay reference: smoothed inputs, accurate to a few metres.",
+    "Referencia de repetición: entradas suavizadas con precisión de unos metros."
+  ],
+  "Referência excluída.": ["Reference deleted.", "Referencia eliminada."],
+  "Referência padrão do delta": ["Default delta reference", "Referencia de delta predeterminada"],
+  "Referência sem pontos de orientação confiáveis": [
+    "Reference has no reliable coaching points",
+    "La referencia no tiene puntos de orientación fiables"
+  ],
+  "referência top": ["leaderboard reference", "referencia de la clasificación"],
+  "Referência top": ["Leaderboard reference", "Referencia de la clasificación"],
+  "referência: {0}": ["reference: {0}", "referencia: {0}"],
+  "Referências capturadas": ["Captured references", "Referencias capturadas"],
+  "Referências do top": ["Leaderboard references", "Referencias de la clasificación"],
+  "Referências do top mundial": [
+    "World leaderboard references",
+    "Referencias de la clasificación mundial"
+  ],
+  "Reforço positivo": ["Positive feedback", "Refuerzo positivo"],
+  "regra geral": ["general rule", "regla general"],
+  "Regra geral não é lei: serve de ponto de partida, e o que vale são os números das suas voltas.": [
+    "General rules are a starting point. Use the numbers from your own laps to check them.",
+    "Las reglas generales son un punto de partida. Compruébalas con los datos de tus vueltas."
+  ],
+  "Relatórios": ["Reports", "Informes"],
+  "Relatórios guardados": ["Saved reports", "Informes guardados"],
+  "Remover {0} do gráfico": ["Remove {0} from chart", "Quitar {0} de la gráfica"],
+  "Remover a chave da API?": ["Remove the API key?", "¿Quitar la clave de API?"],
+  "Remover chave": ["Remove key", "Quitar clave"],
+  "Remover da grade": ["Remove from grid", "Quitar de la cuadrícula"],
+  "Remover filtro {0}": ["Remove filter {0}", "Quitar filtro {0}"],
+  "Renomear": ["Rename", "Renombrar"],
+  "replay": ["replay", "repetición"],
+  "Replay": ["Replay", "Repetición"],
+  "REPLAY": ["REPLAY", "REPETICIÓN"],
+  "replay da volta": ["lap replay", "repetición de la vuelta"],
+  "Replay detectado": ["Replay detected", "Repetición detectada"],
+  "Replay detectado — aguardando o carro cruzar a linha de largada.": [
+    "Replay detected. Waiting for the car to cross the start line.",
+    "Repetición detectada. Esperando que el coche cruce la línea de salida."
+  ],
+  "Replay detectado — identificando a pista…": [
+    "Replay detected. Identifying the track…",
+    "Repetición detectada. Identificando el circuito…"
+  ],
+  "Replay detectado. Deixe tocar: estou reconhecendo a pista pela posição do carro.": [
+    "Replay detected. Keep it playing while Bono identifies the track from the car’s position.",
+    "Repetición detectada. Déjala correr mientras Bono identifica el circuito por la posición del coche."
+  ],
+  "Replay pronto: toque e deixe tocar, sem pausar nem avançar.": [
+    "Replay ready. Tap and let it play without pausing or seeking.",
+    "Repetición lista. Toca y deja que se reproduzca sin pausar ni saltar."
+  ],
+  "Reserva: combustível para {0} volta(s).": [
+    "Reserve: {0} lap(s) of fuel left.",
+    "Reserva: combustible para {0} vuelta(s)."
+  ],
+  "respondendo": ["responding", "respondiendo"],
+  "Restaurar grade padrão": ["Restore default grid", "Restaurar cuadrícula predeterminada"],
+  "Restaurar telas padrão": ["Restore default views", "Restaurar vistas predeterminadas"],
+  "Resultado": ["Result", "Resultado"],
+  "Resumindo a volta": ["Summarising the lap", "Resumiendo la vuelta"],
+  "Resumo da comparação": ["Comparison summary", "Resumen de comparación"],
+  "Resumo do treino": ["Practice summary", "Resumen de entrenamiento"],
+  "Reta": ["Straight", "Recta"],
+  "retas": ["straights", "rectas"],
+  "Retomada": ["Throttle pickup", "Aceleración"],
+  "Retomada do acelerador": ["Throttle pickup", "Inicio de la aceleración"],
+  "Retomada vs base (− = antes)": [
+    "Throttle pickup vs baseline (− = earlier)",
+    "Aceleración frente a la base (− = antes)"
+  ],
+  "Rever o assistente": ["Reopen the assistant", "Volver a abrir el asistente"],
+  "Ritmo da fala": ["Speech pace", "Ritmo de voz"],
+  "Roda livre": ["Coasting", "Sin pedales"],
+  "rodadas de ferramentas por pedido.": [
+    "tool rounds per request.",
+    "rondas de herramientas por solicitud."
+  ],
+  "Roxo = melhor setor da sessão (voltas válidas). Voltas de replay e com tempo divergente só são marcadas, não invalidadas.": [
+    "Purple marks the best session sector from valid laps. Replay laps and laps with a time mismatch are flagged and remain valid.",
+    "El morado marca el mejor sector de las vueltas válidas. Las repeticiones y los tiempos divergentes se señalan y siguen siendo válidos."
+  ],
+  "RPM, marchas, turbo e óleo": ["RPM, gears, boost and oil", "RPM, marchas, turbo y aceite"],
+  "s, eu mostro o que conferir.": [
+    "s, Bono will show what to check.",
+    "s, Bono mostrará qué comprobar."
+  ],
+  "Saída": ["Exit", "Salida"],
+  "saída da curva": ["corner exit", "salida de curva"],
+  "Saída de frente": ["Understeer", "Subviraje"],
+  "Saída de traseira": ["Oversteer", "Sobreviraje"],
+  "Saída vs base": ["Exit vs baseline", "Salida frente a la base"],
+  "Sair": ["Quit", "Salir"],
+  "Sair da tela cheia": ["Exit fullscreen", "Salir de pantalla completa"],
+  "Saiu dos boxes ou do grid: volta lenta, não conta como volta lançada": [
+    "Slow lap from the pits or grid. It doesn’t count as a flying lap.",
+    "Vuelta lenta desde boxes o parrilla. No cuenta como vuelta lanzada."
+  ],
+  "salto nos dados": ["data jump", "salto en los datos"],
+  "salva no app": ["saved in Bono", "guardada en Bono"],
+  "Salvar": ["Save", "Guardar"],
+  "Salvar chave": ["Save key", "Guardar clave"],
+  "Salvar referência": ["Save reference", "Guardar referencia"],
+  "Salve a configuração do bot antes de testar.": [
+    "Save the bot configuration before testing.",
+    "Guarda la configuración del bot antes de probar."
+  ],
+  "Se o navegador oferecer “Adicionar à tela inicial”, use essa opção para abrir o painel em tela cheia. Neste PC:": [
+    "If your browser offers “Add to Home Screen”, use it to open the dashboard fullscreen. On this PC:",
+    "Si tu navegador ofrece «Añadir a pantalla de inicio», úsalo para abrir el panel a pantalla completa. En este PC:"
+  ],
+  "Se o replay começar no meio da volta, a parte inicial é ignorada e a próxima volta completa é gravada. Replays são suavizados: ótimos para aprender frenagens e traçado, não para contar milésimos.": [
+    "If the replay starts mid-lap, Bono skips the partial lap and records the next full one. Replay smoothing makes it useful for braking and lines, with precision of a few metres.",
+    "Si la repetición empieza a mitad de vuelta, Bono omite la vuelta parcial y graba la siguiente completa. El suavizado permite estudiar frenadas y trazadas con una precisión de unos metros."
+  ],
+  "Seções": ["Sections", "Secciones"],
+  "Seções da pista": ["Track sections", "Secciones del circuito"],
+  "Seções do menu": ["Menu sections", "Secciones del menú"],
+  "Seguir o carro": ["Follow car", "Seguir coche"],
+  "segundo uma fonte": ["based on a source", "según una fuente"],
+  "Segure": ["Press and hold", "Mantén pulsada"],
+  "Segure a tela para escolher as telas e ajustes.": [
+    "Press and hold the screen to choose views and settings.",
+    "Mantén pulsada la pantalla para elegir vistas y ajustes."
+  ],
+  "Segure o cadeado para destravar.": [
+    "Hold the lock to unlock gestures.",
+    "Mantén pulsado el candado para desbloquear."
+  ],
+  "Selecionar": ["Select", "Seleccionar"],
+  "Selecionar volta {0}": ["Select lap {0}", "Seleccionar vuelta {0}"],
+  "Selecione e copie": ["Select and copy", "Selecciona y copia"],
+  "sem base": ["no baseline", "sin base"],
+  "sem chave": ["no key", "sin clave"],
+  "Sem chave? As mesmas ferramentas funcionam no": [
+    "You can use the same tools in",
+    "Puedes usar las mismas herramientas en"
+  ],
+  "Sem conexão com o app": ["No connection to Bono", "Sin conexión con Bono"],
+  "Sem conexão com o servidor": ["No connection to server", "Sin conexión con el servidor"],
+  "Sem dados de": ["No data for", "Sin datos de"],
+  "Sem dica": ["No guidance", "Sin indicaciones"],
+  "Sem dica de curva": ["No corner guidance", "Sin indicaciones de curva"],
+  "Sem informação": ["No information", "Sin información"],
+  "Sem informação do console": ["No console information", "Sin información de la consola"],
+  "Sem mapa": ["No map", "Sin mapa"],
+  "sem nome": ["unnamed", "sin nombre"],
+  "Sem nome de carro": ["No car name", "Sin nombre de coche"],
+  "Sem número de voltas (treino ou time trial): mostrando só a autonomia.": [
+    "Lap count unavailable (practice or time trial). Showing range only.",
+    "Número de vueltas no disponible (entrenamiento o contrarreloj). Se muestra solo la autonomía."
+  ],
+  "sem referência": ["no reference", "sin referencia"],
+  "Sem referência": ["No reference", "Sin referencia"],
+  "Sem referência do top para esta pista: usando sua melhor volta.": [
+    "No captured reference for this track. Using your best lap.",
+    "No hay referencia capturada para este circuito. Se usa tu mejor vuelta."
+  ],
+  "Sem servidor": ["Server offline", "Servidor desconectado"],
+  "Sem sinal": ["No signal", "Sin señal"],
+  "sem traçado": ["layout unavailable", "sin trazado"],
+  "Sem traçado ainda: dirija uma volta para desenhar o mapa": [
+    "No layout yet. Drive a lap to build the map.",
+    "Aún no hay trazado. Da una vuelta para crear el mapa."
+  ],
+  "Sem traçado da pista": ["Track layout unavailable", "Trazado no disponible"],
+  "Sem volta de referência": ["No reference lap", "Sin vuelta de referencia"],
+  "Sem volta sua válida com este carro nesta pista para comparar.": [
+    "You don’t have a valid lap with this car and track to compare.",
+    "No tienes una vuelta válida con este coche y circuito para comparar."
+  ],
+  "Sem volta válida com esse filtro.": [
+    "No valid lap matches this filter.",
+    "Ninguna vuelta válida coincide con este filtro."
+  ],
+  "será apagado junto com os gráficos que ele guardou.": [
+    "will be deleted along with its charts.",
+    "se borrará junto con sus gráficas."
+  ],
+  "será reconhecida pela posição do carro": [
+    "recognised from the car’s position",
+    "se reconoce por la posición del coche"
+  ],
+  "será reconhecido pelo replay": ["recognised from the replay", "se reconoce desde la repetición"],
+  "Servidor": ["Server", "Servidor"],
+  "Servidor {0}": ["Server {0}", "Servidor {0}"],
+  "Servidor encontrado: saindo da demonstração.": [
+    "Server found. Leaving demo mode.",
+    "Servidor encontrado. Saliendo de la demostración."
+  ],
+  "Servidor fora do ar": ["Server offline", "Servidor desconectado"],
+  "Servidor indisponível no momento.": [
+    "Server temporarily unavailable.",
+    "Servidor no disponible en este momento."
+  ],
+  "Servidor ok, console não conectado": [
+    "Server online, console disconnected",
+    "Servidor conectado, consola desconectada"
+  ],
+  "sessão": ["session", "sesión"],
+  "Sessão": ["Session", "Sesión"],
+  "Sessão apagada.": ["Session deleted.", "Sesión borrada."],
+  "Sessão salva: {0}": ["Session saved: {0}", "Sesión guardada: {0}"],
+  "sessões": ["sessions", "sesiones"],
+  "Sessões": ["Sessions", "Sesiones"],
+  "setores": ["sectors", "sectores"],
+  "Setores": ["Sectors", "Sectores"],
+  "Setores (iguais)": ["Sectors (equal length)", "Sectores (longitud igual)"],
+  "Seu engenheiro de pista": ["Your race engineer", "Tu ingeniero de pista"],
+  "Seu histórico de voltas, organizado por pista automaticamente.": [
+    "Your lap history, automatically grouped by track.",
+    "Tu historial de vueltas, agrupado automáticamente por circuito."
+  ],
+  "Seu ID de usuário no Discord": ["Your Discord user ID", "Tu ID de usuario de Discord"],
+  "Seus dados": ["Your data", "Tus datos"],
+  "Shift lights": ["Shift lights", "Luces de cambio"],
+  "Silenciar": ["Mute", "Silenciar"],
+  "Sim": ["Yes", "Sí"],
+  "Sim, excluir": ["Yes, delete", "Sí, eliminar"],
+  "Sinal perdido": ["Signal lost", "Señal perdida"],
+  "Sinal perdido — reconectando…": [
+    "Signal lost. Reconnecting…",
+    "Se perdió la señal. Reconectando…"
+  ],
+  "Situação": ["Status", "Estado"],
+  "Só existem os medidos nas suas voltas e nas referências capturadas; o guia nunca os inventa.": [
+    "Bono uses points measured on your laps and captured references.",
+    "Bono usa los puntos medidos en tus vueltas y referencias capturadas."
+  ],
+  "Só há dados de demonstração": ["Only demo data available", "Solo hay datos de demostración"],
+  "Só mexa nisto se o modo automático não funcionar. Ao escolher um formato, o app para de trocar sozinho; para voltar, ligue o interruptor “Formato do pacote: automático”.": [
+    "Use this if automatic detection fails. Selecting a format locks it. Enable “Packet format: automatic” to restore detection.",
+    "Úsalo si falla la detección automática. Al elegir un formato, queda fijo. Activa «Formato de paquete: automático» para volver a detectar."
+  ],
+  "Só mude se o detectado estiver errado. Ao escolher um carro, a volta só vale se o replay for desse carro.": [
+    "Change this if detection was wrong. If you choose a car, the replay must use it.",
+    "Cambia esto si la detección fue incorrecta. Si eliges un coche, la repetición debe usarlo."
+  ],
+  "Só o delta, enorme, para ler de longe": [
+    "Large delta for viewing from a distance",
+    "Delta grande para ver a distancia"
+  ],
+  "Só o que muda uma decisão: pneus, combustível e condição do carro. Não precisa de referência.": [
+    "Actionable alerts for tyres, fuel and the car. Works without a reference lap.",
+    "Avisos de neumáticos, combustible y estado del coche. Funciona sin vuelta de referencia."
+  ],
+  "Só os que eu já usei": ["Only cars I’ve driven", "Solo los que he usado"],
+  "Só voltas válidas podem ser referência": [
+    "Only valid laps can be used as a reference",
+    "Solo se pueden usar vueltas válidas como referencia"
+  ],
+  "Sob demanda": ["On demand", "A petición"],
+  "Sobram": ["Spare", "Sobran"],
+  "Sobre": ["About", "Acerca de"],
+  "Sobrepor outra volta": ["Overlay another lap", "Superponer otra vuelta"],
+  "Soltar {0}": ["Unpin {0}", "Soltar {0}"],
+  "Solte o freio": ["Release the brake", "Suelta el freno"],
+  "Solte o freio aos poucos": ["Ease off the brake", "Ve soltando el freno"],
+  "Soma dos melhores microssetores de {0} voltas válidas da sessão": [
+    "Sum of the best microsectors from {0} valid laps in the session",
+    "Suma de los mejores microsectores de {0} vueltas válidas de la sesión"
+  ],
+  "Soma dos melhores setores da sessão": [
+    "Sum of the best sectors in this session",
+    "Suma de los mejores sectores de la sesión"
+  ],
+  "Soma dos melhores trechos de": [
+    "Sum of the best sections from",
+    "Suma de los mejores tramos de"
+  ],
+  "Somente neste aparelho": ["Only on this device", "Solo en este dispositivo"],
+  "Sua melhor": ["Your best", "Tu mejor"],
+  "Sua melhor volta": ["Your best lap", "Tu mejor vuelta"],
+  "Suas pistas": ["Your tracks", "Tus circuitos"],
+  "Suas pistas vão aparecer aqui": [
+    "Your tracks will appear here",
+    "Tus circuitos aparecerán aquí"
+  ],
+  "Suas pistas, sessões e voltas": [
+    "Your tracks, sessions and laps",
+    "Tus circuitos, sesiones y vueltas"
+  ],
+  "Suas sessões, voltas e gravações ficam só neste PC.": [
+    "Sessions, laps and recordings stay on this PC.",
+    "Las sesiones, las vueltas y las grabaciones quedan en este PC."
+  ],
+  "Sugerida": ["Suggested", "Sugerida"],
+  "Superaquecido": ["Overheating", "Sobrecalentado"],
+  "Tabela de voltas e setores da sessão": [
+    "Session lap and sector times",
+    "Tiempos de vueltas y sectores de la sesión"
+  ],
+  "Tanque abaixo de 10%.": ["Fuel tank below 10%.", "Depósito por debajo del 10 %."],
+  "Técnicas por classe de carro": ["Techniques by car class", "Técnicas por clase de coche"],
+  "Tela": ["View", "Vista"],
+  "Tela anterior": ["Previous view", "Vista anterior"],
+  "Tela atual": ["Current view", "Vista actual"],
+  "Tela cheia": ["Fullscreen", "Pantalla completa"],
+  "Tela inicial": ["First view", "Vista inicial"],
+  "Tela ligada pelo vídeo invisível; se apagar, desative o bloqueio automático": [
+    "Screen kept awake by hidden video. If it turns off, disable automatic screen lock.",
+    "La pantalla se mantiene encendida con un vídeo oculto. Si se apaga, desactiva el bloqueo automático."
+  ],
+  "Tela para {0}": ["View for {0}", "Vista para {0}"],
+  "Tela Personalizada": ["Custom view", "Vista personalizada"],
+  "Tela sempre ligada (Wake Lock)": [
+    "Screen stays awake (Wake Lock)",
+    "Pantalla siempre encendida (Wake Lock)"
+  ],
+  "Tela trocada pelo controle remoto: {0}": [
+    "View changed by remote control: {0}",
+    "Vista cambiada por control remoto: {0}"
+  ],
+  "Telas": ["Views", "Vistas"],
+  "Telas deste dispositivo": ["Views on this device", "Vistas de este dispositivo"],
+  "Telas do painel ao vivo": ["Live dashboard views", "Vistas del panel en directo"],
+  "Telas ligadas": ["Enabled views", "Vistas activadas"],
+  "Telemetria de pilotagem": ["Driving telemetry", "Telemetría de conducción"],
+  "Telemetria parada": ["Telemetry stopped", "Telemetría detenida"],
+  "Tem certeza?": ["Are you sure?", "¿Confirmas?"],
+  "Temp. dos pneus": ["Tyre temperature", "Temperatura de neumáticos"],
+  "Temperatura, patinagem e suspensão por roda": [
+    "Temperature, slip and suspension for each wheel",
+    "Temperatura, deslizamiento y suspensión por rueda"
+  ],
+  "Tempo": ["Time", "Tiempo"],
+  "Tempo atual": ["Current time", "Tiempo actual"],
+  "Tempo curto demais para uma volta. Confira os minutos (ex.: 1:30.960).": [
+    "This time is too short for a lap. Check the minutes (e.g. 1:30.960).",
+    "El tiempo es demasiado corto para una vuelta. Comprueba los minutos (p. ej., 1:30.960)."
+  ],
+  "Tempo da referência": ["Reference time", "Tiempo de referencia"],
+  "tempo divergente": ["time mismatch", "tiempo divergente"],
+  "Tempo do ranking": ["Leaderboard time", "Tiempo de la clasificación"],
+  "Tempo do ranking (opcional)": [
+    "Leaderboard time (optional)",
+    "Tiempo de clasificación (opcional)"
+  ],
+  "Tempo inválido. Use o formato 1:30.960.": [
+    "Invalid time. Use the format 1:30.960.",
+    "Tiempo no válido. Usa el formato 1:30.960."
+  ],
+  "Tempo longo demais para uma volta.": [
+    "This time is too long for a lap.",
+    "El tiempo es demasiado largo para una vuelta."
+  ],
+  "Tempo na curva": ["Corner time", "Tiempo en curva"],
+  "Tempo perdido vs base": ["Time lost vs baseline", "Tiempo perdido frente a la base"],
+  "Tempo:": ["Time:", "Tiempo:"],
+  "Tempos": ["Timing", "Tiempos"],
+  "Tempos de setor de voltas antigas não são recalculados.": [
+    "Sector times for previous laps are kept as recorded.",
+    "Los tiempos de sector de vueltas anteriores se conservan tal como se grabaron."
+  ],
+  "Tendências (primeiro × último dia)": [
+    "Trends (first vs last day)",
+    "Tendencias (primer y último día)"
+  ],
+  "Tentando de novo…": ["Retrying…", "Reintentando…"],
+  "Tentar agora": ["Try now", "Probar ahora"],
+  "Tentar com a referência automática": [
+    "Try the automatic reference",
+    "Probar la referencia automática"
+  ],
+  "Tentar de novo": ["Try again", "Volver a intentar"],
+  "Tente outra pista, carro ou modo.": [
+    "Try another track, car or mode.",
+    "Prueba otro circuito, coche o modo."
+  ],
+  "Terminou nos boxes ou no fim da sessão": [
+    "Ended in the pits or at the end of the session",
+    "Terminó en boxes o al final de la sesión"
+  ],
+  "Terra": ["Dirt", "Tierra"],
+  "Testa ~, depois B e A, e guarda o que funcionar.": [
+    "Tries ~, then B and A, and remembers what works.",
+    "Prueba ~, luego B y A, y guarda el que funciona."
+  ],
+  "Testar com 10 bipes": ["Test with 10 beeps", "Probar con 10 pitidos"],
+  "Testar voz": ["Preview voice", "Probar voz"],
+  "Teste pronto. Entre no canal pelo PS5.": [
+    "Test ready. Join the channel on PS5.",
+    "Prueba lista. Entra al canal desde la PS5."
+  ],
+  "Tipo": ["Type", "Tipo"],
+  "Tipo de conteúdo": ["Content type", "Tipo de contenido"],
+  "Tirar de referência": ["Clear reference", "Quitar referencia"],
+  "Todas": ["All", "Todas"],
+  "Todas as marcas": ["All makes", "Todas las marcas"],
+  "Todas as marcas do jogo": ["All makes in the game", "Todas las marcas del juego"],
+  "Todas as sessões": ["All sessions", "Todas las sesiones"],
+  "Todas as sessões em ordem de data. Para ver por pista, volte ao início.": [
+    "All sessions by date. Return home to browse by track.",
+    "Todas las sesiones por fecha. Vuelve al inicio para verlas por circuito."
+  ],
+  "todos": ["all", "todos"],
+  "Todos": ["All", "Todos"],
+  "Todos os carros da {0}": ["All {0} cars", "Todos los coches de {0}"],
+  "Todos os carros fora do catálogo": [
+    "All cars outside the catalogue",
+    "Todos los coches fuera del catálogo"
+  ],
+  "Token do bot": ["Bot token", "Token del bot"],
+  "Token salvo · preencha para trocar": [
+    "Token saved · enter a value to replace it",
+    "Token guardado · escribe un valor para sustituirlo"
+  ],
+  "Top capturado": ["Captured reference", "Referencia capturada"],
+  "tópico": ["topic", "tema"],
+  "tópicos": ["topics", "temas"],
+  "tópicos ·": ["topics ·", "temas ·"],
+  "Toque duas vezes": ["Double-tap", "Toca dos veces"],
+  "Toque em Editar para escolher os widgets desta tela.": [
+    "Tap Edit to choose widgets for this view.",
+    "Toca Editar para elegir los widgets de esta vista."
+  ],
+  "Toque na tela para impedir que ela apague": [
+    "Tap the screen to keep it awake",
+    "Toca la pantalla para mantenerla encendida"
+  ],
+  "Toque num widget da grade para mover, redimensionar ou remover.": [
+    "Tap a widget to move, resize or remove it.",
+    "Toca un widget para moverlo, cambiar su tamaño o quitarlo."
+  ],
+  "Traçado": ["Racing line", "Trazada"],
+  "Traçado com sua posição e microssetores": [
+    "Track layout with your position and microsectors",
+    "Trazado con tu posición y microsectores"
+  ],
+  "traçado confere": ["layout matches", "el trazado coincide"],
+  "Traçado da demonstração": ["Demo layout", "Trazado de demostración"],
+  "Traçado da pista": ["Track layout", "Trazado del circuito"],
+  "Traçado de {0}": ["Layout of {0}", "Trazado de {0}"],
+  "Traçado indisponível": ["Layout unavailable", "Trazado no disponible"],
+  "Traçado montado com as suas voltas": [
+    "Layout built from your laps",
+    "Trazado a partir de tus vueltas"
+  ],
+  "Traçado: desvio médio de {0} m. ": [
+    "Layout: average deviation of {0} m. ",
+    "Trazado: desviación media de {0} m. "
+  ],
+  "trail braking, subesterço, TCS…": [
+    "trail braking, understeer, TCS…",
+    "frenada regresiva, subviraje, TCS…"
+  ],
+  "Travamento dianteiro": ["Front lock-up", "Bloqueo delantero"],
+  "Travando": ["Locking up", "Bloqueo"],
+  "Travar gestos": ["Lock gestures", "Bloquear gestos"],
+  "Trecho": ["Section", "Tramo"],
+  "Treino": ["Practice", "Entrenamiento"],
+  "Treino ·": ["Practice ·", "Entrenamiento ·"],
+  "Treino concluído": ["Practice complete", "Entrenamiento completado"],
+  "Treino de curva": ["Corner practice", "Entrenamiento en curva"],
+  "Treino por curvas": ["Corner practice", "Entrenamiento por curvas"],
+  "Três passos curtos. O app reconhece replay, carro e pista sozinho; o tempo do ranking e o piloto são opcionais.": [
+    "Three short steps. Bono recognises the replay, car and track. Leaderboard time and driver are optional.",
+    "Tres pasos breves. Bono reconoce la repetición, el coche y el circuito. El tiempo de la clasificación y el piloto son opcionales."
+  ],
+  "Trocando formato": ["Switching format", "Cambiando formato"],
+  "Trocando o formato do pacote": ["Switching packet format", "Cambiando formato de paquete"],
+  "Trocando para o formato {0} (até ~15 s).": [
+    "Switching to format {0} (up to ~15 s).",
+    "Cambiando al formato {0} (hasta ~15 s)."
+  ],
+  "Trocar": ["Change", "Cambiar"],
+  "Tudo": ["All", "Todo"],
+  "Tudo certo: é só tocar em “Capturar esta volta”.": [
+    "Ready. Select “Capture this lap”.",
+    "Todo listo. Selecciona «Capturar esta vuelta»."
+  ],
+  "Tudo liberado ✓": ["All allowed ✓", "Todo permitido ✓"],
+  "Tudo pronto!": ["All set!", "¡Todo listo!"],
+  "Tudo se ajusta aqui: nada de arquivo de configuração.": [
+    "Manage your Bono preferences.",
+    "Gestiona tus preferencias de Bono."
+  ],
+  "Turbo (bar)": ["Boost (bar)", "Turbo (bar)"],
+  "Última": ["Last", "Última"],
+  "Última atividade": ["Last activity", "Última actividad"],
+  "Última busca": ["Last search", "Última búsqueda"],
+  "Última passagem": ["Last pass", "Último paso"],
+  "Última passagem {0} s vs referência": [
+    "Last pass {0} s vs reference",
+    "Último paso {0} s frente a la referencia"
+  ],
+  "Última volta": ["Last lap", "Última vuelta"],
+  "Últimas 3": ["Last 3", "Últimas 3"],
+  "Último recurso: informar o IP": [
+    "Last resort: enter the IP",
+    "Último recurso: introducir la IP"
+  ],
+  "Último sinal": ["Last signal", "Última señal"],
+  "Uma tentativa anterior foi descartada; esta é a próxima volta, gravando sozinho.": [
+    "A previous attempt was discarded. Bono is recording the next lap automatically.",
+    "Se descartó un intento anterior. Bono está grabando la siguiente vuelta automáticamente."
+  ],
+  "Usa esta volta como alvo do delta ao vivo e das comparações": [
+    "Use this lap as the target for live delta and comparisons",
+    "Usar esta vuelta para el delta en directo y las comparaciones"
+  ],
+  "Usando {0}": ["Using {0}", "Usando {0}"],
+  "Usar {0} como tela inicial": ["Use {0} as the first view", "Usar {0} como vista inicial"],
+  "Usar este IP": ["Use this IP", "Usar esta IP"],
+  "Usar melhor pessoal ·": ["Use personal best ·", "Usar mejor personal ·"],
+  "Usar outro IP": ["Use a different IP", "Usar otra IP"],
+  "Use de 1 a 20 setores.": ["Enter 1 to 20 sectors.", "Introduce de 1 a 20 sectores."],
+  "Use o endereço ou o QR code mostrado na tela do PC.": [
+    "Use the address or QR code shown on the PC.",
+    "Usa la dirección o el código QR del PC."
+  ],
+  "Use o QR Code ou o endereço da seção “Dispositivo remoto”.": [
+    "Use the QR code or address in “Remote device”.",
+    "Usa el código QR o la dirección en «Dispositivo remoto»."
+  ],
+  "Use um bot no seu canal de voz privado. O token é salvo no armazenamento seguro deste PC.": [
+    "Use a bot in your private voice channel. The token is kept in this PC’s secure storage.",
+    "Usa un bot en tu canal de voz privado. El token se guarda de forma segura en este PC."
+  ],
+  "Use uma volta do mesmo carro e traçado": [
+    "Use a lap with the same car and layout",
+    "Usa una vuelta con el mismo coche y trazado"
+  ],
+  "V-mín": ["Min. speed", "V. mín."],
+  "V-mín {0} km/h{1}": ["Min. speed {0} km/h{1}", "V. mín. {0} km/h{1}"],
+  "V-mín vs base": ["Min. speed vs baseline", "V. mín. frente a la base"],
+  "válida": ["valid", "válida"],
+  "Validando": ["Validating", "Validando"],
+  "Validando a volta…": ["Validating lap…", "Validando vuelta…"],
+  "Validando distância, pacotes e tempo…": [
+    "Checking distance, packets and time…",
+    "Validando distancia, paquetes y tiempo…"
+  ],
+  "válidas": ["valid", "válidas"],
+  "Vamos salvar {0} se a estimativa da telemetria ficar a até 0,3 s desse tempo.": [
+    "Bono will save {0} if the telemetry estimate is within 0.3 s.",
+    "Bono guardará {0} si la estimación de telemetría difiere como máximo 0,3 s."
+  ],
+  "variável ANTHROPIC_API_KEY — tem prioridade": [
+    "ANTHROPIC_API_KEY environment variable takes priority",
+    "La variable ANTHROPIC_API_KEY tiene prioridad"
+  ],
+  "varredura {0}": ["scan {0}", "búsqueda {0}"],
+  "Velocidade": ["Speed", "Velocidad"],
+  "Velocidade (km/h)": ["Speed (km/h)", "Velocidad (km/h)"],
+  "Velocidade de saída": ["Exit speed", "Velocidad de salida"],
+  "Velocidade mínima": ["Minimum speed", "Velocidad mínima"],
+  "Ver": ["View", "Ver"],
+  "Ver a captura": ["View capture", "Ver captura"],
+  "Ver a pista": ["View track", "Ver circuito"],
+  "Ver a pista toda": ["Show whole track", "Ver circuito completo"],
+  "Ver chamadas com a referência usada no rádio": [
+    "View calls against the radio reference",
+    "Ver llamadas con la referencia de la radio"
+  ],
+  "Ver demonstração": ["View demo", "Ver demostración"],
+  "Ver no gráfico": ["View on chart", "Ver en la gráfica"],
+  "Ver traços": ["View traces", "Ver gráficas"],
+  "Verificando…": ["Checking…", "Comprobando…"],
+  "Verificar de novo": ["Check again", "Volver a comprobar"],
+  "Versão": ["Version", "Versión"],
+  "você": ["you", "tú"],
+  "Você": ["You", "Tú"],
+  "Você ·": ["You ·", "Tú ·"],
+  "Você · {0} · {1}": ["You · {0} · {1}", "Tú · {0} · {1}"],
+  "Você ainda não tem voltas gravadas: aqui estão todas as marcas do Gran Turismo 7.": [
+    "You haven’t recorded any laps yet. Here are all the makes in Gran Turismo 7.",
+    "Aún no has grabado vueltas. Aquí están todas las marcas de Gran Turismo 7."
+  ],
+  "Você escondeu os dados de demonstração. Quando pilotar de verdade, as pistas aparecem sozinhas.": [
+    "Demo data is hidden. Tracks appear automatically once you drive.",
+    "Los datos de demostración están ocultos. Los circuitos aparecen automáticamente cuando conduces."
+  ],
+  "Você está no modo demonstração: estas voltas vêm de um piloto simulado, não do console.": [
+    "Demo mode. These laps are from a simulated driver.",
+    "Modo de demostración. Estas vueltas son de un piloto simulado."
+  ],
+  "Você está no modo demonstração: estes dados são de um piloto simulado e ficam numa subpasta separada (": [
+    "You’re in demo mode. Data from the simulated driver is stored in a separate subfolder (",
+    "Estás en modo de demostración. Los datos del piloto simulado se guardan en una subcarpeta separada ("
+  ],
+  "Você não precisa informar o IP: o app procura o PS5 sozinho. Use “Usar outro IP” só se a busca automática não achar o console.": [
+    "Bono finds the PS5 automatically. Use “Use a different IP” if automatic discovery cannot find it.",
+    "Bono encuentra la PS5 automáticamente. Usa «Usar otra IP» si la detección automática no la encuentra."
+  ],
+  "Você pode informar uma chave de novo quando quiser.": [
+    "You can enter another key at any time.",
+    "Puedes introducir otra clave cuando quieras."
+  ],
+  "Volante": ["Steering", "Volante"],
+  "volta": ["lap", "vuelta"],
+  "Volta": ["Lap", "Vuelta"],
+  "Volta –": ["Lap –", "Vuelta –"],
+  "Volta {0}": ["Lap {0}", "Vuelta {0}"],
+  "Volta {0}/{1}": ["Lap {0}/{1}", "Vuelta {0}/{1}"],
+  "Volta analisada": ["Analysed lap", "Vuelta analizada"],
+  "Volta atual": ["Current lap", "Vuelta actual"],
+  "volta de": ["lap at", "vuelta en"],
+  "volta de entrada": ["in-lap", "vuelta de entrada"],
+  "Volta de referência": ["Reference lap", "Vuelta de referencia"],
+  "volta de saída": ["out-lap", "vuelta de salida"],
+  "Volta de saída": ["Out-lap", "Vuelta de salida"],
+  "Volta definida como referência.": ["Lap set as reference.", "Vuelta definida como referencia."],
+  "Volta escolhida": ["Selected lap", "Vuelta elegida"],
+  "Volta escolhida na comparação": [
+    "Lap selected in comparison",
+    "Vuelta elegida en la comparación"
+  ],
+  "Volta excluída.": ["Lap deleted.", "Vuelta eliminada."],
+  "Volta ideal": ["Ideal lap", "Vuelta ideal"],
+  "Volta ideal da sessão": ["Session ideal lap", "Vuelta ideal de la sesión"],
+  "Volta importada": ["Imported lap", "Vuelta importada"],
+  "Volta inteira": ["Full lap", "Vuelta completa"],
+  "Volta inteira (debrief)": ["Full lap (debrief)", "Vuelta completa (informe)"],
+  "Volta inválida": ["Invalid lap", "Vuelta no válida"],
+  "Volta inválida. A próxima volta válida entra na contagem.": [
+    "Invalid lap. The next valid lap counts.",
+    "Vuelta no válida. Se contará la siguiente vuelta válida."
+  ],
+  "Volta marcada como referência.": [
+    "Lap marked as a reference.",
+    "Vuelta marcada como referencia."
+  ],
+  "volta própria": ["own lap", "vuelta propia"],
+  "Volta própria": ["Own lap", "Vuelta propia"],
+  "Volta salva como referência": ["Lap saved as a reference", "Vuelta guardada como referencia"],
+  "Volta selecionada anteriormente": ["Previously selected lap", "Vuelta elegida anteriormente"],
+  "Volta sem a referência do treino. Confira a referência antes de continuar.": [
+    "Lap without the practice reference. Check the reference before continuing.",
+    "Vuelta sin la referencia del entrenamiento. Comprueba la referencia antes de continuar."
+  ],
+  "Voltar": ["Back", "Atrás"],
+  "Voltar ao automático": ["Return to automatic", "Volver a automático"],
+  "Voltar ao painel": ["Back to dashboard", "Volver al panel"],
+  "Voltar ao painel ao vivo": ["Back to the live dashboard", "Volver al panel en directo"],
+  "voltas": ["laps", "vueltas"],
+  "Voltas": ["Laps", "Vueltas"],
+  "Voltas analisadas": ["Laps analysed", "Vueltas analizadas"],
+  "Voltas até o fim": ["Laps remaining", "Vueltas restantes"],
+  "Voltas comparadas": ["Laps compared", "Vueltas comparadas"],
+  "Voltas da sessão": ["Session laps", "Vueltas de la sesión"],
+  "voltas de combustível": ["laps of fuel", "vueltas de combustible"],
+  "Voltas do top do ranking guardadas para comparar": [
+    "Leaderboard laps saved for comparison",
+    "Vueltas de la clasificación guardadas para comparar"
+  ],
+  "voltas válidas": ["valid laps", "vueltas válidas"],
+  "voltas válidas com este carro.": [
+    "valid laps with this car.",
+    "vueltas válidas con este coche."
+  ],
+  "voltas válidas: o quanto você já mostrou que consegue andar.": [
+    "valid laps: the pace you’ve already shown.",
+    "vueltas válidas: el ritmo que ya has demostrado."
+  ],
+  "Volte ao acelerador": ["Back on the throttle", "Vuelve a acelerar"],
+  "Voltou ao automático: o app procura o PS5 sozinho.": [
+    "Automatic discovery restored. Bono searches for the PS5.",
+    "Detección automática restablecida. Bono busca la PS5."
+  ],
+  "Volume do rádio": ["Radio volume", "Volumen de radio"],
+  "Voz {0} indisponível. Tocando com {1}.": [
+    "Voice {0} unavailable. Using {1}.",
+    "Voz {0} no disponible. Se usa {1}."
+  ],
+  "Voz do rádio": ["Radio voice", "Voz de radio"],
+  "Voz do rádio inválida.": ["Invalid radio voice.", "Voz de radio no válida."],
+  "Voz e som": ["Voice and sound", "Voz y sonido"],
+  "vs melhor": ["vs best", "frente a la mejor"],
+  "vs sua melhor": ["vs your best", "frente a tu mejor vuelta"],
+  "Widget selecionado": ["Selected widget", "Widget seleccionado"],
+  "Zebra": ["Kerb", "Piano"],
+  "Δ melhor": ["Δ best", "Δ mejor"]
+}

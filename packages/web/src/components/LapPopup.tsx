@@ -1,4 +1,5 @@
 import { deltaTone, formatDelta, formatLapTime, formatSectorTime } from '../lib/format.ts';
+import { t as uiText } from '../lib/i18n.ts';
 import { DELTA_REFERENCE_LABELS } from '../lib/labels.ts';
 import { dismissLapPopup } from '../state/actions.ts';
 import { useUi } from '../state/uiStore.ts';
@@ -19,28 +20,31 @@ export function LapPopup() {
       aria-live="assertive"
     >
       <div className="lap-popup-head">
-        <span className="lap-popup-lap">Volta {ev.lapNumber}</span>
+        <span className="lap-popup-lap">
+          {`${uiText('Volta')} `}
+          {ev.lapNumber}
+        </span>
         <span className="lap-popup-badges">
           {ev.isPersonalBest && (
             <span className="ui-badge" data-tone="purple">
-              Melhor pessoal
+              {uiText('Melhor pessoal')}
             </span>
           )}
           {!ev.isPersonalBest && ev.isSessionBest && (
             <span className="ui-badge" data-tone="gain">
-              Melhor da sessão
+              {uiText('Melhor da sessão')}
             </span>
           )}
           {!ev.valid && (
             <span className="ui-badge" data-tone="loss">
-              Inválida
+              {uiText('Inválida')}
             </span>
           )}
         </span>
       </div>
       <div className="lap-popup-time num">{formatLapTime(ev.timeMs)}</div>
       <div className="lap-popup-delta num" data-tone={tone}>
-        {ev.deltaMs === null ? 'Sem referência' : formatDelta(ev.deltaMs)}
+        {ev.deltaMs === null ? uiText('Sem referência') : formatDelta(ev.deltaMs)}
         {ev.deltaMs !== null && (
           <span className="lap-popup-ref">
             {' '}
@@ -63,7 +67,10 @@ export function LapPopup() {
         ))}
       </div>
       {best !== null && (
-        <div className="lap-popup-best">Melhor setor contra a referência: S{best + 1}</div>
+        <div className="lap-popup-best">
+          {uiText('Melhor setor contra a referência: S')}
+          {best + 1}
+        </div>
       )}
     </button>
   );

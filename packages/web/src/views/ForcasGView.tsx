@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { setAttr, setText } from '../lib/dom.ts';
 import { formatFixed } from '../lib/format.ts';
 import type { GPeaks } from '../lib/gStats.ts';
+import { t as uiText } from '../lib/i18n.ts';
 import { derived } from '../live/derived.ts';
 import { useLiveRender } from '../live/raf.ts';
 import { GCircle } from '../widgets/GCircle.tsx';
@@ -20,11 +21,36 @@ export function longitudinalText(g: number): string {
 }
 
 const PEAK_ROWS: { key: keyof Omit<GPeaks, 'vertical'>; label: string }[] = [
-  { key: 'left', label: 'Lateral esq.' },
-  { key: 'right', label: 'Lateral dir.' },
-  { key: 'brake', label: 'Frenagem' },
-  { key: 'accel', label: 'Aceleração' },
-  { key: 'combined', label: 'Combinada' },
+  {
+    key: 'left',
+    get label() {
+      return uiText('Lateral esq.');
+    },
+  },
+  {
+    key: 'right',
+    get label() {
+      return uiText('Lateral dir.');
+    },
+  },
+  {
+    key: 'brake',
+    get label() {
+      return uiText('Frenagem');
+    },
+  },
+  {
+    key: 'accel',
+    get label() {
+      return uiText('Aceleração');
+    },
+  },
+  {
+    key: 'combined',
+    get label() {
+      return uiText('Combinada');
+    },
+  },
 ];
 
 export function ForcasGView() {
@@ -63,13 +89,13 @@ export function ForcasGView() {
             </span>
           </div>
           <div className="stat">
-            <span className="readout-label">Longitudinal (g)</span>
+            <span className="readout-label">{uiText('Longitudinal (g)')}</span>
             <span className="stat-value num" ref={set('lon')}>
               –
             </span>
           </div>
           <div className="stat">
-            <span className="readout-label">Combinada (g)</span>
+            <span className="readout-label">{uiText('Combinada (g)')}</span>
             <span className="stat-value num" ref={set('comb')}>
               –
             </span>
@@ -85,9 +111,9 @@ export function ForcasGView() {
           <table className="forcas-peaks num">
             <thead>
               <tr>
-                <th>Máximas (g)</th>
-                <th>Volta</th>
-                <th>Sessão</th>
+                <th>{uiText('Máximas (g)')}</th>
+                <th>{uiText('Volta')}</th>
+                <th>{uiText('Sessão')}</th>
               </tr>
             </thead>
             <tbody>
@@ -106,7 +132,7 @@ export function ForcasGView() {
             </tbody>
           </table>
         </div>
-        <p className="forcas-hint dim">Marcas roxas: máximas desta volta.</p>
+        <p className="forcas-hint dim">{uiText('Marcas roxas: máximas desta volta.')}</p>
       </div>
     </div>
   );

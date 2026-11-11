@@ -1,6 +1,7 @@
 /** Track outline as a small SVG (map orientation: x mirrored, north up, same as the live map). */
 
 import { useMemo } from 'react';
+import { t as uiText } from '../../lib/i18n.ts';
 
 export interface ThumbLine {
   x: readonly number[];
@@ -50,7 +51,7 @@ export function TrackThumb({
       className={`a-thumb ${className}`}
       viewBox="0 0 100 100"
       role="img"
-      aria-label={label ?? 'Traçado da pista'}
+      aria-label={label ?? uiText('Traçado da pista')}
     >
       {p ? (
         <>
@@ -65,7 +66,7 @@ export function TrackThumb({
         </>
       ) : (
         <text className="a-thumb-none" x="50" y="54" textAnchor="middle">
-          sem traçado
+          {uiText('sem traçado')}
         </text>
       )}
     </svg>

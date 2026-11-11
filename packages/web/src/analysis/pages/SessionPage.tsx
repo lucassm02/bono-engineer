@@ -7,6 +7,7 @@ import type { Lap } from '@gt7/shared';
 import { type ReactNode, useMemo, useState } from 'react';
 import { Icon } from '../../components/ui/Icon.tsx';
 import { formatDelta, formatLapTime, formatSectorTime } from '../../lib/format.ts';
+import { t as uiText } from '../../lib/i18n.ts';
 import { navigate, routes } from '../../lib/route.ts';
 import { addNotice } from '../../state/uiStore.ts';
 import { api, urls } from '../api.ts';
@@ -59,7 +60,7 @@ function ReferenceForm({
   onDone: (l: Lap) => void;
   onCancel: () => void;
 }) {
-  const [driver, setDriver] = useState(lap.referenceMeta?.driverName ?? 'Você');
+  const [driver, setDriver] = useState(lap.referenceMeta?.driverName ?? uiText('Você'));
   const [time, setTime] = useState(formatLapTimeInput(lap.referenceMeta?.rankingTimeMs ?? null));
   const [notes, setNotes] = useState(lap.referenceMeta?.notes ?? '');
   const [busy, setBusy] = useState(false);
@@ -71,13 +72,13 @@ function ReferenceForm({
       onSubmit={async (e) => {
         e.preventDefault();
         if (time.trim() && rankingMs === null) {
-          setErr('Tempo inválido. Use o formato 1:30.960.');
+          setErr(uiText('Tempo inválido. Use o formato 1:30.960.'));
           return;
         }
         setBusy(true);
         try {
           const saved = await api.setReference(lap.id, {
-            driverName: driver.trim() || 'Você',
+            driverName: driver.trim() || uiText('Você'),
             ...(rankingMs ? { rankingTimeMs: rankingMs } : {}),
             notes: notes.trim() || null,
           });
@@ -90,7 +91,7 @@ function ReferenceForm({
       }}
     >
       <label>
-        Piloto
+        {uiText('Piloto')}
         <input
           className="a-input"
           value={driver}
@@ -99,7 +100,7 @@ function ReferenceForm({
         />
       </label>
       <label>
-        Tempo do ranking (opcional)
+        {uiText('Tempo do ranking (opcional)')}
         <input
           className="a-input"
           value={time}
@@ -110,7 +111,7 @@ function ReferenceForm({
         />
       </label>
       <label className="a-grow">
-        Notas
+        {uiText('Notas')}
         <input
           className="a-input"
           value={notes}
@@ -120,10 +121,10 @@ function ReferenceForm({
       </label>
       <div className="a-actions">
         <button type="submit" className="a-btn" disabled={busy}>
-          Salvar referência
+          {uiText('Salvar referência')}
         </button>
         <button type="button" className="a-btn a-btn-ghost" onClick={onCancel}>
-          Cancelar
+          {uiText('Cancelar')}
         </button>
       </div>
       {err && <p className="a-form-error">{err}</p>}
@@ -152,7 +153,7 @@ export function SessionPage({ id }: { id: string }) {
   const refs = useFetch(trackId ? `refs:${trackId}` : null, () => api.references(trackId!));
   const [selected, setSelected] = useState<string[]>([]);
   const [editing, setEditing] = useState<string | null>(null);
-  useTitle('Sessão');
+  useTitle(uiText('Sessão'));
 
   const laps = detail.data?.laps ?? [];
   const best = useMemo(() => bestSectors(laps), [laps]);
@@ -198,8 +199,8 @@ export function SessionPage({ id }: { id: string }) {
   const trackLabel = track.data
     ? fullTrackName(track.data)
     : trackId
-      ? 'Pista'
-      : 'Pista não identificada';
+      ? uiText('Pista')
+      : uiText('Pista não identificada');
 
   return (
     <>
@@ -207,45 +208,47 @@ export function SessionPage({ id }: { id: string }) {
         back={
           trackId
             ? { href: routes.track(trackId, { tab: 'sessoes' }), label: trackLabel }
-            : { href: routes.home(), label: 'Suas pistas' }
+            : { href: routes.home(), label: uiText('Suas pistas') }
         }
         title={trackId ? <a href={routes.track(trackId)}>{trackLabel}</a> : trackLabel}
         sub={
           <>
             {dayHeading(dayKey(session.startedAt))}, {formatClock(session.startedAt)} ·{' '}
             <CarName carCode={session.carCode} logoSize={22} />
-            {session.mode === 'replayCapture' && <Tag tone="ref">captura de replay</Tag>}
-            {active && <Tag tone="info">em andamento</Tag>}
+            {session.mode === 'replayCapture' && (
+              <Tag tone="ref">{uiText('captura de replay')}</Tag>
+            )}
+            {active && <Tag tone="info">{uiText('em andamento')}</Tag>}
           </>
         }
         actions={
           <>
             <a className="a-btn" href={routes.coach({ session: session.id })}>
               <Icon name="coach" size={18} />
-              Debrief com IA
+              {uiText('Debrief com IA')}
             </a>
             {trackId && (
               <a
                 className="a-btn a-btn-ghost"
                 href={routes.track(trackId, { session: session.id })}
               >
-                Consistência e evolução
+                {uiText('Consistência e evolução')}
               </a>
             )}
             {session.recordingFile && (
               <a className="a-btn a-btn-ghost" href={urls.recording(session.id)} download>
-                Baixar gravação (.gt7rec)
+                {uiText('Baixar gravação (.gt7rec)')}
               </a>
             )}
             <ConfirmButton
-              label="Apagar sessão"
-              question="Apagar a sessão e todas as voltas?"
-              confirmLabel="Apagar"
+              label={uiText('Apagar sessão')}
+              question={uiText('Apagar a sessão e todas as voltas?')}
+              confirmLabel={uiText('Apagar')}
               disabled={active}
               onConfirm={async () => {
                 try {
                   await api.deleteSession(session.id);
-                  addNotice('info', 'Sessão apagada.');
+                  addNotice('info', uiText('Sessão apagada.'));
                   navigate(trackId ? routes.track(trackId, { tab: 'sessoes' }) : routes.home());
                 } catch (e) {
                   addNotice('error', (e as Error).message, 6000);
@@ -258,34 +261,40 @@ export function SessionPage({ id }: { id: string }) {
 
       <div className="a-stats a-session-stats">
         <div className="a-stat">
-          <span className="a-stat-k">Voltas</span>
+          <span className="a-stat-k">{uiText('Voltas')}</span>
           <span className="a-stat-v num">{laps.length}</span>
           <span className="a-stat-s">
-            {plural(laps.filter((l) => l.valid).length, 'válida', 'válidas')}
+            {plural(laps.filter((l) => l.valid).length, uiText('válida'), uiText('válidas'))}
           </span>
         </div>
         <div className="a-stat" data-emph={bestLap ? '1' : undefined}>
-          <span className="a-stat-k">Melhor volta</span>
+          <span className="a-stat-k">{uiText('Melhor volta')}</span>
           <span className="a-stat-v num">{bestLap ? formatLapTime(bestLap.timeMs) : '–'}</span>
-          {bestLap && <span className="a-stat-s">volta {bestLap.number}</span>}
+          {bestLap && (
+            <span className="a-stat-s">
+              {`${uiText('volta')} `}
+              {bestLap.number}
+            </span>
+          )}
         </div>
         {idealMs !== null && bestLap && (
           <div className="a-stat" data-emph="ideal">
-            <span className="a-stat-k">Volta ideal</span>
+            <span className="a-stat-k">{uiText('Volta ideal')}</span>
             <span className="a-stat-v num">{formatLapTime(idealMs)}</span>
-            <span className="a-stat-s" title="Soma dos melhores setores da sessão">
-              {formatDelta(idealMs - bestLap.timeMs)} vs melhor
+            <span className="a-stat-s" title={uiText('Soma dos melhores setores da sessão')}>
+              {formatDelta(idealMs - bestLap.timeMs)}
+              {` ${uiText('vs melhor')}`}
             </span>
           </div>
         )}
         <div className="a-stat">
-          <span className="a-stat-k">Duração</span>
+          <span className="a-stat-k">{uiText('Duração')}</span>
           <span className="a-stat-v num">
             {formatDuration(session.startedAt, session.endedAt) ?? '–'}
           </span>
         </div>
         <div className="a-stat">
-          <span className="a-stat-k">Início</span>
+          <span className="a-stat-k">{uiText('Início')}</span>
           <span className="a-stat-v num">{formatDateTime(session.startedAt)}</span>
         </div>
       </div>
@@ -293,41 +302,43 @@ export function SessionPage({ id }: { id: string }) {
       <div className="a-selbar" data-active={selected.length > 0 ? '1' : '0'}>
         <span>
           {selected.length === 0
-            ? 'Marque de 1 a 3 voltas para comparar (a 1ª é a sua, a 2ª a referência).'
-            : `${selected.length} volta(s) marcada(s)${
-                selected.length === 1 ? ' — referência automática' : ''
-              }`}
+            ? uiText('Marque de 1 a 3 voltas para comparar (a 1ª é a sua, a 2ª a referência).')
+            : uiText(
+                '{0} volta(s) marcada(s){1}',
+                selected.length,
+                selected.length === 1 ? uiText(' — referência automática') : '',
+              )}
         </span>
         {compareHref && (
           <a className="a-btn" href={compareHref}>
-            Comparar
+            {uiText('Comparar')}
           </a>
         )}
         {selected.length > 0 && (
           <button type="button" className="a-btn a-btn-ghost" onClick={() => setSelected([])}>
-            Limpar
+            {uiText('Limpar')}
           </button>
         )}
       </div>
 
       {laps.length === 0 ? (
-        <Empty>Esta sessão ainda não tem voltas completas.</Empty>
+        <Empty>{uiText('Esta sessão ainda não tem voltas completas.')}</Empty>
       ) : (
         <div className="a-table-wrap">
           <table className="a-table a-laps a-table-cards">
             <thead>
               <tr>
-                <th aria-label="Selecionar" />
-                <th className="num-col">Volta</th>
-                <th className="num-col">Tempo</th>
+                <th aria-label={uiText('Selecionar')} />
+                <th className="num-col">{uiText('Volta')}</th>
+                <th className="num-col">{uiText('Tempo')}</th>
                 {Array.from({ length: sectorCount }, (_, k) => (
                   // biome-ignore lint/suspicious/noArrayIndexKey: sector columns
                   <th key={k} className="num-col">
                     S{k + 1}
                   </th>
                 ))}
-                <th>Situação</th>
-                <th>Ações</th>
+                <th>{uiText('Situação')}</th>
+                <th>{uiText('Ações')}</th>
               </tr>
             </thead>
             <tbody>
@@ -348,7 +359,7 @@ export function SessionPage({ id }: { id: string }) {
                         onDone={(saved) => {
                           replaceLap(saved);
                           setEditing(null);
-                          addNotice('info', 'Volta marcada como referência.');
+                          addNotice('info', uiText('Volta marcada como referência.'));
                         }}
                       />
                     }
@@ -365,7 +376,7 @@ export function SessionPage({ id }: { id: string }) {
                             checked={sel >= 0}
                             disabled={sel < 0 && selected.length >= MAX_SELECTED}
                             onChange={() => toggle(l.id)}
-                            aria-label={`Selecionar volta ${l.number}`}
+                            aria-label={uiText('Selecionar volta {0}', l.number)}
                           />
                           {sel >= 0 && <span className="a-check-n">{sel + 1}</span>}
                         </label>
@@ -396,27 +407,32 @@ export function SessionPage({ id }: { id: string }) {
                       <td className="a-lap-status">
                         <div className="a-laptags">
                           {l.valid ? (
-                            <Tag tone="sb">válida</Tag>
+                            <Tag tone="sb">{uiText('válida')}</Tag>
                           ) : (
                             <Tag
                               tone="bad"
                               title={badFlags.map((f) => LAP_FLAG_LABELS[f]).join(', ')}
                             >
-                              inválida
+                              {uiText('inválida')}
                             </Tag>
                           )}
-                          {isBest && <Tag tone="pb">melhor da sessão</Tag>}
+                          {isBest && <Tag tone="pb">{uiText('melhor da sessão')}</Tag>}
                           {l.flags.includes('outLap') && (
                             <Tag
                               tone="warn"
-                              title="Saiu dos boxes ou do grid: volta lenta, não conta como volta lançada"
+                              title={uiText(
+                                'Saiu dos boxes ou do grid: volta lenta, não conta como volta lançada',
+                              )}
                             >
-                              volta de saída
+                              {uiText('volta de saída')}
                             </Tag>
                           )}
                           {l.flags.includes('inLap') && (
-                            <Tag tone="warn" title="Terminou nos boxes ou no fim da sessão">
-                              volta de entrada
+                            <Tag
+                              tone="warn"
+                              title={uiText('Terminou nos boxes ou no fim da sessão')}
+                            >
+                              {uiText('volta de entrada')}
                             </Tag>
                           )}
                           {badFlags
@@ -433,7 +449,8 @@ export function SessionPage({ id }: { id: string }) {
                           ))}
                           {l.isReference && (
                             <Tag tone="ref" title={l.referenceMeta?.notes ?? undefined}>
-                              referência · {l.referenceMeta?.driverName ?? 'referência'}
+                              {`${uiText('referência ·')} `}
+                              {l.referenceMeta?.driverName ?? uiText('referência')}
                               {l.referenceMeta?.rankingTimeMs
                                 ? ` (${formatLapTime(l.referenceMeta.rankingTimeMs)})`
                                 : ''}
@@ -461,20 +478,20 @@ export function SessionPage({ id }: { id: string }) {
                                   className="a-menu-item"
                                   onClick={() => setEditing(l.id)}
                                 >
-                                  Referência com detalhes…
+                                  {uiText('Referência com detalhes…')}
                                 </button>
                               )}
                               <a
                                 role="menuitem"
                                 href={routes.coach({ session: session.id, lap: l.id })}
                               >
-                                Debrief desta volta
+                                {uiText('Debrief desta volta')}
                               </a>
                               <a role="menuitem" href={urls.lapCsv(l.id)} download>
-                                Baixar CSV
+                                {uiText('Baixar CSV')}
                               </a>
                               <a role="menuitem" href={urls.lapTrace(l.id)} download>
-                                Baixar trace (JSON)
+                                {uiText('Baixar trace (JSON)')}
                               </a>
                             </>
                           }
@@ -489,8 +506,9 @@ export function SessionPage({ id }: { id: string }) {
         </div>
       )}
       <p className="a-section-note">
-        Roxo = melhor setor da sessão (voltas válidas). Voltas de replay e com tempo divergente só
-        são marcadas, não invalidadas.
+        {uiText(
+          'Roxo = melhor setor da sessão (voltas válidas). Voltas de replay e com tempo divergente só são marcadas, não invalidadas.',
+        )}
       </p>
     </>
   );

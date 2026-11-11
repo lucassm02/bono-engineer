@@ -7,6 +7,14 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-11-10
+
+<!-- release-notes-base: 0.1.2 -->
+
+### Added
+
+- Added Brazilian Portuguese, English and Spanish in Settings, with three offline neural radio voices and the same call catalogue in each language. The selected voice also applies to Discord output from the Windows app.
+
 ## [0.1.2] - 2026-11-10
 
 ### Added
@@ -54,7 +62,8 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Added replay reference capture, distance-aligned lap comparisons, synchronized telemetry charts, consistency and progress analysis, and data exports.
 - Added the driving guide, an Anthropic-powered AI debrief, and MCP tools for telemetry, laps, sessions, tracks, comparisons, and PNG charts.
 
-[Unreleased]: https://github.com/lucassm02/bono-engineer/compare/v0.1.2...main
+[Unreleased]: https://github.com/lucassm02/bono-engineer/compare/v0.1.3...main
+[0.1.3]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.1.3
 [0.1.2]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.1.2
 [0.1.1]: https://github.com/lucassm02/bono-engineer/compare/2ffa36b...94f577d
 [0.1.0]: https://github.com/lucassm02/bono-engineer/tree/2ffa36b

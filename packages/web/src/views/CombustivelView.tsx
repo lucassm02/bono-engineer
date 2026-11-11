@@ -2,6 +2,7 @@ import { useMemo, useRef } from 'react';
 import { setAttr, setStyle, setText } from '../lib/dom.ts';
 import { clamp, formatFixed } from '../lib/format.ts';
 import { fuelPlan } from '../lib/fuel.ts';
+import { t as uiText } from '../lib/i18n.ts';
 import { useLiveRender } from '../live/raf.ts';
 import { useSessionLaps } from '../state/sessionStore.ts';
 
@@ -15,12 +16,16 @@ function FuelHistory() {
     [laps],
   );
   if (bars.length === 0) {
-    return <div className="fuel-history-empty dim">Consumo por volta aparece após a 1ª volta</div>;
+    return (
+      <div className="fuel-history-empty dim">
+        {uiText('Consumo por volta aparece após a 1ª volta')}
+      </div>
+    );
   }
   const max = Math.max(...bars.map((b) => b.fuelUsedL ?? 0));
   const avg = bars.reduce((a, b) => a + (b.fuelUsedL ?? 0), 0) / bars.length;
   return (
-    <div className="fuel-history" role="img" aria-label="Consumo por volta">
+    <div className="fuel-history" role="img" aria-label={uiText('Consumo por volta')}>
       {bars.map((b) => (
         <div className="fuel-hbar" key={b.lapId} data-valid={b.valid ? '1' : '0'}>
           <span className="num fuel-hval">{formatFixed(b.fuelUsedL, 2)}</span>
@@ -69,7 +74,7 @@ export function CombustivelView() {
     setText(e.raceLeft, p.raceLapsLeft === null ? '–' : formatFixed(p.raceLapsLeft, 1));
     setText(e.needed, p.needed === null ? '–' : formatFixed(p.needed, 1));
     const short = p.missing !== null && p.missing > 0.05;
-    setText(e.balanceLabel, short ? 'Faltam' : 'Sobram');
+    setText(e.balanceLabel, short ? uiText('Faltam') : uiText('Sobram'));
     setText(
       e.balance,
       p.missing === null ? '–' : short ? formatFixed(p.missing, 1) : formatFixed(p.surplus, 1),
@@ -102,7 +107,7 @@ export function CombustivelView() {
       <div className="fuel-gauge" ref={set('gauge')} data-level="ok" aria-hidden="true">
         <div className="fuel-gauge-fill" ref={set('gaugeFill')} />
         <div className="fuel-gauge-need" ref={set('gaugeNeed')} data-show="0">
-          <span>até o fim</span>
+          <span>{uiText('até o fim')}</span>
         </div>
       </div>
       <div className="fuel-main">
@@ -110,7 +115,7 @@ export function CombustivelView() {
           <span className="num fuel-big-value" ref={set('laps')}>
             –
           </span>
-          <span className="readout-label">voltas de combustível</span>
+          <span className="readout-label">{uiText('voltas de combustível')}</span>
         </div>
         <div className="fuel-level">
           <span className="num fuel-level-value">
@@ -122,20 +127,20 @@ export function CombustivelView() {
       </div>
       <div className="fuel-stats">
         <div className="stat">
-          <span className="readout-label">Média por volta</span>
+          <span className="readout-label">{uiText('Média por volta')}</span>
           <span className="stat-value num">
             <span ref={set('perLap')}>–</span>
             <small> L</small>
           </span>
         </div>
         <div className="stat">
-          <span className="readout-label">Voltas até o fim</span>
+          <span className="readout-label">{uiText('Voltas até o fim')}</span>
           <span className="stat-value num" ref={set('raceLeft')}>
             –
           </span>
         </div>
         <div className="stat">
-          <span className="readout-label">Necessário até o fim</span>
+          <span className="readout-label">{uiText('Necessário até o fim')}</span>
           <span className="stat-value num">
             <span ref={set('needed')}>–</span>
             <small> L</small>
@@ -143,7 +148,7 @@ export function CombustivelView() {
         </div>
         <div className="stat fuel-balance" ref={set('balanceBox')} data-tone="neutral">
           <span className="readout-label" ref={set('balanceLabel')}>
-            Sobram
+            {uiText('Sobram')}
           </span>
           <span className="stat-value num">
             <span ref={set('balance')}>–</span>
@@ -159,7 +164,7 @@ export function CombustivelView() {
           ))}
         </div>
         <div className="fuel-regen" ref={set('regenBox')} data-show="0">
-          <span className="readout-label">Recuperação de energia</span>
+          <span className="readout-label">{uiText('Recuperação de energia')}</span>
           <div className="fuel-regen-row">
             <div className="fuel-regen-track">
               <div className="fuel-regen-fill" ref={set('regenFill')} />

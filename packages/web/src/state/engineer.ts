@@ -1,4 +1,4 @@
-import { normalizeRadioPreferences, type RadioPreferences } from '@gt7/shared';
+import { type Language, normalizeRadioPreferences, type RadioPreferences } from '@gt7/shared';
 import { create } from 'zustand';
 import {
   pickRadioPack,
@@ -11,9 +11,11 @@ import {
   setRadioClipVolume,
   stopRadioClip,
 } from '../lib/engineerClips.ts';
+import { getLanguage, subscribeLanguage, t } from '../lib/i18n.ts';
 import { RADIO_HELLO, RADIO_PREVIEW_KEY, type RadioUtterance } from '../lib/radioPhrases.ts';
-import { DEFAULT_RADIO_VOICE, migrateRadioVoice } from '../lib/radioVoices.ts';
+import { defaultRadioVoice, migrateRadioVoice, radioVoice } from '../lib/radioVoices.ts';
 import { loadJson, saveJson } from '../lib/storage.ts';
+import { addNotice } from './uiStore.ts';
 
 const KEY = 'gt7.engineer.muted';
 const HUD_KEY = 'gt7.engineer.hudVisible';
@@ -58,10 +60,17 @@ export function migrateVoicePrefs(saved: unknown): { voiceUri: string; pace: Eng
   return { voiceUri: migrateRadioVoice(prefs.voiceUri), pace };
 }
 
-const savedVoice = loadJson<unknown>(VOICE_KEY);
-const initialVoice = migrateVoicePrefs(savedVoice);
-if ((savedVoice as { voiceUri?: unknown } | null)?.voiceUri !== initialVoice.voiceUri)
-  saveJson(VOICE_KEY, initialVoice);
+const voiceKey = (language: Language) =>
+  language === 'pt-BR' ? VOICE_KEY : `${VOICE_KEY}.${language}`;
+
+function loadVoice(language: Language) {
+  const prefs = migrateVoicePrefs(loadJson(voiceKey(language)));
+  if (radioVoice(prefs.voiceUri)?.language !== language)
+    prefs.voiceUri = defaultRadioVoice(language).id;
+  return prefs;
+}
+
+const initialVoice = loadVoice(getLanguage());
 
 export const useEngineer = create(() => ({
   enabled: false,
@@ -106,7 +115,7 @@ export function setRadioControls(change: Partial<RadioControls>): void {
 /** Decode the chosen pack; when it fails, prepare the default pack for the fallback. */
 function prepareVoice(voiceId: string): Promise<RadioPack | null> {
   const chosen = radioPack(voiceId);
-  const fallback = radioPack(DEFAULT_RADIO_VOICE);
+  const fallback = radioPack(defaultRadioVoice(radioVoice(voiceId)?.language ?? getLanguage()).id);
   const tryPack = (pack: RadioPack | null) =>
     pack ? prepareRadioPack(pack).then(() => pack) : Promise.reject(new Error('Sem pacote'));
   return tryPack(chosen).catch(() =>
@@ -137,14 +146,30 @@ export function playEngineerVoice(
 }
 
 export function setEngineerVoice(voiceUri: string, pace: EngineerPace): void {
-  const voice = migrateRadioVoice(voiceUri);
+  const language = getLanguage();
+  const choice = radioVoice(voiceUri);
+  const voice = choice?.language === language ? choice.id : defaultRadioVoice(language).id;
   stopEngineerVoice();
   stopEngineerPreview();
   useEngineer.setState({ voiceUri: voice, pace, voiceError: false, voiceFallback: false });
-  saveJson(VOICE_KEY, { voiceUri: voice, pace });
+  saveJson(voiceKey(language), { voiceUri: voice, pace });
+  syncDiscordVoice();
   const { enabled, muted } = useEngineer.getState();
   if (enabled && !muted) testEngineerVoice(false);
 }
+
+export function syncDiscordVoice(): void {
+  const pack = radioVoice(useEngineer.getState().voiceUri)?.pack;
+  if (!pack) return;
+  void globalThis.window?.bonoDiscord?.setVoice?.(pack).catch(() => {
+    addNotice('warn', t('Não foi possível atualizar a voz no Discord.'));
+  });
+}
+
+subscribeLanguage(() => {
+  const { voiceUri, pace } = loadVoice(getLanguage());
+  setEngineerVoice(voiceUri, pace);
+});
 
 export function stopEngineerVoice(): void {
   stopRadioClip(false);

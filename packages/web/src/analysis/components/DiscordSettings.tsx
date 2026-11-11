@@ -1,5 +1,8 @@
 import type { DesktopDiscordBridge } from '@gt7/shared';
 import { useEffect, useId, useState } from 'react';
+import { t as uiText } from '../../lib/i18n.ts';
+import { radioVoice } from '../../lib/radioVoices.ts';
+import { useEngineer } from '../../state/engineer.ts';
 import { ConfirmModal } from './ConfirmModal.tsx';
 import { Panel } from './Panel.tsx';
 
@@ -63,7 +66,7 @@ function SettingsForm({ bridge }: { bridge: DesktopDiscordBridge }) {
         if (mounted) setData(value);
       },
       () => {
-        if (mounted) setError('Não foi possível ler a configuração do Discord.');
+        if (mounted) setError(uiText('Não foi possível ler a configuração do Discord.'));
       },
     );
     return () => {
@@ -86,8 +89,8 @@ function SettingsForm({ bridge }: { bridge: DesktopDiscordBridge }) {
       }
     } catch (cause) {
       const message =
-        cause instanceof Error ? cause.message : 'Não foi possível aplicar a configuração.';
-      setError(message.replace(/^Error invoking remote method '[^']+': Error: /, ''));
+        cause instanceof Error ? cause.message : uiText('Não foi possível aplicar a configuração.');
+      setError(uiText(message.replace(/^Error invoking remote method '[^']+': Error: /, '')));
     } finally {
       setBusy(false);
     }
@@ -96,21 +99,24 @@ function SettingsForm({ bridge }: { bridge: DesktopDiscordBridge }) {
   return (
     <Panel
       id="discord"
-      title="Rádio no Discord"
-      description="Use um bot no seu canal de voz privado. O token é salvo no armazenamento seguro deste PC."
+      title={uiText('Rádio no Discord')}
+      description={uiText(
+        'Use um bot no seu canal de voz privado. O token é salvo no armazenamento seguro deste PC.',
+      )}
     >
       {data && (
         <form
           className="cfg-stack"
           onSubmit={(event) => {
             event.preventDefault();
-            void run(() => bridge.save({ ...data.settings, token }), true);
+            const voice = radioVoice(useEngineer.getState().voiceUri)?.pack ?? data.settings.voice;
+            void run(() => bridge.save({ ...data.settings, token, voice }), true);
           }}
         >
           <fieldset className="cfg-fieldset" disabled={busy}>
             <div className="cfg-two">
               <label className="ui-field">
-                <span className="ui-label">Token do bot</span>
+                <span className="ui-label">{uiText('Token do bot')}</span>
                 <input
                   className="ui-input"
                   type="password"
@@ -118,23 +124,25 @@ function SettingsForm({ bridge }: { bridge: DesktopDiscordBridge }) {
                   maxLength={200}
                   value={token}
                   required={!data.hasToken}
-                  placeholder={data.hasToken ? 'Token salvo · preencha para trocar' : undefined}
+                  placeholder={
+                    data.hasToken ? uiText('Token salvo · preencha para trocar') : undefined
+                  }
                   onChange={(event) => setToken(event.currentTarget.value)}
                 />
               </label>
               <label className="ui-field">
-                <span className="ui-label">Atraso medido em ms</span>
+                <span className="ui-label">{uiText('Atraso medido em ms')}</span>
                 <input
                   className="ui-input"
                   maxLength={400}
                   required={data.settings.enabled}
                   value={data.settings.delay}
-                  placeholder="Ex.: 280,300,315"
+                  placeholder={uiText('Ex.: 280,300,315')}
                   onChange={(event) => edit({ delay: event.currentTarget.value })}
                 />
               </label>
               <label className="ui-field">
-                <span className="ui-label">ID do canal de voz</span>
+                <span className="ui-label">{uiText('ID do canal de voz')}</span>
                 <input
                   className="ui-input"
                   inputMode="numeric"
@@ -145,7 +153,7 @@ function SettingsForm({ bridge }: { bridge: DesktopDiscordBridge }) {
                 />
               </label>
               <label className="ui-field">
-                <span className="ui-label">Seu ID de usuário no Discord</span>
+                <span className="ui-label">{uiText('Seu ID de usuário no Discord')}</span>
                 <input
                   className="ui-input"
                   inputMode="numeric"
@@ -158,19 +166,19 @@ function SettingsForm({ bridge }: { bridge: DesktopDiscordBridge }) {
             </div>
             <div className="cfg-list">
               <Switch
-                title="Falar o percentual de freio em Aprender pista"
+                title={uiText('Falar o percentual de freio em Aprender pista')}
                 checked={data.settings.brakePercent}
                 onChange={(next) => edit({ brakePercent: next })}
               />
               <Switch
-                title="Ativar o rádio do Discord ao abrir o Bono"
+                title={uiText('Ativar o rádio do Discord ao abrir o Bono')}
                 checked={data.settings.enabled}
                 onChange={(next) => edit({ enabled: next })}
               />
             </div>
             <div className="cfg-actions">
               <button type="submit" className="ui-btn">
-                Salvar
+                {uiText('Salvar')}
               </button>
               {data.status.testing ? (
                 <button
@@ -179,7 +187,7 @@ function SettingsForm({ bridge }: { bridge: DesktopDiscordBridge }) {
                   data-variant="secondary"
                   onClick={() => void run(() => bridge.stopTest())}
                 >
-                  Encerrar teste
+                  {uiText('Encerrar teste')}
                 </button>
               ) : (
                 <button
@@ -189,7 +197,7 @@ function SettingsForm({ bridge }: { bridge: DesktopDiscordBridge }) {
                   disabled={!data.hasToken}
                   onClick={() => void run(() => bridge.test())}
                 >
-                  Testar com 10 bipes
+                  {uiText('Testar com 10 bipes')}
                 </button>
               )}
               {data.hasToken && (
@@ -199,29 +207,31 @@ function SettingsForm({ bridge }: { bridge: DesktopDiscordBridge }) {
                   data-variant="danger"
                   onClick={() => setConfirmRemove(true)}
                 >
-                  Apagar configuração
+                  {uiText('Apagar configuração')}
                 </button>
               )}
             </div>
           </fieldset>
           <p className="cfg-status" role="status">
-            {data.status.message}
+            {uiText(data.status.message)}
           </p>
           <p className="cfg-hint">
-            Para calibrar, salve com o rádio desligado, entre no canal pelo PS5 e inicie o teste.
-            Para ouvir as instruções, escolha Discord · PS5 em Aparelho que toca o rádio no painel
-            ao vivo.
+            {uiText(
+              'Para calibrar, salve com o rádio desligado, entre no canal pelo PS5 e inicie o teste. Para ouvir as instruções, escolha Discord · PS5 em Aparelho que toca o rádio no painel ao vivo.',
+            )}
           </p>
           <ConfirmModal
             open={confirmRemove}
-            title="Apagar a configuração do Discord?"
+            title={uiText('Apagar a configuração do Discord?')}
             message={
               <>
-                <p>O token do bot e os IDs salvos neste PC serão apagados.</p>
-                <p>O rádio no Discord deixa de funcionar até você configurar de novo.</p>
+                <p>{uiText('O token do bot e os IDs salvos neste PC serão apagados.')}</p>
+                <p>
+                  {uiText('O rádio no Discord deixa de funcionar até você configurar de novo.')}
+                </p>
               </>
             }
-            confirmLabel="Apagar configuração"
+            confirmLabel={uiText('Apagar configuração')}
             busy={busy}
             onClose={() => setConfirmRemove(false)}
             onConfirm={async () => {

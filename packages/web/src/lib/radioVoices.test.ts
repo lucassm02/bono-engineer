@@ -1,8 +1,9 @@
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { migrateVoicePrefs } from '../state/engineer.ts';
+import { migrateVoicePrefs, setEngineerVoice, useEngineer } from '../state/engineer.ts';
 import { pickRadioPack, radioPack, radioUtteranceMs } from './engineerClips.ts';
+import { setLanguage, t } from './i18n.ts';
 import manifest from './radio-manifest.json';
 import {
   gearSegment,
@@ -12,19 +13,43 @@ import {
   RADIO_PREVIEW_KEY,
   SEGMENTS,
 } from './radioPhrases.ts';
-import { DEFAULT_RADIO_VOICE, migrateRadioVoice, RADIO_VOICES, radioVoice } from './radioVoices.ts';
+import {
+  DEFAULT_RADIO_VOICE,
+  defaultRadioVoice,
+  migrateRadioVoice,
+  RADIO_VOICES,
+  radioVoice,
+} from './radioVoices.ts';
 
 const WEB = join(import.meta.dirname, '..', '..');
 const voices = manifest.voices as Record<string, { file: string; clips: Record<string, number[]> }>;
 
 describe('catálogo de vozes neurais', () => {
-  it('offers only neural male pt-BR voices with distinct names and Alex as default', () => {
+  it('offers three neural voices per language and keeps Alex as the Portuguese default', () => {
     expect(DEFAULT_RADIO_VOICE).toBe('radio:alex');
     expect(radioVoice(DEFAULT_RADIO_VOICE)?.name).toBe('Alex');
-    expect(RADIO_VOICES.length).toBeGreaterThanOrEqual(3);
+    for (const language of ['pt-BR', 'en', 'es'] as const) {
+      expect(RADIO_VOICES.filter((v) => v.language === language)).toHaveLength(3);
+      expect(defaultRadioVoice(language).language).toBe(language);
+    }
     expect(new Set(RADIO_VOICES.map((v) => v.name)).size).toBe(RADIO_VOICES.length);
     expect(RADIO_VOICES.every((v) => v.id.startsWith('radio:'))).toBe(true);
     expect(RADIO_VOICES.some((v) => /dora/i.test(v.id))).toBe(false);
+  });
+
+  it('updates the UI and voice together, remembering the voice selected for each language', () => {
+    try {
+      setLanguage('en');
+      expect(t('Configurações')).toBe('Settings');
+      setEngineerVoice('radio:en-onyx', 'calma');
+      setLanguage('es');
+      expect(t('Configurações')).toBe('Configuración');
+      expect(useEngineer.getState().voiceUri).toBe('radio:es-alex');
+      setLanguage('en');
+      expect(useEngineer.getState()).toMatchObject({ voiceUri: 'radio:en-onyx', pace: 'calma' });
+    } finally {
+      setLanguage('pt-BR');
+    }
   });
 
   it('ships every catalog entry for every voice, inside its pack file', () => {
@@ -132,5 +157,8 @@ describe('fallback com o manifesto real', () => {
     );
     expect(pickRadioPack('radio:santa', phrase, () => false)).toBeNull();
     expect(pickRadioPack('radio:santa', 'Frase que não existe.', () => true)).toBeNull();
+    expect(
+      pickRadioPack('radio:es-bruno', phrase, (p) => p.voiceId !== 'radio:es-bruno')?.voiceId,
+    ).toBe('radio:es-alex');
   });
 });

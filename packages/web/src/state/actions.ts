@@ -3,6 +3,7 @@
 import type { LapCompletedEvent, ViewId } from '@gt7/shared';
 import { TIMINGS } from '../config.ts';
 import { stepIndex } from '../lib/carousel.ts';
+import { t as uiText } from '../lib/i18n.ts';
 import { DELTA_REFERENCE_LABELS, VIEW_LABELS } from '../lib/labels.ts';
 import { nextDeltaReference, type ProfileAction, reduceProfile } from '../lib/profile.ts';
 import { derived } from '../live/derived.ts';
@@ -33,7 +34,10 @@ export function goToView(view: ViewId, source: ViewChangeSource): void {
   const s = useUi.getState();
   if (!s.profile.views.includes(view)) {
     if (source === 'remote') {
-      addNotice('warn', `Controle remoto: a tela ${VIEW_LABELS[view]} está desligada aqui.`);
+      addNotice(
+        'warn',
+        uiText('Controle remoto: a tela {0} está desligada aqui.', VIEW_LABELS[view]),
+      );
     }
     return;
   }
@@ -42,7 +46,7 @@ export function goToView(view: ViewId, source: ViewChangeSource): void {
   vibrate(12);
   send({ type: 'currentView', view });
   if (source === 'remote')
-    addNotice('info', `Tela trocada pelo controle remoto: ${VIEW_LABELS[view]}`);
+    addNotice('info', uiText('Tela trocada pelo controle remoto: {0}', VIEW_LABELS[view]));
 }
 
 export function stepView(by: 1 | -1, source: ViewChangeSource): void {
@@ -72,7 +76,7 @@ export function cycleDeltaReference(): void {
   send({ type: 'setDeltaReference', kind });
   vibrate(20);
   showOverlay();
-  addNotice('info', `Delta contra: ${DELTA_REFERENCE_LABELS[kind]}`, 1800);
+  addNotice('info', uiText('Delta contra: {0}', DELTA_REFERENCE_LABELS[kind]), 1800);
 }
 
 // The "top reference" can be selected (double tap) on a track that has none: frames then carry an
@@ -85,7 +89,11 @@ derived.onReferenceMissing = () => {
   lastRefFallbackAt = now;
   dispatchProfile({ type: 'setDeltaReference', kind: 'personalBest' });
   send({ type: 'setDeltaReference', kind: 'personalBest' });
-  addNotice('info', 'Sem referência do top para esta pista: usando sua melhor volta.', 3000);
+  addNotice(
+    'info',
+    uiText('Sem referência do top para esta pista: usando sua melhor volta.'),
+    3000,
+  );
 };
 
 export function setLocked(locked: boolean): void {
@@ -93,7 +101,9 @@ export function setLocked(locked: boolean): void {
   vibrate(locked ? 30 : 15);
   addNotice(
     'info',
-    locked ? 'Gestos travados. Segure o cadeado para destravar.' : 'Gestos destravados.',
+    locked
+      ? uiText('Gestos travados. Segure o cadeado para destravar.')
+      : uiText('Gestos destravados.'),
     2500,
   );
 }

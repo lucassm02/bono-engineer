@@ -4,6 +4,7 @@ import { App } from './App.tsx';
 import { api } from './analysis/api.ts';
 import { TitleBar } from './components/TitleBar.tsx';
 import { BOOT_WAIT_MS, bootTarget, openedWithoutRoute } from './lib/boot.ts';
+import { applyDocumentLanguage, setLanguage, t as uiText, useLanguage } from './lib/i18n.ts';
 import { decideOnboarding, ONBOARDING_KEY, ONBOARDING_WAIT_MS } from './lib/onboarding.ts';
 import { isAnalysisRoute, navigate, parseRoute, type Route, routes } from './lib/route.ts';
 import { loadString } from './lib/storage.ts';
@@ -27,12 +28,23 @@ const AnalysisApp = lazy(() => import('./analysis/AnalysisApp.tsx'));
 /** First-run assistant: only downloaded when it is going to be shown. */
 const Onboarding = lazy(() => import('./components/Onboarding.tsx'));
 
+applyDocumentLanguage();
+void window.bonoDesktop
+  ?.getLanguage()
+  .then((language) => {
+    if (language) setLanguage(language);
+  })
+  .catch(() => {});
 startConnection();
 startSwUpdateWatch();
 setupKeepAwake((mode) => {
   useUi.setState({ keepAwake: mode });
   if (mode !== 'wakeLock' && !isAnalysisRoute(parseRoute(location.hash))) {
-    addNotice('info', 'Dica: desative o bloqueio automático da tela para ela não apagar.', 7000);
+    addNotice(
+      'info',
+      uiText('Dica: desative o bloqueio automático da tela para ela não apagar.'),
+      7000,
+    );
   }
 });
 
@@ -161,7 +173,7 @@ function Root() {
     return (
       <>
         <TitleBar />
-        <div className="area-loading">Conectando ao servidor…</div>
+        <div className="area-loading">{uiText('Conectando ao servidor…')}</div>
       </>
     );
   return (
@@ -170,7 +182,7 @@ function Root() {
       {!isAnalysisRoute(route) ? (
         <App />
       ) : (
-        <Suspense fallback={<div className="area-loading">Carregando a análise…</div>}>
+        <Suspense fallback={<div className="area-loading">{uiText('Carregando a análise…')}</div>}>
           <AnalysisApp route={route} />
         </Suspense>
       )}
@@ -183,11 +195,16 @@ function Root() {
   );
 }
 
+function LocalizedApp() {
+  const language = useLanguage();
+  return <Root key={language} />;
+}
+
 const root = document.getElementById('root');
 if (root) {
   createRoot(root).render(
     <StrictMode>
-      <Root />
+      <LocalizedApp />
     </StrictMode>,
   );
 }

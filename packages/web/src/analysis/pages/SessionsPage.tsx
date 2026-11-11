@@ -3,6 +3,7 @@
 import type { Session, Track } from '@gt7/shared';
 import { useMemo, useState } from 'react';
 import { formatLapTime } from '../../lib/format.ts';
+import { t as uiText } from '../../lib/i18n.ts';
 import { navigate, type Route, routes } from '../../lib/route.ts';
 import { api } from '../api.ts';
 import { CarName } from '../components/CarName.tsx';
@@ -15,9 +16,9 @@ import { useCarFilter } from '../lib/useCarFilter.ts';
 import { useFetch } from '../useFetch.ts';
 
 export function trackName(tracks: Track[] | null, id: string | null): string {
-  if (!id) return 'Pista não identificada';
+  if (!id) return uiText('Pista não identificada');
   const t = tracks?.find((x) => x.id === id);
-  return t ? fullTrackName(t) : 'Pista';
+  return t ? fullTrackName(t) : uiText('Pista');
 }
 
 export function SessionsPage({ route }: { route: Route }) {
@@ -50,30 +51,30 @@ export function SessionsPage({ route }: { route: Route }) {
     [sessions.data, trackFilter, carFilter, mode],
   );
 
-  useTitle('Sessões');
+  useTitle(uiText('Sessões'));
 
   return (
     <>
       <PageHead
-        back={{ href: routes.home(), label: 'Suas pistas' }}
-        title="Todas as sessões"
-        sub="Todas as sessões em ordem de data. Para ver por pista, volte ao início."
+        back={{ href: routes.home(), label: uiText('Suas pistas') }}
+        title={uiText('Todas as sessões')}
+        sub={uiText('Todas as sessões em ordem de data. Para ver por pista, volte ao início.')}
         actions={
           <>
             <a className="a-btn a-btn-ghost" href={routes.capture()}>
-              Capturar referência
+              {uiText('Capturar referência')}
             </a>
             <a className="a-btn" href={routes.coach()}>
-              Debrief com IA
+              {uiText('Debrief com IA')}
             </a>
           </>
         }
       />
       <div className="a-toolbar">
         <label>
-          Pista
+          {uiText('Pista')}
           <select value={trackFilter} onChange={(e) => setTrack(e.target.value)}>
-            <option value="">Todas</option>
+            <option value="">{uiText('Todas')}</option>
             {(tracks.data ?? []).map((t) => (
               <option key={t.id} value={t.id}>
                 {t.name}
@@ -83,11 +84,11 @@ export function SessionsPage({ route }: { route: Route }) {
         </label>
         <CarFilterField usage={usage} value={carFilter} onChange={setCarFilter} />
         <label>
-          Modo
+          {uiText('Modo')}
           <select value={mode} onChange={(e) => setMode(e.target.value as typeof mode)}>
-            <option value="">Todos</option>
-            <option value="live">Ao vivo</option>
-            <option value="replayCapture">Captura de replay</option>
+            <option value="">{uiText('Todos')}</option>
+            <option value="live">{uiText('Ao vivo')}</option>
+            <option value="replayCapture">{uiText('Captura de replay')}</option>
           </select>
         </label>
       </div>
@@ -105,15 +106,17 @@ export function SessionsPage({ route }: { route: Route }) {
         <Empty>
           {sessions.data.length === 0 ? (
             <>
-              <strong>Nenhuma sessão gravada ainda</strong>
+              <strong>{uiText('Nenhuma sessão gravada ainda')}</strong>
               <p>
-                Abra o Gran Turismo 7 e dê algumas voltas: cada volta completa aparece aqui sozinha.
+                {uiText(
+                  'Abra o Gran Turismo 7 e dê algumas voltas: cada volta completa aparece aqui sozinha.',
+                )}
               </p>
             </>
           ) : (
             <>
-              <strong>Nenhuma sessão com esses filtros</strong>
-              <p>Tente outra pista, carro ou modo.</p>
+              <strong>{uiText('Nenhuma sessão com esses filtros')}</strong>
+              <p>{uiText('Tente outra pista, carro ou modo.')}</p>
             </>
           )}
         </Empty>
@@ -122,12 +125,12 @@ export function SessionsPage({ route }: { route: Route }) {
           <table className="a-table a-table-click a-table-cards">
             <thead>
               <tr>
-                <th>Data</th>
-                <th>Pista</th>
-                <th>Carro</th>
-                <th>Modo</th>
-                <th className="num-col">Voltas</th>
-                <th className="num-col">Melhor</th>
+                <th>{uiText('Data')}</th>
+                <th>{uiText('Pista')}</th>
+                <th>{uiText('Carro')}</th>
+                <th>{uiText('Modo')}</th>
+                <th className="num-col">{uiText('Voltas')}</th>
+                <th className="num-col">{uiText('Melhor')}</th>
               </tr>
             </thead>
             <tbody>
@@ -137,7 +140,7 @@ export function SessionsPage({ route }: { route: Route }) {
                     <a href={routes.session(s.id)} onClick={(e) => e.stopPropagation()}>
                       {formatDateTime(s.startedAt)}
                     </a>
-                    {s.endedAt === null && <Tag tone="info">em andamento</Tag>}
+                    {s.endedAt === null && <Tag tone="info">{uiText('em andamento')}</Tag>}
                   </td>
                   <td data-label="Pista">
                     {s.trackId ? (

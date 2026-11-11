@@ -5,6 +5,7 @@
  */
 
 import type { Corner, DrivingEvent, DrivingEventEvidence } from '@gt7/shared';
+import { t as uiText } from '../../lib/i18n.ts';
 import { cornerLabel, fixed } from '../lib/chartData.ts';
 import {
   CONFIDENCE_LABELS,
@@ -35,7 +36,8 @@ export function evidenceChips(e: DrivingEventEvidence): string[] {
     out.push(`guinada ${fixed(e.yawRatio, 1)}× a esperada`);
   }
   if (e.lineOpeningM !== null) out.push(`linha abriu ${fixed(e.lineOpeningM, 1)} m`);
-  if (e.slipAngleDeg !== null) out.push(`giro além da trajetória ${fixed(e.slipAngleDeg, 1)}°`);
+  if (e.slipAngleDeg !== null)
+    out.push(uiText('giro além da trajetória {0}°', fixed(e.slipAngleDeg, 1)));
   if (e.countersteerS) out.push(`contravolante ${fixed(e.countersteerS, 2)} s`);
   if (e.frontSlipPeak !== null) out.push(`dianteira ${pct(e.frontSlipPeak)}`);
   if (e.rearSlipPeak !== null) out.push(`traseira ${pct(e.rearSlipPeak)}`);
@@ -47,8 +49,9 @@ export function DrivingEventsPanel({ events, corners, selectedId, onOpen, warnin
   return (
     <div className="a-findings">
       <p className="dim a-small">
-        Detectados nos sinais do carro (volante, guinada, trajetória e rotação das rodas). Confiança
-        média ou baixa indica um diagnóstico provável: confira nos traços.
+        {uiText(
+          'Detectados nos sinais do carro (volante, guinada, trajetória e rotação das rodas). Confiança média ou baixa indica um diagnóstico provável: confira nos traços.',
+        )}
       </p>
       {warnings?.map((w) => (
         <p key={w} className="a-note">
@@ -57,8 +60,9 @@ export function DrivingEventsPanel({ events, corners, selectedId, onOpen, warnin
       ))}
       {events.length === 0 ? (
         <p className="dim">
-          Nenhum evento nesta volta: sem saída de frente, de traseira, travamento ou perda de
-          tração.
+          {uiText(
+            'Nenhum evento nesta volta: sem saída de frente, de traseira, travamento ou perda de tração.',
+          )}
         </p>
       ) : (
         <ol className="a-finding-list">
@@ -71,7 +75,7 @@ export function DrivingEventsPanel({ events, corners, selectedId, onOpen, warnin
                 data-selected={e.id === selectedId ? '1' : undefined}
               >
                 <div className="a-finding-head">
-                  <strong>{corner ? cornerLabel(corner) : (e.cornerId ?? 'Reta')}</strong>
+                  <strong>{corner ? cornerLabel(corner) : (e.cornerId ?? uiText('Reta'))}</strong>
                   <span>
                     {DRIVING_EVENT_LABELS[e.kind]}
                     {e.kind !== 'exitTraction' && ` · ${DRIVING_EVENT_PHASE_LABELS[e.phase]}`}
@@ -99,7 +103,7 @@ export function DrivingEventsPanel({ events, corners, selectedId, onOpen, warnin
                   className="a-btn a-btn-ghost a-btn-sm"
                   onClick={() => onOpen(e)}
                 >
-                  Ver traços
+                  {uiText('Ver traços')}
                 </button>
               </li>
             );

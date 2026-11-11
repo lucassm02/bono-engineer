@@ -6,6 +6,7 @@
 
 import type { MapCorner, MicrosectorColor } from '@gt7/shared';
 import { type PointerEvent as ReactPointerEvent, useCallback, useEffect, useRef } from 'react';
+import { t as uiText } from '../../lib/i18n.ts';
 import { type Bounds, boundsOf, fitScale, mapX, mapY } from '../../lib/mapMath.ts';
 import { THEME, withAlpha } from '../../lib/theme.ts';
 import { useCanvasSize } from '../../widgets/useCanvas.ts';
@@ -127,7 +128,7 @@ export function CompareMap({
       ctx.fillStyle = THEME.text3;
       ctx.font = `14px ${THEME.font}`;
       ctx.textAlign = 'center';
-      ctx.fillText('Sem traçado da pista', s.w / 2, s.h / 2);
+      ctx.fillText(uiText('Sem traçado da pista'), s.w / 2, s.h / 2);
       return;
     }
     const vp = { w: s.w, h: s.h, pad: 18 };
@@ -365,7 +366,7 @@ export function CompareMap({
       onPointerMove={onMove}
       onPointerLeave={() => bus?.set(null, 'map')}
       onPointerUp={onClick}
-      aria-label="Mapa da pista com os traçados"
+      aria-label={uiText('Mapa da pista com os traçados')}
       role="img"
     />
   );

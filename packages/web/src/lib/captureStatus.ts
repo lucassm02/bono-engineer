@@ -9,6 +9,7 @@ import type {
   SessionSavedMessage,
 } from '@gt7/shared';
 import { formatLapTime } from './format.ts';
+import { t as uiText } from './i18n.ts';
 
 export type CaptureTone = 'ok' | 'warn' | 'info' | 'idle' | 'off';
 
@@ -32,12 +33,12 @@ const lapsText = (n: number) => `${n} ${n === 1 ? 'volta' : 'voltas'}`;
 export function describeCapture(c: SessionCaptureStatus | null | undefined): CaptureView | null {
   if (!c) return null;
   const sessionId = c.enabled ? c.sessionId : null;
-  const title = c.hint || 'Captura automática de sessões';
+  const title = c.hint || uiText('Captura automática de sessões');
   switch (c.state) {
     case 'recording':
       return {
         tone: 'ok',
-        label: c.lapsDone > 0 ? `Gravando · ${lapsText(c.lapsDone)}` : 'Gravando',
+        label: c.lapsDone > 0 ? uiText('Gravando · {0}', lapsText(c.lapsDone)) : uiText('Gravando'),
         title,
         pulse: true,
         sessionId,
@@ -45,18 +46,24 @@ export function describeCapture(c: SessionCaptureStatus | null | undefined): Cap
     case 'paused': {
       const label =
         c.detail === 'offTrack'
-          ? 'Fora da pista'
+          ? uiText('Fora da pista')
           : c.detail === 'noSignal'
-            ? 'Sem sinal'
-            : 'Pausado';
+            ? uiText('Sem sinal')
+            : uiText('Pausado');
       return { tone: 'warn', label, title, pulse: false, sessionId };
     }
     case 'waiting':
-      return { tone: 'idle', label: 'Aguardando pista', title, pulse: false, sessionId: null };
+      return {
+        tone: 'idle',
+        label: uiText('Aguardando pista'),
+        title,
+        pulse: false,
+        sessionId: null,
+      };
     case 'replay':
       return {
         tone: 'info',
-        label: 'Replay detectado',
+        label: uiText('Replay detectado'),
         title,
         pulse: false,
         sessionId: null,
@@ -64,7 +71,7 @@ export function describeCapture(c: SessionCaptureStatus | null | undefined): Cap
     default:
       return {
         tone: 'off',
-        label: c.enabled ? 'Captura parada' : 'Gravação desligada',
+        label: c.enabled ? uiText('Captura parada') : uiText('Gravação desligada'),
         title,
         pulse: false,
         sessionId: null,
@@ -86,31 +93,35 @@ export function describeReferenceCapture(
   r: ReferenceCaptureStatus | null | undefined,
 ): CaptureView | null {
   if (!r || r.state === 'idle') return null;
-  const title = r.hint || 'Captura de referência em andamento';
+  const title = r.hint || uiText('Captura de referência em andamento');
   const base = { title, pulse: false, sessionId: null, reference: true } as const;
   switch (r.state) {
     case 'recording':
       return {
         ...base,
         tone: 'ok',
-        label: `Capturando · gravando volta ${clockText(r.recordingMs ?? 0)}`,
+        label: uiText('Capturando · gravando volta {0}', clockText(r.recordingMs ?? 0)),
         pulse: true,
       };
     case 'validating':
-      return { ...base, tone: 'info', label: 'Capturando · validando' };
+      return { ...base, tone: 'info', label: uiText('Capturando · validando') };
     case 'waitingLapStart':
       switch (r.waiting) {
         case 'startLine':
-          return { ...base, tone: 'info', label: 'Capturando · aguardando linha de largada' };
+          return {
+            ...base,
+            tone: 'info',
+            label: uiText('Capturando · aguardando linha de largada'),
+          };
         case 'track':
-          return { ...base, tone: 'info', label: 'Capturando · identificando a pista' };
+          return { ...base, tone: 'info', label: uiText('Capturando · identificando a pista') };
         case 'unknownTrack':
-          return { ...base, tone: 'warn', label: 'Capturando · pista desconhecida' };
+          return { ...base, tone: 'warn', label: uiText('Capturando · pista desconhecida') };
         default:
-          return { ...base, tone: 'idle', label: 'Capturando · aguardando o replay' };
+          return { ...base, tone: 'idle', label: uiText('Capturando · aguardando o replay') };
       }
     default:
-      return { ...base, tone: 'idle', label: 'Preparando a captura' };
+      return { ...base, tone: 'idle', label: uiText('Preparando a captura') };
   }
 }
 
@@ -118,7 +129,7 @@ export function describeReferenceCapture(
 export function savedToastText(
   m: Pick<SessionSavedMessage, 'trackName' | 'lapCount' | 'bestLapMs'>,
 ): string {
-  const parts = [m.trackName ?? 'pista não identificada', lapsText(m.lapCount)];
+  const parts = [m.trackName ?? uiText('pista não identificada'), lapsText(m.lapCount)];
   if (m.bestLapMs !== null && m.bestLapMs > 0) parts.push(`melhor ${formatLapTime(m.bestLapMs)}`);
-  return `Sessão salva: ${parts.join(', ')}`;
+  return uiText('Sessão salva: {0}', parts.join(', '));
 }

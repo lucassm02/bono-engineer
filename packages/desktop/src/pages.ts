@@ -4,7 +4,14 @@
  * (no network, no script) loaded through a data: URL.
  */
 
-import { BRAND_SIGNAL, BRAND_SURFACE, brandIconContents, PRODUCT_NAME } from '@gt7/shared';
+import {
+  BRAND_SIGNAL,
+  BRAND_SURFACE,
+  brandIconContents,
+  type Language,
+  PRODUCT_NAME,
+} from '@gt7/shared';
+import { translateMessage } from '../../web/src/lib/messages.ts';
 import { ACTION_SCHEME } from './paths.ts';
 
 export function escapeHtml(s: string): string {
@@ -33,9 +40,10 @@ const BASE_CSS = `
 
 const LOGO = `<svg class="logo" viewBox="0 0 64 64" aria-hidden="true">${brandIconContents()}</svg>`;
 
-export function splashHtml(): string {
+export function splashHtml(language: Language = 'pt-BR'): string {
+  const text = (message: string) => escapeHtml(translateMessage(language, message));
   return `<!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><title>${PRODUCT_NAME}</title>
+<html lang="${language}"><head><meta charset="utf-8"><title>${PRODUCT_NAME}</title>
 <style>${BASE_CSS}
   .spin { width: 28px; height: 28px; margin: 18px auto 6px; border-radius: 50%;
     border: 3px solid #223140; border-top-color: ${BRAND_SIGNAL}; animation: r .9s linear infinite; }
@@ -44,9 +52,9 @@ export function splashHtml(): string {
 </style></head>
 <body><div class="drag"></div><main>
   ${LOGO}
-  <h1>Iniciando…</h1>
-  <div class="spin" role="status" aria-label="Iniciando"></div>
-  <p>Preparando o servidor e o painel.</p>
+  <h1>${text('Iniciando…')}</h1>
+  <div class="spin" role="status" aria-label="${text('Iniciando')}"></div>
+  <p>${text('Preparando o servidor e o painel.')}</p>
   <div class="brand">${PRODUCT_NAME}</div>
 </main></body></html>`;
 }
@@ -60,13 +68,15 @@ export interface ErrorPageInput {
   logFile?: string;
 }
 
-export function errorHtml(input: ErrorPageInput): string {
+export function errorHtml(input: ErrorPageInput, language: Language = 'pt-BR'): string {
+  const text = (message: string, ...values: string[]) =>
+    escapeHtml(translateMessage(language, message, ...values));
   const detail = input.detail ? `<pre>${escapeHtml(input.detail)}</pre>` : '';
   const log = input.logFile
-    ? `<p class="small">Detalhes técnicos: <code>${escapeHtml(input.logFile)}</code></p>`
+    ? `<p class="small">${text('Detalhes técnicos:')} <code>${escapeHtml(input.logFile)}</code></p>`
     : '';
   return `<!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><title>${PRODUCT_NAME}</title>
+<html lang="${language}"><head><meta charset="utf-8"><title>${PRODUCT_NAME}</title>
 <style>${BASE_CSS}
   h1 { color: #ff5160; }
   .actions { margin-top: 22px; display: flex; gap: 12px; justify-content: center; }
@@ -82,13 +92,13 @@ export function errorHtml(input: ErrorPageInput): string {
 </style></head>
 <body><div class="drag"></div><main>
   ${LOGO}
-  <h1>Não foi possível abrir o ${PRODUCT_NAME}</h1>
-  <p>${escapeHtml(input.message)}</p>
+  <h1>${text('Não foi possível abrir o {0}', PRODUCT_NAME)}</h1>
+  <p>${text(input.message)}</p>
   ${detail}
   ${log}
   <div class="actions">
-    <a class="btn" href="${ACTION_SCHEME}//retry" autofocus>Tentar de novo</a>
-    <a class="btn secondary" href="${ACTION_SCHEME}//quit">Fechar o app</a>
+    <a class="btn" href="${ACTION_SCHEME}//retry" autofocus>${text('Tentar de novo')}</a>
+    <a class="btn secondary" href="${ACTION_SCHEME}//quit">${text('Fechar o app')}</a>
   </div>
 </main></body></html>`;
 }

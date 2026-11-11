@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { api } from '../analysis/api.ts';
 import { type FetchState, useFetch } from '../analysis/useFetch.ts';
 import { formatLapTime } from '../lib/format.ts';
+import { t as uiText } from '../lib/i18n.ts';
 import { DELTA_REFERENCE_LABELS } from '../lib/labels.ts';
 import { live } from '../live/liveStore.ts';
 import { useLiveRender } from '../live/raf.ts';
@@ -90,22 +91,22 @@ export function EngineerReference({
   }
 
   const sourceLabel = ref?.flags.includes('replay')
-    ? 'Captura de replay'
+    ? uiText('Captura de replay')
     : ref?.referenceMeta?.source === 'import'
-      ? 'Volta importada'
-      : 'Telemetria de pilotagem';
+      ? uiText('Volta importada')
+      : uiText('Telemetria de pilotagem');
 
   return (
     <>
       <section className="ui-card bn-card" aria-labelledby="engineer-ref-title">
         <div className="ui-card-head">
           <h3 id="engineer-ref-title" className="ui-card-title">
-            Volta de referência
+            {uiText('Volta de referência')}
           </h3>
         </div>
         <div className="bn-fields">
           <label className="ui-field">
-            <span className="ui-label">Comparar o painel com</span>
+            <span className="ui-label">{uiText('Comparar o painel com')}</span>
             <select
               className="ui-select"
               value={selectedId ? `lap:${selectedId}` : (current?.kind ?? profileKind)}
@@ -118,11 +119,14 @@ export function EngineerReference({
                 </option>
               ))}
               {selectedId && !laps.some((lap) => lap.id === selectedId) && (
-                <option value={`lap:${selectedId}`}>Volta selecionada anteriormente</option>
+                <option value={`lap:${selectedId}`}>
+                  {uiText('Volta selecionada anteriormente')}
+                </option>
               )}
               {laps.map((lap) => (
                 <option value={`lap:${lap.id}`} key={lap.id}>
-                  {lap.referenceMeta?.driverName ?? 'Referência'} · {formatLapTime(lap.timeMs)}
+                  {lap.referenceMeta?.driverName ?? uiText('Referência')} ·{' '}
+                  {formatLapTime(lap.timeMs)}
                 </option>
               ))}
             </select>
@@ -132,12 +136,14 @@ export function EngineerReference({
               <div className="bn-refinfo-head">
                 <strong className="num bn-refinfo-time">{formatLapTime(ref.timeMs)}</strong>
                 <span className="ui-badge" data-tone="accent">
-                  {ref.referenceMeta?.driverName ?? 'Volta própria'}
+                  {ref.referenceMeta?.driverName ?? uiText('Volta própria')}
                 </span>
               </div>
               <p className="ui-help">
-                {ref.referenceMeta?.carName || carName(ref.carCode) || `Carro #${ref.carCode}`} ·{' '}
-                {description?.name ?? 'Traçado indisponível'}
+                {ref.referenceMeta?.carName ||
+                  carName(ref.carCode) ||
+                  uiText('Carro #{0}', ref.carCode)}{' '}
+                · {description?.name ?? uiText('Traçado indisponível')}
                 {description?.layout && ` · ${description.layout}`}
               </p>
               <p className="ui-help">{sourceLabel}</p>
@@ -145,7 +151,7 @@ export function EngineerReference({
           )}
           {needsFallback && (
             <div className="bn-note" data-tone="warn" role="status">
-              <p>A referência não está disponível para este carro e traçado.</p>
+              <p>{uiText('A referência não está disponível para este carro e traçado.')}</p>
               {personal && (
                 <button
                   type="button"
@@ -156,21 +162,24 @@ export function EngineerReference({
                   onClick={() => void selectReference('personalBest')}
                 >
                   <Icon name="check" size={16} />
-                  Usar melhor pessoal · {formatLapTime(personal.timeMs)}
+                  {`${uiText('Usar melhor pessoal ·')} `}
+                  {formatLapTime(personal.timeMs)}
                 </button>
               )}
             </div>
           )}
           {!refId && !needsFallback && (
             <p className="ui-help">
-              O painel mostra os detalhes assim que encontrar a volta para o carro e traçado atuais.
+              {uiText(
+                'O painel mostra os detalhes assim que encontrar a volta para o carro e traçado atuais.',
+              )}
             </p>
           )}
           {(sendError || error) && (
             <p className="bn-note" data-tone="loss" role="status">
               {sendError
-                ? 'Não foi possível trocar a referência.'
-                : 'Não foi possível listar as referências salvas.'}
+                ? uiText('Não foi possível trocar a referência.')
+                : uiText('Não foi possível listar as referências salvas.')}
             </p>
           )}
         </div>

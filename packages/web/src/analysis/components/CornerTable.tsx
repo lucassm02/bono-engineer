@@ -2,6 +2,7 @@
 
 import type { CornerComparisonRow, CornerMetrics } from '@gt7/shared';
 import { useState } from 'react';
+import { t as uiText } from '../../lib/i18n.ts';
 import { THEME } from '../../lib/theme.ts';
 import {
   CORNER_METRICS,
@@ -28,30 +29,34 @@ export function CornerTable({ rows, focusCorner, onCorner }: Props) {
   return (
     <div className="cmp-corner-table">
       <div className="cmp-ct-tools">
-        <fieldset className="ui-segmented" aria-label="Ordenar curvas">
+        <fieldset className="ui-segmented" aria-label={uiText('Ordenar curvas')}>
           <button type="button" aria-pressed={sort === 'order'} onClick={() => setSort('order')}>
-            Ordem da pista
+            {uiText('Ordem da pista')}
           </button>
           <button
             type="button"
             aria-pressed={sort === 'timeLost'}
             onClick={() => setSort('timeLost')}
           >
-            Mais tempo perdido
+            {uiText('Mais tempo perdido')}
           </button>
         </fieldset>
         <p className="cmp-ct-legend">
           <span>
-            <i className="cmp-swatch" style={{ background: THEME.chart1 }} /> Você
+            <i className="cmp-swatch" style={{ background: THEME.chart1 }} />
+            {` ${uiText('Você')}`}
           </span>
           <span>
-            <i className="cmp-swatch" style={{ background: THEME.chart2 }} /> Referência
+            <i className="cmp-swatch" style={{ background: THEME.chart2 }} />
+            {` ${uiText('Referência')}`}
           </span>
           <span>
-            <i className="cmp-swatch" style={{ background: THEME.gain }} /> a seu favor
+            <i className="cmp-swatch" style={{ background: THEME.gain }} />
+            {` ${uiText('a seu favor')}`}
           </span>
           <span>
-            <i className="cmp-swatch" style={{ background: THEME.loss }} /> custa tempo
+            <i className="cmp-swatch" style={{ background: THEME.loss }} />
+            {` ${uiText('custa tempo')}`}
           </span>
         </p>
       </div>
@@ -59,18 +64,18 @@ export function CornerTable({ rows, focusCorner, onCorner }: Props) {
         <table className="cmp-table cmp-table-click">
           <thead>
             <tr>
-              <th>Curva</th>
+              <th>{uiText('Curva')}</th>
               <th
                 className="num-col"
-                title="+ = você perdeu tempo nesta curva (zona de frenagem → saída)"
+                title={uiText('+ = você perdeu tempo nesta curva (zona de frenagem → saída)')}
               >
-                Tempo
+                {uiText('Tempo')}
               </th>
               {CORNER_METRICS.map((m) => (
                 <th
                   key={m.key}
                   className="num-col"
-                  title={`${m.label} (${m.unit}). Diferença: ${m.hint}`}
+                  title={uiText('{0} ({1}). Diferença: {2}', m.label, m.unit, m.hint)}
                 >
                   {m.short}
                   <span className="cmp-th-unit"> {m.unit}</span>
@@ -78,12 +83,15 @@ export function CornerTable({ rows, focusCorner, onCorner }: Props) {
               ))}
               <th
                 className="num-col"
-                title="Desvio lateral do seu traçado em relação à linha da referência (+ = à esquerda): entrada / ápice / saída"
+                title={uiText(
+                  'Desvio lateral do seu traçado em relação à linha da referência (+ = à esquerda): entrada / ápice / saída',
+                )}
               >
-                Traçado <span className="cmp-th-unit">m</span>
+                {`${uiText('Traçado')} `}
+                <span className="cmp-th-unit">m</span>
               </th>
-              <th className="num-col" title="Marcha no ápice: você / referência">
-                Marcha
+              <th className="num-col" title={uiText('Marcha no ápice: você / referência')}>
+                {uiText('Marcha')}
               </th>
             </tr>
           </thead>
@@ -153,10 +161,13 @@ export function CornerTable({ rows, focusCorner, onCorner }: Props) {
         </table>
       </div>
       <p className="cmp-table-note">
-        Em cada métrica: <span className="a-m-you">você</span> ·{' '}
-        <span className="a-m-ref">referência</span> · diferença (verde = a seu favor, vermelho =
-        custa tempo). Frenagem e retomada são posições na volta (m); frenagem + = você freia mais
-        tarde.
+        {`${uiText('Em cada métrica:')} `}
+        <span className="a-m-you">{uiText('você')}</span> ·{' '}
+        <span className="a-m-ref">{uiText('referência')}</span>
+        {' ' +
+          uiText(
+            '· diferença (verde = a seu favor, vermelho = custa tempo). Frenagem e retomada são posições na volta (m); frenagem + = você freia mais tarde.',
+          )}
       </p>
     </div>
   );

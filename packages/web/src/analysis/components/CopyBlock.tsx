@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from '../../components/ui/Icon.tsx';
+import { t as uiText } from '../../lib/i18n.ts';
 import { copyText } from './ui.tsx';
 
-export function CopyBtn({ text, label = 'Copiar' }: { text: string; label?: string }) {
+export function CopyBtn({ text, label = uiText('Copiar') }: { text: string; label?: string }) {
   const [state, setState] = useState<'idle' | 'ok' | 'fail'>('idle');
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => void (timer.current && clearTimeout(timer.current)), []);
@@ -22,7 +23,7 @@ export function CopyBtn({ text, label = 'Copiar' }: { text: string; label?: stri
       }}
     >
       <Icon name={state === 'ok' ? 'check' : 'copy'} size={14} />
-      {state === 'ok' ? 'Copiado' : state === 'fail' ? 'Selecione e copie' : label}
+      {state === 'ok' ? uiText('Copiado') : state === 'fail' ? uiText('Selecione e copie') : label}
     </button>
   );
 }

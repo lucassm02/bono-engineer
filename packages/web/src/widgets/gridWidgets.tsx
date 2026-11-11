@@ -18,7 +18,8 @@ import {
   formatLapTime,
   formatSectorTime,
 } from '../lib/format.ts';
-import { DELTA_REFERENCE_LABELS, WHEEL_LABELS } from '../lib/labels.ts';
+import { t as uiText } from '../lib/i18n.ts';
+import { DELTA_REFERENCE_LABELS, wheelLabel } from '../lib/labels.ts';
 import { tyreTempColor } from '../lib/tyreColor.ts';
 import { useLiveRender } from '../live/raf.ts';
 import { fuelText, trendGlyph } from '../views/CorridaView.tsx';
@@ -72,7 +73,7 @@ function ValueWidget({ spec }: { spec: ValueSpec }) {
       data-tone="neutral"
       data-accent={opts.accent ? '1' : '0'}
     >
-      <span className="gw-label">{label}</span>
+      <span className="gw-label">{uiText(label)}</span>
       <span className="gw-big num">
         <span ref={set('v')}>–</span>
         {opts.unit && <small> {opts.unit}</small>}
@@ -91,7 +92,9 @@ function DeltaWidget() {
     setAttr(r.current.box, 'data-tone', deltaTone(d.ms));
     setText(
       r.current.ref,
-      d.ms === null ? 'sem referência' : `vs ${DELTA_REFERENCE_LABELS[d.reference].toLowerCase()}`,
+      d.ms === null
+        ? uiText('sem referência')
+        : `vs ${DELTA_REFERENCE_LABELS[d.reference].toLowerCase()}`,
     );
   });
   return (
@@ -176,10 +179,10 @@ function TyreTempsWidget() {
   });
   return (
     <div className="gw gw-tyres">
-      <span className="gw-label">Pneus °C</span>
+      <span className="gw-label">{uiText('Pneus °C')}</span>
       <div className="gw-tyre-grid">
         {[0, 1, 2, 3].map((i) => (
-          <span key={i} className="gw-tyre num" ref={set(`c${i}`)} title={WHEEL_LABELS[i]}>
+          <span key={i} className="gw-tyre num" ref={set(`c${i}`)} title={wheelLabel(i)}>
             <span ref={set(`t${i}`)} />
           </span>
         ))}
@@ -197,15 +200,12 @@ function TyreSlipWidget() {
       const state = a < SLIP_WARN ? 'ok' : s > 0 ? 'spin' : 'lock';
       setAttr(r.current[`c${i}`], 'data-slip', state);
       setAttr(r.current[`c${i}`], 'data-level', a >= SLIP_ALERT ? '2' : a >= SLIP_WARN ? '1' : '0');
-      setText(
-        r.current[`t${i}`],
-        state === 'ok' ? WHEEL_LABELS[i as 0 | 1 | 2 | 3] : `${Math.round(a * 100)}%`,
-      );
+      setText(r.current[`t${i}`], state === 'ok' ? wheelLabel(i) : `${Math.round(a * 100)}%`);
     }
   });
   return (
     <div className="gw gw-tyres">
-      <span className="gw-label">Patinagem</span>
+      <span className="gw-label">{uiText('Patinagem')}</span>
       <div className="gw-tyre-grid">
         {[0, 1, 2, 3].map((i) => (
           <span key={i} className="gw-slip num" ref={set(`c${i}`)} data-slip="ok" data-level="0">
@@ -225,7 +225,7 @@ function InputsWidget() {
   });
   return (
     <div className="gw gw-inputs">
-      <span className="gw-label">Pedais</span>
+      <span className="gw-label">{uiText('Pedais')}</span>
       <div className="gw-pedals">
         <div className="gw-pedal gw-pedal-brk">
           <div className="gw-pedal-fill" ref={set('brk')} />
@@ -242,11 +242,11 @@ function BoostWidget() {
   const { r, set } = useRefs();
   useLiveRender((f) => {
     setAttr(r.current.box, 'data-turbo', f.flags.hasTurbo ? '1' : '0');
-    setText(r.current.v, f.flags.hasTurbo ? formatFixed(f.car.boostBar, 2) : 'Aspirado');
+    setText(r.current.v, f.flags.hasTurbo ? formatFixed(f.car.boostBar, 2) : uiText('Aspirado'));
   });
   return (
     <div className="gw gw-value" ref={set('box')} data-turbo="1">
-      <span className="gw-label">Turbo (bar)</span>
+      <span className="gw-label">{uiText('Turbo (bar)')}</span>
       <span className="gw-big num" ref={set('v')} />
     </div>
   );
@@ -272,7 +272,7 @@ function FlagsWidget() {
         LIM
       </span>
       <span className="aid" ref={set('hb')} data-on="0">
-        FREIO MÃO
+        {uiText('FREIO MÃO')}
       </span>
     </div>
   );
@@ -284,12 +284,17 @@ function NextCornerWidget() {
     const h = f.nextCorner;
     setText(
       r.current.name,
-      h ? `${h.direction === 'left' ? '↰' : '↱'} ${cornerLabel(h.cornerId, h.name)}` : 'Sem dica',
+      h
+        ? `${h.direction === 'left' ? '↰' : '↱'} ${cornerLabel(h.cornerId, h.name)}`
+        : uiText('Sem dica'),
     );
     if (h) {
       const b = distanceToBrake(h, f.distanceM, f.track?.lengthM ?? null);
       setText(r.current.v, `${formatInt(Math.max(0, b.meters))} m`);
-      setText(r.current.sub, b.kind === 'brake' ? 'até a frenagem' : 'até a entrada');
+      setText(
+        r.current.sub,
+        b.kind === 'brake' ? uiText('até a frenagem') : uiText('até a entrada'),
+      );
     } else {
       setText(r.current.v, '–');
       setText(r.current.sub, '');
@@ -331,7 +336,7 @@ const GRID_WIDGETS: Record<WidgetId, ComponentType | ValueSpec> = {
   bestLap: valueWidget('Melhor', (f) => formatLapTime(f.lap.bestLapMs)),
   lapCounter: valueWidget('Volta', (f) =>
     f.lap.lap <= 0
-      ? 'Saída'
+      ? uiText('Saída')
       : f.lap.totalLaps
         ? `${f.lap.lap}/${f.lap.totalLaps}`
         : String(f.lap.lap),
@@ -351,7 +356,12 @@ const GRID_WIDGETS: Record<WidgetId, ComponentType | ValueSpec> = {
       f.fuel.lapsRemaining === null
         ? formatFixed(f.fuel.level, 1)
         : formatFixed(f.fuel.lapsRemaining, 1),
-    { sub: (f) => (f.fuel.lapsRemaining === null ? 'litros' : fuelText(f).replace('Comb. ', '')) },
+    {
+      sub: (f) =>
+        f.fuel.lapsRemaining === null
+          ? uiText('litros')
+          : fuelText(f).replace(uiText('Comb. '), ''),
+    },
   ),
   gForce: GForceWidget,
   miniMap: MiniMapWidget,

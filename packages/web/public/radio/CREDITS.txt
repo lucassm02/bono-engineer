@@ -1,4 +1,4 @@
-Clipes de rádio em português do Brasil pré-gerados para o Bono Engineer.
+Clipes de rádio em português do Brasil, inglês e espanhol pré-gerados para o Bono Engineer.
 Áudio sintético (voz gerada por computador), gerado offline com sherpa-onnx
 (https://github.com/k2-fsa/sherpa-onnx, Apache-2.0), sherpa-onnx-node 1.13.8.
 Regenerar: npm run radio:voices (packages/web/scripts/radio-voices).
@@ -25,3 +25,45 @@ Conversão ONNX: k2-fsa/sherpa-onnx, kokoro-multi-lang-v1_0 (Apache-2.0).
 https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
 Voz: mistura gerada pelo Bono dos estilos pm_alex (60%) e am_onyx (40%), modificação
 dos arquivos de voz Apache-2.0 do Kokoro, com fonemas em pt-BR.
+
+== Michael (radio:en-michael)
+Modelo: Kokoro-82M v1.0, de hexgrad. Licença Apache-2.0.
+https://huggingface.co/hexgrad/Kokoro-82M
+Conversão ONNX: k2-fsa/sherpa-onnx, kokoro-multi-lang-v1_0 (Apache-2.0).
+https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
+Voice: am_michael.
+
+== Nick (radio:en-nick)
+Modelo: Kokoro-82M v1.0, de hexgrad. Licença Apache-2.0.
+https://huggingface.co/hexgrad/Kokoro-82M
+Conversão ONNX: k2-fsa/sherpa-onnx, kokoro-multi-lang-v1_0 (Apache-2.0).
+https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
+Voice: am_santa.
+
+== Onyx (radio:en-onyx)
+Modelo: Kokoro-82M v1.0, de hexgrad. Licença Apache-2.0.
+https://huggingface.co/hexgrad/Kokoro-82M
+Conversão ONNX: k2-fsa/sherpa-onnx, kokoro-multi-lang-v1_0 (Apache-2.0).
+https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
+Voice: am_onyx.
+
+== Álex (radio:es-alex)
+Modelo: Kokoro-82M v1.0, de hexgrad. Licença Apache-2.0.
+https://huggingface.co/hexgrad/Kokoro-82M
+Conversão ONNX: k2-fsa/sherpa-onnx, kokoro-multi-lang-v1_0 (Apache-2.0).
+https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
+Voz: em_alex.
+
+== Santos (radio:es-santos)
+Modelo: Kokoro-82M v1.0, de hexgrad. Licença Apache-2.0.
+https://huggingface.co/hexgrad/Kokoro-82M
+Conversão ONNX: k2-fsa/sherpa-onnx, kokoro-multi-lang-v1_0 (Apache-2.0).
+https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
+Voz: em_santa.
+
+== Bruno ES (radio:es-bruno)
+Modelo: Kokoro-82M v1.0, de hexgrad. Licença Apache-2.0.
+https://huggingface.co/hexgrad/Kokoro-82M
+Conversão ONNX: k2-fsa/sherpa-onnx, kokoro-multi-lang-v1_0 (Apache-2.0).
+https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
+Voz: mezcla de em_alex (55 %) y am_onyx (45 %), con fonemas en español.

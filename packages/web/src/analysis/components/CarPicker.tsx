@@ -21,6 +21,7 @@ import {
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '../../components/ui/Icon.tsx';
 import { Modal } from '../../components/ui/Modal.tsx';
+import { t as uiText } from '../../lib/i18n.ts';
 import {
   type CarFilter,
   describeCarFilter,
@@ -61,7 +62,7 @@ export function FilterChip({
         type="button"
         className="cf-chip-x"
         onClick={onRemove}
-        aria-label={`Remover filtro ${label}`}
+        aria-label={uiText('Remover filtro {0}', label)}
       >
         <Icon name="close" size={14} />
       </button>
@@ -83,16 +84,20 @@ export function CarFilterChips({
     <>
       {value.makerId !== null && (value.carCode === null || maker) && (
         <FilterChip
-          label={value.makerId === UNKNOWN_MAKER_ID ? 'Fora do catálogo' : (maker?.name ?? 'Marca')}
+          label={
+            value.makerId === UNKNOWN_MAKER_ID
+              ? uiText('Fora do catálogo')
+              : (maker?.name ?? uiText('Marca'))
+          }
           icon={maker ? <BrandLogo maker={maker} size={22} /> : undefined}
-          title="Marca"
+          title={uiText('Marca')}
           onRemove={() => onChange(NO_CAR_FILTER)}
         />
       )}
       {value.carCode !== null && (
         <FilterChip
-          label={getCar(value.carCode)?.name ?? `Carro #${value.carCode}`}
-          title="Carro"
+          label={getCar(value.carCode)?.name ?? uiText('Carro #{0}', value.carCode)}
+          title={uiText('Carro')}
           onRemove={() =>
             onChange(value.makerId !== null ? pickMaker(value.makerId) : NO_CAR_FILTER)
           }
@@ -107,7 +112,7 @@ export function CarFilterField({
   usage,
   value,
   onChange,
-  label = 'Carro',
+  label = uiText('Carro'),
 }: {
   /** Cars (with lap counts) that exist in the screen's data; drives the "history" tab. */
   usage: readonly CarUsage[];
@@ -224,15 +229,15 @@ function CarPicker({
 
   const title = inMaker
     ? makerId === UNKNOWN_MAKER_ID
-      ? 'Fora do catálogo'
-      : (maker?.name ?? 'Marca')
-    : 'Escolher carro';
+      ? uiText('Fora do catálogo')
+      : (maker?.name ?? uiText('Marca'))
+    : uiText('Escolher carro');
 
   const subtitle = maker
     ? `${maker.countryName} · ${plural(maker.carCount, 'carro', 'carros')} no jogo`
     : makerId === UNKNOWN_MAKER_ID
-      ? 'Carros que ainda não estão na lista do jogo (DLC novo?)'
-      : 'Escolha a marca e depois o carro';
+      ? uiText('Carros que ainda não estão na lista do jogo (DLC novo?)')
+      : uiText('Escolha a marca e depois o carro');
 
   return (
     <Modal
@@ -259,10 +264,10 @@ function CarPicker({
             onChange={(e) => setQuery(e.target.value)}
             placeholder={
               inMaker
-                ? `Buscar carro da ${title}…`
-                : 'Buscar marca ou carro (ex.: supra, gt-r, civic)'
+                ? uiText('Buscar carro da {0}…', title)
+                : uiText('Buscar marca ou carro (ex.: supra, gt-r, civic)')
             }
-            aria-label="Buscar"
+            aria-label={uiText('Buscar')}
             autoComplete="off"
             spellCheck={false}
           />
@@ -280,7 +285,7 @@ function CarPicker({
             }}
           >
             <Icon name="back" size={16} />
-            Todas as marcas
+            {uiText('Todas as marcas')}
           </button>
         )}
       </div>
@@ -307,21 +312,23 @@ function CarPicker({
                   aria-pressed={tab === 'history'}
                   onClick={() => setTab('history')}
                 >
-                  No meu histórico
+                  {uiText('No meu histórico')}
                 </button>
                 <button type="button" aria-pressed={tab === 'all'} onClick={() => setTab('all')}>
-                  Todas as marcas do jogo
+                  {uiText('Todas as marcas do jogo')}
                 </button>
               </div>
             )}
             {!hasHistory && (
               <p className="cp-hint">
-                Você ainda não tem voltas gravadas: aqui estão todas as marcas do Gran Turismo 7.
+                {uiText(
+                  'Você ainda não tem voltas gravadas: aqui estão todas as marcas do Gran Turismo 7.',
+                )}
               </p>
             )}
             {isCarFiltering(value) && (
               <button type="button" className="cp-all" onClick={() => onPick(NO_CAR_FILTER)}>
-                Mostrar todos os carros (limpar filtro)
+                {uiText('Mostrar todos os carros (limpar filtro)')}
               </button>
             )}
             <ul className="cp-grid">
@@ -392,7 +399,7 @@ function MakerCars({
     if (unknown) {
       return usedCars.map((c) => ({
         id: c.carCode,
-        label: `Carro #${c.carCode}`,
+        label: uiText('Carro #{0}', c.carCode),
         sub: '',
         group: '',
       }));
@@ -408,20 +415,22 @@ function MakerCars({
   }, [unknown, usedCars, query, makerId, onlyUsed, lapsByCar]);
 
   const anyUsed = usedCars.length > 0;
-  const name = maker?.name ?? 'Fora do catálogo';
+  const name = maker?.name ?? uiText('Fora do catálogo');
 
   return (
     <>
       <button type="button" className="cp-all" onClick={onAllOfMaker}>
-        {unknown ? 'Todos os carros fora do catálogo' : `Todos os carros da ${name}`}
+        {unknown
+          ? uiText('Todos os carros fora do catálogo')
+          : uiText('Todos os carros da {0}', name)}
         {anyUsed && (
           <span className="cp-all-sub">
             {' '}
             ·{' '}
             {plural(
               usedCars.reduce((n, c) => n + c.laps, 0),
-              'volta',
-              'voltas',
+              uiText('volta'),
+              uiText('voltas'),
             )}
           </span>
         )}
@@ -433,18 +442,18 @@ function MakerCars({
             checked={onlyUsed}
             onChange={(e) => setOnlyUsed(e.target.checked)}
           />
-          Só os que eu já usei
+          {uiText('Só os que eu já usei')}
         </label>
       )}
       {rows.length === 0 ? (
         <Nothing
           text={
             query
-              ? `Nenhum carro da ${name} combina com “${query}”.`
-              : 'Nenhum carro para mostrar com esse filtro.'
+              ? uiText('Nenhum carro da {0} combina com “{1}”.', name, query)
+              : uiText('Nenhum carro para mostrar com esse filtro.')
           }
           onClear={query ? onClear : onlyUsed ? () => setOnlyUsed(false) : undefined}
-          clearLabel={query ? 'Limpar a busca' : 'Mostrar todos'}
+          clearLabel={query ? uiText('Limpar a busca') : uiText('Mostrar todos')}
         />
       ) : (
         <ul className="cp-cars">
@@ -466,7 +475,7 @@ function MakerCars({
                   </span>
                   {laps > 0 && (
                     <span className="ui-badge" data-tone="accent">
-                      {plural(laps, 'volta', 'voltas')}
+                      {plural(laps, uiText('volta'), uiText('voltas'))}
                     </span>
                   )}
                 </button>
@@ -506,7 +515,10 @@ function SearchResults({
   if (makers.length === 0 && shown.length === 0) {
     return (
       <Nothing
-        text={`Nada encontrado para “${query}”. Tente só parte do nome (ex.: “skyl” ou “civic”).`}
+        text={uiText(
+          'Nada encontrado para “{0}”. Tente só parte do nome (ex.: “skyl” ou “civic”).',
+          query,
+        )}
         onClear={onClear}
         clearLabel="Limpar a busca"
       />
@@ -516,7 +528,7 @@ function SearchResults({
     <>
       {makers.length > 0 && (
         <>
-          <h3 className="cp-sec">Marcas</h3>
+          <h3 className="cp-sec">{uiText('Marcas')}</h3>
           <ul className="cp-grid">
             {makers.slice(0, 12).map((m) => (
               <li key={m.id}>
@@ -532,7 +544,7 @@ function SearchResults({
       )}
       {shown.length > 0 && (
         <>
-          <h3 className="cp-sec">Carros</h3>
+          <h3 className="cp-sec">{uiText('Carros')}</h3>
           <ul className="cp-cars">
             {shown.map((c) => {
               const laps = lapsByCar.get(c.id) ?? 0;
@@ -549,7 +561,7 @@ function SearchResults({
                     </span>
                     {laps > 0 && (
                       <span className="ui-badge" data-tone="accent">
-                        {plural(laps, 'volta', 'voltas')}
+                        {plural(laps, uiText('volta'), uiText('voltas'))}
                       </span>
                     )}
                   </button>
@@ -559,7 +571,9 @@ function SearchResults({
           </ul>
           {more && (
             <p className="cp-hint">
-              Mostrando os {SEARCH_LIMIT} primeiros. Escreva mais do nome para refinar.
+              {`${uiText('Mostrando os')} `}
+              {SEARCH_LIMIT}
+              {` ${uiText('primeiros. Escreva mais do nome para refinar.')}`}
             </p>
           )}
         </>
@@ -610,11 +624,11 @@ function BrandTile({
       onClick={onClick}
     >
       <BrandLogo maker={maker} size={44} />
-      <span className="cp-brand-name">{maker?.name ?? 'Fora do catálogo'}</span>
+      <span className="cp-brand-name">{maker?.name ?? uiText('Fora do catálogo')}</span>
       <span className="cp-brand-sub">
         {laps > 0
-          ? plural(laps, 'volta', 'voltas')
-          : plural(maker?.carCount ?? 0, 'carro', 'carros')}
+          ? plural(laps, uiText('volta'), uiText('voltas'))
+          : plural(maker?.carCount ?? 0, uiText('carro'), uiText('carros'))}
       </span>
     </button>
   );

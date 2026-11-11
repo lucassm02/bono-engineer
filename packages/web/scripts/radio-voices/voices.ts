@@ -89,9 +89,10 @@ export const KOKORO_SPEAKERS = [
 export type Recipe =
   | {
       engine: 'kokoro';
-      /** Style-vector mix, weights summing to 1. Text is always phonemized as pt-BR. */
+      /** Style-vector mix, weights summing to 1. */
       mix: Partial<Record<(typeof KOKORO_SPEAKERS)[number], number>>;
       speed: number;
+      lang?: 'en-us' | 'es';
     }
   | { engine: 'vits'; model: 'piperFaber' | 'piperCadu' | 'piperJeff'; speed: number }
   | { engine: 'supertonic'; sid: number; speed: number; steps: number };
@@ -125,6 +126,33 @@ export const VOICE_SOURCES: Record<string, VoiceSource> = {
       ...KOKORO_CREDITS,
       'Voz: mistura gerada pelo Bono dos estilos pm_alex (60%) e am_onyx (40%), modificação',
       'dos arquivos de voz Apache-2.0 do Kokoro, com fonemas em pt-BR.',
+    ],
+  },
+  'en-michael': {
+    recipe: { engine: 'kokoro', mix: { am_michael: 1 }, speed: 1, lang: 'en-us' },
+    credits: [...KOKORO_CREDITS, 'Voice: am_michael.'],
+  },
+  'en-nick': {
+    recipe: { engine: 'kokoro', mix: { am_santa: 1 }, speed: 1, lang: 'en-us' },
+    credits: [...KOKORO_CREDITS, 'Voice: am_santa.'],
+  },
+  'en-onyx': {
+    recipe: { engine: 'kokoro', mix: { am_onyx: 1 }, speed: 0.97, lang: 'en-us' },
+    credits: [...KOKORO_CREDITS, 'Voice: am_onyx.'],
+  },
+  'es-alex': {
+    recipe: { engine: 'kokoro', mix: { em_alex: 1 }, speed: 1, lang: 'es' },
+    credits: [...KOKORO_CREDITS, 'Voz: em_alex.'],
+  },
+  'es-santos': {
+    recipe: { engine: 'kokoro', mix: { em_santa: 1 }, speed: 1, lang: 'es' },
+    credits: [...KOKORO_CREDITS, 'Voz: em_santa.'],
+  },
+  'es-bruno': {
+    recipe: { engine: 'kokoro', mix: { em_alex: 0.55, am_onyx: 0.45 }, speed: 0.97, lang: 'es' },
+    credits: [
+      ...KOKORO_CREDITS,
+      'Voz: mezcla de em_alex (55 %) y am_onyx (45 %), con fonemas en español.',
     ],
   },
 };

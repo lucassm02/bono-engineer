@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { DELTA_BAR_RANGE_MS } from '../config.ts';
 import { setAttr, setStyle, setText } from '../lib/dom.ts';
 import { clamp, deltaTone, formatDelta, formatLapTime } from '../lib/format.ts';
+import { t as uiText } from '../lib/i18n.ts';
 import { DELTA_REFERENCE_LABELS } from '../lib/labels.ts';
 import { useLiveRender } from '../live/raf.ts';
 import { DeltaBar } from '../widgets/DeltaBar.tsx';
@@ -31,11 +32,11 @@ export function DeltaGrandeView() {
     setText(
       e.ref,
       ms === null
-        ? 'Sem volta de referência'
-        : `Contra ${DELTA_REFERENCE_LABELS[f.lap.delta.reference].toLowerCase()}`,
+        ? uiText('Sem volta de referência')
+        : uiText('Contra {0}', DELTA_REFERENCE_LABELS[f.lap.delta.reference].toLowerCase()),
     );
     setText(e.lap, lapCounterText(f));
-    setText(e.predicted, `Prevista ${formatLapTime(f.lap.predictedLapMs)}`);
+    setText(e.predicted, uiText('Prevista {0}', formatLapTime(f.lap.predictedLapMs)));
   });
 
   return (

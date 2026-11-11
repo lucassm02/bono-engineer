@@ -2,7 +2,8 @@ import { useRef } from 'react';
 import { SLIP_ALERT, SLIP_WARN, SUSPENSION_RANGE_M, TYRE_TEMP_SCALE } from '../config.ts';
 import { setAttr, setStyle, setText } from '../lib/dom.ts';
 import { clamp, formatInt } from '../lib/format.ts';
-import { surfaceLabel, WHEEL_LABELS } from '../lib/labels.ts';
+import { t as uiText } from '../lib/i18n.ts';
+import { surfaceLabel, wheelLabel } from '../lib/labels.ts';
 import { tyreTempBand, tyreTempColor } from '../lib/tyreColor.ts';
 import { useLiveRender } from '../live/raf.ts';
 
@@ -15,16 +16,32 @@ export function slipState(slip: number): { state: SlipState; level: 0 | 1 | 2 } 
 }
 
 const SLIP_TEXT: Record<SlipState, string> = {
-  ok: 'Aderindo',
-  spin: 'Patinando',
-  lock: 'Travando',
+  get ok() {
+    return uiText('Aderindo');
+  },
+  get spin() {
+    return uiText('Patinando');
+  },
+  get lock() {
+    return uiText('Travando');
+  },
 };
 const BAND_TEXT = {
-  cold: 'Frio',
-  warming: 'Aquecendo',
-  ideal: 'Ideal',
-  overheating: 'Quente',
-  hot: 'Superaquecido',
+  get cold() {
+    return uiText('Frio');
+  },
+  get warming() {
+    return uiText('Aquecendo');
+  },
+  get ideal() {
+    return uiText('Ideal');
+  },
+  get overheating() {
+    return uiText('Quente');
+  },
+  get hot() {
+    return uiText('Superaquecido');
+  },
 } as const;
 
 const WHEELS = [0, 1, 2, 3] as const;
@@ -38,7 +55,12 @@ const TYRE_RECTS = [
 
 function CarDrawing({ tyreRef }: { tyreRef: (i: number) => (el: SVGRectElement | null) => void }) {
   return (
-    <svg className="car-svg" viewBox="0 0 200 360" role="img" aria-label="Carro visto de cima">
+    <svg
+      className="car-svg"
+      viewBox="0 0 200 360"
+      role="img"
+      aria-label={uiText('Carro visto de cima')}
+    >
       <path
         className="car-body"
         d="M100 14 C78 14 66 24 62 44 L54 110 C50 140 50 150 52 170 L56 300 C58 330 72 346 100 346 C128 346 142 330 144 300 L148 170 C150 150 150 140 146 110 L138 44 C134 24 122 14 100 14 Z"
@@ -100,7 +122,7 @@ export function PneusView() {
   const card = (i: (typeof WHEELS)[number]) => (
     <div className={`tyre-card tyre-card-${i}`} ref={set(`card${i}`)} key={i}>
       <div className="tyre-card-head">
-        <span className="tyre-name">{WHEEL_LABELS[i]}</span>
+        <span className="tyre-name">{wheelLabel(i)}</span>
         <span className="tyre-surface" ref={set(`surf${i}`)} />
       </div>
       <div className="tyre-temp num">
@@ -109,7 +131,7 @@ export function PneusView() {
       </div>
       <div className="tyre-band" ref={set(`band${i}`)} />
       <div className="tyre-slip" ref={set(`slip${i}`)} data-slip="ok" data-level="0" />
-      <div className="tyre-susp" title="Altura da suspensão">
+      <div className="tyre-susp" title={uiText('Altura da suspensão')}>
         <div className="tyre-susp-track">
           <div className="tyre-susp-fill" ref={set(`susp${i}`)} />
         </div>

@@ -5,6 +5,7 @@
  */
 
 import type { ConsoleConnection, ConsoleIpSource, ConsoleLinkState } from '@gt7/shared';
+import { t as uiText } from './i18n.ts';
 
 /** Visual tone of the link: drives the dot colour. */
 export type LinkTone = 'ok' | 'busy' | 'info' | 'warn' | 'bad';
@@ -27,7 +28,7 @@ export function plural(n: number, one: string, many: string): string {
 
 /** "N endereços testados" (singular aware). */
 export function hostsProbedText(n: number): string {
-  return `${plural(n, 'endereço testado', 'endereços testados')}`;
+  return `${plural(n, uiText('endereço testado'), uiText('endereços testados'))}`;
 }
 
 /** What to show for a given connection. `null` = the server has not told us yet. */
@@ -35,9 +36,9 @@ export function describeLink(c: ConsoleConnection | null): LinkView {
   if (!c) {
     return {
       tone: 'warn',
-      title: 'Sem informação do console',
-      short: 'Sem informação',
-      detail: 'O servidor ainda não informou o estado da conexão com o PS5.',
+      title: uiText('Sem informação do console'),
+      short: uiText('Sem informação'),
+      detail: uiText('O servidor ainda não informou o estado da conexão com o PS5.'),
       busy: false,
     };
   }
@@ -45,50 +46,62 @@ export function describeLink(c: ConsoleConnection | null): LinkView {
     case 'idle':
       return {
         tone: 'bad',
-        title: 'Telemetria parada',
-        short: 'Telemetria parada',
+        title: uiText('Telemetria parada'),
+        short: uiText('Telemetria parada'),
         detail:
           c.hint ??
-          'O app não está ouvindo o console. Feche outros programas de telemetria (SimHub, GT7 Dashboard) e reinicie o app.',
+          uiText(
+            'O app não está ouvindo o console. Feche outros programas de telemetria (SimHub, GT7 Dashboard) e reinicie o app.',
+          ),
         busy: false,
       };
     case 'searching':
       return {
         tone: 'busy',
-        title: 'Procurando o PS5 na rede…',
-        short: 'Procurando o PS5…',
+        title: uiText('Procurando o PS5 na rede…'),
+        short: uiText('Procurando o PS5…'),
         detail:
           c.hostsProbed > 0
-            ? `${hostsProbedText(c.hostsProbed)} até agora. Abra o Gran Turismo 7 no PS5 e entre numa pista.`
-            : 'Abra o Gran Turismo 7 no PS5 e entre numa pista.',
+            ? uiText(
+                '{0} até agora. Abra o Gran Turismo 7 no PS5 e entre numa pista.',
+                hostsProbedText(c.hostsProbed),
+              )
+            : uiText('Abra o Gran Turismo 7 no PS5 e entre numa pista.'),
         busy: true,
       };
     case 'found':
       return {
         tone: 'info',
         title: c.consoleIp
-          ? `Console encontrado (${c.consoleIp}) — abra o Gran Turismo 7 e entre numa pista`
-          : 'Console encontrado — abra o Gran Turismo 7 e entre numa pista',
-        short: 'PS5 encontrado',
-        detail: 'Não é erro: o PS5 só envia dados com o jogo aberto numa pista (ou replay).',
+          ? uiText(
+              'Console encontrado ({0}) — abra o Gran Turismo 7 e entre numa pista',
+              c.consoleIp,
+            )
+          : uiText('Console encontrado — abra o Gran Turismo 7 e entre numa pista'),
+        short: uiText('PS5 encontrado'),
+        detail: uiText(
+          'Não é erro: o PS5 só envia dados com o jogo aberto numa pista (ou replay).',
+        ),
         busy: true,
       };
     case 'receiving':
       return {
         tone: 'ok',
-        title: 'Recebendo telemetria',
-        short: 'Recebendo telemetria',
+        title: uiText('Recebendo telemetria'),
+        short: uiText('Recebendo telemetria'),
         detail: null,
         busy: false,
       };
     case 'lost':
       return {
         tone: 'warn',
-        title: 'Sinal perdido — reconectando…',
-        short: 'Sinal perdido',
+        title: uiText('Sinal perdido — reconectando…'),
+        short: uiText('Sinal perdido'),
         detail:
           c.hint ??
-          'O PS5 parou de enviar dados. Se o jogo está aberto, confira se o console continua na mesma rede.',
+          uiText(
+            'O PS5 parou de enviar dados. Se o jogo está aberto, confira se o console continua na mesma rede.',
+          ),
         busy: true,
       };
   }
@@ -96,12 +109,16 @@ export function describeLink(c: ConsoleConnection | null): LinkView {
 
 export const IP_SOURCE_LABELS: Record<ConsoleIpSource, string> = {
   discovered: 'encontrado automaticamente',
-  manual: 'fixado por você',
-  simulator: 'console simulado (demonstração)',
+  get manual() {
+    return uiText('fixado por você');
+  },
+  get simulator() {
+    return uiText('console simulado (demonstração)');
+  },
 };
 
 export function ipSourceLabel(source: ConsoleIpSource | null): string {
-  return source ? IP_SOURCE_LABELS[source] : 'ainda não encontrado';
+  return source ? IP_SOURCE_LABELS[source] : uiText('ainda não encontrado');
 }
 
 /** True when the console is known (found at least once in this run, or saved). */
@@ -127,11 +144,11 @@ export function agoText(at: number | null | undefined, now = Date.now()): string
   if (!at) return 'nunca';
   const s = Math.max(0, Math.round((now - at) / 1000));
   if (s < 5) return 'agora';
-  if (s < 60) return `há ${s} s`;
+  if (s < 60) return uiText('há {0} s', s);
   const m = Math.round(s / 60);
-  if (m < 60) return `há ${m} min`;
+  if (m < 60) return uiText('há {0} min', m);
   const h = Math.round(m / 60);
-  return h < 48 ? `há ${h} h` : `há ${Math.round(h / 24)} dias`;
+  return h < 48 ? uiText('há {0} h', h) : uiText('há {0} dias', Math.round(h / 24));
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -179,13 +196,15 @@ export function mockConsoleConnection(
     lastPacketAt: state === 'receiving' ? now : state === 'lost' ? now - 8000 : null,
     hint:
       state === 'searching'
-        ? 'Procurando o PlayStation na rede. Abra o Gran Turismo 7 no PS5 e entre numa pista.'
+        ? uiText(
+            'Procurando o PlayStation na rede. Abra o Gran Turismo 7 no PS5 e entre numa pista.',
+          )
         : state === 'found'
-          ? 'Console encontrado. Abra o Gran Turismo 7 e entre numa pista.'
+          ? uiText('Console encontrado. Abra o Gran Turismo 7 e entre numa pista.')
           : state === 'lost'
             ? 'O PS5 parou de enviar dados.'
             : state === 'idle'
-              ? 'A porta de telemetria está ocupada por outro programa.'
+              ? uiText('A porta de telemetria está ocupada por outro programa.')
               : null,
   };
 }

@@ -22,6 +22,7 @@ import {
 } from '@gt7/shared';
 import { clockText } from '../../lib/captureStatus.ts';
 import { formatLapTime } from '../../lib/format.ts';
+import { t as uiText } from '../../lib/i18n.ts';
 import { parseLapTime } from './lapTime.ts';
 
 // ---------------------------------------------------------------------------------------------
@@ -64,17 +65,19 @@ export function parseRankingTime(raw: string): RankingTimeInput {
   if (ms === null) {
     return {
       kind: 'invalid',
-      message: 'Não entendi esse tempo. Use minutos:segundos.milésimos, por exemplo 1:30.960.',
+      message: uiText(
+        'Não entendi esse tempo. Use minutos:segundos.milésimos, por exemplo 1:30.960.',
+      ),
     };
   }
   if (ms < MIN_RANKING_MS) {
     return {
       kind: 'invalid',
-      message: 'Tempo curto demais para uma volta. Confira os minutos (ex.: 1:30.960).',
+      message: uiText('Tempo curto demais para uma volta. Confira os minutos (ex.: 1:30.960).'),
     };
   }
   if (ms > MAX_RANKING_MS) {
-    return { kind: 'invalid', message: 'Tempo longo demais para uma volta.' };
+    return { kind: 'invalid', message: uiText('Tempo longo demais para uma volta.') };
   }
   return { kind: 'ok', ms, shown: formatLapTime(ms) };
 }
@@ -103,7 +106,7 @@ export function resolvedCarName(carCode: number | null | undefined): string | nu
 /** Name shown for a car code: catalogue name or "Carro #1234". */
 export function carDisplayName(carCode: number | null | undefined): string {
   if (carCode === null || carCode === undefined) return '—';
-  return resolvedCarName(carCode) ?? `Carro #${carCode}`;
+  return resolvedCarName(carCode) ?? uiText('Carro #{0}', carCode);
 }
 
 export interface CarOptionGroup {
@@ -229,8 +232,8 @@ export function detectionView(i: DetectionInput): DetectionView {
       ...base,
       kind: 'offline',
       tone: 'warn',
-      title: 'Sem conexão com o app',
-      message: 'A captura precisa do app rodando no PC. Confira se ele está aberto.',
+      title: uiText('Sem conexão com o app'),
+      message: uiText('A captura precisa do app rodando no PC. Confira se ele está aberto.'),
     };
   }
   if (!replay) {
@@ -238,13 +241,14 @@ export function detectionView(i: DetectionInput): DetectionView {
       ...base,
       kind: 'idle',
       tone: 'idle',
-      title: 'Abra o replay no jogo — eu detecto sozinho',
-      message:
+      title: uiText('Abra o replay no jogo — eu detecto sozinho'),
+      message: uiText(
         'No jogo: Time Trial › Ranking › escolha o piloto › Replay. Dê play: esta faixa muda quando o replay começar.',
+      ),
     };
   }
   const carCode = i.carCode;
-  const carName = resolvedCarName(carCode) ?? (carCode ? `Carro #${carCode}` : null);
+  const carName = resolvedCarName(carCode) ?? (carCode ? uiText('Carro #{0}', carCode) : null);
   const trackName = i.capture?.trackName ?? null;
   const known = { carCode, carName, trackName };
   if (i.capture?.waiting === 'unknownTrack') {
@@ -252,9 +256,10 @@ export function detectionView(i: DetectionInput): DetectionView {
       ...known,
       kind: 'replayUnknownTrack',
       tone: 'warn',
-      title: 'Replay detectado',
-      message:
+      title: uiText('Replay detectado'),
+      message: uiText(
         'Não conheço esta pista ainda. Dirija essa pista ao vivo primeiro (uma volta completa) e depois capture o replay.',
+      ),
     };
   }
   if (trackName) {
@@ -262,8 +267,8 @@ export function detectionView(i: DetectionInput): DetectionView {
       ...known,
       kind: 'replay',
       tone: 'ok',
-      title: 'Replay detectado',
-      message: 'Tudo certo: é só tocar em “Capturar esta volta”.',
+      title: uiText('Replay detectado'),
+      message: uiText('Tudo certo: é só tocar em “Capturar esta volta”.'),
     };
   }
   const armed = !!i.capture && i.capture.state !== 'idle';
@@ -271,10 +276,10 @@ export function detectionView(i: DetectionInput): DetectionView {
     ...known,
     kind: 'replay',
     tone: 'ok',
-    title: 'Replay detectado',
+    title: uiText('Replay detectado'),
     message: armed
-      ? 'Identificando a pista pela posição do carro…'
-      : 'A pista é identificada assim que você tocar em “Capturar esta volta”.',
+      ? uiText('Identificando a pista pela posição do carro…')
+      : uiText('A pista é identificada assim que você tocar em “Capturar esta volta”.'),
   };
 }
 
@@ -302,20 +307,42 @@ export interface ProgressView {
 
 const WAITING_TEXT: Record<CaptureWaiting, { headline: string; text: string }> = {
   replay: {
-    headline: 'Abra o replay no jogo',
-    text: 'Abra o replay da volta (Time Trial › Ranking › Replay) e dê play.',
+    get headline() {
+      return uiText('Abra o replay no jogo');
+    },
+    get text() {
+      return uiText('Abra o replay da volta (Time Trial › Ranking › Replay) e dê play.');
+    },
   },
   track: {
-    headline: 'Identificando a pista',
-    text: 'Replay detectado. Deixe tocar: estou reconhecendo a pista pela posição do carro.',
+    get headline() {
+      return uiText('Identificando a pista');
+    },
+    get text() {
+      return uiText(
+        'Replay detectado. Deixe tocar: estou reconhecendo a pista pela posição do carro.',
+      );
+    },
   },
   unknownTrack: {
-    headline: 'Pista desconhecida',
-    text: 'Dirija essa pista ao vivo primeiro (uma volta completa) e depois capture o replay.',
+    get headline() {
+      return uiText('Pista desconhecida');
+    },
+    get text() {
+      return uiText(
+        'Dirija essa pista ao vivo primeiro (uma volta completa) e depois capture o replay.',
+      );
+    },
   },
   startLine: {
-    headline: 'Deixe o replay tocar',
-    text: 'Aguardando o carro cruzar a linha de largada. Não pause, não volte e não avance.',
+    get headline() {
+      return uiText('Deixe o replay tocar');
+    },
+    get text() {
+      return uiText(
+        'Aguardando o carro cruzar a linha de largada. Não pause, não volte e não avance.',
+      );
+    },
   },
 };
 
@@ -346,17 +373,17 @@ export function progressView(s: ReferenceCaptureStatus): ProgressView {
   let tone: ProgressView['tone'] = 'wait';
   if (s.state === 'recording') {
     guidance = {
-      headline: 'Gravando a volta',
-      text: 'Deixe o replay tocar até o fim da volta. Não pause, não volte e não avance.',
+      headline: uiText('Gravando a volta'),
+      text: uiText('Deixe o replay tocar até o fim da volta. Não pause, não volte e não avance.'),
     };
     tone = 'rec';
   } else if (s.state === 'validating') {
     guidance = {
-      headline: 'Conferindo a volta',
-      text: 'Validando distância, pacotes e tempo…',
+      headline: uiText('Conferindo a volta'),
+      text: uiText('Validando distância, pacotes e tempo…'),
     };
   } else if (s.state === 'switchingFormat') {
-    guidance = { headline: 'Preparando', text: 'Preparando a captura…' };
+    guidance = { headline: uiText('Preparando'), text: uiText('Preparando a captura…') };
   } else {
     guidance = WAITING_TEXT[s.waiting ?? 'replay'];
     if (s.waiting === 'unknownTrack') tone = 'warn';
@@ -409,7 +436,7 @@ export function timeOriginLabel(meta: ReferenceMeta | null | undefined): string 
   if (meta.timeSource === 'ranking') return 'tempo do ranking';
   if (meta.timeSource === 'packets') return 'estimado pela telemetria';
   if (meta.source === 'replayCapture') return meta.rankingTimeMs ? 'tempo do ranking' : 'replay';
-  return meta.source === 'import' ? 'importada' : 'volta própria';
+  return meta.source === 'import' ? 'importada' : uiText('volta própria');
 }
 
 /** References grouped by track (most recently captured track first), fastest lap first. */
@@ -439,7 +466,7 @@ export function groupReferences(
       }
       return {
         trackId,
-        trackName: t?.name ?? 'Pista não identificada',
+        trackName: t?.name ?? uiText('Pista não identificada'),
         layout: t?.layout ?? null,
         laps: sorted,
         deltaIds,

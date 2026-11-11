@@ -2,6 +2,7 @@ import { carName, makerOfCar } from '@gt7/shared';
 import { useRef } from 'react';
 import { setAttr, setStyle, setText } from '../lib/dom.ts';
 import { clamp, formatFixed, formatGear, formatInt } from '../lib/format.ts';
+import { t as uiText } from '../lib/i18n.ts';
 import { shiftLightLevel } from '../lib/shift.ts';
 import { useLiveRender } from '../live/raf.ts';
 import { ShiftLights } from '../widgets/ShiftLights.tsx';
@@ -93,17 +94,18 @@ export function MotorView() {
         <div className="rpm-ticks num" ref={set('ticks')} aria-hidden="true" />
       </div>
       <div className="motor-gear">
-        <div className="readout-label">Marcha</div>
+        <div className="readout-label">{uiText('Marcha')}</div>
         <div className="motor-gear-value num" ref={set('gear')}>
           –
         </div>
         <div className="motor-sug" ref={set('sugBox')} data-show="0">
-          Sugerida <span className="num" ref={set('sug')} />
+          {`${uiText('Sugerida')} `}
+          <span className="num" ref={set('sug')} />
         </div>
       </div>
       <div className="motor-stats">
         <div className="stat stat-boost" ref={set('boostBox')} data-turbo="1">
-          <div className="readout-label">Turbo (bar)</div>
+          <div className="readout-label">{uiText('Turbo (bar)')}</div>
           <div className="stat-value num" ref={set('boost')} />
           <div className="boost-track">
             <div className="boost-zero" />
@@ -111,17 +113,17 @@ export function MotorView() {
           </div>
         </div>
         <div className="stat">
-          <div className="readout-label">Óleo (bar)</div>
+          <div className="readout-label">{uiText('Óleo (bar)')}</div>
           <div className="stat-value num" ref={set('oil')} />
         </div>
         <div className="stat">
-          <div className="readout-label">Velocidade</div>
+          <div className="readout-label">{uiText('Velocidade')}</div>
           <div className="stat-value num">
             <span ref={set('speed')} /> <small>km/h</small>
           </div>
         </div>
         <div className="stat">
-          <div className="readout-label">Máxima estimada</div>
+          <div className="readout-label">{uiText('Máxima estimada')}</div>
           <div className="stat-value num">
             <span ref={set('vmax')} /> <small>km/h</small>
           </div>

@@ -11,6 +11,7 @@ import type {
   CoachToolStatus,
   CoachUsage,
 } from '@gt7/shared';
+import { getLanguage } from '../lib/i18n.ts';
 import { errorFromResponse, OFFLINE_MESSAGE } from './api.ts';
 import { parseSseJson, readSse } from './lib/sse.ts';
 
@@ -72,7 +73,11 @@ export async function streamCoach(
   try {
     res = await fetch(path, {
       method: 'POST',
-      headers: { 'content-type': 'application/json', accept: 'text/event-stream' },
+      headers: {
+        'content-type': 'application/json',
+        accept: 'text/event-stream',
+        'accept-language': getLanguage(),
+      },
       body: JSON.stringify(body),
       signal,
     });

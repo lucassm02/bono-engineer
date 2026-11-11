@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { TIMINGS } from '../config.ts';
+import { t as uiText } from '../lib/i18n.ts';
 import { CONNECTION_STATE_LABELS, DELTA_REFERENCE_LABELS, VIEW_LABELS } from '../lib/labels.ts';
 import { goToView, setLocked } from '../state/actions.ts';
 import { addNotice, dismissNotice, useUi } from '../state/uiStore.ts';
@@ -30,16 +31,27 @@ export function OverlayHeader() {
         </span>
       </div>
       <div className="overlay-ref">
-        Delta contra <strong>{DELTA_REFERENCE_LABELS[reference]}</strong>
-        <span className="dim"> (toque duplo troca)</span>
+        {`${uiText('Delta contra')} `}
+        <strong>{DELTA_REFERENCE_LABELS[reference]}</strong>
+        <span className="dim">{` ${uiText('(toque duplo troca)')}`}</span>
       </div>
       <div className="overlay-link">
         <span className="ui-badge" data-tone={source === 'mock' ? 'accent' : undefined}>
-          {source === 'mock' ? 'Demonstração' : 'Servidor'}
+          {source === 'mock' ? uiText('Demonstração') : uiText('Servidor')}
         </span>
         {liveState && <span className="ui-badge">{CONNECTION_STATE_LABELS[liveState]}</span>}
-        {format && <span className="ui-badge">Pacote {format}</span>}
-        {latency !== null && <span className="ui-badge">Latência {latency} ms</span>}
+        {format && (
+          <span className="ui-badge">
+            {`${uiText('Pacote')} `}
+            {format}
+          </span>
+        )}
+        {latency !== null && (
+          <span className="ui-badge">
+            {`${uiText('Latência')} `}
+            {latency} ms
+          </span>
+        )}
       </div>
     </div>
   );
@@ -51,7 +63,7 @@ export function Dots() {
   const locked = useUi((s) => s.profile.locked);
   if (views.length <= 1) return null;
   return (
-    <nav className="dots" data-no-gesture aria-label="Telas">
+    <nav className="dots" data-no-gesture aria-label={uiText('Telas')}>
       {views.map((v) => (
         <button
           key={v}
@@ -77,7 +89,7 @@ export function EdgeArrows() {
         type="button"
         className="ui-icon-btn edge-arrow edge-prev"
         data-no-gesture
-        aria-label="Tela anterior"
+        aria-label={uiText('Tela anterior')}
         onClick={() => animateStep(-1)}
       >
         <Icon name="back" size={24} />
@@ -86,7 +98,7 @@ export function EdgeArrows() {
         type="button"
         className="ui-icon-btn edge-arrow edge-next"
         data-no-gesture
-        aria-label="Próxima tela"
+        aria-label={uiText('Próxima tela')}
         onClick={() => animateStep(1)}
       >
         <Icon name="chevron-right" size={24} />
@@ -115,7 +127,7 @@ export function LockButton() {
       data-no-gesture
       data-locked={locked ? '1' : '0'}
       data-holding={holding ? '1' : '0'}
-      aria-label={locked ? 'Destravar gestos (segure)' : 'Travar gestos'}
+      aria-label={locked ? uiText('Destravar gestos (segure)') : uiText('Travar gestos')}
       aria-pressed={locked}
       style={{ ['--hold-ms' as string]: `${TIMINGS.longPressMs}ms` }}
       onContextMenu={(e) => e.preventDefault()}
@@ -135,7 +147,7 @@ export function LockButton() {
       onClick={() => {
         if (fired.current) return;
         if (!locked) setLocked(true);
-        else addNotice('info', 'Segure o cadeado para destravar.', 2000);
+        else addNotice('info', uiText('Segure o cadeado para destravar.'), 2000);
       }}
     >
       <Icon name={locked ? 'lock' : 'unlock'} />
@@ -174,12 +186,12 @@ export function SourceBadge() {
       <SessionSavedToast />
       {source === 'mock' && (
         <span className="ui-badge" data-tone="accent">
-          {auto ? 'Demonstração (sem servidor)' : 'Demonstração'}
+          {auto ? uiText('Demonstração (sem servidor)') : uiText('Demonstração')}
         </span>
       )}
       {state === 'replay' && (
         <span className="ui-badge" data-tone="info">
-          REPLAY
+          {uiText('REPLAY')}
         </span>
       )}
       <ReplayNotice />

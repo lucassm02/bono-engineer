@@ -3,6 +3,7 @@ import { useRef } from 'react';
 import { type CornerHintExt, distanceToBrake } from '../lib/cornerPass.ts';
 import { setAttr, setStyle, setText } from '../lib/dom.ts';
 import { clamp, deltaTone, formatDelta, formatInt } from '../lib/format.ts';
+import { t as uiText } from '../lib/i18n.ts';
 import { wrapDistance } from '../lib/mapMath.ts';
 import { derived } from '../live/derived.ts';
 import { live } from '../live/liveStore.ts';
@@ -18,7 +19,17 @@ import { cornerLabel } from './MapaView.tsx';
 /** Countdown bar full scale (m before the brake point). */
 const COUNTDOWN_M = 300;
 const ITEMS = ['brake', 'vmin', 'throttle'] as const;
-const ITEM_LABEL = { brake: 'Frenagem', vmin: 'V-mín', throttle: 'Retomada' } as const;
+const ITEM_LABEL = {
+  get brake() {
+    return uiText('Frenagem');
+  },
+  get vmin() {
+    return uiText('V-mín');
+  },
+  get throttle() {
+    return uiText('Retomada');
+  },
+} as const;
 /** The result card is "fresh" (full colour) for this long after a pass. */
 const FRESH_MS = 9000;
 
@@ -50,7 +61,10 @@ export function TreinoCurvaView() {
       setText(e.dir, isNext ? arrow(hint!.direction) : '');
       if (isNext && hint) {
         const b = distanceToBrake(hint, f.distanceM, L);
-        setText(e.distLabel, b.kind === 'brake' ? 'até a frenagem da ref.' : 'até a entrada');
+        setText(
+          e.distLabel,
+          b.kind === 'brake' ? uiText('até a frenagem da ref.') : uiText('até a entrada'),
+        );
         setText(e.dist, `${formatInt(Math.max(0, b.meters))} m`);
         const frac = clamp(1 - b.meters / COUNTDOWN_M, 0, 1);
         setStyle(e.bar, 'transform', `scaleX(${frac.toFixed(3)})`);
@@ -73,14 +87,14 @@ export function TreinoCurvaView() {
           e.lastDelta,
           hint.lastPassDeltaMs === null
             ? ''
-            : `Última passagem ${formatDelta(hint.lastPassDeltaMs)} s vs referência`,
+            : uiText('Última passagem {0} s vs referência', formatDelta(hint.lastPassDeltaMs)),
         );
         setAttr(e.lastDelta, 'data-tone', deltaTone(hint.lastPassDeltaMs, 20));
       } else {
         // Pinned corner that is not next yet: distance to its entry when known.
         const dist =
           entry && f.distanceM !== null && L ? wrapDistance(entry.entryM - f.distanceM, L) : null;
-        setText(e.distLabel, 'até a curva fixada');
+        setText(e.distLabel, uiText('até a curva fixada'));
         setText(
           e.dist,
           dist === null
@@ -91,7 +105,10 @@ export function TreinoCurvaView() {
         );
         setStyle(e.bar, 'transform', 'scaleX(0)');
         setAttr(e.barBox, 'data-near', '0');
-        setText(e.lastDelta, hint ? `Antes: ${cornerLabel(hint.cornerId, hint.name)}` : '');
+        setText(
+          e.lastDelta,
+          hint ? uiText('Antes: {0}', cornerLabel(hint.cornerId, hint.name)) : '',
+        );
         setAttr(e.lastDelta, 'data-tone', 'neutral');
       }
       setAttr(e.root, 'data-ref', isNext && hint?.referenceBrakePointM != null ? '1' : '0');
@@ -120,9 +137,9 @@ export function TreinoCurvaView() {
       setText(
         e.basis,
         basis === 'passagem anterior'
-          ? 'Alvo: sua passagem anterior (sem referência)'
+          ? uiText('Alvo: sua passagem anterior (sem referência)')
           : basis
-            ? 'Alvo: volta de referência'
+            ? uiText('Alvo: volta de referência')
             : '',
       );
     }
@@ -152,30 +169,31 @@ export function TreinoCurvaView() {
         </div>
         <dl className="treino-targets num">
           <div>
-            <dt>Frenagem</dt>
+            <dt>{uiText('Frenagem')}</dt>
             <dd ref={set('tBrake')}>–</dd>
           </div>
           <div>
-            <dt>V-mín</dt>
+            <dt>{uiText('V-mín')}</dt>
             <dd ref={set('tVmin')}>–</dd>
           </div>
           <div>
-            <dt>Retomada</dt>
+            <dt>{uiText('Retomada')}</dt>
             <dd ref={set('tThrottle')}>–</dd>
           </div>
         </dl>
         <div className="treino-last num" ref={set('lastDelta')} data-tone="neutral" />
         <div className="treino-nohint">
-          <strong>Sem dica de curva</strong>
+          <strong>{uiText('Sem dica de curva')}</strong>
           <span className="dim">
-            O treino precisa de uma pista identificada com curvas detectadas. As metas vêm da volta
-            de referência do delta.
+            {uiText(
+              'O treino precisa de uma pista identificada com curvas detectadas. As metas vêm da volta de referência do delta.',
+            )}
           </span>
         </div>
       </section>
       <section className="treino-result" ref={set('result')} data-show="0" data-verdict="neutral">
         <div className="treino-res-top">
-          <span className="readout-label">Última passagem</span>
+          <span className="readout-label">{uiText('Última passagem')}</span>
           <span className="treino-res-corner" ref={set('resCorner')} />
         </div>
         <div className="treino-res-head" ref={set('resHead')} />
@@ -183,8 +201,8 @@ export function TreinoCurvaView() {
           <thead>
             <tr>
               <th />
-              <th>Você</th>
-              <th>Alvo</th>
+              <th>{uiText('Você')}</th>
+              <th>{uiText('Alvo')}</th>
               <th />
             </tr>
           </thead>
@@ -202,7 +220,9 @@ export function TreinoCurvaView() {
         <div className="dim treino-basis" ref={set('basis')} />
       </section>
       <section className="treino-empty-result dim">
-        Passe por uma curva para ver o resultado: frenagem, V-mín e retomada contra a referência.
+        {uiText(
+          'Passe por uma curva para ver o resultado: frenagem, V-mín e retomada contra a referência.',
+        )}
       </section>
       <div className="treino-controls" data-no-gesture>
         <button
@@ -213,7 +233,7 @@ export function TreinoCurvaView() {
           disabled={!speechSupported()}
           onClick={() => setCornerAudio(!audio)}
         >
-          {audio ? 'Áudio: ligado' : 'Áudio: desligado'}
+          {audio ? uiText('Áudio: ligado') : uiText('Áudio: desligado')}
         </button>
         <button
           type="button"
@@ -222,7 +242,7 @@ export function TreinoCurvaView() {
           aria-pressed={!!pinned}
           onClick={pinCurrent}
         >
-          {pinned ? `Soltar ${pinned}` : 'Fixar esta curva'}
+          {pinned ? uiText('Soltar {0}', pinned) : uiText('Fixar esta curva')}
         </button>
       </div>
     </div>

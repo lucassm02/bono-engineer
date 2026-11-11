@@ -18,6 +18,7 @@ import type {
 import { type CSSProperties, useCallback, useEffect, useMemo, useState } from 'react';
 import { Icon } from '../../components/ui/Icon.tsx';
 import { formatDelta, formatLapTime } from '../../lib/format.ts';
+import { t as uiText } from '../../lib/i18n.ts';
 import { navigate, type Route, routes } from '../../lib/route.ts';
 import { THEME } from '../../lib/theme.ts';
 import { flushEngineerJournal } from '../../state/engineerJournal.ts';
@@ -72,14 +73,14 @@ function lapOptionLabel(l: Lap): string {
   const who = l.isReference
     ? `ref ${l.referenceMeta?.driverName ?? ''}`.trim()
     : `volta ${l.number} · ${formatDateTime(l.startedAt)}`;
-  return `${formatLapTime(l.timeMs)} · ${who}${l.valid ? '' : ' (inválida)'}`;
+  return `${formatLapTime(l.timeMs)} · ${who}${l.valid ? '' : uiText(' (inválida)')}`;
 }
 
 function lapTitle(l: Lap): string {
   if (l.isReference) {
-    return `${l.referenceMeta?.driverName ?? 'Referência'}${l.flags.includes('replay') ? ' (replay)' : ''}`;
+    return `${l.referenceMeta?.driverName ?? uiText('Referência')}${l.flags.includes('replay') ? ' (replay)' : ''}`;
   }
-  return `Volta ${l.number}`;
+  return uiText('Volta {0}', l.number);
 }
 
 export function ComparePage({ route }: { route: Route }) {
@@ -89,7 +90,7 @@ export function ComparePage({ route }: { route: Route }) {
     () => (route.query.extra ?? '').split(',').filter(Boolean).slice(0, MAX_EXTRA),
     [route.query.extra],
   );
-  useTitle('Comparação de voltas');
+  useTitle(uiText('Comparação de voltas'));
 
   const cmp = useFetch(lapId ? `cmp:${lapId}:${ref}` : null, () => api.compare(lapId, ref));
   const radio = useFetch(lapId ? `radio:${lapId}` : null, async () => {
@@ -134,14 +135,18 @@ export function ComparePage({ route }: { route: Route }) {
     return (
       <>
         <PageHead
-          title="Comparação de voltas"
-          back={{ href: routes.home(), label: 'Suas pistas' }}
+          title={uiText('Comparação de voltas')}
+          back={{ href: routes.home(), label: uiText('Suas pistas') }}
         />
         <div className="ui-empty">
-          <strong>Nenhuma volta escolhida</strong>
-          <p>Escolha uma volta para comparar com a sua melhor ou com a de um piloto do top.</p>
+          <strong>{uiText('Nenhuma volta escolhida')}</strong>
+          <p>
+            {uiText(
+              'Escolha uma volta para comparar com a sua melhor ou com a de um piloto do top.',
+            )}
+          </p>
           <a className="ui-btn" href={routes.home()}>
-            Escolher uma pista
+            {uiText('Escolher uma pista')}
           </a>
         </div>
       </>
@@ -151,8 +156,8 @@ export function ComparePage({ route }: { route: Route }) {
     return (
       <>
         <PageHead
-          title="Comparação de voltas"
-          back={{ href: routes.home(), label: 'Suas pistas' }}
+          title={uiText('Comparação de voltas')}
+          back={{ href: routes.home(), label: uiText('Suas pistas') }}
         />
         <ErrorBox error={cmp.error} onRetry={cmp.reload} />
         {ref !== 'auto' && (
@@ -162,14 +167,14 @@ export function ComparePage({ route }: { route: Route }) {
               data-variant="secondary"
               href={routes.compare({ lap: lapId, ref: 'auto', extra })}
             >
-              Tentar com a referência automática
+              {uiText('Tentar com a referência automática')}
             </a>
           </p>
         )}
       </>
     );
   }
-  if (!cmp.data) return <Loading text="Comparando as voltas…" />;
+  if (!cmp.data) return <Loading text={uiText('Comparando as voltas…')} />;
 
   return (
     <CompareView
@@ -294,12 +299,12 @@ export function CompareView({
     () => [
       {
         id: lap.id,
-        label: `Você · ${lapTitle(lap)} · ${formatLapTime(lap.timeMs)}`,
+        label: uiText('Você · {0} · {1}', lapTitle(lap), formatLapTime(lap.timeMs)),
         color: LAP_COLORS.subject,
       },
       {
         id: refLap.id,
-        label: `Ref · ${lapTitle(refLap)} · ${formatLapTime(refLap.timeMs)}`,
+        label: uiText('Ref · {0} · {1}', lapTitle(refLap), formatLapTime(refLap.timeMs)),
         color: LAP_COLORS.reference,
       },
       ...extra
@@ -308,7 +313,7 @@ export function CompareView({
           const l = trackLaps.find((x) => x.id === id);
           return {
             id,
-            label: l ? `${lapTitle(l)} · ${formatLapTime(l.timeMs)}` : `Volta ${id}`,
+            label: l ? `${lapTitle(l)} · ${formatLapTime(l.timeMs)}` : uiText('Volta {0}', id),
             color: LAP_COLORS.extra[k] ?? THEME.text3,
             dash: [5, 4],
           };
@@ -346,7 +351,7 @@ export function CompareView({
           lineId: refLap.id,
           distanceM: r.b.brakePointM,
           color: LAP_COLORS.reference,
-          label: 'F ref',
+          label: uiText('F ref'),
         });
       }
     }
@@ -385,17 +390,18 @@ export function CompareView({
   const warnings = [
     ...c.warnings,
     ...(isReplay && !c.warnings.some((w) => /replay/i.test(w))
-      ? ['Referência de replay: entradas suavizadas, precisão de alguns metros.']
+      ? [uiText('Referência de replay: entradas suavizadas, precisão de alguns metros.')]
       : []),
   ];
 
   return (
     <div className="cmp-page">
       <PageHead
-        back={{ href: routes.session(lap.sessionId), label: 'Sessão' }}
+        back={{ href: routes.session(lap.sessionId), label: uiText('Sessão') }}
         title={
           <>
-            Comparação <span className="dim">· {track?.track.name ?? lap.trackId ?? ''}</span>
+            {`${uiText('Comparação')} `}
+            <span className="dim">· {track?.track.name ?? lap.trackId ?? ''}</span>
           </>
         }
         sub={
@@ -411,12 +417,13 @@ export function CompareView({
                 />
               </>
             )}{' '}
-            · referência: {REFERENCE_KIND_LABELS[cmp.referenceKind]}
+            {`${uiText('· referência:')} `}
+            {REFERENCE_KIND_LABELS[cmp.referenceKind]}
             {demo && (
               <>
                 {' '}
                 <span className="ui-badge" data-tone="warn">
-                  demonstração
+                  {uiText('demonstração')}
                 </span>
               </>
             )}
@@ -432,7 +439,7 @@ export function CompareView({
                 target="_blank"
                 rel="noopener"
               >
-                Gerar gráfico (PNG)
+                {uiText('Gerar gráfico (PNG)')}
               </a>
               <a
                 className="ui-btn"
@@ -443,7 +450,7 @@ export function CompareView({
                   corner: focus ?? undefined,
                 })}
               >
-                Debrief com IA
+                {uiText('Debrief com IA')}
               </a>
             </>
           )
@@ -451,12 +458,14 @@ export function CompareView({
       />
 
       <Panel
-        title="Voltas comparadas"
-        description="A volta analisada fica fixa. Escolha contra qual referência medir e, se quiser, sobreponha até duas outras voltas nos gráficos."
+        title={uiText('Voltas comparadas')}
+        description={uiText(
+          'A volta analisada fica fixa. Escolha contra qual referência medir e, se quiser, sobreponha até duas outras voltas nos gráficos.',
+        )}
       >
         <div className="cmp-picker-grid">
           <div className="ui-field">
-            <span className="ui-label">Volta analisada</span>
+            <span className="ui-label">{uiText('Volta analisada')}</span>
             <div className="cmp-lapbox">
               <i className="cmp-swatch" style={{ background: LAP_COLORS.subject }} />
               <span className="cmp-lapbox-text">
@@ -464,7 +473,7 @@ export function CompareView({
                 <span className="cmp-lapbox-time">{formatLapTime(lap.timeMs)}</span>
                 {!lap.valid && (
                   <span className="ui-badge" data-tone="loss">
-                    inválida
+                    {uiText('inválida')}
                   </span>
                 )}
               </span>
@@ -474,12 +483,12 @@ export function CompareView({
                 data-size="sm"
                 href={routes.session(lap.sessionId)}
               >
-                Trocar
+                {uiText('Trocar')}
               </a>
             </div>
           </div>
           <label className="ui-field">
-            <span className="ui-label">Referência</span>
+            <span className="ui-label">{uiText('Referência')}</span>
             <select className="ui-select" value={refParam} onChange={(e) => setRef(e.target.value)}>
               {REF_KINDS.map((k) => (
                 <option key={k} value={k}>
@@ -491,7 +500,7 @@ export function CompareView({
                   <option value={refParam}>{lapOptionLabel(refLap)}</option>
                 )}
               {otherLaps.length > 0 && (
-                <optgroup label="Outra volta desta pista">
+                <optgroup label={uiText('Outra volta desta pista')}>
                   {otherLaps.map((l) => (
                     <option key={l.id} value={l.id}>
                       {lapOptionLabel(l)}
@@ -507,13 +516,13 @@ export function CompareView({
           </label>
           {!demo && extra.length < MAX_EXTRA && otherLaps.length > 0 && (
             <label className="ui-field">
-              <span className="ui-label">Sobrepor outra volta</span>
+              <span className="ui-label">{uiText('Sobrepor outra volta')}</span>
               <select
                 className="ui-select"
                 value=""
                 onChange={(e) => e.target.value && addExtra(e.target.value)}
               >
-                <option value="">Escolher…</option>
+                <option value="">{uiText('Escolher…')}</option>
                 {otherLaps
                   .filter((l) => l.id !== refLap.id && !extra.includes(l.id))
                   .map((l) => (
@@ -522,7 +531,10 @@ export function CompareView({
                     </option>
                   ))}
               </select>
-              <span className="ui-help">Aparece tracejada nos gráficos (até {MAX_EXTRA}).</span>
+              <span className="ui-help">
+                {`${uiText('Aparece tracejada nos gráficos (até')} `}
+                {MAX_EXTRA}).
+              </span>
             </label>
           )}
         </div>
@@ -538,7 +550,7 @@ export function CompareView({
                 {lapTitle(l)} · {formatLapTime(l.timeMs)}
                 <button
                   type="button"
-                  aria-label={`Remover ${lapTitle(l)} do gráfico`}
+                  aria-label={uiText('Remover {0} do gráfico', lapTitle(l))}
                   onClick={() => removeExtra(l.id)}
                 >
                   <Icon name="close" size={14} />
@@ -549,31 +561,40 @@ export function CompareView({
         )}
       </Panel>
 
-      <Panel title="Resumo da comparação">
+      <Panel title={uiText('Resumo da comparação')}>
         <div className="cmp-stats">
           <div className="ui-stat cmp-stat" data-series style={seriesStyle(LAP_COLORS.subject)}>
-            <span className="ui-stat-label">Você · {lapTitle(lap)}</span>
+            <span className="ui-stat-label">
+              {`${uiText('Você ·')} `}
+              {lapTitle(lap)}
+            </span>
             <span className="ui-stat-value num">{formatLapTime(c.lapATimeMs)}</span>
             {!lap.valid && (
               <span className="ui-badge" data-tone="loss">
-                inválida
+                {uiText('inválida')}
               </span>
             )}
           </div>
           <div className="ui-stat cmp-stat" data-series style={seriesStyle(LAP_COLORS.reference)}>
-            <span className="ui-stat-label">Referência · {lapTitle(refLap)}</span>
+            <span className="ui-stat-label">
+              {`${uiText('Referência ·')} `}
+              {lapTitle(refLap)}
+            </span>
             <span className="ui-stat-value num">{formatLapTime(c.lapBTimeMs)}</span>
           </div>
           <div className="ui-stat cmp-stat">
-            <span className="ui-stat-label">Delta total</span>
+            <span className="ui-stat-label">{uiText('Delta total')}</span>
             <span className="ui-stat-value num" data-tone={timeTone(c.totalDeltaMs)}>
               {formatDelta(c.totalDeltaMs)}
             </span>
-            <span className="cmp-stat-sub num">retas {formatDelta(c.straightsDeltaMs)}</span>
+            <span className="cmp-stat-sub num">
+              {`${uiText('retas')} `}
+              {formatDelta(c.straightsDeltaMs)}
+            </span>
           </div>
           {sectorDeltas.length > 0 && (
             <div className="ui-stat cmp-stat">
-              <span className="ui-stat-label">Delta por setor</span>
+              <span className="ui-stat-label">{uiText('Delta por setor')}</span>
               <span className="cmp-sectors">
                 {sectorDeltas.map((d, k) => (
                   // biome-ignore lint/suspicious/noArrayIndexKey: sector index
@@ -588,21 +609,27 @@ export function CompareView({
           {theoretical && (
             <div
               className="ui-stat cmp-stat"
-              title={`Soma dos melhores microssetores de ${theoretical.laps} voltas válidas da sessão`}
+              title={uiText(
+                'Soma dos melhores microssetores de {0} voltas válidas da sessão',
+                theoretical.laps,
+              )}
             >
-              <span className="ui-stat-label">Volta ideal da sessão</span>
+              <span className="ui-stat-label">{uiText('Volta ideal da sessão')}</span>
               <span className="ui-stat-value num">
                 {formatLapTime(theoretical.theoreticalBestMs)}
               </span>
               <span className="cmp-stat-sub num">
-                {formatDelta(theoretical.theoreticalBestMs - theoretical.bestLapMs)} vs sua melhor
+                {formatDelta(theoretical.theoreticalBestMs - theoretical.bestLapMs)}
+                {` ${uiText('vs sua melhor')}`}
               </span>
             </div>
           )}
         </div>
         {worstCorners.length > 0 && (
           <div className="cmp-losses">
-            <span className="ui-stat-label">Onde você mais perde tempo (clique para dar zoom)</span>
+            <span className="ui-stat-label">
+              {uiText('Onde você mais perde tempo (clique para dar zoom)')}
+            </span>
             <div className="cmp-losses-list">
               {worstCorners.map((r) => (
                 <button
@@ -653,7 +680,7 @@ export function CompareView({
                       ? cornerLabel(
                           corners.find((x) => x.id === focus) ?? { id: focus, name: null },
                         )
-                      : 'Trecho'}
+                      : uiText('Trecho')}
                     : {Math.round(range[0])}–{Math.round(range[1])} m
                     <button
                       type="button"
@@ -662,7 +689,7 @@ export function CompareView({
                       data-size="sm"
                       onClick={resetRange}
                     >
-                      Volta inteira
+                      {uiText('Volta inteira')}
                     </button>
                   </span>
                 )
@@ -671,11 +698,11 @@ export function CompareView({
           ) : tracesError ? (
             <ErrorBox error={tracesError} compact />
           ) : (
-            <Loading text="Carregando os traces…" />
+            <Loading text={uiText('Carregando os traces…')} />
           )}
         </div>
         <aside className="cmp-side">
-          <section className="ui-card cmp-mapbox" aria-label="Mapa da pista">
+          <section className="ui-card cmp-mapbox" aria-label={uiText('Mapa da pista')}>
             <CompareMap
               outline={track ? { x: track.polyline.x, z: track.polyline.z } : null}
               distanceM={traces?.distanceM ?? []}
@@ -689,19 +716,24 @@ export function CompareView({
             />
             <div className="cmp-map-legend">
               <span>
-                <i style={{ background: LAP_COLORS.subject }} /> você
+                <i style={{ background: LAP_COLORS.subject }} />
+                {` ${uiText('você')}`}
               </span>
               <span>
-                <i style={{ background: LAP_COLORS.reference }} /> referência
+                <i style={{ background: LAP_COLORS.reference }} />
+                {` ${uiText('referência')}`}
               </span>
               <span>
-                <i style={{ background: THEME.gain }} /> ganha tempo
+                <i style={{ background: THEME.gain }} />
+                {` ${uiText('ganha tempo')}`}
               </span>
               <span>
-                <i style={{ background: THEME.loss }} /> perde tempo
+                <i style={{ background: THEME.loss }} />
+                {` ${uiText('perde tempo')}`}
               </span>
               <span>
-                <i className="cmp-map-ring" /> frenagem
+                <i className="cmp-map-ring" />
+                {` ${uiText('frenagem')}`}
               </span>
             </div>
           </section>
@@ -709,8 +741,8 @@ export function CompareView({
       </div>
 
       <Panel
-        title="O que treinar"
-        description="As curvas que mais custam tempo, com uma ação para cada."
+        title={uiText('O que treinar')}
+        description={uiText('As curvas que mais custam tempo, com uma ação para cada.')}
         className="cmp-findings"
       >
         <FindingsPanel
@@ -723,8 +755,10 @@ export function CompareView({
 
       {events && (
         <Panel
-          title="Eventos de pilotagem"
-          description="Momentos da volta em que o carro escapou ou o piloto deixou tempo na pista."
+          title={uiText('Eventos de pilotagem')}
+          description={uiText(
+            'Momentos da volta em que o carro escapou ou o piloto deixou tempo na pista.',
+          )}
           className="cmp-events"
         >
           <DrivingEventsPanel
@@ -739,13 +773,13 @@ export function CompareView({
       )}
 
       <Panel
-        title="Curva a curva"
-        description="Clique numa curva para dar zoom nos gráficos e no mapa."
+        title={uiText('Curva a curva')}
+        description={uiText('Clique numa curva para dar zoom nos gráficos e no mapa.')}
       >
         {c.rows.length ? (
           <CornerTable rows={c.rows} focusCorner={focus} onCorner={zoomCorner} />
         ) : (
-          <p className="pn-desc">Esta pista ainda não tem curvas detectadas.</p>
+          <p className="pn-desc">{uiText('Esta pista ainda não tem curvas detectadas.')}</p>
         )}
       </Panel>
       {radio && (

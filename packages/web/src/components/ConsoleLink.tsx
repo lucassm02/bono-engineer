@@ -13,6 +13,7 @@ import {
   isValidIpv4,
   type LinkTone,
 } from '../lib/consoleLink.ts';
+import { t as uiText } from '../lib/i18n.ts';
 import { backToAutomatic, pinConsoleIp, rescanConsole } from '../net/consoleActions.ts';
 import {
   closeConnectionPanel,
@@ -59,7 +60,7 @@ export function ConsoleChip({ variant }: { variant: 'live' | 'bar' }) {
       data-quiet={quiet ? '1' : '0'}
       data-tone={view.tone}
       data-no-gesture
-      aria-label={`Conexão com o PS5: ${view.title}. Abrir detalhes.`}
+      aria-label={uiText('Conexão com o PS5: {0}. Abrir detalhes.', view.title)}
       title={view.title}
       onClick={openConnectionPanel}
     >
@@ -98,7 +99,7 @@ export function IpForm({ onDone, autoFocus }: { onDone?: () => void; autoFocus?:
   return (
     <form className="cx-ipform" onSubmit={submit} noValidate>
       <label className="ui-field">
-        <span className="ui-label">Endereço IP do PS5</span>
+        <span className="ui-label">{uiText('Endereço IP do PS5')}</span>
         <input
           ref={inputRef}
           className="ui-input cx-input"
@@ -113,12 +114,12 @@ export function IpForm({ onDone, autoFocus }: { onDone?: () => void; autoFocus?:
         />
       </label>
       <button type="submit" className="ui-btn" disabled={busy || ip.trim() === ''}>
-        Usar este IP
+        {uiText('Usar este IP')}
       </button>
       <p id="cx-ip-help" className={bad ? 'ui-error' : 'ui-help'}>
         {bad
-          ? 'Digite quatro números de 0 a 255 separados por pontos, como 192.168.0.20.'
-          : 'No PS5: Configurações › Rede › Ver status da conexão › Endereço IPv4.'}
+          ? uiText('Digite quatro números de 0 a 255 separados por pontos, como 192.168.0.20.')
+          : uiText('No PS5: Configurações › Rede › Ver status da conexão › Endereço IPv4.')}
       </p>
     </form>
   );
@@ -154,7 +155,7 @@ export function ConnectionDetails() {
       {conn && (
         <dl className="cx-facts">
           <div>
-            <dt>Endereço do PS5</dt>
+            <dt>{uiText('Endereço do PS5')}</dt>
             <dd>
               {conn.consoleIp ? (
                 <>
@@ -162,32 +163,32 @@ export function ConnectionDetails() {
                   <span className="cx-muted">({ipSourceLabel(conn.source)})</span>
                 </>
               ) : (
-                <span className="cx-muted">ainda não encontrado</span>
+                <span className="cx-muted">{uiText('ainda não encontrado')}</span>
               )}
             </dd>
           </div>
           <div>
-            <dt>Redes verificadas</dt>
+            <dt>{uiText('Redes verificadas')}</dt>
             <dd>
               {conn.subnets.length > 0 ? (
                 <span className="num">{conn.subnets.join(', ')}</span>
               ) : (
-                <span className="cx-muted">nenhuma rede local encontrada neste PC</span>
+                <span className="cx-muted">{uiText('nenhuma rede local encontrada neste PC')}</span>
               )}
             </dd>
           </div>
           {conn.state === 'searching' && (
             <div>
-              <dt>Busca</dt>
+              <dt>{uiText('Busca')}</dt>
               <dd>{hostsProbedText(conn.hostsProbed)}</dd>
             </div>
           )}
           <div>
-            <dt>Último sinal</dt>
+            <dt>{uiText('Último sinal')}</dt>
             <dd>{agoText(conn.lastPacketAt)}</dd>
           </div>
           <div>
-            <dt>Última busca</dt>
+            <dt>{uiText('Última busca')}</dt>
             <dd>{agoText(conn.lastScanAt)}</dd>
           </div>
         </dl>
@@ -201,7 +202,7 @@ export function ConnectionDetails() {
           onClick={() => run(rescanConsole)}
         >
           <Icon name="refresh" size={18} />
-          Procurar de novo
+          {uiText('Procurar de novo')}
         </button>
         <button
           type="button"
@@ -210,7 +211,7 @@ export function ConnectionDetails() {
           aria-expanded={showIp}
           onClick={() => setShowIp((v) => !v)}
         >
-          Usar outro IP
+          {uiText('Usar outro IP')}
         </button>
         {conn?.source === 'manual' && (
           <button
@@ -220,14 +221,15 @@ export function ConnectionDetails() {
             disabled={busy}
             onClick={() => run(backToAutomatic)}
           >
-            Voltar ao automático
+            {uiText('Voltar ao automático')}
           </button>
         )}
       </div>
       {showIp && <IpForm autoFocus onDone={() => setShowIp(false)} />}
       <p className="ui-help">
-        Você não precisa informar o IP: o app procura o PS5 sozinho. Use “Usar outro IP” só se a
-        busca automática não achar o console.
+        {uiText(
+          'Você não precisa informar o IP: o app procura o PS5 sozinho. Use “Usar outro IP” só se a busca automática não achar o console.',
+        )}
       </p>
     </div>
   );
@@ -243,7 +245,7 @@ export function ConsolePanelHost() {
       open={open}
       onClose={closeConnectionPanel}
       className="bn-modal-text"
-      title="Conexão com o PS5"
+      title={uiText('Conexão com o PS5')}
       subtitle="O app procura o console sozinho. Aqui você acompanha e corrige, se precisar."
     >
       <ConnectionDetails />

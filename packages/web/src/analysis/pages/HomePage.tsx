@@ -6,6 +6,7 @@
 import { useMemo, useState } from 'react';
 import { Icon } from '../../components/ui/Icon.tsx';
 import { formatLapTime } from '../../lib/format.ts';
+import { t as uiText } from '../../lib/i18n.ts';
 import { GT7_INTEGRATION } from '../../lib/integrations.ts';
 import { routes } from '../../lib/route.ts';
 import { loadJson, saveJson } from '../../lib/storage.ts';
@@ -71,25 +72,32 @@ export function TrackCard({
   const sessionCount = carFiltering ? fcars.reduce((n, c) => n + c.sessions, 0) : t.sessionCount;
   return (
     <a className="a-trackcard" href={routes.track(t.id)}>
-      <TrackThumb line={t.thumb} className="a-trackcard-thumb" label={`Traçado de ${t.name}`} />
+      <TrackThumb
+        line={t.thumb}
+        className="a-trackcard-thumb"
+        label={uiText('Traçado de {0}', t.name)}
+      />
       <div className="a-trackcard-body">
         <h3 className="a-trackcard-title">
           <span>{fullTrackName(t)}</span>
           {demo && (
-            <Tag tone="warn" title="Dados gerados pelo simulador, não são suas voltas reais">
+            <Tag
+              tone="warn"
+              title={uiText('Dados gerados pelo simulador, não são suas voltas reais')}
+            >
               Demo
             </Tag>
           )}
           {t.needsName && (
-            <Tag tone="info" title="Ainda sem nome: abra a pista para dizer qual é">
-              sem nome
+            <Tag tone="info" title={uiText('Ainda sem nome: abra a pista para dizer qual é')}>
+              {uiText('sem nome')}
             </Tag>
           )}
         </h3>
         {carFiltering ? (
           fbest ? (
             <p className="a-trackcard-best">
-              <span className="a-stat-k">Melhor volta com o filtro</span>
+              <span className="a-stat-k">{uiText('Melhor volta com o filtro')}</span>
               <span className="a-trackcard-best-row">
                 <span className="a-trackcard-time num">{formatLapTime(fbest.ms)}</span>
                 <span className="a-trackcard-sub">
@@ -98,18 +106,20 @@ export function TrackCard({
               </span>
             </p>
           ) : (
-            <p className="a-trackcard-sub">Sem volta válida com esse filtro.</p>
+            <p className="a-trackcard-sub">{uiText('Sem volta válida com esse filtro.')}</p>
           )
         ) : t.best ? (
           <p className="a-trackcard-best">
-            <span className="a-stat-k">Melhor volta</span>
+            <span className="a-stat-k">{uiText('Melhor volta')}</span>
             <span className="a-trackcard-best-row">
               <span className="a-trackcard-time num">{formatLapTime(t.best.timeMs)}</span>
               {trend && (
                 <span
                   className="a-trend"
                   data-tone={trend.tone}
-                  title="Melhor volta da última sessão contra a sessão anterior com o mesmo carro"
+                  title={uiText(
+                    'Melhor volta da última sessão contra a sessão anterior com o mesmo carro',
+                  )}
                 >
                   <span aria-hidden="true">
                     {trend.tone === 'gain' ? '▲' : trend.tone === 'loss' ? '▼' : '●'}
@@ -129,13 +139,13 @@ export function TrackCard({
             </span>
           </p>
         ) : (
-          <p className="a-trackcard-sub">Ainda sem volta válida.</p>
+          <p className="a-trackcard-sub">{uiText('Ainda sem volta válida.')}</p>
         )}
         <ul className="a-trackcard-meta">
-          <li>{plural(sessionCount, 'sessão', 'sessões')}</li>
+          <li>{plural(sessionCount, uiText('sessão'), uiText('sessões'))}</li>
           <li>
-            {plural(lapCount, 'volta', 'voltas')}
-            {carFiltering ? ' com o filtro' : ''}
+            {plural(lapCount, uiText('volta'), uiText('voltas'))}
+            {carFiltering ? uiText(' com o filtro') : ''}
           </li>
           <li>{formatKm(t.lengthM)}</li>
         </ul>
@@ -149,11 +159,17 @@ export function TrackCard({
             </span>
           )}
           {t.referenceCount > 0 && (
-            <Tag tone="ref" title="Voltas do top do ranking guardadas para comparar">
-              {t.referenceCount} ref. do top
+            <Tag tone="ref" title={uiText('Voltas do top do ranking guardadas para comparar')}>
+              {t.referenceCount}
+              {` ${uiText('ref. do top')}`}
             </Tag>
           )}
-          {t.lastActivityAt && <span>Última atividade {formatAgo(t.lastActivityAt)}</span>}
+          {t.lastActivityAt && (
+            <span>
+              {`${uiText('Última atividade')} `}
+              {formatAgo(t.lastActivityAt)}
+            </span>
+          )}
         </div>
       </div>
     </a>
@@ -171,41 +187,50 @@ function EmptyHome({ hiddenDemo, onShowDemo }: { hiddenDemo: boolean; onShowDemo
           }}
         />
       </div>
-      <h2>{hiddenDemo ? 'Só há dados de demonstração' : 'Suas pistas vão aparecer aqui'}</h2>
+      <h2>
+        {hiddenDemo
+          ? uiText('Só há dados de demonstração')
+          : uiText('Suas pistas vão aparecer aqui')}
+      </h2>
       {hiddenDemo ? (
         <p>
-          Você escondeu os dados de demonstração. Quando pilotar de verdade, as pistas aparecem
-          sozinhas.
+          {uiText(
+            'Você escondeu os dados de demonstração. Quando pilotar de verdade, as pistas aparecem sozinhas.',
+          )}
         </p>
       ) : (
         <p>
-          Entre em uma pista no simulador conectado e dê algumas voltas. Seus tempos aparecem aqui,
-          organizados por pista.
+          {uiText(
+            'Entre em uma pista no simulador conectado e dê algumas voltas. Seus tempos aparecem aqui, organizados por pista.',
+          )}
         </p>
       )}
       {!hiddenDemo && (
         <p className="dim">
-          <a href={routes.config('conexao')}>Configurar a integração de telemetria</a>
+          <a href={routes.config('conexao')}>{uiText('Configurar a integração de telemetria')}</a>
         </p>
       )}
       <div className="a-actions a-actions-center">
         {hiddenDemo ? (
           <button type="button" className="a-btn" onClick={onShowDemo}>
-            Mostrar a demonstração
+            {uiText('Mostrar a demonstração')}
           </button>
         ) : (
           <a className="a-btn" href="/?mock=1#/">
-            Ver demonstração
+            {uiText('Ver demonstração')}
           </a>
         )}
         <a className="a-btn a-btn-ghost" href={routes.live()}>
-          Abrir o painel ao vivo
+          {uiText('Abrir o painel ao vivo')}
         </a>
       </div>
       {!hiddenDemo && (
         <p className="dim a-small">
-          A demonstração mostra o painel ao vivo com um piloto simulado. Para ver o histórico
-          preenchido com voltas de exemplo, rode <code>npm run demo</code> no PC.
+          {`${uiText(
+            'A demonstração mostra o painel ao vivo com um piloto simulado. Para ver o histórico preenchido com voltas de exemplo, rode',
+          )} `}
+          <code>npm run demo</code>
+          {` ${uiText('no PC.')}`}
         </p>
       )}
     </div>
@@ -218,7 +243,7 @@ export function HomePage() {
   const [carFilter, setCarFilter] = useCarFilter();
   const [hideDemo, setHideDemo] = useState(() => loadJson<boolean>(HIDE_DEMO_KEY) === true);
   const [dismissed, setDismissed] = useState<string[]>(loadDismissed);
-  useTitle('Início');
+  useTitle(uiText('Início'));
 
   const data = overview.data;
   const isDemo = data?.simulator === true;
@@ -258,44 +283,46 @@ export function HomePage() {
 
   return (
     <>
-      <section className="a-hero" aria-label="Suas pistas">
+      <section className="a-hero" aria-label={uiText('Suas pistas')}>
         <div className="a-hero-content">
-          <p className="a-eyebrow">Seu engenheiro de pista</p>
-          <h1>Suas pistas</h1>
+          <p className="a-eyebrow">{uiText('Seu engenheiro de pista')}</p>
+          <h1>{uiText('Suas pistas')}</h1>
           <p className="a-sub">
             {data && tracks.length > 0
-              ? 'Escolha uma pista para ver seus melhores tempos, a evolução e onde ainda dá para ganhar.'
-              : 'Seu histórico de voltas, organizado por pista automaticamente.'}
+              ? uiText(
+                  'Escolha uma pista para ver seus melhores tempos, a evolução e onde ainda dá para ganhar.',
+                )
+              : uiText('Seu histórico de voltas, organizado por pista automaticamente.')}
           </p>
           <div className="a-actions a-hero-actions">
             <a className="a-btn a-btn-lg" href={routes.live()}>
               <Icon name="live" size={20} />
-              Abrir painel ao vivo
+              {uiText('Abrir painel ao vivo')}
             </a>
             <a className="a-btn a-btn-lg a-btn-ghost" href={routes.sessions()}>
-              Todas as sessões
+              {uiText('Todas as sessões')}
             </a>
           </div>
           {data && tracks.length > 0 && (
             <dl className="a-hero-stats">
               <div>
-                <dt>Pistas</dt>
+                <dt>{uiText('Pistas')}</dt>
                 <dd className="num">{tracks.length}</dd>
               </div>
               <div>
-                <dt>Sessões</dt>
+                <dt>{uiText('Sessões')}</dt>
                 <dd className="num">{totalSessions}</dd>
               </div>
               <div>
-                <dt>Voltas</dt>
+                <dt>{uiText('Voltas')}</dt>
                 <dd className="num">{totalLaps}</dd>
               </div>
             </dl>
           )}
           <a className="a-hero-source" href={routes.config('conexao')}>
             <span className="ui-dot" data-tone={isDemo ? 'warn' : 'accent'} />
-            <span>{isDemo ? 'Fonte das voltas' : 'Integração disponível'}</span>
-            <strong>{isDemo ? 'Demonstração' : GT7_INTEGRATION.name}</strong>
+            <span>{isDemo ? uiText('Fonte das voltas') : uiText('Integração disponível')}</span>
+            <strong>{isDemo ? uiText('Demonstração') : GT7_INTEGRATION.name}</strong>
           </a>
         </div>
         <svg className="a-hero-signal" viewBox="0 0 440 236" aria-hidden="true">
@@ -317,7 +344,7 @@ export function HomePage() {
       {overview.error && !data ? (
         <ErrorBox error={overview.error} onRetry={overview.reload} />
       ) : !data ? (
-        <Loading text="Carregando suas pistas…" />
+        <Loading text={uiText('Carregando suas pistas…')} />
       ) : (
         <>
           {unnamed.slice(0, 1).map((t) => (
@@ -332,22 +359,25 @@ export function HomePage() {
 
           {isDemo && !hideDemo && tracks.length > 0 && (
             <p className="a-note">
-              <Tag tone="warn">Demo</Tag> Você está no modo demonstração: estas voltas vêm de um
-              piloto simulado, não do console.
+              <Tag tone="warn">Demo</Tag>
+              {' ' +
+                uiText(
+                  'Você está no modo demonstração: estas voltas vêm de um piloto simulado, não do console.',
+                )}
             </p>
           )}
 
           {tracks.length > 0 && (
             <search className="a-toolbar">
               <label className="a-search a-grow">
-                Buscar pista
+                {uiText('Buscar pista')}
                 <span className="a-search-field">
                   <Icon name="search" size={18} />
                   <input
                     className="a-input"
                     type="search"
                     value={query}
-                    placeholder="Ex.: Monza, Suzuka…"
+                    placeholder={uiText('Ex.: Monza, Suzuka…')}
                     onChange={(e) => setQuery(e.target.value)}
                   />
                 </span>
@@ -360,7 +390,7 @@ export function HomePage() {
                     checked={hideDemo}
                     onChange={(e) => setHide(e.target.checked)}
                   />
-                  Esconder demonstração
+                  {uiText('Esconder demonstração')}
                 </label>
               )}
             </search>
@@ -370,8 +400,8 @@ export function HomePage() {
             <div className="cf-chips">
               {query.trim() !== '' && (
                 <FilterChip
-                  label={`Pista: ${query.trim()}`}
-                  title="Busca por pista"
+                  label={uiText('Pista: {0}', query.trim())}
+                  title={uiText('Busca por pista')}
                   onRemove={() => setQuery('')}
                 />
               )}
@@ -381,7 +411,7 @@ export function HomePage() {
                 className="a-btn a-btn-quiet a-btn-sm cf-chip-clear"
                 onClick={clearFilters}
               >
-                Limpar filtros
+                {uiText('Limpar filtros')}
               </button>
             </div>
           )}
@@ -390,14 +420,14 @@ export function HomePage() {
             filtering ? (
               <div className="ui-empty a-empty">
                 <Icon name="search" size={28} />
-                <strong>Nenhuma pista encontrada</strong>
+                <strong>{uiText('Nenhuma pista encontrada')}</strong>
                 <p>
-                  Nada combina com esse filtro.
+                  {uiText('Nada combina com esse filtro.')}
                   {isCarFiltering(carFilter) &&
-                    ' Talvez você ainda não tenha voltas com esse carro.'}
+                    uiText(' Talvez você ainda não tenha voltas com esse carro.')}
                 </p>
                 <button type="button" className="a-btn a-btn-ghost" onClick={clearFilters}>
-                  Limpar filtros
+                  {uiText('Limpar filtros')}
                 </button>
               </div>
             ) : (
@@ -409,11 +439,15 @@ export function HomePage() {
           ) : (
             <>
               <div className="a-sectionhead">
-                <h2>{filtering ? 'Resultado' : 'Pistas'}</h2>
+                <h2>{filtering ? uiText('Resultado') : uiText('Pistas')}</h2>
                 <span className="dim a-small">
                   {filtering
-                    ? `${shown.length} de ${plural(tracks.length, 'pista', 'pistas')}`
-                    : 'Mais recentes primeiro'}
+                    ? uiText(
+                        '{0} de {1}',
+                        shown.length,
+                        plural(tracks.length, uiText('pista'), uiText('pistas')),
+                      )
+                    : uiText('Mais recentes primeiro')}
                 </span>
               </div>
               <div className="a-trackgrid">

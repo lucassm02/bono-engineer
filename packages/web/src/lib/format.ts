@@ -1,24 +1,27 @@
-/** Number formatting for the dashboard (pt-BR decimal comma, tabular-friendly fixed widths). */
+/** Localized number formatting for the dashboard, with tabular-friendly fixed widths. */
+
+import { getLanguage } from './i18n.ts';
 
 const DASH = '–';
+const decimal = () => (getLanguage() === 'en' ? '.' : ',');
 
 /** Lap time `m:ss,mmm` (or `ss,mmm` under a minute when `compact`). Null → placeholder. */
 export function formatLapTime(ms: number | null | undefined, compact = false): string {
   if (ms === null || ms === undefined || !Number.isFinite(ms) || ms < 0)
-    return `${DASH}:${DASH}${DASH},${DASH}${DASH}${DASH}`;
+    return `${DASH}:${DASH}${DASH}${decimal()}${DASH}${DASH}${DASH}`;
   const total = Math.round(ms);
   const m = Math.floor(total / 60000);
   const s = Math.floor((total % 60000) / 1000);
   const milli = total % 1000;
   const frac = String(milli).padStart(3, '0');
-  if (compact && m === 0) return `${s},${frac}`;
-  return `${m}:${String(s).padStart(2, '0')},${frac}`;
+  if (compact && m === 0) return `${s}${decimal()}${frac}`;
+  return `${m}:${String(s).padStart(2, '0')}${decimal()}${frac}`;
 }
 
 /** Sector time `ss,mmm` (minutes only when needed). */
 export function formatSectorTime(ms: number | null | undefined): string {
   if (ms === null || ms === undefined || !Number.isFinite(ms))
-    return `${DASH}${DASH},${DASH}${DASH}${DASH}`;
+    return `${DASH}${DASH}${decimal()}${DASH}${DASH}${DASH}`;
   return formatLapTime(ms, true);
 }
 
@@ -29,13 +32,13 @@ export function formatSectorTime(ms: number | null | undefined): string {
  */
 export function formatDelta(ms: number | null | undefined, digits = 3): string {
   if (ms === null || ms === undefined || !Number.isFinite(ms))
-    return `${DASH}${DASH},${DASH.repeat(digits)}`;
+    return `${DASH}${DASH}${decimal()}${DASH.repeat(digits)}`;
   const factor = 10 ** digits;
   const rounded = Math.round(Math.abs(ms) / (1000 / factor));
   const sign = rounded === 0 ? '±' : ms > 0 ? '+' : '−';
   const int = Math.floor(rounded / factor);
   const frac = String(rounded % factor).padStart(digits, '0');
-  return `${sign}${int},${frac}`;
+  return `${sign}${int}${decimal()}${frac}`;
 }
 
 /** Sign class of a delta for colouring: gain (faster), loss (slower) or neutral. */
@@ -65,7 +68,7 @@ export function formatInt(v: number | null | undefined): string {
 
 export function formatFixed(v: number | null | undefined, digits = 1): string {
   if (v === null || v === undefined || !Number.isFinite(v)) return DASH;
-  return v.toFixed(digits).replace('.', ',');
+  return v.toFixed(digits).replace('.', decimal());
 }
 
 export function clamp(v: number, min: number, max: number): number {

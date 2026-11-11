@@ -5,7 +5,7 @@
 
 import manifest from './radio-manifest.json';
 import { type RadioUtterance, utteranceKeys } from './radioPhrases.ts';
-import { DEFAULT_RADIO_VOICE, radioVoice } from './radioVoices.ts';
+import { defaultRadioVoice, radioVoice } from './radioVoices.ts';
 
 export interface RadioPack {
   voiceId: string;
@@ -64,7 +64,8 @@ export function pickRadioPack(
   utterance: RadioUtterance,
   usable: (pack: RadioPack) => boolean = (pack) => radioPackStatus(pack) !== 'failed',
 ): RadioPack | null {
-  for (const id of [voiceId, DEFAULT_RADIO_VOICE]) {
+  const fallback = defaultRadioVoice(radioVoice(voiceId)?.language ?? 'pt-BR');
+  for (const id of new Set([voiceId, fallback.id])) {
     const pack = radioPack(id);
     if (pack && usable(pack) && hasRadioUtterance(pack, utterance)) return pack;
   }

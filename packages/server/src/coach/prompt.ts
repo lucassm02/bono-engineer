@@ -9,6 +9,7 @@ import { COACH_PERSONA, cornerFocusTask, debriefTask } from '@gt7/mcp';
 import {
   COACH_RULES,
   carLabel,
+  type Language,
   type Lap,
   PRODUCT_NAME,
   type Session,
@@ -50,6 +51,15 @@ ferramentas que usou nem repita JSON cru. Não use emojis.
 ferramentas quando necessário.
 
 ${COACH_KNOWLEDGE_RULES}`;
+
+export function coachSystemPrompt(language: Language): string {
+  if (language === 'pt-BR') return COACH_SYSTEM_PROMPT;
+  const outputLanguage = language === 'en' ? 'inglês' : 'espanhol';
+  return COACH_SYSTEM_PROMPT.replace(
+    'Responda em português do Brasil',
+    `Escreva toda a resposta em ${outputLanguage}, incluindo títulos e instruções das ferramentas citadas. Responda`,
+  );
+}
 
 export interface CoachTarget {
   session: Session | null;

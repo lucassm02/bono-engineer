@@ -17,14 +17,38 @@ if (start === -1 || !lines[start].startsWith(`## [${version}] - `)) {
   throw new Error(`The latest version in CHANGELOG.md must be ${version}.`);
 }
 
-const end = lines.findIndex((line, index) => index > start && /^## |^\[[^\]]+\]:/.test(line));
-const notes = lines
-  .slice(start + 1, end === -1 ? undefined : end)
-  .join('\n')
-  .trim();
+const baseDirective = /^<!-- release-notes-base: (\d+\.\d+\.\d+) -->$/;
+
+function entryLines(startIndex) {
+  const end = lines.findIndex(
+    (line, index) => index > startIndex && /^## |^\[[^\]]+\]:/.test(line),
+  );
+  return lines.slice(startIndex + 1, end === -1 ? undefined : end);
+}
+
+function entryNotes(entry) {
+  return entry
+    .filter((line) => !baseDirective.test(line))
+    .join('\n')
+    .trim();
+}
+
+const entry = entryLines(start);
+const notes = entryNotes(entry);
 const outputPath = process.argv[2];
 if (!notes || !outputPath) throw new Error('Provide an output path and nonempty release notes.');
-writeFileSync(outputPath, `${notes}\n`);
+
+const baseVersion = baseDirective.exec(entry.find((line) => baseDirective.test(line)) ?? '')?.[1];
+let description = notes;
+if (baseVersion) {
+  const base = lines.findIndex(
+    (line, index) => index > start && line.startsWith(`## [${baseVersion}] - `),
+  );
+  const baseNotes = base === -1 ? '' : entryNotes(entryLines(base));
+  if (!baseNotes) throw new Error(`Missing release notes for base version ${baseVersion}.`);
+  description = `${baseNotes}\n\n## New in ${version}\n\n${notes}`;
+}
+writeFileSync(outputPath, `${description}\n`);
 
 const tag = `v${version}`;
 if (process.env.GITHUB_OUTPUT) {

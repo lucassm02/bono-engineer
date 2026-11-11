@@ -12,8 +12,7 @@ type Clip = { start: number; length: number };
 
 export function radioAudio(voice: string, volume: number, radioDir?: string) {
   const pack = voices[voice];
-  if (!pack || !Object.hasOwn(voices, voice))
-    throw new Error('Voz inválida. Use alex, santa ou bruno.');
+  if (!pack || !Object.hasOwn(voices, voice)) throw new Error('Voz do rádio inválida.');
   const { file, clips: catalog } = pack;
   const wav = readFileSync(
     radioDir ? join(radioDir, file) : new URL(`../../../web/public/radio/${file}`, import.meta.url),

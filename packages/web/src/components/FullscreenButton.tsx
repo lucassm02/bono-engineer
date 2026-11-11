@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { t as uiText } from '../lib/i18n.ts';
 import { Icon } from './ui/Icon.tsx';
 
 /** Botão de ícone para entrar e sair da tela cheia (some quando o navegador não suporta). */
@@ -27,7 +28,7 @@ export function FullscreenButton({ className }: { className?: string }) {
     }
   }
 
-  const label = active ? 'Sair da tela cheia' : 'Tela cheia';
+  const label = active ? uiText('Sair da tela cheia') : uiText('Tela cheia');
   return (
     <div className="bn-fs">
       <button
@@ -43,7 +44,7 @@ export function FullscreenButton({ className }: { className?: string }) {
       </button>
       {failed && (
         <p role="status" className="bn-fs-error ui-error">
-          Não foi possível alternar a tela cheia neste aparelho.
+          {uiText('Não foi possível alternar a tela cheia neste aparelho.')}
         </p>
       )}
     </div>

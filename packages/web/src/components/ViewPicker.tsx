@@ -4,6 +4,7 @@
  */
 
 import { DELTA_REFERENCE_KINDS, type ViewId } from '@gt7/shared';
+import { t as uiText } from '../lib/i18n.ts';
 import {
   DELTA_REFERENCE_LABELS,
   IMPLEMENTED_VIEWS,
@@ -27,10 +28,18 @@ import { Modal } from './ui/Modal.tsx';
 import { ViewIcon } from './ViewIcon.tsx';
 
 const KEEP_AWAKE_TEXT: Record<KeepAwakeMode, string> = {
-  pending: 'Toque na tela para impedir que ela apague',
-  wakeLock: 'Tela sempre ligada (Wake Lock)',
-  video: 'Tela ligada pelo vídeo invisível; se apagar, desative o bloqueio automático',
-  none: 'Não foi possível manter a tela ligada: desative o bloqueio automático',
+  get pending() {
+    return uiText('Toque na tela para impedir que ela apague');
+  },
+  get wakeLock() {
+    return uiText('Tela sempre ligada (Wake Lock)');
+  },
+  get video() {
+    return uiText('Tela ligada pelo vídeo invisível; se apagar, desative o bloqueio automático');
+  },
+  get none() {
+    return uiText('Não foi possível manter a tela ligada: desative o bloqueio automático');
+  },
 };
 
 function ViewText({ view }: { view: ViewId }) {
@@ -40,7 +49,7 @@ function ViewText({ view }: { view: ViewId }) {
       <span className="bn-view-text">
         <span className="bn-view-name">
           {VIEW_LABELS[view]}
-          {!IMPLEMENTED_VIEWS.has(view) && <span className="ui-badge">Em breve</span>}
+          {!IMPLEMENTED_VIEWS.has(view) && <span className="ui-badge">{uiText('Em breve')}</span>}
         </span>
         <span className="bn-view-desc">{VIEW_DESCRIPTIONS[view]}</span>
       </span>
@@ -70,7 +79,7 @@ export function ViewPicker() {
       onClose={closePicker}
       size="xl"
       className="bn-picker-modal"
-      title="Telas deste dispositivo"
+      title={uiText('Telas deste dispositivo')}
       subtitle="Toque no nome para ir à tela. As setas mudam a ordem do carrossel; a estrela marca a tela inicial."
       footer={
         <>
@@ -80,13 +89,13 @@ export function ViewPicker() {
             data-variant="ghost"
             onClick={() => dispatchProfile({ type: 'reset' })}
           >
-            Restaurar telas padrão
+            {uiText('Restaurar telas padrão')}
           </button>
           <a className="ui-btn" data-variant="secondary" href={routes.home()} onClick={closePicker}>
-            Histórico e ajustes
+            {uiText('Histórico e ajustes')}
           </a>
           <button type="button" className="ui-btn" onClick={closePicker}>
-            Concluir
+            {uiText('Concluir')}
           </button>
         </>
       }
@@ -94,7 +103,7 @@ export function ViewPicker() {
       <div className="bn-picker">
         <section className="bn-section" aria-labelledby="bn-views-on">
           <h3 id="bn-views-on" className="ui-eyebrow">
-            Telas ligadas
+            {uiText('Telas ligadas')}
           </h3>
           <ol className="bn-view-rows">
             {enabled.map((v, i) => (
@@ -107,8 +116,8 @@ export function ViewPicker() {
                     type="button"
                     className="ui-icon-btn"
                     aria-pressed={profile.startView === v}
-                    aria-label={`Usar ${VIEW_LABELS[v]} como tela inicial`}
-                    title="Tela inicial"
+                    aria-label={uiText('Usar {0} como tela inicial', VIEW_LABELS[v])}
+                    title={uiText('Tela inicial')}
                     onClick={() => dispatchProfile({ type: 'setStartView', view: v })}
                   >
                     <Icon name="star" />
@@ -116,7 +125,7 @@ export function ViewPicker() {
                   <button
                     type="button"
                     className="ui-icon-btn"
-                    aria-label={`Mover ${VIEW_LABELS[v]} para cima`}
+                    aria-label={uiText('Mover {0} para cima', VIEW_LABELS[v])}
                     disabled={i === 0}
                     onClick={() => dispatchProfile({ type: 'moveView', view: v, by: -1 })}
                   >
@@ -125,7 +134,7 @@ export function ViewPicker() {
                   <button
                     type="button"
                     className="ui-icon-btn"
-                    aria-label={`Mover ${VIEW_LABELS[v]} para baixo`}
+                    aria-label={uiText('Mover {0} para baixo', VIEW_LABELS[v])}
                     disabled={i === enabled.length - 1}
                     onClick={() => dispatchProfile({ type: 'moveView', view: v, by: 1 })}
                   >
@@ -133,7 +142,7 @@ export function ViewPicker() {
                   </button>
                   <SwitchButton
                     on
-                    label={`Desligar ${VIEW_LABELS[v]}`}
+                    label={uiText('Desligar {0}', VIEW_LABELS[v])}
                     disabled={enabled.length <= 1}
                     onChange={() => dispatchProfile({ type: 'toggleView', view: v })}
                   />
@@ -143,7 +152,7 @@ export function ViewPicker() {
           </ol>
           {disabled.length > 0 && (
             <>
-              <h3 className="ui-eyebrow bn-eyebrow-muted">Desligadas</h3>
+              <h3 className="ui-eyebrow bn-eyebrow-muted">{uiText('Desligadas')}</h3>
               <ul className="bn-view-rows">
                 {disabled.map((v) => (
                   <li key={v} className="bn-view-row" data-off="1">
@@ -153,7 +162,7 @@ export function ViewPicker() {
                     <div className="bn-view-actions">
                       <SwitchButton
                         on={false}
-                        label={`Ligar ${VIEW_LABELS[v]}`}
+                        label={uiText('Ligar {0}', VIEW_LABELS[v])}
                         onChange={() => dispatchProfile({ type: 'toggleView', view: v })}
                       />
                     </div>
@@ -164,12 +173,12 @@ export function ViewPicker() {
           )}
         </section>
 
-        <section className="bn-section" aria-label="Ajustes">
-          <h3 className="ui-eyebrow">Ajustes</h3>
+        <section className="bn-section" aria-label={uiText('Ajustes')}>
+          <h3 className="ui-eyebrow">{uiText('Ajustes')}</h3>
           <div className="ui-card bn-card">
             <div className="ui-field">
               <span className="ui-label" id="bn-delta-label">
-                Delta contra
+                {uiText('Delta contra')}
               </span>
               <fieldset className="ui-segmented bn-segmented" aria-labelledby="bn-delta-label">
                 {DELTA_REFERENCE_KINDS.map((k) => (
@@ -189,8 +198,8 @@ export function ViewPicker() {
             </div>
             <hr className="ui-divider" />
             <ToggleRow
-              title="Cartão ao fechar a volta"
-              description="Mostra o tempo e os setores por alguns segundos."
+              title={uiText('Cartão ao fechar a volta')}
+              description={uiText('Mostra o tempo e os setores por alguns segundos.')}
               checked={profile.popupsEnabled}
               onChange={(enabledPopups) =>
                 dispatchProfile({ type: 'setPopups', enabled: enabledPopups })
@@ -198,8 +207,10 @@ export function ViewPicker() {
             />
             <hr className="ui-divider" />
             <ToggleRow
-              title="Travar gestos"
-              description="Ignora deslizar, tocar e segurar. Segure o cadeado para destravar."
+              title={uiText('Travar gestos')}
+              description={uiText(
+                'Ignora deslizar, tocar e segurar. Segure o cadeado para destravar.',
+              )}
               checked={profile.locked}
               onChange={(on) => {
                 setLocked(on);
@@ -211,40 +222,41 @@ export function ViewPicker() {
           <button type="button" className="ui-list-item bn-edit-custom" onClick={openLayoutEditor}>
             <Icon name="layout" size={22} />
             <span className="ui-list-text">
-              <span className="ui-list-title">Editar a tela Personalizada</span>
-              <span className="ui-list-desc">Montar a sua grade de widgets</span>
+              <span className="ui-list-title">{uiText('Editar a tela Personalizada')}</span>
+              <span className="ui-list-desc">{uiText('Montar a sua grade de widgets')}</span>
             </span>
             <Icon name="chevron-right" size={18} className="bn-chev" />
           </button>
 
           <dl className="bn-facts">
             <div>
-              <dt>Dispositivo</dt>
+              <dt>{uiText('Dispositivo')}</dt>
               <dd>
                 {profile.name} <span className="dim">({profile.deviceId})</span>
               </dd>
             </div>
             <div>
-              <dt>Dados</dt>
+              <dt>{uiText('Dados')}</dt>
               <dd>
                 {source === 'mock'
-                  ? 'Demonstração (sem console)'
+                  ? uiText('Demonstração (sem console)')
                   : serverVersion
-                    ? `Servidor ${serverVersion}`
-                    : 'Servidor'}
+                    ? uiText('Servidor {0}', serverVersion)
+                    : uiText('Servidor')}
               </dd>
             </div>
             <div>
-              <dt>Tela</dt>
+              <dt>{uiText('Tela')}</dt>
               <dd>{KEEP_AWAKE_TEXT[keepAwake]}</dd>
             </div>
           </dl>
 
           <div className="bn-note" data-tone="info">
-            <strong>Gestos do painel</strong>
+            <strong>{uiText('Gestos do painel')}</strong>
             <p>
-              Deslize para trocar de tela. Toque: nome da tela. Toque duplo: troca a referência do
-              delta. Segure: abre este painel.
+              {uiText(
+                'Deslize para trocar de tela. Toque: nome da tela. Toque duplo: troca a referência do delta. Segure: abre este painel.',
+              )}
             </p>
           </div>
         </section>
