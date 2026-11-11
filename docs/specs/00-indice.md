@@ -25,6 +25,8 @@ P = ≤ 2 dias · M = 3–5 dias · G = 1–2 semanas (estimativa de uma pessoa)
 
 ## Decisões já tomadas
 
+- **Confirmadas pelo dono em 2026-11-11:** seguir a simplificação do Discord, **remover o ID de
+  usuário**, **manter a calibragem do atraso**, implementar as melhorias de interface e o site.
 - **Token do bot do Discord não vai no código nem no instalador.** Cada pessoa usa o próprio bot;
   o Bono cria o convite e lista os canais. (spec 07, D1)
 - **ID de usuário do piloto sai.** O bot entra quando há alguém no canal. (spec 07, D2)

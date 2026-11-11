@@ -35,9 +35,11 @@ desenvolvedor, nada de copiar IDs.
    como grupo. Se o bot não tiver permissão no canal, a linha mostra "sem permissão" e o motivo.
    Depois: botão **Testar** (um bip no canal) e o PS5 entra no canal pelo Game Base → Discord.
 
-Calibragem do atraso (hoje manual, filmando com o celular) fica **fora do caminho obrigatório**:
-usa um padrão seguro (300 ms) e a calibragem vira "Ajuste fino" opcional dentro de
-Configurações → Rádio no Discord.
+Calibragem do atraso: **continua existindo, com todas as opções de hoje** (teste de 10 bipes,
+medições em ms separadas por vírgula e percentil 90). Só sai do caminho obrigatório: o assistente
+usa um padrão seguro (300 ms) para ninguém ficar travado e oferece **"Calibrar o atraso"** ao fim
+do passo 4. A calibragem completa fica sempre em Configurações → Rádio no Discord → Ajuste fino,
+e o valor medido substitui o padrão.
 
 ## Requisitos funcionais
 
@@ -51,7 +53,9 @@ Configurações → Rádio no Discord.
 - **RF4.** O token continua cifrado com `safeStorage` (já é assim) e **nunca** volta para o
   renderer: o campo mostra só "token salvo" e os 4 últimos caracteres.
 - **RF5.** Atraso padrão de 300 ms quando não calibrado; o Bono avisa "som pode chegar um pouco
-  depois" em vez de bloquear a transmissão (`discordConfig` hoje lança erro sem atraso).
+  depois" em vez de bloquear a transmissão (`discordConfig` hoje lança erro sem atraso). **A
+  calibragem manual permanece** (campo "Atraso medido em ms", teste de 10 bipes, percentil 90) e,
+  quando preenchida, vence o padrão.
 - **RF6.** O interruptor "Falar pelo Discord" (já existente no menu ao vivo) fica disponível assim
   que o passo 4 conclui.
 - **RF7.** Estados de erro acionáveis: bot sem permissão, canal apagado, token revogado (pede
@@ -61,7 +65,7 @@ Configurações → Rádio no Discord.
 
 - Hospedar um bot único para todos (exige backend, rejeitado).
 - Usar conta de usuário/self-bot (viola os termos do Discord).
-- Calibragem automática do atraso (possível no futuro medindo eco; não agora).
+- Calibragem **automática** do atraso (possível no futuro medindo eco; não agora). A manual fica.
 
 ## Critérios de aceite
 
