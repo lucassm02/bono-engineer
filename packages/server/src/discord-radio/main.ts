@@ -25,7 +25,13 @@ import {
   type VoiceChannel,
 } from 'discord.js';
 import { calibrationTone, radioAudio } from './audio.ts';
-import { DISCORD_DEVICE_ID, type discordConfig } from './config.ts';
+import {
+  type ChannelOccupant,
+  DISCORD_DEVICE_ID,
+  type discordConfig,
+  shouldJoinChannel,
+} from './config.ts';
+import { loginErrorMessage } from './inspect.ts';
 
 export function startDiscordRadio(
   config: ReturnType<typeof discordConfig>,
@@ -66,15 +72,57 @@ export function startDiscordRadio(
     report('Falha na reprodução.', true);
   };
 
-  function syncVoice(): void {
-    if (!channel || closing) return;
-    const driverChannel = channel.guild.voiceStates.cache.get(config.driverId)?.channelId;
-    if (driverChannel !== channel.id) {
+  const botFlags = new Map<string, boolean>();
+  /** Quem está no canal agora (sem o próprio bot). Descobre se é bot buscando o membro uma vez. */
+  async function occupants(target: VoiceChannel): Promise<ChannelOccupant[]> {
+    const states = target.guild.voiceStates.cache.filter(
+      (state) => state.channelId === target.id && state.id !== client.user?.id,
+    );
+    return Promise.all(
+      [...states.values()].map(async (state) => {
+        const known = state.member?.user.bot ?? botFlags.get(state.id);
+        if (known !== undefined) {
+          botFlags.set(state.id, known);
+          return { id: state.id, bot: known };
+        }
+        const member = await target.guild.members.fetch(state.id).catch(() => null);
+        const bot = member?.user.bot ?? false;
+        if (member) botFlags.set(state.id, bot);
+        return { id: state.id, bot };
+      }),
+    );
+  }
+
+  let syncing = false;
+  let syncAgain = false;
+  /** Entra quando há alguém no canal e sai quando esvazia; chamadas simultâneas viram uma só. */
+  async function syncVoice(): Promise<void> {
+    if (syncing) {
+      syncAgain = true;
+      return;
+    }
+    syncing = true;
+    try {
+      do {
+        syncAgain = false;
+        if (channel && !closing) joinOrLeave(channel, await occupants(channel));
+      } while (syncAgain && !closing);
+    } finally {
+      syncing = false;
+    }
+  }
+
+  function joinOrLeave(target: VoiceChannel, people: ChannelOccupant[]): void {
+    if (!shouldJoinChannel(people, config.followUserId)) {
       if (voice) {
-        stopRadio('piloto saiu do Discord');
+        stopRadio('canal vazio');
         if (voice.state.status !== VoiceConnectionStatus.Destroyed) voice.destroy();
         voice = undefined;
-        report('Aguardando o piloto no canal.');
+        report(
+          config.followUserId
+            ? 'Aguardando o piloto escolhido entrar no canal.'
+            : 'Aguardando alguém no canal. Entre no canal pelo PS5.',
+        );
       }
       return;
     }
@@ -84,9 +132,9 @@ export function startDiscordRadio(
     }
     if (voice && voice.state.status !== VoiceConnectionStatus.Destroyed) return;
     voice = joinVoiceChannel({
-      channelId: channel.id,
-      guildId: channel.guild.id,
-      adapterCreator: channel.guild.voiceAdapterCreator,
+      channelId: target.id,
+      guildId: target.guild.id,
+      adapterCreator: target.guild.voiceAdapterCreator,
       selfDeaf: true,
       selfMute: false,
     });
@@ -135,7 +183,7 @@ export function startDiscordRadio(
       const result = engine.step(msg.frame, {
         audio: 'ready',
         sampleAgeMs: Math.max(0, lastFrameAt - msg.frame.t),
-        outputLatencyMs: config.delayMs ?? 0,
+        outputLatencyMs: config.delayMs,
       });
       if (result.stop) player.stop(true);
       const speech = result.speak;
@@ -181,7 +229,7 @@ export function startDiscordRadio(
       nextBeepAt = now + 2500;
     }
   }, 50);
-  const reconnect = setInterval(syncVoice, 5000);
+  const reconnect = setInterval(() => void syncVoice(), 5000);
   const close = () => {
     if (closing) return;
     closing = true;
@@ -195,39 +243,53 @@ export function startDiscordRadio(
   };
   player.on('error', playbackError);
   client.on('error', () => report('Erro na conexão do bot.', true));
-  client.on(Events.VoiceStateUpdate, (_before, after) => {
-    if (after.id === config.driverId && after.guild.id === channel?.guild.id) syncVoice();
+  client.on(Events.VoiceStateUpdate, (before, after) => {
+    // Qualquer pessoa entrando ou saindo do canal configurado reavalia se o bot deve estar nele.
+    if (channel && (before.channelId === channel.id || after.channelId === channel.id))
+      void syncVoice();
+  });
+  client.on(Events.ChannelDelete, (deleted) => {
+    if (deleted.id !== channel?.id || closing) return;
+    report('O canal de voz foi apagado. Reconfigure o Discord e escolha outro canal.', true);
+    close();
   });
   client.once(Events.ClientReady, async (connectedClient) => {
-    try {
-      const candidate = await client.channels.fetch(config.channelId);
-      if (closing) return;
-      if (candidate?.type !== ChannelType.GuildVoice) throw new Error();
-      if (
-        !candidate
-          .permissionsFor(connectedClient.user)
-          ?.has([
-            PermissionFlagsBits.ViewChannel,
-            PermissionFlagsBits.Connect,
-            PermissionFlagsBits.Speak,
-          ])
-      )
-        throw new Error();
-      channel = candidate;
-      report(
-        test
-          ? 'Teste pronto. Entre no canal pelo PS5.'
-          : `Aguardando o piloto. Margem de áudio: ${config.delayMs} ms.`,
-      );
-      syncVoice();
-      if (!test) connectBono();
-    } catch {
-      if (!closing) report('Confira o ID do canal e as permissões do bot.', true);
+    const fail = (message: string): void => {
+      if (!closing) report(message, true);
       close();
+    };
+    const candidate = await client.channels.fetch(config.channelId).catch(() => null);
+    if (closing) return;
+    if (candidate?.type !== ChannelType.GuildVoice) {
+      fail(
+        'O canal de voz não existe mais ou o bot saiu do servidor. Reconfigure o Discord e escolha o canal.',
+      );
+      return;
     }
+    const granted = candidate.permissionsFor(connectedClient.user);
+    if (
+      !granted?.has([
+        PermissionFlagsBits.ViewChannel,
+        PermissionFlagsBits.Connect,
+        PermissionFlagsBits.Speak,
+      ])
+    ) {
+      fail('O bot está sem permissão no canal. Dê a ele Ver canal, Conectar e Falar.');
+      return;
+    }
+    channel = candidate;
+    report(
+      test
+        ? 'Teste pronto. Entre no canal pelo PS5.'
+        : config.delayCalibrated
+          ? `Aguardando alguém no canal. Margem de áudio: ${config.delayMs} ms.`
+          : `Aguardando alguém no canal. Atraso padrão de ${config.delayMs} ms: o som pode chegar um pouco depois; calibre para sincronizar.`,
+    );
+    void syncVoice();
+    if (!test) connectBono();
   });
-  void client.login(config.token).catch(() => {
-    if (!closing) report('Falha no login do bot. Confira o token e a conexão com o Discord.', true);
+  void client.login(config.token).catch((error: unknown) => {
+    if (!closing) report(loginErrorMessage(error), true);
     close();
   });
   return close;

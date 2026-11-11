@@ -3,7 +3,7 @@ import { startDiscordRadio } from './main.ts';
 
 try {
   const test = process.argv.includes('--test');
-  const close = startDiscordRadio(discordConfig(process.env, test), test, (message, error) => {
+  const close = startDiscordRadio(discordConfig(process.env), test, (message, error) => {
     if (error) console.error(`[Rádio] ${message}`);
     else console.log(`[Rádio] ${message}`);
   });

@@ -1,9 +1,10 @@
 import {
   DEFAULT_HTTP_PORT,
+  DISCORD_DEFAULT_DELAY_MS,
   DISCORD_RADIO_DEVICE_ID,
   normalizeRadioPreferences,
-  radioEngineConfig,
   RADIO_MODES,
+  radioEngineConfig,
   TRAINING_PROFILES,
   WS_PATH,
 } from '@gt7/shared';
@@ -22,27 +23,39 @@ export function calibratedDelay(value: string | undefined): number | null {
   return Math.ceil(samples[Math.ceil(samples.length * 0.9) - 1]!);
 }
 
-export function discordConfig(env: NodeJS.ProcessEnv, test: boolean) {
+/** ID de usuário do Discord (opcional): 17 a 20 dígitos. */
+export const DISCORD_ID = /^\d{17,20}$/;
+
+export interface ChannelOccupant {
+  id: string;
+  bot: boolean;
+}
+
+/**
+ * Regra de presença do bot: entra quando há alguém no canal e sai quando esvazia. Outros bots e o
+ * próprio bot não contam. Com `followUserId` (opção avançada) só conta esse usuário.
+ */
+export function shouldJoinChannel(
+  occupants: readonly ChannelOccupant[],
+  followUserId = '',
+): boolean {
+  const people = occupants.filter((member) => !member.bot);
+  return followUserId ? people.some((member) => member.id === followUserId) : people.length > 0;
+}
+
+export function discordConfig(env: NodeJS.ProcessEnv) {
   const token = env.BONO_DISCORD_TOKEN?.trim();
   const channelId = env.BONO_DISCORD_CHANNEL_ID?.trim();
-  const driverId = env.BONO_DISCORD_DRIVER_ID?.trim();
-  if (
-    !token ||
-    !channelId ||
-    !driverId ||
-    !/^\d{17,20}$/.test(channelId) ||
-    !/^\d{17,20}$/.test(driverId)
-  ) {
-    throw new Error(
-      'Configure BONO_DISCORD_TOKEN, BONO_DISCORD_CHANNEL_ID e BONO_DISCORD_DRIVER_ID.',
-    );
+  if (!token || !channelId || !DISCORD_ID.test(channelId)) {
+    throw new Error('Configure BONO_DISCORD_TOKEN e BONO_DISCORD_CHANNEL_ID.');
   }
-  const delayMs = calibratedDelay(env.BONO_DISCORD_DELAY_MS);
-  if (!test && delayMs === null) {
-    throw new Error(
-      'Execute o teste de rádio e informe BONO_DISCORD_DELAY_MS antes de transmitir.',
-    );
+  const followUserId = env.BONO_DISCORD_FOLLOW_USER_ID?.trim() ?? '';
+  if (followUserId && !DISCORD_ID.test(followUserId)) {
+    throw new Error('O ID do usuário a seguir deve ter de 17 a 20 dígitos.');
   }
+  // Sem calibragem usamos um atraso padrão: o som pode chegar um pouco depois, mas não bloqueia.
+  const measuredDelayMs = calibratedDelay(env.BONO_DISCORD_DELAY_MS);
+  const delayMs = measuredDelayMs ?? DISCORD_DEFAULT_DELAY_MS;
   const port = Number(env.BONO_DISCORD_BONO_PORT ?? DEFAULT_HTTP_PORT);
   const volume = Number(env.BONO_DISCORD_VOLUME ?? 1);
   if (
@@ -78,8 +91,9 @@ export function discordConfig(env: NodeJS.ProcessEnv, test: boolean) {
   return {
     token,
     channelId,
-    driverId,
+    followUserId,
     delayMs,
+    delayCalibrated: measuredDelayMs !== null,
     bonoUrl,
     engine,
     volume,

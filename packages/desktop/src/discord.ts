@@ -1,20 +1,25 @@
 import { existsSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import type { DesktopDiscordSettings, DesktopDiscordStatus } from '@gt7/shared';
-import { safeStorage } from 'electron';
-import { discordConfig } from '../../server/src/discord-radio/config.ts';
+import {
+  type DesktopDiscordSettings,
+  type DesktopDiscordStatus,
+  type DesktopDiscordSummary,
+  type DiscordBotInfo,
+  type DiscordVoiceChannel,
+  EMPTY_DISCORD_CONFIG,
+  migrateDiscordConfig,
+  type StoredDiscordConfig,
+} from '@gt7/shared';
+import { safeStorage, shell } from 'electron';
+import { DISCORD_ID, discordConfig } from '../../server/src/discord-radio/config.ts';
+import {
+  DiscordSetupError,
+  inspectToken,
+  isAllowedDiscordLink,
+  loginErrorMessage,
+  VoiceChannelLister,
+} from '../../server/src/discord-radio/inspect.ts';
 import { startDiscordRadio } from '../../server/src/discord-radio/main.ts';
 import { radioVoice } from '../../web/src/lib/radioVoices.ts';
-
-type Stored = DesktopDiscordSettings & { encryptedToken: string };
-const EMPTY: Stored = {
-  channelId: '',
-  driverId: '',
-  delay: '',
-  enabled: false,
-  brakePercent: false,
-  voice: 'alex',
-  encryptedToken: '',
-};
 
 export class DesktopDiscord {
   #stop: (() => void) | undefined;
@@ -24,6 +29,15 @@ export class DesktopDiscord {
     error: false,
     testing: false,
   };
+  /**
+   * Token validado pelo assistente, usado só para listar os canais. Fica na memória deste processo,
+   * nunca é gravado nem devolvido à tela, e é descartado por `get()` (a tela chama `get()` ao
+   * abrir), `save()`, `remove()` e `stop()`.
+   */
+  #draft: { token: string; botName: string } | undefined;
+  /** Servidor e canal vistos na última listagem, para guardar os nomes ao salvar. */
+  #seen = new Map<string, { guildName: string; channelName: string }>();
+  readonly #lister = new VoiceChannelLister();
 
   constructor(
     private readonly file: string,
@@ -32,19 +46,46 @@ export class DesktopDiscord {
     private readonly sendStatus: (status: DesktopDiscordStatus) => void,
   ) {}
 
-  #read(): Stored {
-    return existsSync(this.file)
-      ? { ...EMPTY, ...JSON.parse(readFileSync(this.file, 'utf8')) }
-      : EMPTY;
+  #read(): StoredDiscordConfig {
+    if (!existsSync(this.file)) return EMPTY_DISCORD_CONFIG;
+    try {
+      return migrateDiscordConfig(JSON.parse(readFileSync(this.file, 'utf8')));
+    } catch {
+      return EMPTY_DISCORD_CONFIG;
+    }
   }
 
-  get() {
-    const { channelId, driverId, delay, enabled, brakePercent, voice, encryptedToken } =
-      this.#read();
+  #write(stored: StoredDiscordConfig): void {
+    const tmp = `${this.file}.tmp`;
+    writeFileSync(tmp, JSON.stringify(stored), { mode: 0o600 });
+    renameSync(tmp, this.file);
+  }
+
+  get(): {
+    settings: DesktopDiscordSettings;
+    hasToken: boolean;
+    status: DesktopDiscordStatus;
+    summary: DesktopDiscordSummary;
+  } {
+    this.#draft = undefined;
+    const {
+      channelId,
+      followUserId,
+      delay,
+      enabled,
+      brakePercent,
+      voice,
+      encryptedToken,
+      botName,
+      guildName,
+      channelName,
+      tokenTail,
+    } = this.#read();
     return {
-      settings: { channelId, driverId, delay, enabled, brakePercent, voice },
+      settings: { channelId, followUserId, delay, enabled, brakePercent, voice },
       hasToken: !!encryptedToken,
       status: this.#status,
+      summary: { botName, guildName, channelName, tokenTail },
     };
   }
 
@@ -66,24 +107,61 @@ export class DesktopDiscord {
     return {
       BONO_DISCORD_TOKEN: token,
       BONO_DISCORD_CHANNEL_ID: settings.channelId,
-      BONO_DISCORD_DRIVER_ID: settings.driverId,
+      BONO_DISCORD_FOLLOW_USER_ID: settings.followUserId,
       BONO_DISCORD_DELAY_MS: settings.delay,
       BONO_DISCORD_BRAKE_PERCENT: settings.brakePercent ? '1' : '0',
       BONO_DISCORD_VOICE: settings.voice,
     };
   }
 
+  #savedToken(): string {
+    const { encryptedToken } = this.#read();
+    this.#checkEncryption();
+    return encryptedToken ? safeStorage.decryptString(Buffer.from(encryptedToken, 'base64')) : '';
+  }
+
+  /** Valida o token no Discord. Se for válido, guarda na memória para as próximas etapas do assistente. */
+  async inspectToken(input: unknown): Promise<DiscordBotInfo> {
+    if (typeof input !== 'string' || input.length > 200) throw new Error('Token inválido.');
+    const info = await inspectToken(input);
+    this.#draft = { token: input.trim(), botName: info.botName };
+    return info;
+  }
+
+  async listVoiceChannels(): Promise<DiscordVoiceChannel[]> {
+    const token = this.#draft?.token || this.#savedToken();
+    if (!token) throw new Error('Cole o token do bot primeiro.');
+    try {
+      const channels = await this.#lister.list(token);
+      this.#seen = new Map(
+        channels.map((channel) => [
+          channel.channelId,
+          { guildName: channel.guildName, channelName: channel.channelName },
+        ]),
+      );
+      return channels;
+    } catch (error) {
+      throw error instanceof DiscordSetupError ? error : new Error(loginErrorMessage(error));
+    }
+  }
+
+  async openLink(url: unknown): Promise<void> {
+    if (typeof url !== 'string' || !isAllowedDiscordLink(url))
+      throw new Error('Link não permitido.');
+    await shell.openExternal(url);
+  }
+
   save(input: unknown): void {
     if (!input || typeof input !== 'object') throw new Error('Configuração inválida.');
-    const { channelId, driverId, delay, enabled, brakePercent, token, voice } = input as Record<
+    const { channelId, followUserId, delay, enabled, brakePercent, token, voice } = input as Record<
       string,
       unknown
     >;
     if (
       typeof channelId !== 'string' ||
-      typeof driverId !== 'string' ||
       typeof delay !== 'string' ||
       delay.length > 400 ||
+      (followUserId !== undefined && typeof followUserId !== 'string') ||
       typeof token !== 'string' ||
       token.length > 200 ||
       typeof enabled !== 'boolean' ||
@@ -91,33 +169,43 @@ export class DesktopDiscord {
     )
       throw new Error('Confira os campos de configuração do Discord.');
 
-    const settings = {
+    const prior = this.#read();
+    const settings: DesktopDiscordSettings = {
       channelId: channelId.trim(),
-      driverId: driverId.trim(),
+      followUserId: (followUserId ?? '').trim(),
       delay: delay.trim(),
       enabled,
       brakePercent,
-      voice: typeof voice === 'string' && radioVoice(`radio:${voice}`) ? voice : this.#read().voice,
+      voice: typeof voice === 'string' && radioVoice(`radio:${voice}`) ? voice : prior.voice,
     };
     this.#checkEncryption();
-    const prior = this.#read().encryptedToken;
+    const typed = token.trim();
     const secret =
-      token.trim() || (prior ? safeStorage.decryptString(Buffer.from(prior, 'base64')) : '');
-    if (
-      !secret ||
-      !/^\d{17,20}$/.test(settings.channelId) ||
-      !/^\d{17,20}$/.test(settings.driverId)
-    ) {
-      throw new Error('Preencha o token do bot, o ID do canal e o ID da sua conta Discord.');
+      typed ||
+      (prior.encryptedToken
+        ? safeStorage.decryptString(Buffer.from(prior.encryptedToken, 'base64'))
+        : '');
+    if (!secret || !DISCORD_ID.test(settings.channelId)) {
+      throw new Error('Cole o token do bot e escolha o canal de voz.');
     }
-    discordConfig(this.#env(settings, secret), !enabled);
-    const stored: Stored = {
+    if (settings.followUserId && !DISCORD_ID.test(settings.followUserId)) {
+      throw new Error('O ID do usuário a seguir deve ter de 17 a 20 dígitos.');
+    }
+    discordConfig(this.#env(settings, secret));
+    const seen = this.#seen.get(settings.channelId);
+    const sameChannel = prior.channelId === settings.channelId;
+    this.#write({
       ...settings,
-      encryptedToken: token.trim() ? safeStorage.encryptString(secret).toString('base64') : prior,
-    };
-    const tmp = `${this.file}.tmp`;
-    writeFileSync(tmp, JSON.stringify(stored), { mode: 0o600 });
-    renameSync(tmp, this.file);
+      encryptedToken: typed
+        ? safeStorage.encryptString(secret).toString('base64')
+        : prior.encryptedToken,
+      tokenTail: secret.slice(-4),
+      botName: !typed ? prior.botName : this.#draft?.token === typed ? this.#draft.botName : '',
+      guildName: seen?.guildName ?? (sameChannel ? prior.guildName : ''),
+      channelName: seen?.channelName ?? (sameChannel ? prior.channelName : ''),
+    });
+    this.#draft = undefined;
+    this.#lister.close();
     this.resume();
   }
 
@@ -125,13 +213,9 @@ export class DesktopDiscord {
   setEnabled(enabled: unknown): void {
     if (typeof enabled !== 'boolean') throw new Error('Valor inválido.');
     const saved = this.#read();
-    if (enabled && (!saved.encryptedToken || !saved.channelId || !saved.driverId))
+    if (enabled && (!saved.encryptedToken || !saved.channelId))
       throw new Error('Configure o bot do Discord em Configurações antes de ativar.');
-    if (enabled && !saved.delay.trim())
-      throw new Error('Informe o atraso medido em Configurações → Rádio no Discord.');
-    const tmp = `${this.file}.tmp`;
-    writeFileSync(tmp, JSON.stringify({ ...saved, enabled }), { mode: 0o600 });
-    renameSync(tmp, this.file);
+    this.#write({ ...saved, enabled });
     this.resume();
   }
 
@@ -140,21 +224,22 @@ export class DesktopDiscord {
       throw new Error('Voz do rádio inválida.');
     const saved = this.#read();
     if (!saved.encryptedToken || saved.voice === pack) return;
-    const tmp = `${this.file}.tmp`;
-    writeFileSync(tmp, JSON.stringify({ ...saved, voice: pack }), { mode: 0o600 });
-    renameSync(tmp, this.file);
+    this.#write({ ...saved, voice: pack });
     if (saved.enabled && !this.#status.testing) this.resume();
   }
 
   stop(): void {
+    this.#draft = undefined;
     this.#generation++;
     this.#stop?.();
     this.#stop = undefined;
+    this.#lister.close();
   }
 
   remove(): void {
     rmSync(this.file, { force: true });
     rmSync(`${this.file}.tmp`, { force: true });
+    this.#draft = undefined;
     this.stop();
     this.#publish('Configuração e token do Discord removidos.');
   }
@@ -178,12 +263,13 @@ export class DesktopDiscord {
       this.#publish('Rádio do Discord desligado.');
       return;
     }
-    if (!saved.encryptedToken) throw new Error('Salve a configuração do bot antes de testar.');
+    if (!saved.encryptedToken || !saved.channelId)
+      throw new Error('Salve a configuração do bot antes de testar.');
     const endpoint = this.endpoint();
     if (!endpoint) throw new Error('Aguarde o servidor do Bono iniciar.');
     this.#checkEncryption();
     const token = safeStorage.decryptString(Buffer.from(saved.encryptedToken, 'base64'));
-    const config = discordConfig(this.#env(saved, token), test);
+    const config = discordConfig(this.#env(saved, token));
     this.stop();
     const generation = this.#generation;
     this.#publish('Conectando ao Discord…', false, test);

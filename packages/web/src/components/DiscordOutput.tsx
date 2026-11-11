@@ -54,11 +54,9 @@ function Switch({ bridge }: { bridge: DesktopDiscordBridge }) {
     };
   }, [bridge]);
 
-  const configured =
-    !!info?.hasToken &&
-    !!info.settings.channelId &&
-    !!info.settings.driverId &&
-    !!info.settings.delay.trim();
+  // Configurado = token + canal. O atraso não é requisito: sem calibrar vale o padrão.
+  const configured = !!info?.hasToken && !!info.settings.channelId;
+  const uncalibrated = configured && !info?.settings.delay.trim();
   const on = selected && !!info?.settings.enabled;
 
   async function toggle(next: boolean) {
@@ -89,7 +87,7 @@ function Switch({ bridge }: { bridge: DesktopDiscordBridge }) {
         description={
           configured
             ? uiText(
-                'O engenheiro fala no canal de voz e você ouve no PS5. O bot entra quando você entra no canal.',
+                'O engenheiro fala no canal de voz e você ouve no PS5. O bot entra quando alguém entra no canal.',
               )
             : uiText('Configure o bot uma vez para ativar a saída pelo Discord.')
         }
@@ -100,6 +98,11 @@ function Switch({ bridge }: { bridge: DesktopDiscordBridge }) {
       {info && configured && (
         <p className="ui-help" role="status" data-tone={info.status.error ? 'loss' : undefined}>
           {uiText(info.status.message)}
+        </p>
+      )}
+      {uncalibrated && (
+        <p className="ui-help">
+          {uiText('O som pode chegar um pouco depois; calibre para sincronizar.')}
         </p>
       )}
       {info && !configured && (

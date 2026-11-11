@@ -135,6 +135,9 @@ function registerDesktopHandlers(): void {
     test: () => discord.test(),
     'stop-test': () => discord.resume(),
     remove: () => discord.remove(),
+    'inspect-token': (token: unknown) => discord.inspectToken(token),
+    'list-voice-channels': () => discord.listVoiceChannels(),
+    'open-link': (url: unknown) => discord.openLink(url),
   };
   for (const [name, action] of Object.entries(actions)) {
     ipcMain.handle(`bono:discord:${name}`, (event, input: unknown) => {

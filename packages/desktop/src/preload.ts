@@ -9,6 +9,9 @@ const discord: DesktopDiscordBridge = {
   test: () => ipcRenderer.invoke('bono:discord:test'),
   stopTest: () => ipcRenderer.invoke('bono:discord:stop-test'),
   remove: () => ipcRenderer.invoke('bono:discord:remove'),
+  inspectToken: (token) => ipcRenderer.invoke('bono:discord:inspect-token', token),
+  listVoiceChannels: () => ipcRenderer.invoke('bono:discord:list-voice-channels'),
+  openLink: (url) => ipcRenderer.invoke('bono:discord:open-link', url),
   onStatus(callback) {
     const receive = (_event: Electron.IpcRendererEvent, status: Parameters<typeof callback>[0]) =>
       callback(status);
