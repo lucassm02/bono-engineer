@@ -49,7 +49,7 @@ Capturas do aplicativo em português do Brasil, com telemetria de demonstração
 - Exporte os dados da volta em CSV ou JSON, gráficos de comparação em PNG e gravações brutas quando habilitadas.
 - Acompanhe as **Corridas diárias** da semana (as três corridas do Modo Esportivo) com regras, tempos de medalha, top 100 e top 1000 e o tempo do 1º lugar, ao lado da sua melhor volta na mesma pista. Fica **desligado até você responder "sim"** a uma pergunta única na Início; depois o Bono lê as páginas públicas do [DG EDGE](https://www.dg-edge.com/events/dailies) a partir do seu PC, no máximo uma vez por hora, respeitando o `robots.txt` e linkando a fonte. Nenhum nome de jogador é guardado. "Usar como referência" abre a captura de replay com o tempo do ranking preenchido.
 - Escolha onde os dados ficam (por exemplo uma pasta do OneDrive ou do Dropbox, com um modo de escrita mais seguro nelas) e leve tudo para outro PC com **backups .bono**: exporte sessões, voltas e configurações (nunca chaves ou senhas) e importe para somar ou substituir o seu histórico.
-- Consulte o **Guia de pilotagem** no app ou gere um relatório pós-sessão no **Coach IA**, que usa a telemetria, gráficos e uma chave da Anthropic fornecida por você. Telemetria e rádio funcionam independentemente do Coach.
+- Consulte o **Guia de pilotagem** no app ou pergunte ao **Coach IA** sobre as suas voltas (pontos fortes e fracos, tempos das últimas sessões, o que melhorar). Há dois caminhos: conversar no seu próprio agente de IA pelo MCP (Claude Code, Codex), sem chave, ou usar uma chave de API da Anthropic ou da OpenAI fornecida por você e conversar dentro do Bono. Telemetria e rádio funcionam independentemente do Coach.
 - Conecte ferramentas externas pela API REST, pelo WebSocket ou pelo MCP. O servidor MCP local expõe telemetria, comparações, gráficos e histórico via HTTP, com opção stdio para clientes de desktop.
 
 ## Instalar e conectar
@@ -121,7 +121,7 @@ O painel e a API ficam em `http://localhost:8770` por padrão. Quando a porta es
 
 - O histórico SQLite, os traços, os relatórios e as gravações ficam em `%APPDATA%\Bono Engineer` no Windows. Ao rodar pelo código, a pasta no macOS é `~/Library/Application Support/Bono Engineer`. No Linux, é `$XDG_DATA_HOME/bono-engineer` ou `~/.local/share/bono-engineer`. A demonstração usa uma subpasta `demo`.
 - No app Windows, escolha outra pasta em **Configurações → Contas e dados → Pasta dos dados** (pastas do OneDrive e similares são detectadas e usam um modo de escrita mais seguro). Para o backup, use **Exportar backup** (um arquivo `.bono`; **Importar backup** soma ou substitui o histórico em outra instalação) ou copie a pasta inteira com o Bono fechado. Para escolher outra pasta ao rodar pelo código, use `--data` ou `GT7_DATA`. Os logs e as preferências da janela Electron ficam em `%LOCALAPPDATA%\Bono Engineer`.
-- Em **Configurações → Contas e dados**, confira a pasta ativa e, em **Conectar ao Claude ou ao Codex**, copie os comandos para conectar clientes MCP. O endereço HTTP padrão é `http://localhost:8770/mcp`. A chave da Anthropic, se salva, fica no banco local.
+- Em **Configurações → Contas e dados**, confira a pasta ativa e, em **Conectar ao Claude ou ao Codex**, copie os comandos para conectar clientes MCP. O endereço HTTP padrão é `http://localhost:8770/mcp`. As chaves de API (Anthropic e OpenAI), se salvas, ficam no banco local.
 
 ## Releases e CI
 

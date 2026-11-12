@@ -11,12 +11,11 @@ import {
   isLanguage,
   LANGUAGES,
 } from '@gt7/shared';
-import { useState } from 'react';
 import { LANGUAGE_NAMES, setLanguage, t as uiText, useLanguage } from '../../../lib/i18n.ts';
 import { api } from '../../api.ts';
 import { useFetch } from '../../useFetch.ts';
-import { ConfirmModal } from '../ConfirmModal.tsx';
 import { CodeBlock, CopyBtn } from '../CopyBlock.tsx';
+import { KeySetup } from '../coach/KeySetup.tsx';
 import { DiscordSettings } from '../DiscordSettings.tsx';
 import { Panel } from '../Panel.tsx';
 import { ErrorBox, Loading } from '../ui.tsx';
@@ -156,8 +155,6 @@ export function McpSection({ status, forceOpen }: { status: ApiStatus; forceOpen
 
 export function CoachSection() {
   const cfg = useFetch('coachcfg', () => api.coachConfig());
-  const [key, setKey] = useState('');
-  const [confirmRemove, setConfirmRemove] = useState(false);
   const { busy, run } = useSave();
   const apply = async (p: Parameters<typeof api.putCoachConfig>[0], ok: string) => {
     const r = await run(() => api.putCoachConfig(p), ok);
@@ -166,7 +163,7 @@ export function CoachSection() {
   };
   if (cfg.error && !cfg.data) {
     return (
-      <Panel title={uiText('Coach IA (Claude)')} id="coach">
+      <Panel title={uiText('Coach IA')} id="coach">
         <ErrorBox
           error={
             cfg.error.status === 404
@@ -184,97 +181,17 @@ export function CoachSection() {
   const c = cfg.data;
   return (
     <Panel
-      title={uiText('Coach IA (Claude)')}
-      description={uiText('O debrief em linguagem natural usa a API da Anthropic com a sua chave.')}
+      title={uiText('Coach IA')}
+      description={uiText(
+        'Pergunte ao coach dentro do Bono com a sua chave de API (Claude ou OpenAI), ou use o seu agente de IA pelo MCP.',
+      )}
       id="coach"
     >
       {!c ? (
         <Loading />
       ) : (
         <div className="cfg-stack">
-          <div className="cfg-keystate">
-            <span className="ui-label">{uiText('Chave da API')}</span>
-            {c.hasKey ? (
-              <span className="cfg-keyline">
-                <span className="ui-badge" data-tone="gain">
-                  {uiText('configurada')}
-                </span>
-                <span className="num">…{c.keyLast4}</span>
-                <span className="cfg-muted">
-                  {c.keySource === 'env'
-                    ? uiText('variável ANTHROPIC_API_KEY — tem prioridade')
-                    : uiText('salva no app')}
-                </span>
-              </span>
-            ) : (
-              <span className="ui-badge" data-tone="loss">
-                {uiText('sem chave')}
-              </span>
-            )}
-          </div>
-          <form
-            className="cfg-keyform"
-            autoComplete="off"
-            onSubmit={async (e) => {
-              e.preventDefault();
-              if (!key.trim()) return;
-              if (await apply({ apiKey: key.trim() }, uiText('Chave salva.'))) setKey('');
-            }}
-          >
-            <div className="ui-field">
-              <label className="ui-label" htmlFor="coach-key">
-                {uiText('Chave da API da Anthropic')}
-              </label>
-              <div className="cfg-inputrow">
-                <input
-                  id="coach-key"
-                  className="ui-input"
-                  type="password"
-                  value={key}
-                  placeholder={c.hasKey ? uiText('Digite para trocar a chave') : 'sk-ant-…'}
-                  autoComplete="new-password"
-                  spellCheck={false}
-                  onChange={(e) => setKey(e.target.value)}
-                />
-                <button type="submit" className="ui-btn" disabled={busy || !key.trim()}>
-                  {uiText('Salvar chave')}
-                </button>
-                {c.keySource === 'settings' && (
-                  <button
-                    type="button"
-                    className="ui-btn"
-                    data-variant="danger"
-                    disabled={busy}
-                    onClick={() => setConfirmRemove(true)}
-                  >
-                    {uiText('Remover chave')}
-                  </button>
-                )}
-              </div>
-              <span className="ui-help">
-                {uiText(
-                  'A chave fica só no PC (banco local) e nunca volta para o navegador — aqui aparecem só os 4 últimos caracteres. Crie uma em console.anthropic.com.',
-                )}
-              </span>
-            </div>
-          </form>
-          <label className="ui-field">
-            <span className="ui-label">{uiText('Modelo')}</span>
-            <select
-              className="ui-select"
-              value={c.model}
-              disabled={busy}
-              onChange={(e) => apply({ model: e.target.value }, uiText('Modelo salvo.'))}
-            >
-              {c.models.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.label}
-                  {m.id === c.defaultModel ? uiText(' (padrão)') : ''}
-                </option>
-              ))}
-            </select>
-            <span className="ui-help">{c.models.find((m) => m.id === c.model)?.description}</span>
-          </label>
+          <KeySetup config={c} onChange={(next) => cfg.setData(next)} />
           <details className="cfg-adv">
             <summary>{uiText('Avançado: esforço e relatórios guardados')}</summary>
             <div className="cfg-adv-body cfg-two">
@@ -329,27 +246,6 @@ export function CoachSection() {
               </label>
             </div>
           </details>
-          <ConfirmModal
-            open={confirmRemove}
-            title={uiText('Remover a chave da API?')}
-            message={
-              <>
-                <p>
-                  {uiText(
-                    'A chave salva neste PC será apagada e o coach de IA deixa de funcionar aqui.',
-                  )}
-                </p>
-                <p>{uiText('Você pode informar uma chave de novo quando quiser.')}</p>
-              </>
-            }
-            confirmLabel={uiText('Remover chave')}
-            busy={busy}
-            onClose={() => setConfirmRemove(false)}
-            onConfirm={async () => {
-              await apply({ apiKey: null }, uiText('Chave removida.'));
-              setConfirmRemove(false);
-            }}
-          />
         </div>
       )}
     </Panel>

@@ -12,12 +12,15 @@ import { formatLapTime } from '../../lib/format.ts';
 import { t as uiText } from '../../lib/i18n.ts';
 import { navigate, type Route, routes } from '../../lib/route.ts';
 import { addNotice } from '../../state/uiStore.ts';
+import '../../styles/coach-setup.css';
 import { api } from '../api.ts';
 import { type CoachToolCall, streamCoach } from '../coachStream.ts';
 import { ConfirmModal } from '../components/ConfirmModal.tsx';
+import { CoachSetup, type SetupMode } from '../components/coach/CoachSetup.tsx';
 import { Markdown } from '../components/Markdown.tsx';
 import { Panel } from '../components/Panel.tsx';
 import { ErrorBox, Loading, PageHead, useTitle } from '../components/ui.tsx';
+import { coachStarters } from '../lib/coachStarters.ts';
 import { coachToolLabel, formatDateTime, REFERENCE_KIND_LABELS } from '../lib/labels.ts';
 import { useFetch } from '../useFetch.ts';
 
@@ -51,38 +54,6 @@ function ToolChips({ tools }: { tools: CoachToolCall[] }) {
         </li>
       ))}
     </ul>
-  );
-}
-
-function NoKey() {
-  return (
-    <Panel
-      tone="accent"
-      title={uiText('Configure o coach de IA')}
-      description={uiText(
-        'O coach usa a API do Claude com as mesmas ferramentas de análise do app.',
-      )}
-    >
-      <div className="coach-nokey">
-        <p>
-          {uiText('Para usar aqui dentro, informe uma chave da API da Anthropic em')}{' '}
-          <a href={routes.config('coach')}>{uiText('Configurações → Coach IA')}</a>
-          {` ${uiText('(ou defina a variável')}`} <code>ANTHROPIC_API_KEY</code>
-          {` ${uiText('antes de iniciar o servidor).')}`}
-        </p>
-        <p className="coach-muted">
-          {`${uiText('Sem chave? As mesmas ferramentas funcionam no')} `}
-          <strong>Claude Desktop</strong>
-          {` ${uiText('ou no')}`} <strong>Claude Code</strong>
-          {` ${uiText('pelo MCP — veja')}`}{' '}
-          <a href={routes.config('mcp')}>{uiText('como conectar')}</a>
-          {` ${uiText('e use o prompt “debrief_sessao”.')}`}
-        </p>
-        <a className="ui-btn" href={routes.config('coach')}>
-          {uiText('Abrir Configurações')}
-        </a>
-      </div>
-    </Panel>
   );
 }
 
@@ -139,6 +110,9 @@ export function CoachPage({ route }: { route: Route }) {
   const [currentId, setCurrentId] = useState<string | null>(reportId);
   const [streaming, setStreaming] = useState(false);
   const [chat, setChat] = useState('');
+  // Free question box of the empty state, and the setup screen opened from the chat header.
+  const [ask, setAsk] = useState('');
+  const [setupOpen, setSetupOpen] = useState<SetupMode | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const pending = useRef('');
   const raf = useRef(0);
@@ -211,7 +185,7 @@ export function CoachPage({ route }: { route: Route }) {
     });
 
   const run = async (
-    path: '/api/coach/debrief' | '/api/coach/chat',
+    path: '/api/coach/debrief' | '/api/coach/chat' | '/api/coach/ask',
     body: Parameters<typeof streamCoach>[1],
     userText: string,
     fresh: boolean,
@@ -305,6 +279,14 @@ export function CoachPage({ route }: { route: Route }) {
     );
   };
 
+  /** A free question starts a new chat: the coach fetches the data itself. */
+  const askNew = (message: string) => {
+    const msg = message.trim();
+    if (!msg || streaming) return;
+    setAsk('');
+    void run('/api/coach/ask', { message: msg }, msg, true);
+  };
+
   const sendChat = () => {
     const msg = chat.trim();
     if (!msg || !currentId) return;
@@ -340,19 +322,31 @@ export function CoachPage({ route }: { route: Route }) {
       <PageHead
         title={uiText('Coach IA')}
         sub={uiText(
-          'Debrief com números e uma ação por curva, a partir das mesmas métricas da página de análise.',
+          'Pergunte sobre o seu desempenho: o coach busca os números reais das suas voltas e responde com uma ação por curva.',
         )}
         actions={
-          currentId && (
-            <a
-              className="ui-btn"
-              data-variant="secondary"
-              href={routes.coach()}
-              onClick={() => abortRef.current?.abort()}
-            >
-              {uiText('Novo debrief')}
-            </a>
-          )
+          <>
+            {config?.hasKey && (
+              <button
+                type="button"
+                className="ui-btn"
+                data-variant="secondary"
+                onClick={() => setSetupOpen(setupOpen ? null : 'mcp')}
+              >
+                {uiText('Usar pelo meu agente (MCP)')}
+              </button>
+            )}
+            {currentId && (
+              <a
+                className="ui-btn"
+                data-variant="secondary"
+                href={routes.coach()}
+                onClick={() => abortRef.current?.abort()}
+              >
+                {uiText('Nova conversa')}
+              </a>
+            )}
+          </>
         }
       />
       <div className="coach-layout">
@@ -366,121 +360,211 @@ export function CoachPage({ route }: { route: Route }) {
               compact
             />
           )}
-          {config && !config.hasKey && <NoKey />}
+          {config && (!config.hasKey || setupOpen) && (
+            <CoachSetup
+              config={config}
+              onConfig={(c) => cfg.setData(c)}
+              initial={config.hasKey ? setupOpen : null}
+              onClose={() => setSetupOpen(null)}
+            />
+          )}
 
-          {!currentId && entries.length === 0 && (
-            <Panel
-              title={uiText('Pedir um debrief')}
-              description={uiText(
-                'Escolha o que o coach deve olhar. Sem escolher nada, ele analisa a melhor volta da sessão mais recente.',
-              )}
-            >
-              <form
-                className="coach-form"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  startDebrief();
-                }}
+          {config?.hasKey && !setupOpen && !currentId && entries.length === 0 && (
+            <div className="cch">
+              <Panel
+                title={uiText('Pergunte ao seu coach')}
+                description={uiText(
+                  'Escolha uma pergunta pronta ou escreva a sua. Ele busca as suas últimas voltas e sessões e responde com números.',
+                )}
               >
-                <label className="ui-field coach-span2">
-                  <span className="ui-label">{uiText('Sessão')}</span>
-                  <select
-                    className="ui-select"
-                    value={effectiveSession}
-                    onChange={(e) => {
-                      setSessionId(e.target.value);
-                      setLapId('');
-                      setCorner('');
+                <div className="cch">
+                  <div className="cch-head">
+                    <span className="cch-who">
+                      <span className="ui-badge" data-tone="accent">
+                        {config.providers.find((p) => p.provider === config.provider)?.label}
+                      </span>
+                      <span className="ui-badge">
+                        {config.models.find((m) => m.id === config.model)?.label ?? config.model}
+                      </span>
+                    </span>
+                    <a
+                      className="ui-btn"
+                      data-variant="secondary"
+                      data-size="sm"
+                      href={routes.config('coach')}
+                    >
+                      {uiText('Trocar chave ou modelo')}
+                    </a>
+                  </div>
+                  <ul className="cch-starters">
+                    {coachStarters().map((st) => (
+                      <li key={st.id}>
+                        <button
+                          type="button"
+                          className="cch-starter"
+                          disabled={streaming || noCoachEndpoint}
+                          onClick={() => askNew(st.question)}
+                        >
+                          <strong>{st.title}</strong>
+                          <span>{st.question}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                  <form
+                    className="cch-compose"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      askNew(ask);
                     }}
                   >
-                    {!sessions.data?.length && <option value="">{uiText('Mais recente')}</option>}
-                    {(sessions.data ?? []).map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {sessionLabel(s, trackNames)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="ui-field">
-                  <span className="ui-label">{uiText('Volta')}</span>
-                  <select
-                    className="ui-select"
-                    value={lapId}
-                    onChange={(e) => setLapId(e.target.value)}
-                  >
-                    <option value="">{uiText('Melhor volta da sessão')}</option>
-                    {laps.map((l) => (
-                      <option key={l.id} value={l.id}>
-                        {`${uiText('Volta')} `}
-                        {l.number} · {formatLapTime(l.timeMs)}
-                        {l.valid ? '' : uiText(' (inválida)')}
-                        {l.isReference ? uiText(' · ref') : ''}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="ui-field">
-                  <span className="ui-label">{uiText('Referência')}</span>
-                  <select
-                    className="ui-select"
-                    value={ref}
-                    onChange={(e) => setRef(e.target.value)}
-                  >
-                    {REF_OPTIONS.map((k) => (
-                      <option key={k} value={k}>
-                        {REFERENCE_KIND_LABELS[k]}
-                      </option>
-                    ))}
-                    {!(REF_OPTIONS as readonly string[]).includes(ref) && (
-                      <option value={ref}>{uiText('Volta escolhida na comparação')}</option>
-                    )}
-                  </select>
-                </label>
-                <label className="ui-field coach-span2">
-                  <span className="ui-label">{uiText('Foco')}</span>
-                  <select
-                    className="ui-select"
-                    value={corner}
-                    onChange={(e) => setCorner(e.target.value)}
-                  >
-                    <option value="">{uiText('Volta inteira (debrief)')}</option>
-                    {(track.data?.corners ?? []).map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.id}
-                        {c.name ? ` · ${c.name}` : ''}
-                      </option>
-                    ))}
-                    {corner && !(track.data?.corners ?? []).some((c) => c.id === corner) && (
-                      <option value={corner}>{corner}</option>
-                    )}
-                  </select>
-                </label>
-                <label className="ui-field coach-span2">
-                  <span className="ui-label">{uiText('Pergunta (opcional)')}</span>
-                  <textarea
-                    className="ui-input"
-                    rows={3}
-                    maxLength={1000}
-                    value={question}
-                    placeholder={uiText('ex.: por que perco tanto na saída da T3?')}
-                    onChange={(e) => setQuestion(e.target.value)}
-                  />
-                </label>
-                <div className="coach-actions coach-span2">
-                  <button type="submit" className="ui-btn" data-size="lg" disabled={!canGenerate}>
-                    {uiText('Gerar debrief')}
-                  </button>
-                  <span className="coach-muted">
-                    {config
-                      ? uiText(
-                          'Modelo: {0}',
-                          config.models.find((m) => m.id === config.model)?.label ?? config.model,
-                        )
-                      : ''}
-                  </span>
+                    <textarea
+                      className="ui-input"
+                      rows={2}
+                      maxLength={2000}
+                      value={ask}
+                      aria-label={uiText('Sua pergunta para o coach')}
+                      placeholder={uiText(
+                        'Escreva a sua pergunta (ex.: onde eu perco mais tempo em Trial Mountain?)',
+                      )}
+                      onChange={(e) => setAsk(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          askNew(ask);
+                        }
+                      }}
+                    />
+                    <button type="submit" className="ui-btn" disabled={!ask.trim() || !canGenerate}>
+                      {uiText('Perguntar')}
+                    </button>
+                  </form>
                 </div>
-              </form>
-            </Panel>
+              </Panel>
+              <details className="cch-adv">
+                <summary>{uiText('Pedir um debrief de uma sessão específica')}</summary>
+                <Panel
+                  title={uiText('Pedir um debrief')}
+                  description={uiText(
+                    'Escolha o que o coach deve olhar. Sem escolher nada, ele analisa a melhor volta da sessão mais recente.',
+                  )}
+                >
+                  <form
+                    className="coach-form"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      startDebrief();
+                    }}
+                  >
+                    <label className="ui-field coach-span2">
+                      <span className="ui-label">{uiText('Sessão')}</span>
+                      <select
+                        className="ui-select"
+                        value={effectiveSession}
+                        onChange={(e) => {
+                          setSessionId(e.target.value);
+                          setLapId('');
+                          setCorner('');
+                        }}
+                      >
+                        {!sessions.data?.length && (
+                          <option value="">{uiText('Mais recente')}</option>
+                        )}
+                        {(sessions.data ?? []).map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {sessionLabel(s, trackNames)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="ui-field">
+                      <span className="ui-label">{uiText('Volta')}</span>
+                      <select
+                        className="ui-select"
+                        value={lapId}
+                        onChange={(e) => setLapId(e.target.value)}
+                      >
+                        <option value="">{uiText('Melhor volta da sessão')}</option>
+                        {laps.map((l) => (
+                          <option key={l.id} value={l.id}>
+                            {`${uiText('Volta')} `}
+                            {l.number} · {formatLapTime(l.timeMs)}
+                            {l.valid ? '' : uiText(' (inválida)')}
+                            {l.isReference ? uiText(' · ref') : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="ui-field">
+                      <span className="ui-label">{uiText('Referência')}</span>
+                      <select
+                        className="ui-select"
+                        value={ref}
+                        onChange={(e) => setRef(e.target.value)}
+                      >
+                        {REF_OPTIONS.map((k) => (
+                          <option key={k} value={k}>
+                            {REFERENCE_KIND_LABELS[k]}
+                          </option>
+                        ))}
+                        {!(REF_OPTIONS as readonly string[]).includes(ref) && (
+                          <option value={ref}>{uiText('Volta escolhida na comparação')}</option>
+                        )}
+                      </select>
+                    </label>
+                    <label className="ui-field coach-span2">
+                      <span className="ui-label">{uiText('Foco')}</span>
+                      <select
+                        className="ui-select"
+                        value={corner}
+                        onChange={(e) => setCorner(e.target.value)}
+                      >
+                        <option value="">{uiText('Volta inteira (debrief)')}</option>
+                        {(track.data?.corners ?? []).map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.id}
+                            {c.name ? ` · ${c.name}` : ''}
+                          </option>
+                        ))}
+                        {corner && !(track.data?.corners ?? []).some((c) => c.id === corner) && (
+                          <option value={corner}>{corner}</option>
+                        )}
+                      </select>
+                    </label>
+                    <label className="ui-field coach-span2">
+                      <span className="ui-label">{uiText('Pergunta (opcional)')}</span>
+                      <textarea
+                        className="ui-input"
+                        rows={3}
+                        maxLength={1000}
+                        value={question}
+                        placeholder={uiText('ex.: por que perco tanto na saída da T3?')}
+                        onChange={(e) => setQuestion(e.target.value)}
+                      />
+                    </label>
+                    <div className="coach-actions coach-span2">
+                      <button
+                        type="submit"
+                        className="ui-btn"
+                        data-size="lg"
+                        disabled={!canGenerate}
+                      >
+                        {uiText('Gerar debrief')}
+                      </button>
+                      <span className="coach-muted">
+                        {config
+                          ? uiText(
+                              'Modelo: {0}',
+                              config.models.find((m) => m.id === config.model)?.label ??
+                                config.model,
+                            )
+                          : ''}
+                      </span>
+                    </div>
+                  </form>
+                </Panel>
+              </details>
+            </div>
           )}
 
           {(entries.length > 0 || currentId) && (
@@ -497,7 +581,7 @@ export function CoachPage({ route }: { route: Route }) {
                   )}
                 </div>
               )}
-              {entries.length === 0 && <Loading text={uiText('Abrindo o relatório…')} />}
+              {entries.length === 0 && <Loading text={uiText('Abrindo a conversa…')} />}
               {entries.map((e, i) =>
                 e.role === 'user' ? (
                   // biome-ignore lint/suspicious/noArrayIndexKey: append-only conversation
@@ -591,8 +675,8 @@ export function CoachPage({ route }: { route: Route }) {
 
         <aside className="coach-side">
           <Panel
-            title={uiText('Relatórios')}
-            description={uiText('Debriefs salvos, do mais recente ao mais antigo.')}
+            title={uiText('Conversas')}
+            description={uiText('Conversas e debriefs salvos, do mais recente ao mais antigo.')}
           >
             {reports.error && !reports.data ? (
               <p className="coach-muted">
@@ -601,7 +685,7 @@ export function CoachPage({ route }: { route: Route }) {
             ) : !reports.data ? (
               <Loading />
             ) : reportList.length === 0 ? (
-              <p className="coach-muted">{uiText('Nenhum relatório ainda.')}</p>
+              <p className="coach-muted">{uiText('Nenhuma conversa ainda.')}</p>
             ) : (
               <ul className="coach-reports">
                 {reportList.map((r) => (
@@ -627,7 +711,7 @@ export function CoachPage({ route }: { route: Route }) {
                     <button
                       type="button"
                       className="ui-icon-btn coach-report-del"
-                      aria-label={uiText('Apagar o relatório {0}', r.title)}
+                      aria-label={uiText('Apagar a conversa {0}', r.title)}
                       title={uiText('Apagar')}
                       onClick={() => setToDelete(r)}
                     >

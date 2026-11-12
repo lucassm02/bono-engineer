@@ -33,7 +33,7 @@ export const FAQ_EN = [
   },
   {
     q: 'Where does my data go?',
-    a: 'Nowhere. Sessions, laps and recordings stay in a folder on your PC, and Bono has no server or account. Discord radio and the optional AI debrief use the internet only if you turn them on, and the debrief uses your own Anthropic key.',
+    a: 'Nowhere. Sessions, laps and recordings stay in a folder on your PC, and Bono has no server or account. Discord radio and the optional AI debrief use the internet only if you turn them on, and the AI coach uses your own Anthropic or OpenAI key (or your own agent, through MCP).',
   },
 ];
 
@@ -104,7 +104,7 @@ ${motionSection(ctx, 'en')}
         <div class="read">.bono<small>one file with your whole history</small></div>
       </li>
       <li class="row">
-        <div><h3>Optional AI debrief</h3><p>A post-session report with the three costliest corners and one action for each. It uses your own Anthropic key. Everything else works without it.</p></div>
+        <div><h3>Optional AI coach</h3><p>Ask about your laps — strengths and weaknesses, times of your latest sessions, what to improve — and get the three costliest corners with one action for each. It works through your own agent (Claude Code, Codex) over MCP with no key, or with your own Anthropic or OpenAI key. Everything else works without it.</p></div>
         <div class="read">3 corners<small>one action each</small></div>
       </li>
     </ul>

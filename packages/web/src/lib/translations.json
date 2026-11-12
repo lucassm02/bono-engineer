@@ -4599,5 +4599,204 @@
     "V-mín {0} km/h (ref. {1}) · salida {2} km/h (ref. {3})."
   ],
   "Problema na volta": ["Problem on the lap", "Problema en la vuelta"],
-  "Ver replay da volta": ["Watch the lap replay", "Ver la repetición de la vuelta"]
+  "Ver replay da volta": ["Watch the lap replay", "Ver la repetición de la vuelta"],
+  "Pergunte sobre o seu desempenho: o coach busca os números reais das suas voltas e responde com uma ação por curva.": [
+    "Ask about your driving: the coach fetches the real numbers from your laps and answers with one action per corner.",
+    "Pregunta sobre tu rendimiento: el coach busca los números reales de tus vueltas y responde con una acción por curva."
+  ],
+  "Usar pelo meu agente (MCP)": ["Use my AI agent (MCP)", "Usar mi agente de IA (MCP)"],
+  "Nova conversa": ["New conversation", "Nueva conversación"],
+  "Pergunte ao seu coach": ["Ask your coach", "Pregunta a tu coach"],
+  "Escolha uma pergunta pronta ou escreva a sua. Ele busca as suas últimas voltas e sessões e responde com números.": [
+    "Pick a ready-made question or write your own. It fetches your latest laps and sessions and answers with numbers.",
+    "Elige una pregunta lista o escribe la tuya. Busca tus últimas vueltas y sesiones y responde con números."
+  ],
+  "Trocar chave ou modelo": ["Change key or model", "Cambiar clave o modelo"],
+  "Sua pergunta para o coach": ["Your question for the coach", "Tu pregunta para el coach"],
+  "Escreva a sua pergunta (ex.: onde eu perco mais tempo em Trial Mountain?)": [
+    "Write your question (e.g. where do I lose the most time at Trial Mountain?)",
+    "Escribe tu pregunta (p. ej.: ¿dónde pierdo más tiempo en Trial Mountain?)"
+  ],
+  "Perguntar": ["Ask", "Preguntar"],
+  "Pedir um debrief de uma sessão específica": [
+    "Ask for a debrief of a specific session",
+    "Pedir un debrief de una sesión concreta"
+  ],
+  "Conectar pelo seu agente de IA (MCP)": [
+    "Connect through your AI agent (MCP)",
+    "Conectar con tu agente de IA (MCP)"
+  ],
+  "Usar uma chave de API": ["Use an API key", "Usar una clave de API"],
+  "Passo a passo para perguntar ao seu agente, sem chave de API.": [
+    "Step by step to ask your agent, with no API key.",
+    "Paso a paso para preguntar a tu agente, sin clave de API."
+  ],
+  "Depois de salvar, o chat do coach aparece aqui no Bono.": [
+    "After saving, the coach chat appears here in Bono.",
+    "Al guardar, el chat del coach aparece aquí en Bono."
+  ],
+  "Voltar ao chat": ["Back to the chat", "Volver al chat"],
+  "Como você quer usar o coach de IA?": [
+    "How do you want to use the AI coach?",
+    "¿Cómo quieres usar el coach de IA?"
+  ],
+  "O coach lê as suas voltas, sessões e curvas e responde em linguagem natural. Escolha um caminho:": [
+    "The coach reads your laps, sessions and corners and answers in plain language. Pick a path:",
+    "El coach lee tus vueltas, sesiones y curvas y responde en lenguaje natural. Elige un camino:"
+  ],
+  "Pelo meu agente de IA (MCP)": ["Through my AI agent (MCP)", "Con mi agente de IA (MCP)"],
+  "Sem chave. Você conversa no Claude Code ou no Codex, e ele lê os seus dados do Bono. Mostramos o passo a passo.": [
+    "No key. You chat in Claude Code or Codex and it reads your Bono data. We show the steps.",
+    "Sin clave. Conversas en Claude Code o Codex y él lee tus datos de Bono. Te mostramos los pasos."
+  ],
+  "Ver o passo a passo": ["See the steps", "Ver el paso a paso"],
+  "Com uma chave de API": ["With an API key", "Con una clave de API"],
+  "Pergunte aqui dentro, num chat do Bono. Funciona com Claude (Anthropic) ou OpenAI, e você escolhe o modelo.": [
+    "Ask right here, in a Bono chat. Works with Claude (Anthropic) or OpenAI, and you choose the model.",
+    "Pregunta aquí dentro, en un chat de Bono. Funciona con Claude (Anthropic) u OpenAI, y tú eliges el modelo."
+  ],
+  "Configurar a chave": ["Set up the key", "Configurar la clave"],
+  "Claude (Anthropic)": ["Claude (Anthropic)", "Claude (Anthropic)"],
+  "Modelos Claude": ["Claude models", "Modelos Claude"],
+  "OpenAI (ChatGPT)": ["OpenAI (ChatGPT)", "OpenAI (ChatGPT)"],
+  "Modelos GPT": ["GPT models", "Modelos GPT"],
+  "Qual IA vai responder?": ["Which AI will answer?", "¿Qué IA va a responder?"],
+  "em uso": ["in use", "en uso"],
+  "chave salva": ["key saved", "clave guardada"],
+  "Crie uma chave de API": ["Create an API key", "Crea una clave de API"],
+  "a chave é da conta de desenvolvedor e é cobrada à parte; a assinatura do chat não vale como chave.": [
+    "the key belongs to the developer account and is billed separately; a chat subscription does not work as a key.",
+    "la clave es de la cuenta de desarrollador y se cobra aparte; la suscripción del chat no sirve como clave."
+  ],
+  "Cole a chave aqui": ["Paste the key here", "Pega la clave aquí"],
+  "variável {0} — tem prioridade": [
+    "variable {0} — takes priority",
+    "variable {0} — tiene prioridad"
+  ],
+  "Salvar e testar": ["Save and test", "Guardar y probar"],
+  "A chave fica só neste PC e nunca volta para o navegador: aqui aparecem só os 4 últimos caracteres.": [
+    "The key stays on this PC only and never goes back to the browser: only the last 4 characters show here.",
+    "La clave queda solo en este PC y nunca vuelve al navegador: aquí solo se ven los 4 últimos caracteres."
+  ],
+  "Escolha o modelo": ["Choose the model", "Elige el modelo"],
+  "Outro modelo…": ["Other model…", "Otro modelo…"],
+  "Nome do modelo": ["Model name", "Nombre del modelo"],
+  "Usar este modelo": ["Use this model", "Usar este modelo"],
+  "Modelo digitado por você: confira o nome na documentação do provedor.": [
+    "Model you typed: check the name in the provider documentation.",
+    "Modelo escrito por ti: confirma el nombre en la documentación del proveedor."
+  ],
+  "Usar {0}": ["Use {0}", "Usar {0}"],
+  "Testar a chave": ["Test the key", "Probar la clave"],
+  "Remover a chave de {0}?": ["Remove the {0} key?", "¿Quitar la clave de {0}?"],
+  "Claude (chat)": ["Claude (chat)", "Claude (chat)"],
+  "O Bono tem um servidor MCP: o seu agente de IA lê as suas voltas, sessões e curvas por ele e responde no chat que você já usa. Não precisa de chave de API.": [
+    "Bono has an MCP server: your AI agent reads your laps, sessions and corners through it and answers in the chat you already use. No API key needed.",
+    "Bono tiene un servidor MCP: tu agente de IA lee tus vueltas, sesiones y curvas con él y responde en el chat que ya usas. No hace falta clave de API."
+  ],
+  "Escolha o seu agente": ["Choose your agent", "Elige tu agente"],
+  "Agente de IA": ["AI agent", "Agente de IA"],
+  "Conecte o Bono uma única vez": ["Connect Bono just once", "Conecta Bono una sola vez"],
+  "Abra o Claude Code: a aba Code do app do Claude, ou digite claude num terminal. Depois cole este comando e aperte Enter:": [
+    "Open Claude Code: the Code tab of the Claude app, or type claude in a terminal. Then paste this command and press Enter:",
+    "Abre Claude Code: la pestaña Code de la app de Claude, o escribe claude en una terminal. Luego pega este comando y pulsa Enter:"
+  ],
+  "Comando": ["Command", "Comando"],
+  "Para conferir, rode claude mcp list: o bono deve aparecer como conectado. Numa conversa nova, o Claude Code já enxerga as ferramentas.": [
+    "To check, run claude mcp list: bono should show as connected. In a new conversation, Claude Code already sees the tools.",
+    "Para comprobar, ejecuta claude mcp list: bono debe aparecer como conectado. En una conversación nueva, Claude Code ya ve las herramientas."
+  ],
+  "No chat do app do Claude, o MCP vem de um arquivo. Abra Configurações → Desenvolvedor → Editar configuração (ou o arquivo claude_desktop_config.json em %APPDATA%\\Claude) e coloque isto:": [
+    "In the Claude app chat, MCP comes from a file. Open Settings → Developer → Edit config (or the claude_desktop_config.json file in %APPDATA%\\Claude) and put this in:",
+    "En el chat de la app de Claude, el MCP viene de un archivo. Abre Configuración → Desarrollador → Editar configuración (o el archivo claude_desktop_config.json en %APPDATA%\\Claude) y pon esto:"
+  ],
+  "Feche o app do Claude por completo e abra de novo. Se já existir um bloco mcpServers, junte só a entrada bono.": [
+    "Close the Claude app completely and open it again. If an mcpServers block already exists, just add the bono entry.",
+    "Cierra la app de Claude por completo y ábrela de nuevo. Si ya existe un bloque mcpServers, añade solo la entrada bono."
+  ],
+  "O Codex é o agente de código da OpenAI. No terminal, rode este comando (ou, se a sua versão não tiver o comando, ponha o bloco no arquivo ~/.codex/config.toml):": [
+    "Codex is OpenAI's coding agent. In a terminal, run this command (or, if your version lacks the command, put the block in ~/.codex/config.toml):",
+    "Codex es el agente de código de OpenAI. En una terminal, ejecuta este comando (o, si tu versión no lo tiene, pon el bloque en ~/.codex/config.toml):"
+  ],
+  "Reinicie o Codex. Peça \"liste as ferramentas do bono\" para conferir se conectou.": [
+    "Restart Codex. Ask it to \"list the bono tools\" to check it connected.",
+    "Reinicia Codex. Pídele \"lista las herramientas de bono\" para comprobar que conectó."
+  ],
+  "O ChatGPT (site e app) só conecta servidores MCP que tenham um endereço HTTPS público. O endereço do Bono é local, então ele não alcança o seu PC.": [
+    "ChatGPT (site and app) only connects to MCP servers that have a public HTTPS address. Bono's address is local, so it cannot reach your PC.",
+    "ChatGPT (sitio y app) solo conecta servidores MCP con una dirección HTTPS pública. La dirección de Bono es local, así que no llega a tu PC."
+  ],
+  "O caminho mais simples com a OpenAI é o Codex (aba ao lado) ou usar uma chave de API da OpenAI aqui no Bono.": [
+    "The simplest path with OpenAI is Codex (next tab) or using an OpenAI API key here in Bono.",
+    "El camino más simple con OpenAI es Codex (pestaña de al lado) o usar una clave de API de OpenAI aquí en Bono."
+  ],
+  "Quem expõe o Bono por um túnel HTTPS por conta própria usa este endereço (com o token, se o acesso estiver protegido):": [
+    "If you expose Bono through an HTTPS tunnel yourself, use this address (with the token, if access is protected):",
+    "Quien expone Bono con un túnel HTTPS por su cuenta usa esta dirección (con el token, si el acceso está protegido):"
+  ],
+  "Endereço MCP (HTTP)": ["MCP address (HTTP)", "Dirección MCP (HTTP)"],
+  "Pergunte em linguagem natural": ["Ask in plain language", "Pregunta en lenguaje natural"],
+  "Peça o que quiser sobre o seu desempenho. O agente busca os números no Bono e responde. Copie uma pergunta e cole no chat dele:": [
+    "Ask anything about your driving. The agent fetches the numbers from Bono and answers. Copy a question and paste it in its chat:",
+    "Pide lo que quieras sobre tu rendimiento. El agente busca los números en Bono y responde. Copia una pregunta y pégala en su chat:"
+  ],
+  "Também existem os prompts prontos debrief_sessao e foco_curva, que o agente oferece no menu de comandos.": [
+    "There are also the ready-made prompts debrief_sessao and foco_curva, which the agent offers in its command menu.",
+    "También hay los prompts listos debrief_sessao y foco_curva, que el agente ofrece en su menú de comandos."
+  ],
+  "Pontos fortes e fracos": ["Strengths and weaknesses", "Puntos fuertes y débiles"],
+  "Quais são os meus pontos fortes e os meus pontos fracos? Use as minhas últimas corridas.": [
+    "What are my strengths and my weaknesses? Use my latest races.",
+    "¿Cuáles son mis puntos fuertes y mis puntos débiles? Usa mis últimas carreras."
+  ],
+  "O que melhorar primeiro": ["What to improve first", "Qué mejorar primero"],
+  "O que eu mais preciso melhorar? Quero as 3 prioridades, com uma ação para cada.": [
+    "What do I need to improve most? I want the 3 priorities, with one action for each.",
+    "¿Qué necesito mejorar más? Quiero las 3 prioridades, con una acción para cada una."
+  ],
+  "Tempos das últimas sessões": ["Times of the latest sessions", "Tiempos de las últimas sesiones"],
+  "Quais foram os tempos das minhas últimas sessões? Mostre uma tabela com a melhor volta de cada uma.": [
+    "What were the times of my latest sessions? Show a table with the best lap of each.",
+    "¿Cuáles fueron los tiempos de mis últimas sesiones? Muestra una tabla con la mejor vuelta de cada una."
+  ],
+  "Minha evolução": ["My progress", "Mi evolución"],
+  "Como estou evoluindo na pista que mais treinei, nos últimos dias?": [
+    "How am I progressing on the track I trained most, over the last days?",
+    "¿Cómo voy evolucionando en la pista que más entrené, en los últimos días?"
+  ],
+  "Qual curva treinar": ["Which corner to drill", "Qué curva entrenar"],
+  "Qual curva eu devo treinar hoje e por quê?": [
+    "Which corner should I drill today and why?",
+    "¿Qué curva debo entrenar hoy y por qué?"
+  ],
+  "Estou regular nas minhas voltas? Onde eu mais oscilo?": [
+    "Am I consistent across my laps? Where do I vary the most?",
+    "¿Soy regular en mis vueltas? ¿Dónde oscilo más?"
+  ],
+  "Meus melhores tempos": ["My best times", "Mis mejores tiempos"],
+  "Qual é o meu melhor tempo em cada pista, e com qual carro?": [
+    "What is my best time on each track, and with which car?",
+    "¿Cuál es mi mejor tiempo en cada pista, y con qué coche?"
+  ],
+  "Debrief da última sessão": ["Debrief of the last session", "Debrief de la última sesión"],
+  "Faça o debrief da minha última sessão: o que ganhei, o que perdi e o plano para o próximo stint.": [
+    "Debrief my last session: what I gained, what I lost and the plan for the next stint.",
+    "Haz el debrief de mi última sesión: qué gané, qué perdí y el plan para el próximo stint."
+  ],
+  "Use as ferramentas do servidor MCP \"bono\" (telemetria do Gran Turismo 7) para responder.": [
+    "Use the tools of the MCP server \"bono\" (Gran Turismo 7 telemetry) to answer.",
+    "Usa las herramientas del servidor MCP \"bono\" (telemetría de Gran Turismo 7) para responder."
+  ],
+  "Pergunte ao coach dentro do Bono com a sua chave de API (Claude ou OpenAI), ou use o seu agente de IA pelo MCP.": [
+    "Ask the coach inside Bono with your API key (Claude or OpenAI), or use your AI agent through MCP.",
+    "Pregunta al coach dentro de Bono con tu clave de API (Claude u OpenAI), o usa tu agente de IA por MCP."
+  ],
+  "Abrindo a conversa…": ["Opening the conversation…", "Abriendo la conversación…"],
+  "Conversas": ["Conversations", "Conversaciones"],
+  "Conversas e debriefs salvos, do mais recente ao mais antigo.": [
+    "Saved conversations and debriefs, newest first.",
+    "Conversaciones y debriefs guardados, del más reciente al más antiguo."
+  ],
+  "Nenhuma conversa ainda.": ["No conversations yet.", "Aún no hay conversaciones."],
+  "Apagar a conversa {0}": ["Delete the conversation {0}", "Borrar la conversación {0}"]
 }

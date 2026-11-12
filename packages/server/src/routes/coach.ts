@@ -5,9 +5,12 @@
 
 import {
   type CoachDebriefRequest,
+  type CoachProvider,
   type CoachReport,
   type CoachReportSummary,
   type CoachSseEvent,
+  type CoachVerifyResult,
+  isCoachProvider,
   isLanguage,
 } from '@gt7/shared';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
@@ -89,18 +92,36 @@ export function coachRoutes(app: FastifyInstance, ctx: RouteContext): void {
 
   app.put('/coach/config', async (req) => {
     const b = bodyObject(req.body);
-    const known = ['apiKey', 'model', 'effort', 'maxReports'];
+    const known = [
+      'apiKey',
+      'model',
+      'openaiApiKey',
+      'openaiModel',
+      'provider',
+      'effort',
+      'maxReports',
+    ];
     const unknown = Object.keys(b).filter((k) => !known.includes(k));
     if (unknown.length) throw badRequest(`Campo(s) desconhecido(s): ${unknown.join(', ')}.`);
-    if (b.apiKey !== undefined && b.apiKey !== null && typeof b.apiKey !== 'string') {
-      throw badRequest('O campo "apiKey" deve ser um texto (ou null para remover).');
+    for (const key of ['apiKey', 'openaiApiKey'] as const) {
+      if (b[key] !== undefined && b[key] !== null && typeof b[key] !== 'string') {
+        throw badRequest(`O campo "${key}" deve ser um texto (ou null para remover).`);
+      }
     }
     const model = optString(b, 'model', 'model', 64);
+    const openaiModel = optString(b, 'openaiModel', 'openaiModel', 64);
+    const provider = optString(b, 'provider', 'provider', 20);
+    if (provider !== undefined && !isCoachProvider(provider)) {
+      throw badRequest('Provedor inválido: use anthropic ou openai.');
+    }
     const effort = optString(b, 'effort', 'effort', 10);
     const maxReports = optNumber(b, 'maxReports', 'maxReports', { integer: true });
     try {
       return coach.updateConfig({
         ...(b.apiKey !== undefined ? { apiKey: b.apiKey as string | null } : {}),
+        ...(b.openaiApiKey !== undefined ? { openaiApiKey: b.openaiApiKey as string | null } : {}),
+        ...(openaiModel !== undefined ? { openaiModel } : {}),
+        ...(provider !== undefined ? { provider: provider as CoachProvider } : {}),
         ...(model !== undefined ? { model } : {}),
         ...(effort !== undefined ? { effort: effort as 'low' | 'medium' | 'high' } : {}),
         ...(maxReports !== undefined ? { maxReports } : {}),
@@ -126,6 +147,25 @@ export function coachRoutes(app: FastifyInstance, ctx: RouteContext): void {
     if (question) body.question = question;
     const language = req.headers['accept-language'];
     const run = start(() => coach.startDebrief(body, isLanguage(language) ? language : undefined));
+    await streamRun(req, reply, run);
+  });
+
+  /** Tests the saved key of a provider (default: the active one) with a cheap call. */
+  app.post('/coach/verify', async (req): Promise<CoachVerifyResult> => {
+    const b = req.body === undefined || req.body === null ? {} : bodyObject(req.body);
+    const provider = optString(b, 'provider', 'provider', 20);
+    if (provider !== undefined && !isCoachProvider(provider)) {
+      throw badRequest('Provedor inválido: use anthropic ou openai.');
+    }
+    return coach.verify(provider as CoachProvider | undefined);
+  });
+
+  /** A free question that opens a new chat (no session needed). */
+  app.post('/coach/ask', async (req, reply) => {
+    const b = bodyObject(req.body);
+    const message = reqString(b, 'message', 'message', 4000);
+    const language = req.headers['accept-language'];
+    const run = start(() => coach.startAsk(message, isLanguage(language) ? language : undefined));
     await streamRun(req, reply, run);
   });
 

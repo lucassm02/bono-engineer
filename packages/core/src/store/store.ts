@@ -1041,7 +1041,7 @@ export class Gt7Store {
       id: String(r.id),
       createdAt: num(r.created_at),
       updatedAt: num(r.updated_at),
-      kind: r.kind === 'corner' ? 'corner' : 'debrief',
+      kind: r.kind === 'corner' || r.kind === 'chat' ? r.kind : 'debrief',
       title: String(r.title),
       trackId: strOrNull(r.track_id),
       sessionId: strOrNull(r.session_id),

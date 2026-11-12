@@ -32,8 +32,10 @@ import type {
   ApiTrackSectors,
   CoachConfig,
   CoachConfigPatch,
+  CoachProvider,
   CoachReport,
   CoachReportSummary,
+  CoachVerifyResult,
   DeviceInfo,
   EngineerRadioLog,
   FirewallStatus,
@@ -286,6 +288,8 @@ export const api = {
     request<void>('DELETE', `/api/data/import/${encodeURIComponent(id)}`),
   coachConfig: () => get<CoachConfig>('/api/coach/config'),
   putCoachConfig: (p: CoachConfigPatch) => request<CoachConfig>('PUT', '/api/coach/config', p),
+  coachVerify: (provider?: CoachProvider) =>
+    request<CoachVerifyResult>('POST', '/api/coach/verify', provider ? { provider } : {}),
   coachReports: (limit = 50) => get<CoachReportSummary[]>(`/api/coach/reports${qs({ limit })}`),
   coachReport: (id: string) => get<CoachReport>(`/api/coach/reports/${enc(id)}`),
   deleteCoachReport: (id: string) =>

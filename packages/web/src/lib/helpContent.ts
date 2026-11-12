@@ -340,7 +340,7 @@ const PT: HelpContent = {
         'Início: suas pistas, melhor volta e evolução.',
         'Comparar voltas: curva a curva, com gráficos.',
         'Gravar volta de replay: usa um replay do jogo (o seu ou de um piloto melhor) como referência.',
-        'Coach IA: análise da sessão, com a sua chave da Anthropic (Configurações → Contas e dados).',
+        'Coach IA: pergunte sobre as suas voltas, pelo seu agente de IA (MCP) ou com uma chave da Anthropic ou da OpenAI.',
       ],
       note: 'A gravação automática liga e desliga em Configurações → Console.',
       links: [
@@ -495,6 +495,23 @@ const PT: HelpContent = {
       links: [lnk('Início', routes.home())],
       keywords:
         'replay volta reproduzir fantasma timeline barra tempo freio acelerador volante passo',
+    },
+    {
+      id: 'coach-ia',
+      topic: 'settings',
+      title: 'Coach IA: perguntar sobre as suas voltas',
+      summary:
+        'Converse com uma IA que lê as suas voltas, sessões e curvas. Duas formas: o seu agente (MCP) ou uma chave de API.',
+      steps: [
+        'Abra Coach IA e escolha: Pelo meu agente de IA (MCP) ou Com uma chave de API.',
+        'MCP: cole o comando mostrado no Claude Code (aba Code) ou no Codex e pergunte lá. Não precisa de chave.',
+        'Chave de API: escolha Claude ou OpenAI, cole a chave, Salvar e testar, e escolha o modelo.',
+        'No chat, toque numa pergunta pronta (pontos fortes e fracos, tempos das últimas sessões, o que melhorar) ou escreva a sua.',
+      ],
+      note: 'A chave fica só neste PC e é cobrada pelo provedor na sua conta de API. O ChatGPT (site e app) não alcança o MCP local: use o Codex ou uma chave da OpenAI.',
+      links: [lnk('Coach IA', routes.coach())],
+      keywords:
+        'coach ia chat pergunta mcp claude openai chatgpt codex chave api modelo pontos fortes fracos',
     },
     {
       id: 'treinar-uma-curva',
@@ -912,7 +929,7 @@ const EN: HelpContent = {
         'Home: your tracks, best lap and progress.',
         'Compare laps: corner by corner, with charts.',
         'Record a replay lap: uses a game replay (yours or a faster driver’s) as the reference.',
-        'AI Coach: session analysis, with your Anthropic key (Settings → Accounts and data).',
+        'AI Coach: ask about your laps, through your AI agent (MCP) or with an Anthropic or OpenAI key.',
       ],
       note: 'Automatic recording is switched in Settings → Console.',
       links: [
@@ -1066,6 +1083,23 @@ const EN: HelpContent = {
       note: 'Same distance shows what each lap did at the same point; Same time shows who is ahead on the track. Space plays and pauses, G switches the mode.',
       links: [lnk('Home', routes.home())],
       keywords: 'replay lap play ghost timeline scrub brake throttle steering step',
+    },
+    {
+      id: 'coach-ia',
+      topic: 'settings',
+      title: 'AI Coach: ask about your laps',
+      summary:
+        'Chat with an AI that reads your laps, sessions and corners. Two ways: your own agent (MCP) or an API key.',
+      steps: [
+        'Open AI Coach and choose: Through my AI agent (MCP) or With an API key.',
+        'MCP: paste the command shown into Claude Code (Code tab) or Codex and ask there. No key needed.',
+        'API key: choose Claude or OpenAI, paste the key, Save and test, and pick the model.',
+        'In the chat, tap a ready-made question (strengths and weaknesses, times of the latest sessions, what to improve) or write your own.',
+      ],
+      note: 'The key stays on this PC and is billed by the provider on your API account. ChatGPT (site and app) cannot reach the local MCP: use Codex or an OpenAI key.',
+      links: [lnk('AI Coach', routes.coach())],
+      keywords:
+        'ai coach chat question mcp claude openai chatgpt codex key api model strengths weaknesses',
     },
     {
       id: 'treinar-uma-curva',
@@ -1487,7 +1521,7 @@ const ES: HelpContent = {
         'Inicio: tus pistas, mejor vuelta y evolución.',
         'Comparar vueltas: curva a curva, con gráficos.',
         'Grabar vuelta de repetición: usa una repetición del juego (la tuya o la de un piloto más rápido) como referencia.',
-        'Coach IA: análisis de la sesión, con tu clave de Anthropic (Configuración → Cuentas y datos).',
+        'Coach IA: pregunta sobre tus vueltas, con tu agente de IA (MCP) o con una clave de Anthropic u OpenAI.',
       ],
       note: 'La grabación automática se activa en Configuración → Consola.',
       links: [
@@ -1645,6 +1679,23 @@ const ES: HelpContent = {
       links: [lnk('Inicio', routes.home())],
       keywords:
         'repetición vuelta reproducir fantasma línea de tiempo barra freno acelerador volante paso',
+    },
+    {
+      id: 'coach-ia',
+      topic: 'settings',
+      title: 'Coach IA: pregunta sobre tus vueltas',
+      summary:
+        'Conversa con una IA que lee tus vueltas, sesiones y curvas. Dos formas: tu agente (MCP) o una clave de API.',
+      steps: [
+        'Abre Coach IA y elige: Con mi agente de IA (MCP) o Con una clave de API.',
+        'MCP: pega el comando que se muestra en Claude Code (pestaña Code) o en Codex y pregunta allí. No hace falta clave.',
+        'Clave de API: elige Claude u OpenAI, pega la clave, Guardar y probar, y elige el modelo.',
+        'En el chat, toca una pregunta lista (puntos fuertes y débiles, tiempos de las últimas sesiones, qué mejorar) o escribe la tuya.',
+      ],
+      note: 'La clave queda solo en este PC y la cobra el proveedor en tu cuenta de API. ChatGPT (sitio y app) no llega al MCP local: usa Codex o una clave de OpenAI.',
+      links: [lnk('Coach IA', routes.coach())],
+      keywords:
+        'coach ia chat pregunta mcp claude openai chatgpt codex clave api modelo puntos fuertes débiles',
     },
     {
       id: 'treinar-uma-curva',

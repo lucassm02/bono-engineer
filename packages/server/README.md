@@ -86,15 +86,20 @@ Erros da análise viram 404 (`notFound`, `noCenterline`, `noTrace`, `noReference
 | `GET /api/analysis/evolution?trackId=&carCode=&maxDays=` | `ApiEvolution` |
 | `GET /api/analysis/chart.png?lap=&ref=&corner=&width=` | PNG (mesmo gráfico da ferramenta MCP `render_comparison_chart`; legenda no cabeçalho `x-chart-caption`) |
 
-### Coach com IA (`/api/coach`, "Debrief com IA")
+### Coach com IA (`/api/coach`, chat e "Debrief com IA")
 
-A chave vem de `ANTHROPIC_API_KEY` (tem prioridade) ou é salva pelo `PUT /api/coach/config`. A
-chave **nunca** é devolvida: só `hasKey`, `keySource` e os 4 últimos caracteres.
+Dois provedores, com as mesmas ferramentas MCP: **Claude** (Anthropic) e **OpenAI**. A chave vem de
+`ANTHROPIC_API_KEY` / `OPENAI_API_KEY` (têm prioridade) ou é salva pelo `PUT /api/coach/config`. A
+chave **nunca** é devolvida: só `hasKey`, `keySource` e os 4 últimos caracteres. O provedor ativo é
+o escolhido (`provider`) que tenha chave. Um modelo `claude-*` é da Anthropic; o resto, da OpenAI. A
+variável `GT7_OPENAI_BASE_URL` aponta o cliente para um endereço compatível com a OpenAI (proxy ou teste).
 
 | Método | Rota | Resposta |
 |---|---|---|
-| GET | `/api/coach/config` | `CoachConfig` (modelo, lista de modelos, esforço, limite de ferramentas) |
-| PUT | `/api/coach/config` | corpo `CoachConfigPatch { apiKey?, model?, effort? }` (`apiKey: null` remove) → `CoachConfig` |
+| GET | `/api/coach/config` | `CoachConfig` (provedor ativo, `providers[]` com chave e modelos de cada um, esforço, limite de ferramentas) |
+| PUT | `/api/coach/config` | corpo `CoachConfigPatch { apiKey?, model?, openaiApiKey?, openaiModel?, provider?, effort? }` (`null` remove a chave) → `CoachConfig` |
+| POST | `/api/coach/verify` | corpo `{ provider? }` → `CoachVerifyResult { ok, provider, message }` (testa a chave salva com uma chamada barata) |
+| POST | `/api/coach/ask` | corpo `CoachAskRequest { message }` → **SSE** (abre uma conversa livre, sem sessão: o coach busca os dados com as ferramentas) |
 | POST | `/api/coach/debrief` | corpo `CoachDebriefRequest { sessionId?, lapId?, ref?, focusCorner?, question? }` → **SSE** |
 | POST | `/api/coach/chat` | corpo `CoachChatRequest { reportId, message }` → **SSE** (continua a mesma conversa) |
 | GET | `/api/coach/reports?trackId=&limit=` | `CoachReportSummary[]` |

@@ -4,11 +4,23 @@
  */
 
 import type { Gt7Store } from '@gt7/core';
-import type { CoachConfig, CoachConfigPatch, CoachEffort, CoachModelOption } from '@gt7/shared';
+import {
+  COACH_PROVIDERS,
+  type CoachConfig,
+  type CoachConfigPatch,
+  type CoachEffort,
+  type CoachModelOption,
+  type CoachProvider,
+  type CoachProviderConfig,
+  isCoachProvider,
+} from '@gt7/shared';
 
 export const COACH_SETTINGS = {
   apiKey: 'coach.apiKey',
   model: 'coach.model',
+  provider: 'coach.provider',
+  openaiKey: 'coach.openaiKey',
+  openaiModel: 'coach.openaiModel',
   effort: 'coach.effort',
   maxReports: 'coach.maxReports',
 } as const;
@@ -38,6 +50,43 @@ export const COACH_MODELS: CoachModelOption[] = [
   },
 ];
 
+/** OpenAI models offered in the settings; any other model id can still be typed (and verified). */
+export const DEFAULT_OPENAI_MODEL = 'gpt-5';
+
+export const OPENAI_MODELS: CoachModelOption[] = [
+  {
+    id: 'gpt-5',
+    label: 'GPT-5',
+    description: 'O mais capaz da lista: melhor diagnóstico e plano (padrão).',
+  },
+  {
+    id: 'gpt-5-mini',
+    label: 'GPT-5 mini',
+    description: 'Mais rápido e bem mais barato; ótimo para perguntas do dia a dia.',
+  },
+  {
+    id: 'gpt-4.1',
+    label: 'GPT-4.1',
+    description: 'Respostas rápidas, sem raciocínio estendido.',
+  },
+];
+
+/** Where each provider issues its API keys. */
+export const KEY_URLS: Record<CoachProvider, string> = {
+  anthropic: 'https://console.anthropic.com/settings/keys',
+  openai: 'https://platform.openai.com/api-keys',
+};
+export const ENV_VARS: Record<CoachProvider, string> = {
+  anthropic: 'ANTHROPIC_API_KEY',
+  openai: 'OPENAI_API_KEY',
+};
+const PROVIDER_LABELS: Record<CoachProvider, string> = { anthropic: 'Claude', openai: 'OpenAI' };
+
+/** Model ids never overlap between the two providers: `claude-*` is Anthropic, the rest OpenAI. */
+export function providerOfModel(model: string): CoachProvider {
+  return model.startsWith('claude') ? 'anthropic' : 'openai';
+}
+
 export const COACH_EFFORTS: readonly CoachEffort[] = ['low', 'medium', 'high'];
 export const DEFAULT_COACH_EFFORT: CoachEffort = 'high';
 
@@ -60,18 +109,43 @@ export class CoachSettings {
     readonly env: Record<string, string | undefined> = process.env,
   ) {}
 
-  key(): ResolvedKey | null {
-    const env = this.env.ANTHROPIC_API_KEY?.trim();
+  /** The key of one provider (the environment variable wins over the saved one). */
+  keyFor(provider: CoachProvider): ResolvedKey | null {
+    const env = this.env[ENV_VARS[provider]]?.trim();
     if (env) return { key: env, source: 'env' };
-    const saved = this.store.getSetting<string>(COACH_SETTINGS.apiKey);
+    const saved = this.store.getSetting<string>(
+      provider === 'anthropic' ? COACH_SETTINGS.apiKey : COACH_SETTINGS.openaiKey,
+    );
     return typeof saved === 'string' && saved.trim()
       ? { key: saved.trim(), source: 'settings' }
       : null;
   }
 
+  /** The active provider: the saved choice when it has a key, else the one that has a key. */
+  provider(): CoachProvider {
+    const saved = this.store.getSetting<string>(COACH_SETTINGS.provider);
+    if (isCoachProvider(saved) && this.keyFor(saved)) return saved;
+    return (
+      COACH_PROVIDERS.find((p) => this.keyFor(p)) ?? (isCoachProvider(saved) ? saved : 'anthropic')
+    );
+  }
+
+  /** Key of the active provider. */
+  key(): ResolvedKey | null {
+    return this.keyFor(this.provider());
+  }
+
+  modelFor(provider: CoachProvider): string {
+    const m = this.store.getSetting<string>(
+      provider === 'anthropic' ? COACH_SETTINGS.model : COACH_SETTINGS.openaiModel,
+    );
+    if (typeof m === 'string' && MODEL_ID.test(m) && providerOfModel(m) === provider) return m;
+    return provider === 'anthropic' ? DEFAULT_COACH_MODEL : DEFAULT_OPENAI_MODEL;
+  }
+
+  /** Model of the active provider. */
   model(): string {
-    const m = this.store.getSetting<string>(COACH_SETTINGS.model);
-    return typeof m === 'string' && MODEL_ID.test(m) ? m : DEFAULT_COACH_MODEL;
+    return this.modelFor(this.provider());
   }
 
   effort(): CoachEffort {
@@ -91,38 +165,81 @@ export class CoachSettings {
       : DEFAULT_MAX_REPORTS;
   }
 
-  config(): CoachConfig {
-    const k = this.key();
+  #providerConfig(provider: CoachProvider): CoachProviderConfig {
+    const k = this.keyFor(provider);
     return {
+      provider,
+      label: PROVIDER_LABELS[provider],
       hasKey: !!k,
       keySource: k?.source ?? null,
       keyLast4: k ? k.key.slice(-4) : null,
-      model: this.model(),
-      defaultModel: DEFAULT_COACH_MODEL,
-      models: COACH_MODELS,
+      envVar: ENV_VARS[provider],
+      keyUrl: KEY_URLS[provider],
+      model: this.modelFor(provider),
+      defaultModel: provider === 'anthropic' ? DEFAULT_COACH_MODEL : DEFAULT_OPENAI_MODEL,
+      models: provider === 'anthropic' ? COACH_MODELS : OPENAI_MODELS,
+    };
+  }
+
+  config(): CoachConfig {
+    const provider = this.provider();
+    const active = this.#providerConfig(provider);
+    return {
+      hasKey: active.hasKey,
+      keySource: active.keySource,
+      keyLast4: active.keyLast4,
+      model: active.model,
+      defaultModel: active.defaultModel,
+      models: active.models,
       effort: this.effort(),
       maxToolIterations: MAX_TOOL_ITERATIONS,
       maxReports: this.maxReports(),
+      provider,
+      providers: COACH_PROVIDERS.map((p) => this.#providerConfig(p)),
     };
+  }
+
+  #saveKey(provider: CoachProvider, value: string | null): void {
+    const name = provider === 'anthropic' ? COACH_SETTINGS.apiKey : COACH_SETTINGS.openaiKey;
+    const k = value?.trim() ?? '';
+    if (!k) {
+      this.store.deleteSetting(name);
+      return;
+    }
+    if (k.length < 20 || k.length > 300 || /\s/.test(k)) {
+      throw new Error(
+        provider === 'anthropic'
+          ? 'Chave da API inválida (copie a chave completa do Console da Anthropic).'
+          : 'Chave da API inválida (copie a chave completa da plataforma da OpenAI).',
+      );
+    }
+    this.store.setSetting(name, k);
+  }
+
+  #saveModel(provider: CoachProvider, model: string): void {
+    if (!MODEL_ID.test(model) || providerOfModel(model) !== provider) {
+      throw new Error(
+        provider === 'anthropic'
+          ? 'Modelo inválido: use um modelo Claude (claude-…).'
+          : 'Modelo inválido: use um modelo da OpenAI (por exemplo gpt-5).',
+      );
+    }
+    this.store.setSetting(
+      provider === 'anthropic' ? COACH_SETTINGS.model : COACH_SETTINGS.openaiModel,
+      model,
+    );
   }
 
   /** Validated patch (throws Error with a pt-BR message on invalid input). */
   update(patch: CoachConfigPatch): CoachConfig {
-    if (patch.apiKey !== undefined) {
-      const k = patch.apiKey?.trim() ?? '';
-      if (!k) this.store.deleteSetting(COACH_SETTINGS.apiKey);
-      else {
-        if (k.length < 20 || k.length > 300 || /\s/.test(k)) {
-          throw new Error(
-            'Chave da API inválida (copie a chave completa do Console da Anthropic).',
-          );
-        }
-        this.store.setSetting(COACH_SETTINGS.apiKey, k);
-      }
-    }
-    if (patch.model !== undefined) {
-      if (!MODEL_ID.test(patch.model)) throw new Error('Modelo inválido.');
-      this.store.setSetting(COACH_SETTINGS.model, patch.model);
+    if (patch.apiKey !== undefined) this.#saveKey('anthropic', patch.apiKey);
+    if (patch.openaiApiKey !== undefined) this.#saveKey('openai', patch.openaiApiKey);
+    if (patch.model !== undefined) this.#saveModel('anthropic', patch.model);
+    if (patch.openaiModel !== undefined) this.#saveModel('openai', patch.openaiModel);
+    if (patch.provider !== undefined) {
+      if (!isCoachProvider(patch.provider))
+        throw new Error('Provedor inválido: use anthropic ou openai.');
+      this.store.setSetting(COACH_SETTINGS.provider, patch.provider);
     }
     if (patch.effort !== undefined) {
       if (!COACH_EFFORTS.includes(patch.effort)) {

@@ -1,0 +1,317 @@
+/* Coach IA: escolha MCP × chave, configuração da chave, guia do MCP e perguntas prontas. */
+
+.cks {
+  display: grid;
+  gap: var(--sp-4);
+  min-width: 0;
+}
+.cks-lead {
+  margin: 0;
+  color: var(--text-2);
+}
+.cks-muted {
+  margin: var(--sp-1) 0 0;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
+.cks-back {
+  margin-bottom: var(--sp-3);
+}
+
+/* Os dois caminhos */
+.cks-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: var(--sp-4);
+}
+.cks-choice {
+  display: grid;
+  align-content: start;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.cks-choice:hover {
+  border-color: var(--purple);
+  background: var(--purple-soft);
+}
+.cks-choice:focus-visible {
+  outline: 2px solid var(--focus, var(--purple));
+  outline-offset: 2px;
+}
+.cks-choice > span {
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
+.cks-choice > .cks-choice-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-sm);
+  background: var(--purple-soft);
+  color: var(--purple);
+}
+.cks-choice > .cks-choice-go {
+  margin-top: var(--sp-2);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* Provedores */
+.cks-providers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: var(--sp-2);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.cks-providers > legend {
+  margin-bottom: var(--sp-2);
+  padding: 0;
+  color: var(--text-2);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.cks-provider {
+  display: grid;
+  gap: 2px;
+  min-height: 44px;
+  padding: var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+  cursor: pointer;
+}
+.cks-provider[data-on="1"] {
+  border-color: var(--purple);
+  background: var(--purple-soft);
+}
+.cks-provider input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.cks-provider:has(input:focus-visible) {
+  outline: 2px solid var(--focus, var(--purple));
+  outline-offset: 2px;
+}
+.cks-sub {
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
+.cks-provider .ui-badge {
+  justify-self: start;
+}
+
+/* Passos */
+.cks-steps {
+  display: grid;
+  gap: var(--sp-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cks-steps > li {
+  display: flex;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+.cks-grow {
+  display: grid;
+  flex: 1;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+.cks-n {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 1.75em;
+  height: 1.75em;
+  border-radius: 50%;
+  background: var(--purple-soft);
+  color: var(--purple);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+.cks-steps > li > div {
+  display: grid;
+  flex: 1;
+  gap: var(--sp-2);
+  align-content: start;
+  min-width: 0;
+}
+.cks-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.cks-form > .ui-input,
+.cks-form > .ui-select {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+.cks-keyline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: 0;
+}
+.cks-result {
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--line);
+  border-left-width: 3px;
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+}
+.cks-result[data-tone="gain"] {
+  border-left-color: var(--gain);
+}
+.cks-result[data-tone="loss"] {
+  border-left-color: var(--loss);
+}
+.cks-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+/* Guia do MCP */
+.cks-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.cks-tabs .ui-chip {
+  min-height: 40px;
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill, 999px);
+  cursor: pointer;
+}
+.cks-tabs .ui-chip[data-on="1"] {
+  border-color: var(--purple);
+  background: var(--purple-soft);
+}
+.cks-note {
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--purple);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+}
+.cks-note p {
+  margin: 0;
+}
+.cks-questions {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cks-questions li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2) var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+}
+.cks-questions li > span {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+/* Chat: cabeçalho, perguntas prontas e caixa de pergunta */
+.cch {
+  display: grid;
+  gap: var(--sp-4);
+}
+.cch-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2) var(--sp-3);
+}
+.cch-who {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.cch-starters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cch-starter {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  min-height: 44px;
+  padding: var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.cch-starter:hover:not(:disabled) {
+  border-color: var(--purple);
+  background: var(--purple-soft);
+}
+.cch-starter:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.cch-starter > strong {
+  font-size: var(--fs-sm);
+}
+.cch-starter > span {
+  color: var(--text-2);
+  font-size: var(--fs-xs);
+}
+.cch-compose {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--sp-2);
+}
+.cch-compose > textarea {
+  flex: 1 1 280px;
+  min-width: 0;
+  resize: vertical;
+}
+.cch-adv > summary {
+  cursor: pointer;
+  color: var(--text-2);
+  font-weight: 600;
+}
+.cch-adv[open] > summary {
+  margin-bottom: var(--sp-3);
+}

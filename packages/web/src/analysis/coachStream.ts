@@ -4,6 +4,7 @@
  */
 
 import type {
+  CoachAskRequest,
   CoachChatRequest,
   CoachDebriefRequest,
   CoachErrorCode,
@@ -65,8 +66,8 @@ export function dispatchCoachEvent(event: string, data: unknown, h: CoachStreamH
 }
 
 export async function streamCoach(
-  path: '/api/coach/debrief' | '/api/coach/chat',
-  body: CoachDebriefRequest | CoachChatRequest,
+  path: '/api/coach/debrief' | '/api/coach/chat' | '/api/coach/ask',
+  body: CoachDebriefRequest | CoachChatRequest | CoachAskRequest,
   h: CoachStreamHandlers,
   signal: AbortSignal,
 ): Promise<void> {

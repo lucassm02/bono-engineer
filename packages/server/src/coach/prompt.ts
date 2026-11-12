@@ -124,3 +124,41 @@ export function coachTitle(t: CoachTarget): string {
     ? `Foco ${t.focusCorner} — ${where} — ${date}`
     : `Debrief — ${where} — ${date}`;
 }
+
+/**
+ * Extra rules for the free chat (the question box of the Coach IA page). The questions are about
+ * the driver over time, not about one session, so the model must go and fetch the data itself.
+ */
+export const COACH_CHAT_RULES = `Você está no CHAT do Coach IA do app ${PRODUCT_NAME}: o piloto faz perguntas livres \
+sobre o próprio desempenho, sem escolher sessão ou volta. Busque os dados com as ferramentas antes de responder.
+
+Como responder as perguntas mais comuns:
+- "Quais são meus pontos fortes e fracos?": list_sessions (últimas sessões) → get_evolution e/ou \
+get_consistency da pista mais recente → compare_laps da melhor volta recente contra a referência. \
+Liste 3 pontos fortes (curvas ou hábitos que ganham tempo ou são consistentes) e 3 pontos fracos (as \
+maiores perdas), cada um com o número que o prova.
+- "O que preciso melhorar?": as 3 maiores perdas de tempo recentes, com UMA ação por curva, e o que treinar \
+primeiro no próximo stint.
+- "Tempos das últimas sessões": list_sessions e list_laps; responda com uma TABELA (data, pista, carro, \
+melhor volta, número de voltas) e destaque o melhor e a tendência.
+- "Como estou evoluindo?": get_evolution da pista pedida (ou da mais recente), comparando o primeiro e o \
+último dia e a regularidade.
+- "Qual curva treinar?": curva com maior perda média nas últimas voltas (compare_laps, get_corner_detail).
+Se a pergunta não disser a pista, use a da sessão mais recente e diga qual escolheu. Se faltarem voltas \
+para responder (nenhuma sessão, sessão curta), diga isso e o que fazer para ter o dado.
+Responda direto, em poucos parágrafos ou numa tabela, sem repetir a pergunta nem descrever as ferramentas. \
+Termine com UMA sugestão de próxima pergunta ou treino. No chat, o formato longo de relatório (incluindo \
+"Plano para o próximo stint") só vale quando o piloto pedir um debrief completo.`;
+
+export function coachChatSystemPrompt(language: Language): string {
+  return coachSystemPrompt(language).replace(
+    '\n\n' + COACH_KNOWLEDGE_RULES,
+    `\n\n${COACH_CHAT_RULES}\n\n${COACH_KNOWLEDGE_RULES}`,
+  );
+}
+
+/** Title of a chat in the history: the first question, shortened. */
+export function coachChatTitle(question: string): string {
+  const one = question.replace(/\s+/g, ' ').trim();
+  return one.length > 60 ? `${one.slice(0, 57)}…` : one;
+}

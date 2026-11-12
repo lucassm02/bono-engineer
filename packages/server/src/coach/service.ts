@@ -18,15 +18,31 @@ import {
   type CoachConfigPatch,
   type CoachDebriefRequest,
   type CoachErrorCode,
+  type CoachProvider,
   type CoachSseEvent,
   type CoachTranscriptEntry,
   type CoachUsage,
+  type CoachVerifyResult,
   type Language,
   type Lap,
   type Session,
 } from '@gt7/shared';
-import { CoachSettings, FALLBACK_MODELS, MAX_TOOL_ITERATIONS } from './config.ts';
-import { buildCoachTask, type CoachTarget, coachSystemPrompt, coachTitle } from './prompt.ts';
+import { CoachSettings, FALLBACK_MODELS, MAX_TOOL_ITERATIONS, providerOfModel } from './config.ts';
+import {
+  createOpenAiClient,
+  type OpenAiClientFactory,
+  type OpenAiMessage,
+  type OpenAiTool,
+  openAiApiError,
+} from './openai.ts';
+import {
+  buildCoachTask,
+  type CoachTarget,
+  coachChatSystemPrompt,
+  coachChatTitle,
+  coachSystemPrompt,
+  coachTitle,
+} from './prompt.ts';
 import { McpToolBridge } from './tools.ts';
 
 type MessageParam = Anthropic.Beta.BetaMessageParam;
@@ -58,6 +74,8 @@ export const defaultCoachClientFactory: CoachClientFactory = (apiKey) => {
 
 export interface CoachServiceOptions {
   clientFactory?: CoachClientFactory;
+  /** Creates the OpenAI client for an API key (tests inject a fake). */
+  openaiFactory?: OpenAiClientFactory;
   /** Environment used for ANTHROPIC_API_KEY (default process.env). */
   env?: Record<string, string | undefined>;
   maxToolIterations?: number;
@@ -155,6 +173,7 @@ export class CoachService {
   readonly settings: CoachSettings;
   readonly tools: McpToolBridge;
   readonly #factory: CoachClientFactory;
+  readonly #openaiFactory: OpenAiClientFactory;
   readonly #opts: Required<
     Pick<
       CoachServiceOptions,
@@ -172,6 +191,11 @@ export class CoachService {
       'Interrompido: o servidor foi reiniciado durante a análise.',
     );
     this.#factory = opts.clientFactory ?? defaultCoachClientFactory;
+    // GT7_OPENAI_BASE_URL points the client at an OpenAI-compatible endpoint (proxy, local test).
+    const openaiBase = (opts.env ?? process.env).GT7_OPENAI_BASE_URL?.trim();
+    this.#openaiFactory =
+      opts.openaiFactory ??
+      ((key) => createOpenAiClient(key, openaiBase ? { baseUrl: openaiBase } : {}));
     this.#opts = {
       maxToolIterations: opts.maxToolIterations ?? MAX_TOOL_ITERATIONS,
       maxInputTokens: opts.maxInputTokens ?? 800_000,
@@ -196,17 +220,49 @@ export class CoachService {
     await this.tools.close();
   }
 
-  #apiKey(): string {
-    const k = this.settings.key();
+  #apiKey(provider: CoachProvider): string {
+    const k = this.settings.keyFor(provider);
     if (!k) {
       throw new CoachError(
         400,
         'noKey',
-        'Configure a chave da API da Anthropic para usar o Debrief com IA (variável ANTHROPIC_API_KEY ' +
-          'ou nas configurações do coach).',
+        provider === 'anthropic'
+          ? 'Configure a chave da API da Anthropic para usar o Coach IA (variável ANTHROPIC_API_KEY ' +
+              'ou nas configurações do coach).'
+          : 'Configure a chave da API da OpenAI para usar o Coach IA (variável OPENAI_API_KEY ' +
+              'ou nas configurações do coach).',
       );
     }
     return k.key;
+  }
+
+  /** Tests the saved key of a provider with a cheap authenticated call. */
+  async verify(provider: CoachProvider = this.settings.provider()): Promise<CoachVerifyResult> {
+    const k = this.settings.keyFor(provider);
+    if (!k) {
+      return {
+        ok: false,
+        provider,
+        message:
+          provider === 'anthropic'
+            ? 'Ainda não há uma chave da Anthropic salva.'
+            : 'Ainda não há uma chave da OpenAI salva.',
+      };
+    }
+    try {
+      if (provider === 'openai') {
+        await this.#openaiFactory(k.key).verify(AbortSignal.timeout(15_000));
+      } else {
+        await new Anthropic({ apiKey: k.key, maxRetries: 0 }).models.list(
+          { limit: 1 },
+          { signal: AbortSignal.timeout(15_000) },
+        );
+      }
+      return { ok: true, provider, message: 'Chave válida. O coach já pode responder.' };
+    } catch (e) {
+      const err = provider === 'openai' ? openAiApiError(e) : coachApiError(e);
+      return { ok: false, provider, message: err.message };
+    }
   }
 
   #resolveTarget(req: CoachDebriefRequest): CoachTarget {
@@ -253,7 +309,8 @@ export class CoachService {
 
   /** Validates the request, creates the report row and returns the run (throws CoachError). */
   startDebrief(req: CoachDebriefRequest, language: Language = 'pt-BR'): CoachRun {
-    const apiKey = this.#apiKey();
+    const provider = this.settings.provider();
+    const apiKey = this.#apiKey(provider);
     const target = this.#resolveTarget(req);
     const now = Date.now();
     const task = buildCoachTask(this.runtime.store, target);
@@ -268,7 +325,7 @@ export class CoachService {
       lapId: target.lap?.id ?? null,
       reference: target.reference,
       focusCorner: target.focusCorner,
-      model: this.settings.model(),
+      model: this.settings.modelFor(provider),
       status: 'running',
       preview: '',
       usage: { ...EMPTY_COACH_USAGE },
@@ -283,6 +340,7 @@ export class CoachService {
         },
       ],
       error: null,
+      // Same shape for both providers: a plain user message.
       messages: [{ role: 'user', content: task } satisfies MessageParam],
     };
     this.runtime.store.saveCoachReport(report);
@@ -292,12 +350,47 @@ export class CoachService {
     };
   }
 
+  /** A free question that opens a new chat: no session or lap needed (throws CoachError). */
+  startAsk(message: string, language: Language = 'pt-BR'): CoachRun {
+    const provider = this.settings.provider();
+    const apiKey = this.#apiKey(provider);
+    const text = message.trim();
+    if (!text) throw new CoachError(400, 'invalidInput', 'Escreva a pergunta.');
+    const now = Date.now();
+    const report: StoredCoachReport = {
+      id: newId(),
+      createdAt: now,
+      updatedAt: now,
+      kind: 'chat',
+      title: coachChatTitle(text),
+      trackId: null,
+      sessionId: null,
+      lapId: null,
+      reference: null,
+      focusCorner: null,
+      model: this.settings.modelFor(provider),
+      status: 'running',
+      preview: '',
+      usage: { ...EMPTY_COACH_USAGE },
+      markdown: '',
+      transcript: [{ role: 'user', text, at: now }],
+      error: null,
+      messages: [{ role: 'user', content: text } satisfies MessageParam],
+    };
+    this.runtime.store.saveCoachReport(report);
+    return {
+      reportId: report.id,
+      execute: (sink, signal) => this.#execute(report, apiKey, false, sink, signal, language),
+    };
+  }
+
   /** Follow-up question in the conversation of a stored report (throws CoachError). */
   startChat(reportId: string, message: string, language: Language = 'pt-BR'): CoachRun {
-    const apiKey = this.#apiKey();
     if (!SAFE_ID.test(reportId)) throw new CoachError(400, 'invalidInput', 'Id inválido.');
     const report = this.runtime.store.getCoachReport(reportId);
     if (!report) throw new CoachError(404, 'notFound', 'Relatório não encontrado.');
+    // The conversation continues with the provider that started it.
+    const apiKey = this.#apiKey(providerOfModel(report.model));
     if (this.#running.has(reportId) || report.status === 'running') {
       throw new CoachError(409, 'busy', 'Este relatório ainda está sendo gerado. Aguarde.');
     }
@@ -325,6 +418,7 @@ export class CoachService {
     language: Language,
   ): Promise<void> {
     this.#running.add(report.id);
+    const provider = providerOfModel(report.model);
     const messages = report.messages as MessageParam[];
     const turn: { text: string; tools: NonNullable<CoachTranscriptEntry['tools']> } = {
       text: '',
@@ -335,16 +429,21 @@ export class CoachService {
     let failure: { code: CoachErrorCode; message: string } | null = null;
     sink.send({ event: 'start', data: { reportId: report.id, model: report.model } });
     try {
-      stopReason = await this.#loop(
-        report,
-        apiKey,
-        messages,
-        turn,
-        usage,
-        sink,
-        signal,
-        coachSystemPrompt(language),
-      );
+      const system =
+        report.kind === 'chat' ? coachChatSystemPrompt(language) : coachSystemPrompt(language);
+      stopReason =
+        provider === 'openai'
+          ? await this.#loopOpenAi(
+              report,
+              apiKey,
+              report.messages as OpenAiMessage[],
+              turn,
+              usage,
+              sink,
+              signal,
+              system,
+            )
+          : await this.#loop(report, apiKey, messages, turn, usage, sink, signal, system);
       if (stopReason === 'refusal') {
         failure = {
           code: 'refused',
@@ -359,9 +458,14 @@ export class CoachService {
     } catch (e) {
       failure = signal.aborted
         ? coachApiError(new Anthropic.APIUserAbortError())
-        : coachApiError(e);
+        : provider === 'openai'
+          ? openAiApiError(e)
+          : coachApiError(e);
     }
-    sealHistory(messages);
+    if (provider === 'openai') sealOpenAiHistory(report.messages as OpenAiMessage[]);
+    else sealHistory(messages);
+    // The first answer of a chat is its "report" (list preview, error state), like a debrief.
+    const firstAnswer = isDebrief || (report.kind === 'chat' && report.transcript.length === 1);
     const now = Date.now();
     if (turn.text || turn.tools.length) {
       report.transcript.push({
@@ -371,10 +475,10 @@ export class CoachService {
         at: now,
       });
     }
-    if (isDebrief) report.markdown = turn.text;
+    if (firstAnswer) report.markdown = turn.text;
     for (const k of Object.keys(usage) as (keyof CoachUsage)[]) report.usage[k] += usage[k];
     // A failed follow-up keeps the report usable (status of the debrief itself).
-    report.status = isDebrief && failure && !turn.text ? 'error' : 'done';
+    report.status = firstAnswer && failure && !turn.text ? 'error' : 'done';
     report.error = failure?.message ?? null;
     report.updatedAt = now;
     try {
@@ -495,6 +599,147 @@ export class CoachService {
       }
       messages.push({ role: 'user', content });
     }
+  }
+
+  /** The same tool loop over the OpenAI Chat Completions API (messages kept in OpenAI format). */
+  async #loopOpenAi(
+    report: StoredCoachReport,
+    apiKey: string,
+    messages: OpenAiMessage[],
+    turn: { text: string; tools: { name: string; isError: boolean }[] },
+    usage: CoachUsage,
+    sink: CoachSink,
+    signal: AbortSignal,
+    system: string,
+  ): Promise<string | null> {
+    const client = this.#openaiFactory(apiKey);
+    const tools = toOpenAiTools(await this.tools.tools());
+    const effort = this.settings.effort();
+    let toolCalls = 0;
+    let finalCall = false;
+    while (true) {
+      if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
+      const textBefore = turn.text;
+      let firstDelta = true;
+      const res = await client.stream(
+        {
+          model: report.model,
+          messages: [{ role: 'system', content: system }, ...messages],
+          tools,
+          ...(finalCall ? { toolChoice: 'none' as const } : {}),
+          maxTokens: this.#opts.maxTokensPerCall,
+          reasoningEffort: effort,
+        },
+        {
+          signal,
+          onText: (delta) => {
+            if (firstDelta && textBefore && !textBefore.endsWith('\n\n')) {
+              turn.text += '\n\n';
+              sink.send({ event: 'text', data: { delta: '\n\n' } });
+            }
+            firstDelta = false;
+            turn.text += delta;
+            sink.send({ event: 'text', data: { delta } });
+          },
+        },
+      );
+      usage.inputTokens += Math.max(0, res.usage.promptTokens - res.usage.cachedTokens);
+      usage.cacheReadTokens += res.usage.cachedTokens;
+      usage.outputTokens += res.usage.completionTokens;
+      usage.requests += 1;
+      messages.push({
+        role: 'assistant',
+        content: res.text || null,
+        ...(res.toolCalls.length ? { tool_calls: res.toolCalls } : {}),
+      });
+      if (res.toolCalls.length === 0) {
+        if (res.finishReason === 'content_filter') return 'refusal';
+        if (res.finishReason === 'length') return 'limit';
+        return res.finishReason;
+      }
+      if (finalCall) return 'limit';
+
+      toolCalls++;
+      const results = await Promise.all(
+        res.toolCalls.map(async (tc) => {
+          let input: unknown = {};
+          try {
+            input = tc.function.arguments ? JSON.parse(tc.function.arguments) : {};
+          } catch {
+            input = null;
+          }
+          sink.send({
+            event: 'tool',
+            data: {
+              id: tc.id,
+              name: tc.function.name,
+              status: 'running',
+              summary: (tc.function.arguments || '{}').slice(0, 120),
+            },
+          });
+          const out =
+            input === null
+              ? {
+                  isError: true,
+                  content: [{ type: 'text' as const, text: 'Entrada inválida: JSON malformado.' }],
+                }
+              : await this.tools.call(tc.function.name, input);
+          turn.tools.push({ name: tc.function.name, isError: out.isError });
+          sink.send({
+            event: 'tool',
+            data: { id: tc.id, name: tc.function.name, status: out.isError ? 'error' : 'done' },
+          });
+          const text = out.content
+            .map((c) => (c.type === 'text' ? c.text : '(gráfico não exibido neste provedor)'))
+            .join('\n');
+          return { role: 'tool' as const, tool_call_id: tc.id, content: text };
+        }),
+      );
+      messages.push(...results);
+      const inputTotal = usage.inputTokens + usage.cacheReadTokens;
+      if (
+        toolCalls >= this.#opts.maxToolIterations ||
+        inputTotal >= this.#opts.maxInputTokens ||
+        usage.outputTokens >= this.#opts.maxOutputTokens
+      ) {
+        finalCall = true;
+        messages.push({ role: 'user', content: FINAL_NOTE });
+      }
+    }
+  }
+}
+
+/** MCP tools as OpenAI function tools (charts return images the chat cannot show, so skip them). */
+export function toOpenAiTools(
+  tools: { name: string; description?: string; input_schema: unknown }[],
+): OpenAiTool[] {
+  return tools
+    .filter((t) => t.name !== 'render_comparison_chart')
+    .map((t) => ({
+      type: 'function' as const,
+      function: {
+        name: t.name,
+        description: t.description ?? '',
+        parameters: { type: 'object', ...(t.input_schema as Record<string, unknown>) },
+      },
+    }));
+}
+
+/**
+ * Keeps a stored OpenAI conversation replayable: tool calls without a matching tool message
+ * (aborted mid-loop) get an error result, otherwise the next request would be rejected.
+ */
+export function sealOpenAiHistory(messages: OpenAiMessage[]): void {
+  const answered = new Set(messages.flatMap((m) => (m.role === 'tool' ? [m.tool_call_id] : [])));
+  const last = messages.at(-1);
+  if (last?.role !== 'assistant' || !last.tool_calls?.length) return;
+  for (const tc of last.tool_calls) {
+    if (answered.has(tc.id)) continue;
+    messages.push({
+      role: 'tool',
+      tool_call_id: tc.id,
+      content: 'Execução interrompida antes do resultado.',
+    });
   }
 }
 

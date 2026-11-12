@@ -39,7 +39,7 @@ export const FAQ = [
   },
   {
     q: 'Meus dados vão para algum servidor?',
-    a: 'Não. Sessões, voltas e gravações ficam numa pasta do seu PC, e o Bono não tem servidor nem conta. O rádio no Discord e o Debrief com IA usam a internet, mas só se você ligar. O Debrief usa a sua própria chave da Anthropic.',
+    a: 'Não. Sessões, voltas e gravações ficam numa pasta do seu PC, e o Bono não tem servidor nem conta. O rádio no Discord e o Debrief com IA usam a internet, mas só se você ligar. O Coach com IA usa a sua própria chave da Anthropic ou da OpenAI (ou o seu agente, pelo MCP).',
   },
   {
     q: 'Como eu melhoro o meu tempo de volta com os números do Bono?',
@@ -119,7 +119,7 @@ ${motionSection(ctx, 'pt-BR')}
         <div class="read">.bono<small>um arquivo com todo o histórico</small></div>
       </li>
       <li class="row">
-        <div><h3>Debrief com IA, se você quiser</h3><p>Depois da sessão, um relatório com as três curvas que mais custaram e uma ação para cada. Usa a sua chave da Anthropic. O resto do Bono funciona sem ela.</p></div>
+        <div><h3>Coach com IA, se você quiser</h3><p>Pergunte sobre as suas voltas — pontos fortes e fracos, tempos das últimas sessões, o que melhorar — e receba as três curvas que mais custaram, com uma ação para cada. Funciona com o seu agente (Claude Code, Codex) pelo MCP, sem chave, ou com a sua chave da Anthropic ou da OpenAI. O resto do Bono funciona sem ela.</p></div>
         <div class="read">3 curvas<small>com uma ação para cada</small></div>
       </li>
     </ul>
