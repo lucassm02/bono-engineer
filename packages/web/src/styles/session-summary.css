@@ -1,7 +1,13 @@
 /* Resumo da sessão (spec 12) */
 
+.ss-stack {
+  display: grid;
+  gap: var(--sp-5);
+  min-width: 0;
+}
+
 .ss-note {
-  margin: 0 0 var(--sp-4);
+  margin: 0;
   padding: var(--sp-3) var(--sp-4);
   color: var(--text-2);
 }

@@ -5,6 +5,16 @@ All notable changes to Bono Engineer are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Added exact values to the **Best lap by day** chart on the track page: pointing at (or touching) a day shows its time to the thousandth for every line, and a table under the chart lists every day with the best lap, the average of the best three and the difference to the base.
+
+### Fixed
+
+- Fixed the missing space between cards on the session summary and on **My goal** (the track page), which left them touching each other.
+
 ## [0.5.0] - 2026-11-12
 
 <!-- release-notes-since: 0.1.0 -->

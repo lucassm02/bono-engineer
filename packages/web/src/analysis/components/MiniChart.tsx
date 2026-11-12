@@ -71,6 +71,52 @@ export function MiniChart({ xs, series, height = 200, xLabel, yLabel, zeroLine =
         })),
       ],
       hooks: {
+        // Tooltip with the exact value of every series at the point under the cursor: the axis
+        // only shows round ticks and, for lap times, the thousandths matter.
+        init: [
+          (u) => {
+            const tip = document.createElement('div');
+            tip.className = 'a-minichart-tip';
+            tip.setAttribute('role', 'status');
+            tip.hidden = true;
+            u.over.appendChild(tip);
+          },
+        ],
+        setCursor: [
+          (u) => {
+            const tip = u.over.querySelector<HTMLDivElement>('.a-minichart-tip');
+            if (!tip) return;
+            const i = u.cursor.idx;
+            if (i === null || i === undefined || (u.cursor.left ?? -1) < 0) {
+              tip.hidden = true;
+              return;
+            }
+            const x = u.data[0]![i];
+            tip.replaceChildren();
+            const head = document.createElement('strong');
+            head.textContent = x === undefined ? '' : fmt.current.xLabel(x);
+            tip.appendChild(head);
+            series.forEach((s, k) => {
+              const v = u.data[k + 1]?.[i];
+              if (v === null || v === undefined) return;
+              const row = document.createElement('div');
+              const dot = document.createElement('i');
+              dot.style.background = s.color;
+              const name = document.createElement('span');
+              name.textContent = `${s.label} `;
+              const val = document.createElement('b');
+              val.className = 'num';
+              val.textContent = fmt.current.yLabel(v);
+              row.append(dot, name, val);
+              tip.appendChild(row);
+            });
+            tip.hidden = false;
+            const left = u.cursor.left ?? 0;
+            const room = u.over.clientWidth - tip.offsetWidth - 8;
+            tip.style.left = `${left + 12 > room ? Math.max(0, left - tip.offsetWidth - 12) : left + 12}px`;
+            tip.style.top = `${Math.max(0, Math.min(u.cursor.top ?? 0, u.over.clientHeight - tip.offsetHeight))}px`;
+          },
+        ],
         draw: [
           (u) => {
             if (zeroLine === null) return;

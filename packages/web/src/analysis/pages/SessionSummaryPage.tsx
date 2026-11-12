@@ -162,7 +162,7 @@ export function SessionSummaryPage({ id }: { id: string }) {
           <p>{uiText('Esta sessão não tem voltas válidas para resumir.')}</p>
         </Empty>
       ) : (
-        <>
+        <div className="ss-stack">
           {s.reduced && (
             <p className="ui-card ss-note" data-tone="info">
               {uiText(
@@ -324,7 +324,7 @@ export function SessionSummaryPage({ id }: { id: string }) {
               )}
             </p>
           </Card>
-        </>
+        </div>
       )}
     </>
   );

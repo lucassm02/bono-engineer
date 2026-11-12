@@ -764,6 +764,9 @@
   ],
   "Continuar": ["Continue", "Continuar"],
   "Contra {0}": ["Against {0}", "Frente a {0}"],
+  "Contra a referência top": ["Against the top reference", "Contra la referencia top"],
+  "Contra o melhor pessoal": ["Against your personal best", "Contra tu mejor marca"],
+  "Dia": ["Day", "Día"],
   "Controle remoto: a tela {0} está desligada aqui.": [
     "Remote control: {0} is disabled on this device.",
     "Control remoto: la vista {0} está desactivada en este dispositivo."

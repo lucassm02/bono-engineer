@@ -71,6 +71,7 @@ export function GoalCard({
     <Card
       title={uiText('Minha meta')}
       id="meta"
+      className="a-goal-card"
       actions={
         cars.length > 1 && (
           <select

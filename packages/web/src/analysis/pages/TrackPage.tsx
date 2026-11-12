@@ -413,6 +413,47 @@ function EvolutionSection({ evo, corners }: { evo: EvolutionReport; corners: Map
             xLabel={dayLabel}
             yLabel={(v) => formatLapTime(v)}
           />
+          <div className="a-table-wrap a-evo-values">
+            <table className="a-table">
+              <thead>
+                <tr>
+                  <th>{uiText('Dia')}</th>
+                  <th className="num-col">{uiText('Melhor volta')}</th>
+                  <th className="num-col">{uiText('Média das 3 melhores')}</th>
+                  {evo.baseline && (
+                    <th
+                      className="num-col"
+                      title={
+                        evo.baseline.kind === 'reference'
+                          ? uiText('Contra a referência top')
+                          : uiText('Contra o melhor pessoal')
+                      }
+                    >
+                      {uiText('Diferença')}
+                    </th>
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {evo.days.map((d) => (
+                  <tr key={d.date}>
+                    <td>{formatDay(d.date)}</td>
+                    <td className="num-col num">
+                      {d.bestLapMs === null ? '–' : formatLapTime(d.bestLapMs)}
+                    </td>
+                    <td className="num-col num">
+                      {d.top3MeanMs === null ? '–' : formatLapTime(d.top3MeanMs)}
+                    </td>
+                    {evo.baseline && (
+                      <td className="num-col num">
+                        {d.gapToBaselineMs === null ? '–' : formatDelta(d.gapToBaselineMs)}
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
         <div>
           <h3 className="a-h3">{uiText('Curva-chave')}</h3>
