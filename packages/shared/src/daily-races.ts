@@ -68,8 +68,8 @@ export interface DailyRace {
   } | null;
   mostUsedCars: DailyCarUsage[];
   /**
-   * First place of the ranking, as the race page shows it. Only this row is kept (the rest of the
-   * ranking is the source's own service): it is what the reference capture asks for.
+   * Time and car of the first place, as the race page shows it. No player name or country is kept:
+   * the reference capture only needs the time to check the replay against.
    */
   leader: DailyLeader | null;
   /** Page of this race on the source. */
@@ -77,10 +77,6 @@ export interface DailyRace {
 }
 
 export interface DailyLeader {
-  /** Name as published on the ranking. */
-  name: string;
-  /** Country code of the player ("JP"), when shown. */
-  country: string | null;
   timeMs: number;
   /** Car of the fastest lap. */
   car: string | null;
@@ -108,8 +104,10 @@ export interface DailyPastRace {
 }
 
 export interface ApiDailyRaces {
-  /** The user turned the integration off. Nothing is fetched. */
+  /** The user turned the integration on. While false, nothing is fetched. */
   enabled: boolean;
+  /** The user already answered the one-time question (yes or no). */
+  asked: boolean;
   source: { name: string; url: string };
   /** When the data was fetched from the source (ms), null if never. */
   fetchedAt: number | null;

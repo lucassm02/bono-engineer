@@ -79,8 +79,11 @@ export interface ImportResult {
   safetyBackup: string | null;
 }
 
-/** Setting keys that are never exported or imported. */
-const SECRET_KEY_SQL = `lower(key) LIKE '%apikey%' OR lower(key) LIKE '%token%' OR lower(key) LIKE '%secret%' OR lower(key) LIKE '%password%'`;
+/**
+ * Setting keys that are never exported or imported: secrets, and the consent to fetch Daily Races
+ * from DG EDGE (consent is given on each PC, so a restored backup asks again).
+ */
+const SECRET_KEY_SQL = `lower(key) LIKE '%apikey%' OR lower(key) LIKE '%token%' OR lower(key) LIKE '%secret%' OR lower(key) LIKE '%password%' OR key = 'events.dgEdge.enabled'`;
 
 const ENTRY_NAME =
   /^data\/(traces\/[A-Za-z0-9_-]+\.bin\.gz|recordings\/[A-Za-z0-9._ -]+|sessions\.db)$/;

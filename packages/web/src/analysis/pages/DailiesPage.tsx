@@ -305,9 +305,6 @@ function DailyCard({
         <div className="dl-leader">
           <span className="ui-stat-label">{uiText('1º lugar')}</span>
           <p>
-            <strong>{race.leader.name}</strong>
-            {race.leader.country && <span className="dl-muted"> ({race.leader.country})</span>}
-            {' · '}
             <span className="num">{formatLapTime(race.leader.timeMs)}</span>
             {race.leader.car && <span className="dl-muted"> · {race.leader.car}</span>}
           </p>

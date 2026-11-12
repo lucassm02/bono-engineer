@@ -140,6 +140,7 @@ describe('backup .bono', () => {
     a.saveLap(lap('l1', 's1', 'trk-a'), trace('l1'));
     a.setSetting('coach.apiKey', 'sk-ant-SEGREDO');
     a.setSetting('liveFormat', 'B');
+    a.setSetting('events.dgEdge.enabled', true);
     a.saveDeviceProfile(createDefaultDeviceProfile('d-1'));
     await a.flush();
 
@@ -170,6 +171,8 @@ describe('backup .bono', () => {
     expect(b.getSetting('liveFormat')).toBe('B');
     // Secrets never travel.
     expect(b.getSetting('coach.apiKey')).toBeUndefined();
+    // The consent to fetch Daily Races is per PC: a restored backup asks again.
+    expect(b.getSetting('events.dgEdge.enabled')).toBeUndefined();
 
     // Importing again changes nothing.
     const again = await importBackup(b, file, { mode: 'merge', settings: true }, META);

@@ -365,9 +365,7 @@ export function parseDailyDetail(html: string): ParsedDailyDetail {
   const leaderTime = l ? parseLapTime(str(l.time)) : null;
   const leaderCar = isRec(p.leaderCar) ? str(p.leaderCar.name) : null;
   const leader: DailyLeader | null =
-    l && str(l.name) && leaderTime !== null
-      ? { name: str(l.name)!, country: str(l.countryCode), timeMs: leaderTime, car: leaderCar }
-      : null;
+    leaderTime !== null ? { timeMs: leaderTime, car: leaderCar } : null;
   return {
     bop: num(e.bop) === null ? null : num(e.bop) === 1,
     damage: damage ? (DAMAGE[damage.toLowerCase()] ?? damage.toLowerCase()) : null,

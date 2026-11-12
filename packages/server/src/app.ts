@@ -94,7 +94,7 @@ export async function createApp(opts: CreateAppOptions = {}): Promise<Gt7Server>
     dataDir: runtime.store.dataDir,
     appVersion: serverVersion,
     enabled: {
-      get: () => runtime.store.getSetting<boolean>('events.dgEdge.enabled', true),
+      get: () => runtime.store.getSetting<boolean | null>('events.dgEdge.enabled', null),
       set: (value) => runtime.store.setSetting('events.dgEdge.enabled', value),
     },
     ...opts.dailies,

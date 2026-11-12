@@ -414,7 +414,7 @@ const PT: HelpContent = {
         'Cada cartão mostra pista, carro, regras e quanto falta para a próxima medalha, usando a sua melhor volta.',
         'Para treinar contra o 1º lugar, toque em Usar como referência e siga os passos para gravar o replay.',
       ],
-      note: 'Os dados vêm do DG EDGE, buscados a partir do seu PC no máximo uma vez por hora. Para desligar, vá em Configurações → Contas e dados → Corridas diárias.',
+      note: 'Fica desligado até você aceitar a pergunta da Início. Os dados vêm do DG EDGE, buscados a partir do seu PC no máximo uma vez por hora. Para ligar ou desligar, vá em Configurações → Contas e dados → Corridas diárias.',
       links: [lnk('Corridas diárias', routes.dailies())],
       keywords:
         'corridas diárias daily races dg edge medalhas semana ranking referência primeiro lugar',
@@ -882,7 +882,7 @@ const EN: HelpContent = {
         'Each card shows track, car, rules and how far you are from the next medal, using your best lap.',
         'To train against 1st place, tap Use as reference and follow the steps to record the replay.',
       ],
-      note: 'The data comes from DG EDGE, fetched from your PC at most once an hour. To turn it off, go to Settings → Accounts and data → Daily Races.',
+      note: 'It stays off until you say yes to the question on Home. The data comes from DG EDGE, fetched from your PC at most once an hour. To turn it on or off, go to Settings → Accounts and data → Daily Races.',
       links: [lnk('Daily Races', routes.dailies())],
       keywords: 'daily races dg edge medals week ranking reference first place',
     },
@@ -1354,7 +1354,7 @@ const ES: HelpContent = {
         'Cada tarjeta muestra pista, coche, reglas y cuánto te falta para la siguiente medalla, con tu mejor vuelta.',
         'Para entrenar contra el 1.er lugar, toca Usar como referencia y sigue los pasos para grabar el replay.',
       ],
-      note: 'Los datos vienen de DG EDGE, obtenidos desde tu PC como máximo una vez por hora. Para desactivarlo, ve a Configuración → Cuentas y datos → Carreras diarias.',
+      note: 'Queda desactivado hasta que aceptes la pregunta de Inicio. Los datos vienen de DG EDGE, obtenidos desde tu PC como máximo una vez por hora. Para activarlo o desactivarlo, ve a Configuración → Cuentas y datos → Carreras diarias.',
       links: [lnk('Carreras diarias', routes.dailies())],
       keywords:
         'carreras diarias daily races dg edge medallas semana ranking referencia primer lugar',

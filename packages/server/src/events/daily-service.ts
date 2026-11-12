@@ -8,7 +8,8 @@
  *  - at most one fetch per hour (data is cached), six hours after a failure, and a manual refresh
  *    only every ten minutes;
  *  - same host only (a redirect elsewhere is refused);
- *  - can be turned off by the user, and then nothing is requested.
+ *  - off until the user says yes to a one-time question; can be turned off again at any time, and
+ *    then nothing is requested.
  */
 
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
@@ -54,8 +55,11 @@ export interface DailyServiceOptions {
   /** Where `cache/daily-races.json` goes. `null` keeps everything in memory (tests, demo). */
   dataDir: string | null;
   appVersion: string;
-  /** Persisted on/off switch (the settings table). */
-  enabled: { get(): boolean; set(value: boolean): void };
+  /**
+   * Persisted answer (the settings table): `null` until the user answers the one-time question.
+   * Nothing is requested unless it is `true`.
+   */
+  enabled: { get(): boolean | null; set(value: boolean): void };
   fetchFn?: typeof fetch;
   now?: () => number;
   sleep?: (ms: number) => Promise<void>;
@@ -115,7 +119,12 @@ export class DailyRacesService {
   }
 
   get enabled(): boolean {
-    return this.#opts.enabled.get();
+    return this.#opts.enabled.get() === true;
+  }
+
+  /** Whether the user already answered the one-time question. */
+  get asked(): boolean {
+    return this.#opts.enabled.get() !== null;
   }
 
   setEnabled(value: boolean): void {
@@ -134,6 +143,7 @@ export class DailyRacesService {
     const c = this.#cache;
     return {
       enabled: this.enabled,
+      asked: this.asked,
       source: { name: DAILY_SOURCE_NAME, url: DAILY_SOURCE_URL },
       fetchedAt: c.fetchedAt,
       stale: this.enabled && (c.fetchedAt === null || now - c.fetchedAt > REFRESH_INTERVAL_MS),

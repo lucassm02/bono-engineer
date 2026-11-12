@@ -303,7 +303,6 @@ export function CapturePage() {
   useEffect(() => {
     if (prefilled.current || !dailyRace?.leader) return;
     prefilled.current = true;
-    setDriver((d) => d || dailyRace.leader!.name);
     setRankingText((t) => t || leaderTimeText(dailyRace.leader!.timeMs));
   }, [dailyRace]);
   useEffect(() => {
@@ -573,11 +572,7 @@ export function CapturePage() {
             <Panel
               tone="accent"
               title={uiText('Referência da Corrida diária {0}', dailyRace.type)}
-              description={uiText(
-                '1º lugar: {0} · {1}',
-                dailyRace.leader.name,
-                formatLapTime(dailyRace.leader.timeMs),
-              )}
+              description={uiText('Tempo do 1º lugar: {0}', formatLapTime(dailyRace.leader.timeMs))}
             >
               <ol className="cap-daily-steps">
                 <li>
@@ -586,7 +581,7 @@ export function CapturePage() {
                 <li>{uiText('Escolha o 1º lugar e toque em Replay.')}</li>
                 <li>
                   {uiText(
-                    'Volte aqui e toque em Capturar esta volta. O piloto e o tempo já estão preenchidos.',
+                    'Volte aqui e toque em Capturar esta volta. O tempo do ranking já está preenchido.',
                   )}
                 </li>
               </ol>

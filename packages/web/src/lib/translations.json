@@ -4082,7 +4082,7 @@
     "Daily Race {0} reference",
     "Referencia de la Carrera diaria {0}"
   ],
-  "1º lugar: {0} · {1}": ["1st place: {0} · {1}", "1.er lugar: {0} · {1}"],
+  "Tempo do 1º lugar: {0}": ["1st place time: {0}", "Tiempo del 1.er lugar: {0}"],
   "No jogo, abra a Corrida diária {0} e entre em Ranking.": [
     "In the game, open Daily Race {0} and go to Ranking.",
     "En el juego, abre la Carrera diaria {0} y entra en Ranking."
@@ -4091,14 +4091,27 @@
     "Pick 1st place and tap Replay.",
     "Elige el 1.er lugar y toca Replay."
   ],
-  "Volte aqui e toque em Capturar esta volta. O piloto e o tempo já estão preenchidos.": [
-    "Come back here and tap Capture this lap. The driver and the time are already filled in.",
-    "Vuelve aquí y toca Capturar esta vuelta. El piloto y el tiempo ya están rellenados."
+  "Volte aqui e toque em Capturar esta volta. O tempo do ranking já está preenchido.": [
+    "Come back here and tap Capture this lap. The ranking time is already filled in.",
+    "Vuelve aquí y toca Capturar esta vuelta. El tiempo del ranking ya está rellenado."
   ],
   "Ver a corrida no DG EDGE": ["See the race on DG EDGE", "Ver la carrera en DG EDGE"],
   "Liga ou desliga a busca das corridas da semana no DG EDGE.": [
     "Turns fetching the week’s races from DG EDGE on or off.",
     "Activa o desactiva la búsqueda de las carreras de la semana en DG EDGE."
+  ],
+  "Novidades semanais do Gran Turismo?": [
+    "Weekly Gran Turismo news?",
+    "¿Novedades semanales de Gran Turismo?"
+  ],
+  "Sim, mostrar": ["Yes, show them", "Sí, mostrar"],
+  "Quer ver as corridas diárias da semana, com as regras e os tempos das medalhas? O Bono busca no site {0} a partir do seu PC, no máximo uma vez por hora.": [
+    "Want to see this week’s Daily Races, with the rules and the medal times? Bono checks the {0} site from your PC, at most once an hour.",
+    "¿Quieres ver las carreras diarias de la semana, con las reglas y los tiempos de las medallas? Bono consulta el sitio {0} desde tu PC, como máximo una vez por hora."
+  ],
+  "Você pode mudar isso depois em Configurações → Contas e dados.": [
+    "You can change this later in Settings → Accounts and data.",
+    "Puedes cambiarlo después en Configuración → Cuentas y datos."
   ],
   "simulação": ["simulation", "simulación"],
   "personalizado": ["custom", "personalizado"]

@@ -9,8 +9,13 @@ da semana** do GT7 (Modo Esportivo): pista, carro ou classe, pneus, voltas, regr
 horários e números agregados (jogadores, top 100, top 1000, tempos de **medalha** e carros mais usados). Ao lado, a
 **melhor volta do piloto** na mesma pista e quanto falta para a próxima medalha.
 
-O **1º lugar** do ranking aparece com um botão **Usar como referência**: ele abre a captura de replay (`#/captura?daily=<id>`)
-com o piloto e o tempo do ranking já preenchidos, e a pista escolhida quando o piloto já a tem no histórico.
+O **tempo do 1º lugar** do ranking aparece com um botão **Usar como referência**: ele abre a captura de replay
+(`#/captura?daily=<id>`) com o tempo do ranking já preenchido, e a pista escolhida quando o piloto já a tem no histórico.
+O **nome do jogador não é lido nem guardado**.
+
+**Desligado por padrão.** Nada é buscado até o piloto responder "Sim, mostrar" a uma pergunta única na Início ("Novidades
+semanais do Gran Turismo?"). A resposta (sim ou não) é lembrada por PC, não entra no backup `.bono` e pode ser mudada em
+Configurações → Contas e dados.
 
 ## Como os dados chegam
 
@@ -37,11 +42,15 @@ com o piloto e o tempo do ranking já preenchidos, e a pista escolhida quando o 
   sem reprodução, distribuição ou uso comercial sem permissão escrita. Por isso: cada usuário busca no **próprio PC**,
   nada é publicado nem empacotado no repositório (os testes usam uma página sintética), e o Bono é gratuito e de código
   aberto.
-- **Só o 1º lugar do ranking é lido** (nome, país, tempo e carro): é a única linha do ranking que a própria página traz.
+- **Só o tempo e o carro do 1º lugar são lidos.** O nome e o país do jogador são descartados na leitura (dado pessoal).
   O ranking completo é carregado por uma **API interna** do site (`admin.dg-edge.com/api`) que não foi feita para uso
   externo; ela **não** é usada.
-- **Recomendado:** pedir autorização por escrito ao DG EDGE (contato do site) antes de divulgar este recurso amplamente.
-  O código é de uma fonte só, fácil de desligar ou trocar.
+- **Consentimento por PC:** a busca só começa depois do "sim" do piloto, e a resposta não viaja no backup.
+- **Identificação fixa (decisão do dono, 2026-11-12):** o `User-Agent` continua identificando o Bono. Disfarçar a
+  requisição de navegador comum foi descartado: tira do site a chance de entender, limitar ou pedir a retirada do acesso, e
+  piora a posição do projeto caso haja um pedido formal.
+- **Autorização por escrito:** não é exigida; fica como cortesia opcional. O código é de uma fonte só, fácil de desligar
+  ou trocar, e um pedido de retirada deve ser atendido na hora.
 
 ## Limites conhecidos
 

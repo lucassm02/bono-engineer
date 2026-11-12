@@ -12,7 +12,7 @@ export function DailiesSetting() {
   const state = useFetch('dailies-setting', () => api.dailyRaces());
   const { busy, run } = useSave();
   const [override, setOverride] = useState<boolean | null>(null);
-  const enabled = override ?? state.data?.enabled ?? true;
+  const enabled = override ?? state.data?.enabled ?? false;
 
   return (
     <Panel

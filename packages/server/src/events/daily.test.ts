@@ -220,24 +220,20 @@ describe('parseDailyDetail', () => {
     });
     expect(d.medals?.gold).toEqual({ timeMs: 122662, percentPlayers: 15.86 });
     expect(d.mostUsedCars[0]).toEqual({ name: "Audi TT Cup '16", percent: 29.37 });
-    expect(d.leader).toEqual({
-      name: 'Piloto Teste',
-      country: 'JP',
-      timeMs: 119089,
-      car: 'Lamborghini Huracán Gr.4',
-    });
+    // only the time and the car: the player's name and country are not kept
+    expect(d.leader).toEqual({ timeMs: 119089, car: 'Lamborghini Huracán Gr.4' });
   });
 
   it('does not keep anything outside the allow-list', () => {
     const text = JSON.stringify(d);
-    expect(text).not.toMatch(/never read|Fulano|secret/);
+    expect(text).not.toMatch(/never read|Fulano|secret|Piloto Teste|"JP"/);
   });
 
   it('merges into a race of the list', () => {
     const race = parseDailyList(LIST_HTML, NOW).races[1]!;
     const merged = withDetail(race, d);
     expect(merged.medals?.platinum.timeMs).toBe(119685);
-    expect(merged.leader?.name).toBe('Piloto Teste');
+    expect(merged.leader?.timeMs).toBe(119089);
   });
 });
 
@@ -255,10 +251,18 @@ describe('robotsAllows', () => {
 });
 
 describe('DailyRacesService', () => {
-  function setup(opts: { robots?: string; failList?: boolean; redirect?: boolean } = {}) {
+  function setup(
+    opts: {
+      robots?: string;
+      failList?: boolean;
+      redirect?: boolean;
+      /** The saved answer; `null` is "never asked". Defaults to "yes". */
+      answer?: boolean | null;
+    } = {},
+  ) {
     const calls: { url: string; ua: string }[] = [];
     let now = NOW;
-    let enabled = true;
+    let enabled: boolean | null = opts.answer === undefined ? true : opts.answer;
     const fetchFn = (async (url: string, init?: RequestInit) => {
       const headers = (init?.headers ?? {}) as Record<string, string>;
       const ua = String(headers['user-agent']);
@@ -348,8 +352,33 @@ describe('DailyRacesService', () => {
     service.setEnabled(false);
     const res = await service.get();
     expect(res.enabled).toBe(false);
+    expect(res.asked).toBe(true);
     expect(calls).toHaveLength(0);
     expect((await service.refresh()).reason).toBe('disabled');
+  });
+
+  it('is off until the user answers, and then fetches only on a yes', async () => {
+    const { service, calls } = setup({ answer: null });
+    const first = await service.get();
+    expect(first.enabled).toBe(false);
+    expect(first.asked).toBe(false);
+    expect((await service.refresh()).reason).toBe('disabled');
+    expect(calls).toHaveLength(0); // never asked: nothing is requested
+
+    service.setEnabled(true);
+    const after = await service.get();
+    expect(after.enabled).toBe(true);
+    expect(after.asked).toBe(true);
+    expect(after.races).toHaveLength(3);
+    expect(calls.length).toBeGreaterThan(0);
+  });
+
+  it('a "no" is remembered and nothing is requested', async () => {
+    const { service, calls } = setup({ answer: null });
+    service.setEnabled(false);
+    expect(service.snapshot().asked).toBe(true);
+    await service.get();
+    expect(calls).toHaveLength(0);
   });
 
   it('stops when robots.txt forbids the page', async () => {
