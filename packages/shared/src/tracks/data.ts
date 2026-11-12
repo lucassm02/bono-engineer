@@ -154,7 +154,7 @@ export const TRACK_LAYOUTS_DATA: readonly (readonly [
   ['89bb71', 453, 'Sardegna - Windmills', 'Full Course', 'Sardegna - Windmills', 'it', 3310, 14, 75, 298, 4, 16, 160, null],
   ['98a1b3', 599, 'Sardegna - Windmills', 'Full Course', 'Sardegna - Windmills (Reverse)', 'it', 3310, 14, 75, 298, 6, 16, 160, '89bb71'],
   ['ef3232', 1260, 'Special Stage Route X', 'Full Course', 'Special Stage Route X', 'us', 30283, 2, 65, 12000, 5, -2800, -4240, null],
-  ['4bf61b', 1340, 'Sportsland SUGO', 'Full Course', 'SUGO International Racing Course', 'jp', 3586, 13, 69.8, null, 16, 80, -208, null],
+  ['4bf61b', 1340, 'Sportsland SUGO', 'Full Course', 'SUGO International Racing Course', 'jp', 3586, 13, 69.8, 704.5, 16, 80, -208, null],
   ['4414cb', 442, 'Suzuka Circuit', 'East Course', 'Suzuka Circuit East Course', 'jp', 2243, 9, 33.6, 800, 0, 736, 64, null],
   ['6e378b', 10, 'Suzuka Circuit', 'Full Course', 'Suzuka Circuit', 'jp', 5807, 20, 40, 1200, 0, 544, -144, null],
   ['dcdc93', 450, 'Tokyo Expressway', 'Central Counterclockwise', 'Tokyo Expressway - Central Counterclockwise', 'jp', 4369, 14, 16, 600, 4, -48, 800, null],

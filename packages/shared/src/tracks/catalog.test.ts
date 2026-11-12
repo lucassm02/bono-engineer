@@ -70,6 +70,7 @@ describe('track catalogue integrity', () => {
     expect(sugo.lengthM).toBe(3586);
     expect(sugo.turns).toBe(13);
     expect(sugo.courseId).toBe(1340);
+    expect(sugo.longestStraightM).toBe(704.5);
     expect(sugo.country).toBe('jp');
     expect(sugo.fictional).toBe(false);
   });

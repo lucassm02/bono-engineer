@@ -41,6 +41,12 @@ const MANUAL_COURSE_IDS = {
   // DG EDGE page of SUGO uses the image "Track1340.webp"; gt7info has no row yet.
   '4bf61b': { courseId: 1340, source: 'dg-edge image name Track1340' },
 };
+/** Longest straight (m) for layouts gt7info has no row for. One figure per layout, with its source. */
+const MANUAL_STRAIGHT_M = {
+  // Official GT7 track list (gran-turismo.com, game 1.72), read by hand by the project owner on
+  // 2026-11-12: a single published figure, not a copy of the list.
+  '4bf61b': { straightM: 704.5, source: 'official GT7 track list, read by hand' },
+};
 /** gt7info course ids that its author marked as dummies ("a dummy course id" in commit bbc5424). */
 const DUMMY_COURSE_IDS = new Set([2001, 2002, 2003, 2004]);
 
@@ -205,7 +211,7 @@ for (const c of index.configurations) {
     lengthM: c.length_m,
     turns: c.turns,
     elevationM: csv ? csv.elevation : c.elevation_m,
-    straightM: csv ? csv.straight : null,
+    straightM: csv ? csv.straight : (MANUAL_STRAIGHT_M[c.official_id]?.straightM ?? null),
     flags,
     sig: signatures.signatures.find((s) => s.official_id === c.official_id) ?? null,
   });
