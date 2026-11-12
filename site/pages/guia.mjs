@@ -193,6 +193,9 @@ export function render(ctx) {
       <li><strong>Retomada:</strong> tolerância de +8 m. Retomada tarde fica vermelha.</li>
     </ul>
     <p>Sem referência, a tela compara com a sua passagem anterior. <strong>Fixar esta curva</strong> prende a tela numa curva só. O áudio, desligado por padrão, diz no máximo uma frase por passagem. Como não há tempo de ler no meio da curva, olhe a tela nas retas e depois da curva, ou ligue o áudio.</p>
+    <p>Para treinar uma curva só, comece pelo botão <strong>Treinar esta curva</strong> do painel “Onde você perde tempo” na comparação, ou escolha a curva na própria tela. O engenheiro passa a falar apenas dela, a cada passagem, comparando com a sua melhor (tempo do trecho, velocidades e ponto de freada). Ele guarda as dez últimas passagens e mostra um resumo ao parar.</p>
+    <h3>Meta por pista</h3>
+    <p>Na página da pista, em <strong>Minha meta</strong>, digite um tempo ou aceite a sugestão (a volta ideal, ou 0,5% abaixo da sua melhor). Ao vivo, o delta grande mostra a diferença para o ritmo da meta e, depois de cada volta válida, o engenheiro diz quanto falta. Escolha uma meta que você consiga alcançar nesta sessão: uma meta distante demais só repete a mesma má notícia.</p>
     <h3>Comparação, depois da sessão</h3>
     <ol>
       <li>Abra a sessão, marque a sua volta e a referência e clique em <strong>Comparar</strong>.</li>

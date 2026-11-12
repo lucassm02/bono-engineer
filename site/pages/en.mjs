@@ -84,8 +84,16 @@ ${motionSection(ctx, 'en')}
         <div class="read acc">100 m<small>warning before the brake point</small></div>
       </li>
       <li class="row">
-        <div><h3>Lap comparison</h3><p>Overlay speed, brake and throttle aligned by distance and see which corner took each tenth away.</p></div>
+        <div><h3>Lap comparison</h3><p>Overlay speed, brake and throttle aligned by distance and see which corner took each tenth away. “Where you lose time” lists the three costliest corners with the probable cause, and the map colours the lap by gain and loss, speed or brake.</p></div>
         <div class="read loss">+0.024<small>the costliest corner, in seconds</small></div>
+      </li>
+      <li class="row">
+        <div><h3>Goal and session summary</h3><p>Set a goal per track (or take the suggestion: the ideal lap) and follow the difference live. When you finish, one screen shows the best lap, pace, consistency, where you gained and lost per corner and up to three tips for next time.</p></div>
+        <div class="read gain">−0.215<small>best lap against the goal, in seconds</small></div>
+      </li>
+      <li class="row">
+        <div><h3>Voice corner drill</h3><p>Pick a corner and the engineer talks only about it, on every pass, rating it against your best: stretch time, speeds and braking point. It keeps the last ten passes and shows a summary when you stop.</p></div>
+        <div class="read acc">10 passes<small>on the same corner, lap after lap</small></div>
       </li>
       <li class="row">
         <div><h3>Daily Races</h3><p>The three GT7 races of the week, with the rules, medal times and the 1st place time next to your best lap on the same track. Off until you accept.</p></div>

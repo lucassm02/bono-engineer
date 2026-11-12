@@ -99,8 +99,16 @@ ${motionSection(ctx, 'pt-BR')}
         <div class="read acc">100 m<small>de aviso antes da freada</small></div>
       </li>
       <li class="row">
-        <div><h3>Comparar voltas</h3><p>Sobreponha velocidade, freio e acelerador alinhados por distância e veja em qual curva cada décimo foi embora.</p></div>
+        <div><h3>Comparar voltas</h3><p>Sobreponha velocidade, freio e acelerador alinhados por distância e veja em qual curva cada décimo foi embora. O painel “Onde você perde tempo” lista as três curvas que mais custam, com o motivo provável, e o mapa pinta a volta por ganho e perda, velocidade ou freio.</p></div>
         <div class="read loss">+0,024<small>a curva que mais custou, em segundos</small></div>
+      </li>
+      <li class="row">
+        <div><h3>Meta e resumo da sessão</h3><p>Defina uma meta por pista (ou aceite a sugestão: a volta ideal) e acompanhe a diferença ao vivo. Ao terminar, uma tela traz a melhor volta, o ritmo, a regularidade, onde você ganhou e perdeu por curva e até três dicas para a próxima.</p></div>
+        <div class="read gain">−0,215<small>melhor volta contra a meta, em segundos</small></div>
+      </li>
+      <li class="row">
+        <div><h3>Treino de curva por voz</h3><p>Escolha uma curva e o engenheiro fala só dela, a cada passagem, comparando com a sua melhor: tempo do trecho, velocidades e ponto de freada. Guarda as dez últimas passagens e mostra um resumo ao parar.</p></div>
+        <div class="read acc">10 passagens<small>na mesma curva, volta após volta</small></div>
       </li>
       <li class="row">
         <div><h3>Corridas diárias</h3><p>As três corridas da semana do GT7, com regras, tempos de medalha e o tempo do 1º lugar, ao lado da sua melhor volta na mesma pista. Fica desligado até você aceitar.</p></div>
