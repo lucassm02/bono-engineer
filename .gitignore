@@ -8,3 +8,6 @@ dev-dist/
 *.tsbuildinfo
 .vitest/
 packages/desktop/release/
+
+# Planejamento local (specs e ideias futuras): nao vai para o repositorio
+/docs/local/
