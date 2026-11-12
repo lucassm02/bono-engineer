@@ -4798,5 +4798,42 @@
     "Conversaciones y debriefs guardados, del más reciente al más antiguo."
   ],
   "Nenhuma conversa ainda.": ["No conversations yet.", "Aún no hay conversaciones."],
-  "Apagar a conversa {0}": ["Delete the conversation {0}", "Borrar la conversación {0}"]
+  "Apagar a conversa {0}": ["Delete the conversation {0}", "Borrar la conversación {0}"],
+  "É o endereço web do Bono, sem caminhos do seu PC. O Bono precisa estar aberto. Para conferir, rode claude mcp list: o bono deve aparecer como conectado.": [
+    "It is Bono's web address, with no paths of your PC. Bono must be open. To check, run claude mcp list: bono should show as connected.",
+    "Es la dirección web de Bono, sin rutas de tu PC. Bono debe estar abierto. Para comprobar, ejecuta claude mcp list: bono debe aparecer como conectado."
+  ],
+  "O Codex é o agente de código da OpenAI. Ponha este bloco no arquivo ~/.codex/config.toml e reinicie o Codex:": [
+    "Codex is OpenAI's coding agent. Put this block in the ~/.codex/config.toml file and restart Codex:",
+    "Codex es el agente de código de OpenAI. Pon este bloque en el archivo ~/.codex/config.toml y reinicia Codex:"
+  ],
+  "O acesso está protegido por token: defina a variável {0} com o token.": [
+    "Access is protected by a token: set the {0} variable to the token.",
+    "El acceso está protegido por token: define la variable {0} con el token."
+  ],
+  "O Bono precisa estar aberto. Peça \"liste as ferramentas do bono\" para conferir se conectou. Se a sua versão do Codex não aceitar o endereço (url), use a alternativa abaixo.": [
+    "Bono must be open. Ask it to \"list the bono tools\" to check it connected. If your Codex version does not accept the address (url), use the alternative below.",
+    "Bono debe estar abierto. Pídele \"lista las herramientas de bono\" para comprobar que conectó. Si tu versión de Codex no acepta la dirección (url), usa la alternativa de abajo."
+  ],
+  "O chat do app do Claude só conecta por um endereço HTTPS público, que o endereço local do Bono não é.": [
+    "The Claude app chat only connects through a public HTTPS address, which Bono's local address is not.",
+    "El chat de la app de Claude solo conecta por una dirección HTTPS pública, y la dirección local de Bono no lo es."
+  ],
+  "O caminho mais simples é o Claude Code (aba Code do mesmo app), que aceita o endereço do Bono. Para o chat, existe a alternativa abaixo, com um comando local.": [
+    "The simplest path is Claude Code (the Code tab of the same app), which accepts Bono's address. For the chat, there is the alternative below, with a local command.",
+    "El camino más simple es Claude Code (la pestaña Code de la misma app), que acepta la dirección de Bono. Para el chat, hay la alternativa de abajo, con un comando local."
+  ],
+  "Endereço MCP (web)": ["MCP address (web)", "Dirección MCP (web)"],
+  "Alternativa: comando local (funciona com o Bono fechado)": [
+    "Alternative: local command (works with Bono closed)",
+    "Alternativa: comando local (funciona con Bono cerrado)"
+  ],
+  "Este modo roda o servidor do Bono no seu PC e por isso leva caminhos da sua instalação, montados automaticamente.": [
+    "This mode runs the Bono server on your PC, so it carries paths of your installation, built automatically.",
+    "Este modo ejecuta el servidor de Bono en tu PC y por eso lleva rutas de tu instalación, armadas automáticamente."
+  ],
+  "Abra Configurações → Desenvolvedor → Editar configuração (ou o arquivo claude_desktop_config.json em %APPDATA%\\Claude) e coloque isto. Depois feche o app do Claude por completo e abra de novo. Se já existir um bloco mcpServers, junte só a entrada bono:": [
+    "Open Settings → Developer → Edit config (or the claude_desktop_config.json file in %APPDATA%\\Claude) and put this in. Then close the Claude app completely and open it again. If an mcpServers block already exists, just add the bono entry:",
+    "Abre Configuración → Desarrollador → Editar configuración (o el archivo claude_desktop_config.json en %APPDATA%\\Claude) y pon esto. Luego cierra la app de Claude por completo y ábrela de nuevo. Si ya existe un bloque mcpServers, añade solo la entrada bono:"
+  ]
 }

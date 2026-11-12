@@ -1,8 +1,8 @@
 import type { ApiMcpInfo } from '@gt7/shared';
 import { describe, expect, it } from 'vitest';
-import { codexSnippets } from './mcpSnippets.ts';
+import { claudeCodeWeb, codexSnippets, codexWebToml, mcpWebUrl } from './mcpSnippets.ts';
 
-const info = (over: Partial<ApiMcpInfo['stdio']>): ApiMcpInfo =>
+const info = (stdio: Partial<ApiMcpInfo['stdio']> = {}, tokenRequired = false): ApiMcpInfo =>
   ({
     stdio: {
       command: 'C:\\Program Files\\Bono\\Bono.exe',
@@ -10,13 +10,35 @@ const info = (over: Partial<ApiMcpInfo['stdio']>): ApiMcpInfo =>
       env: {},
       commandLine: '',
       npmCommandLine: null,
-      ...over,
+      ...stdio,
     },
-  }) as ApiMcpInfo;
+    http: {
+      path: '/mcp',
+      localUrl: 'http://localhost:8770/mcp',
+      lanUrls: [],
+      tokenRequired,
+    },
+  }) as unknown as ApiMcpInfo;
 
-describe('codexSnippets', () => {
+describe('web (HTTP) snippets', () => {
+  it('uses the address of the running Bono and no path of the PC', () => {
+    const i = info();
+    expect(mcpWebUrl(i)).toBe('http://localhost:8770/mcp');
+    expect(claudeCodeWeb(i)).toBe('claude mcp add --transport http bono http://localhost:8770/mcp');
+    expect(codexWebToml(i)).toBe('[mcp_servers.bono]\nurl = "http://localhost:8770/mcp"');
+    expect(claudeCodeWeb(i)).not.toContain('Users');
+  });
+
+  it('asks for the token when the access is protected', () => {
+    const i = info({}, true);
+    expect(claudeCodeWeb(i)).toContain('--header "Authorization: Bearer <seu-token>"');
+    expect(codexWebToml(i)).toContain('bearer_token_env_var = "BONO_TOKEN"');
+  });
+});
+
+describe('codexSnippets (local command)', () => {
   it('quotes paths with spaces in the command and escapes backslashes in the TOML', () => {
-    const s = codexSnippets(info({}));
+    const s = codexSnippets(info());
     expect(s.command).toBe(
       'codex mcp add bono -- "C:\\Program Files\\Bono\\Bono.exe" app.asar\\mcp.cjs --data "C:\\Users\\Ana Maria\\Bono"',
     );

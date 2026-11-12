@@ -1,7 +1,8 @@
 /**
- * Step-by-step guide to ask the Coach through the driver's own AI agent over MCP (Claude Code,
- * Claude Desktop, OpenAI Codex), with the commands filled in with this installation's real paths,
- * and the questions worth asking. No API key is needed: the agent reads the same data as the app.
+ * Step-by-step guide to ask the Coach through the driver's own AI agent over MCP. The main way is
+ * the web (HTTP) address of the running Bono: one line, no paths of the PC. Agents that only take a
+ * local command get it as a collapsed alternative. No API key is needed: the agent reads the same
+ * data as the app.
  */
 
 import { useState } from 'react';
@@ -9,12 +10,18 @@ import { t as uiText } from '../../../lib/i18n.ts';
 import '../../../styles/coach-setup.css';
 import { api } from '../../api.ts';
 import { coachStarters, mcpAgentQuestion } from '../../lib/coachStarters.ts';
-import { codexSnippets } from '../../lib/mcpSnippets.ts';
+import {
+  CODEX_TOKEN_VAR,
+  claudeCodeWeb,
+  codexSnippets,
+  codexWebToml,
+  mcpWebUrl,
+} from '../../lib/mcpSnippets.ts';
 import { useFetch } from '../../useFetch.ts';
 import { CodeBlock, CopyBtn } from '../CopyBlock.tsx';
 import { ErrorBox, Loading } from '../ui.tsx';
 
-type Agent = 'claudeCode' | 'claudeDesktop' | 'codex' | 'chatgpt';
+type Agent = 'claudeCode' | 'codex' | 'claudeDesktop' | 'chatgpt';
 
 function Step({ n, title, children }: { n: number; title: string; children: React.ReactNode }) {
   return (
@@ -33,8 +40,8 @@ export function McpGuide() {
   const [agent, setAgent] = useState<Agent>('claudeCode');
   const agents: { id: Agent; label: string }[] = [
     { id: 'claudeCode', label: 'Claude Code' },
-    { id: 'claudeDesktop', label: uiText('Claude (chat)') },
     { id: 'codex', label: 'OpenAI Codex' },
+    { id: 'claudeDesktop', label: uiText('Claude (chat)') },
     { id: 'chatgpt', label: 'ChatGPT' },
   ];
 
@@ -43,6 +50,7 @@ export function McpGuide() {
   if (!info.data) return <Loading />;
   const i = info.data;
   const codex = codexSnippets(i);
+  const token = i.http.tokenRequired;
 
   return (
     <div className="cks">
@@ -79,28 +87,10 @@ export function McpGuide() {
                   'Abra o Claude Code: a aba Code do app do Claude, ou digite claude num terminal. Depois cole este comando e aperte Enter:',
                 )}
               </p>
-              <CodeBlock code={i.claudeCode.stdio} label={uiText('Comando')} />
+              <CodeBlock code={claudeCodeWeb(i)} label={uiText('Comando')} />
               <p className="cks-muted">
                 {uiText(
-                  'Para conferir, rode claude mcp list: o bono deve aparecer como conectado. Numa conversa nova, o Claude Code já enxerga as ferramentas.',
-                )}
-              </p>
-            </>
-          )}
-          {agent === 'claudeDesktop' && (
-            <>
-              <p className="cks-muted">
-                {uiText(
-                  'No chat do app do Claude, o MCP vem de um arquivo. Abra Configurações → Desenvolvedor → Editar configuração (ou o arquivo claude_desktop_config.json em %APPDATA%\\Claude) e coloque isto:',
-                )}
-              </p>
-              <CodeBlock
-                code={JSON.stringify(i.claudeDesktopConfig, null, 2)}
-                label="claude_desktop_config.json"
-              />
-              <p className="cks-muted">
-                {uiText(
-                  'Feche o app do Claude por completo e abra de novo. Se já existir um bloco mcpServers, junte só a entrada bono.',
+                  'É o endereço web do Bono, sem caminhos do seu PC. O Bono precisa estar aberto. Para conferir, rode claude mcp list: o bono deve aparecer como conectado.',
                 )}
               </p>
             </>
@@ -109,17 +99,38 @@ export function McpGuide() {
             <>
               <p className="cks-muted">
                 {uiText(
-                  'O Codex é o agente de código da OpenAI. No terminal, rode este comando (ou, se a sua versão não tiver o comando, ponha o bloco no arquivo ~/.codex/config.toml):',
+                  'O Codex é o agente de código da OpenAI. Ponha este bloco no arquivo ~/.codex/config.toml e reinicie o Codex:',
                 )}
               </p>
-              <CodeBlock code={codex.command} label={uiText('Comando')} />
-              <CodeBlock code={codex.toml} label="~/.codex/config.toml" />
+              <CodeBlock code={codexWebToml(i)} label="~/.codex/config.toml" />
+              {token && (
+                <p className="cks-muted">
+                  {uiText(
+                    'O acesso está protegido por token: defina a variável {0} com o token.',
+                    CODEX_TOKEN_VAR,
+                  )}
+                </p>
+              )}
               <p className="cks-muted">
                 {uiText(
-                  'Reinicie o Codex. Peça "liste as ferramentas do bono" para conferir se conectou.',
+                  'O Bono precisa estar aberto. Peça "liste as ferramentas do bono" para conferir se conectou. Se a sua versão do Codex não aceitar o endereço (url), use a alternativa abaixo.',
                 )}
               </p>
             </>
+          )}
+          {agent === 'claudeDesktop' && (
+            <div className="cks-note">
+              <p>
+                {uiText(
+                  'O chat do app do Claude só conecta por um endereço HTTPS público, que o endereço local do Bono não é.',
+                )}
+              </p>
+              <p>
+                {uiText(
+                  'O caminho mais simples é o Claude Code (aba Code do mesmo app), que aceita o endereço do Bono. Para o chat, existe a alternativa abaixo, com um comando local.',
+                )}
+              </p>
+            </div>
           )}
           {agent === 'chatgpt' && (
             <div className="cks-note">
@@ -138,8 +149,43 @@ export function McpGuide() {
                   'Quem expõe o Bono por um túnel HTTPS por conta própria usa este endereço (com o token, se o acesso estiver protegido):',
                 )}
               </p>
-              <CodeBlock code={i.http.localUrl} label={uiText('Endereço MCP (HTTP)')} />
+              <CodeBlock code={mcpWebUrl(i)} label={uiText('Endereço MCP (web)')} />
             </div>
+          )}
+
+          {agent !== 'chatgpt' && (
+            <details className="cks-alt">
+              <summary>
+                {uiText('Alternativa: comando local (funciona com o Bono fechado)')}
+              </summary>
+              <p className="cks-muted">
+                {uiText(
+                  'Este modo roda o servidor do Bono no seu PC e por isso leva caminhos da sua instalação, montados automaticamente.',
+                )}
+              </p>
+              {agent === 'claudeCode' && (
+                <CodeBlock code={i.claudeCode.stdio} label={uiText('Comando')} />
+              )}
+              {agent === 'codex' && (
+                <>
+                  <CodeBlock code={codex.command} label={uiText('Comando')} />
+                  <CodeBlock code={codex.toml} label="~/.codex/config.toml" />
+                </>
+              )}
+              {agent === 'claudeDesktop' && (
+                <>
+                  <p className="cks-muted">
+                    {uiText(
+                      'Abra Configurações → Desenvolvedor → Editar configuração (ou o arquivo claude_desktop_config.json em %APPDATA%\\Claude) e coloque isto. Depois feche o app do Claude por completo e abra de novo. Se já existir um bloco mcpServers, junte só a entrada bono:',
+                    )}
+                  </p>
+                  <CodeBlock
+                    code={JSON.stringify(i.claudeDesktopConfig, null, 2)}
+                    label="claude_desktop_config.json"
+                  />
+                </>
+              )}
+            </details>
           )}
         </Step>
 
