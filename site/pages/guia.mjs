@@ -204,6 +204,7 @@ export function render(ctx) {
       <li>Em “O que treinar”, leia os três primeiros itens (custo, ação e confiança) e clique em <strong>Ver no gráfico</strong> para ver velocidade, freio e acelerador sobrepostos.</li>
       <li>Na tabela de curvas, ordene por <strong>Mais tempo perdido</strong>. Verde é a seu favor e vermelho custa tempo.</li>
       <li>Na <strong>volta ideal</strong>, a soma dos seus melhores microssetores mostra quanto tempo existe em juntar o que você já fez bem.</li>
+      <li>Para ver o que aconteceu dentro da volta, abra o <strong>Replay</strong>: uma bolinha anda no mapa, com freio, acelerador e volante a cada instante, e a sua melhor volta ou uma referência do top corre ao lado como fantasma. Toque em <strong>O que errou</strong> para ir ao ponto.</li>
     </ol>
     <h3>Debrief com IA</h3>
     <p>O Debrief lê as mesmas métricas e devolve as três maiores perdas, com números e uma ação por curva, mais o plano do próximo stint. Peça para focar numa curva, como “foco na T3, por que perco na saída?”. Se a referência for de replay, ele avisa que a precisão é de poucos metros.</p>

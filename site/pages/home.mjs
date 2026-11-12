@@ -107,6 +107,10 @@ ${motionSection(ctx, 'pt-BR')}
         <div class="read gain">−0,215<small>melhor volta contra a meta, em segundos</small></div>
       </li>
       <li class="row">
+        <div><h3>Replay de uma volta</h3><p>Reveja uma volta como no Gran Turismo: uma bolinha percorre o mapa enquanto você vê freio, acelerador e volante a cada instante. Ponha a sua melhor volta ou a de um piloto do top ao lado, como um fantasma, e toque no que errou para ir direto ao ponto.</p></div>
+        <div class="read acc">0,25× a 2×<small>velocidade do replay, passo de 0,1 s</small></div>
+      </li>
+      <li class="row">
         <div><h3>Treino de curva por voz</h3><p>Escolha uma curva e o engenheiro fala só dela, a cada passagem, comparando com a sua melhor: tempo do trecho, velocidades e ponto de freada. Guarda as dez últimas passagens e mostra um resumo ao parar.</p></div>
         <div class="read acc">10 passagens<small>na mesma curva, volta após volta</small></div>
       </li>

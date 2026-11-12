@@ -152,7 +152,7 @@ Termine com UMA sugestão de próxima pergunta ou treino. No chat, o formato lon
 
 export function coachChatSystemPrompt(language: Language): string {
   return coachSystemPrompt(language).replace(
-    '\n\n' + COACH_KNOWLEDGE_RULES,
+    `\n\n${COACH_KNOWLEDGE_RULES}`,
     `\n\n${COACH_CHAT_RULES}\n\n${COACH_KNOWLEDGE_RULES}`,
   );
 }

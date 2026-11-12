@@ -92,6 +92,10 @@ ${motionSection(ctx, 'en')}
         <div class="read gain">−0.215<small>best lap against the goal, in seconds</small></div>
       </li>
       <li class="row">
+        <div><h3>Lap replay</h3><p>Watch a lap the way Gran Turismo shows it: a dot runs the map while you see brake, throttle and steering at every instant. Put your best lap or a top driver's lap beside it as a ghost, and tap what went wrong to jump straight to the spot.</p></div>
+        <div class="read acc">0.25× to 2×<small>replay speed, 0.1 s steps</small></div>
+      </li>
+      <li class="row">
         <div><h3>Voice corner drill</h3><p>Pick a corner and the engineer talks only about it, on every pass, rating it against your best: stretch time, speeds and braking point. It keeps the last ten passes and shows a summary when you stop.</p></div>
         <div class="read acc">10 passes<small>on the same corner, lap after lap</small></div>
       </li>
