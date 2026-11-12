@@ -30,6 +30,7 @@
     "build": "npm run build -w @gt7/web",
     "site:build": "node site/build.mjs",
     "site:shots": "node site/shots/run.mjs",
+    "site:social": "node site/social-preview.mjs",
     "site:serve": "node site/serve.mjs",
     "site:test": "node --test site/build.test.mjs",
     "brand:icons": "node --import tsx packages/desktop/scripts/icons.ts",

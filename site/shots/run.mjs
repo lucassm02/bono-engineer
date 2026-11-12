@@ -4,6 +4,10 @@
  *   npm run site:shots                                      sobe um servidor de demonstração próprio (porta 5191)
  *   npm run site:shots -- --server http://localhost:8770    usa um servidor de demonstração já aberto
  *
+ *   --lang en        captura com o app em inglês (nome da pista em inglês)
+ *   --only ao-vivo    captura só uma tela (por nome)
+ *   --out docs/x      pasta de saída (relativa à raiz), em vez de site/assets/shots
+ *
  * O Electron do projeto (já instalado) abre cada tela numa janela invisível; as imagens vão para
  * `site/assets/shots/` em PNG e WebP. Passo manual, se preferir: abra o app com `npm run demo`, tire
  * as capturas em 1440x860 e salve com os mesmos nomes nessa pasta.
@@ -17,7 +21,11 @@ import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '..', '..');
-const OUT = join(ROOT, 'site', 'assets', 'shots');
+const arg = (name) =>
+  process.argv.includes(name) ? process.argv[process.argv.indexOf(name) + 1] : null;
+const OUT = arg('--out') ? join(ROOT, arg('--out')) : join(ROOT, 'site', 'assets', 'shots');
+const LANG = arg('--lang');
+const ONLY = arg('--only');
 const require = createRequire(import.meta.url);
 
 const argv = process.argv.slice(2);
@@ -98,7 +106,7 @@ async function nameDemoTrack(base, trackId) {
     await fetch(`${base}/api/tracks/${trackId}`, {
       method: 'PATCH',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ name: 'Circuito de Demonstração' }),
+      body: JSON.stringify({ name: LANG === 'en' ? 'Demo Circuit' : 'Circuito de Demonstração' }),
       signal: AbortSignal.timeout(3000),
     });
   } catch {
@@ -107,8 +115,7 @@ async function nameDemoTrack(base, trackId) {
 }
 
 /** Antes de fotografar o ao vivo: engenheiro ligado e sem os rótulos da primeira semana nos botões. */
-const PREPARE_LIVE =
-  "localStorage.setItem('gt7.engineer.enabled', 'true'); localStorage.setItem('bono.usage.v1', JSON.stringify({ since: Date.now() - 30 * 864e5, counters: {} })); location.reload()";
+const PREPARE_LIVE = `${LANG ? `localStorage.setItem('bono.language', '${LANG}'); ` : ''}localStorage.setItem('gt7.engineer.enabled', 'true'); localStorage.setItem('bono.usage.v1', JSON.stringify({ since: Date.now() - 30 * 864e5, counters: {} })); location.reload()`;
 
 /** O convite "Novidades no Bono" aparece para quem nunca respondeu (perfil novo do Electron): some antes da foto. */
 const DISMISS_INVITE =
@@ -123,8 +130,13 @@ const demo = serverArg
 let code = 0;
 try {
   await waitFor(() => getJson(`${demo.base}/api/status`), 'servidor de demonstração', 180_000);
-  const { session, best, other } = await pickLaps(demo.base);
-  await nameDemoTrack(demo.base, session.trackId);
+  // A tela ao vivo não depende de voltas salvas: com `--only ao-vivo` não espera o simulador.
+  const needLaps = ONLY !== 'ao-vivo';
+  const { session, best, other } = needLaps
+    ? await pickLaps(demo.base)
+    : { session: {}, best: {}, other: {} };
+  // Só renomeia a pista no servidor que este script iniciou; um servidor já aberto não é alterado.
+  if (!serverArg) await nameDemoTrack(demo.base, session.trackId);
   // ao vivo com o servidor de demonstração (sem o selo "Demonstração" do modo mock): mostra a faixa de contexto
   const live = `${demo.base}/#/painel`;
   const shots = [
@@ -180,7 +192,9 @@ try {
   ];
   mkdirSync(OUT, { recursive: true });
   const specPath = join(tmpdir(), `bono-shots-${process.pid}.json`);
-  writeFileSync(specPath, JSON.stringify({ outDir: OUT, shots }));
+  const selected = ONLY ? shots.filter((shot) => shot.name === ONLY) : shots;
+  if (!selected.length) throw new Error(`nenhuma captura chamada "${ONLY}"`);
+  writeFileSync(specPath, JSON.stringify({ outDir: OUT, shots: selected }));
   const env = { ...process.env };
   delete env.ELECTRON_RUN_AS_NODE;
   const r = spawnSync(require('electron'), [join(HERE, 'capture.cjs'), specPath], {
