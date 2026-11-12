@@ -22,6 +22,7 @@ import { GuidePage } from './pages/GuidePage.tsx';
 import { HelpPage } from './pages/HelpPage.tsx';
 import { HomePage } from './pages/HomePage.tsx';
 import { SessionPage } from './pages/SessionPage.tsx';
+import { SessionSummaryPage } from './pages/SessionSummaryPage.tsx';
 import { SessionsPage } from './pages/SessionsPage.tsx';
 import { TrackPage } from './pages/TrackPage.tsx';
 import '../styles/analysis.css';
@@ -35,6 +36,7 @@ import '../styles/capture-page.css';
 import '../styles/config.css';
 import '../styles/coach.css';
 import '../styles/help.css';
+import '../styles/session-summary.css';
 
 interface NavItem {
   icon: IconName;
@@ -63,7 +65,7 @@ const LIVE: NavItem = {
 const MAIN_NAV: NavItem[] = [
   {
     icon: 'home',
-    names: ['home', 'sessions', 'session', 'track'],
+    names: ['home', 'sessions', 'session', 'summary', 'track'],
     href: routes.home(),
     get label() {
       return uiText('Início');
@@ -243,6 +245,8 @@ function page(route: Route): ReactNode {
       return <SessionsPage route={route} />;
     case 'session':
       return <SessionPage id={route.params.id!} />;
+    case 'summary':
+      return <SessionSummaryPage id={route.params.id!} />;
     case 'compare':
       return <ComparePage route={route} />;
     case 'track':

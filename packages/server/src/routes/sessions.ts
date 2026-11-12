@@ -10,6 +10,7 @@ import {
   type ReferenceMeta,
   type Session,
   type SessionDetail,
+  type SessionSummary,
 } from '@gt7/shared';
 import type { FastifyInstance } from 'fastify';
 import {
@@ -74,6 +75,13 @@ export function sessionRoutes(app: FastifyInstance, ctx: RouteContext): void {
     const id = idParam(req.params);
     const session = getSession(id);
     return { session, laps: store.listLaps(id), active: isActive(id) };
+  });
+
+  /** Summary of the session (spec 12): best lap, pace, consistency, comparisons, tips. */
+  app.get('/sessions/:id/summary', async (req): Promise<SessionSummary> => {
+    const id = idParam(req.params);
+    getSession(id);
+    return runtime.analysis.getSessionSummary(id);
   });
 
   app.get('/sessions/:id/laps', async (req) => {

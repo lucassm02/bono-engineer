@@ -15,6 +15,8 @@ import {
   lapSummaryRule,
   liftThrottleRule,
 } from './coaching.ts';
+import { drillRule } from './drill.ts';
+import { goalRule } from './goal.ts';
 import {
   cornerCuesRule,
   fuelRule,
@@ -45,6 +47,8 @@ export const RADIO_RULES: readonly AnyRadioRule[] = [
   learnReferenceRule,
   drivingEventRule,
   lapResultRule,
+  goalRule,
+  drillRule,
   lapSummaryRule,
   consistencyRule,
 ];

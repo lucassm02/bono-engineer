@@ -224,6 +224,9 @@ export function SessionPage({ id }: { id: string }) {
         }
         actions={
           <>
+            <a className="a-btn" href={routes.summary(session.id)}>
+              {uiText('Resumo da sessão')}
+            </a>
             <a className="a-btn" href={routes.coach({ session: session.id })}>
               <Icon name="coach" size={18} />
               {uiText('Debrief com IA')}

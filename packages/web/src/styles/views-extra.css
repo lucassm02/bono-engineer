@@ -680,9 +680,10 @@
 
 .treino {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr) auto auto;
   grid-template-areas:
     "next result"
+    "drill drill"
     "controls controls";
 }
 .treino-next {
@@ -875,6 +876,106 @@
   color: var(--text-2);
   margin-top: auto;
 }
+/* Treinar uma curva (spec 18) */
+.treino-drill {
+  grid-area: drill;
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  max-height: 42cqh;
+  overflow-y: auto;
+  min-width: 0;
+}
+.dr-head,
+.dr-last-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2) var(--sp-3);
+}
+.dr-corner {
+  display: block;
+  font-size: var(--fs-lg);
+}
+.dr-title {
+  margin: 0;
+  font-size: var(--fs-md);
+}
+.dr-time {
+  font-size: var(--fs-xl);
+  font-weight: 700;
+}
+.dr-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: var(--sp-2) var(--sp-4);
+  margin: 0;
+}
+.dr-stats dt {
+  color: var(--text-3);
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+  letter-spacing: var(--track-caps);
+}
+.dr-stats dd {
+  margin: 0;
+}
+.dr-stats small {
+  color: var(--text-2);
+}
+.dr-hist {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sp-1);
+  height: 56px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dr-hist li {
+  flex: 1;
+  max-width: 36px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 2px;
+}
+.dr-hist-bar {
+  display: block;
+  border-radius: 3px 3px 0 0;
+  background: var(--text-3);
+}
+.dr-hist li[data-best="1"] .dr-hist-bar {
+  background: var(--purple);
+}
+.dr-hist-n {
+  text-align: center;
+  color: var(--text-3);
+  font-size: var(--fs-2xs);
+}
+.dr-best {
+  margin: 0;
+}
+.dr-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--sp-3);
+}
+.dr-form .ui-field {
+  min-width: 140px;
+}
+.dr-summary {
+  display: grid;
+  gap: var(--sp-1);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--line);
+}
+.dr-summary p {
+  margin: 0;
+}
 .treino-controls {
   grid-area: controls;
   display: flex;
@@ -890,8 +991,8 @@
 @container (orientation: portrait) {
   .treino {
     grid-template-columns: 1fr;
-    grid-template-rows: auto minmax(0, 1fr) auto;
-    grid-template-areas: "next" "result" "controls";
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    grid-template-areas: "next" "result" "drill" "controls";
   }
   .treino-dist-value {
     font-size: min(18cqw, 9cqh);
@@ -1111,4 +1212,44 @@
 .gw-canvas .track-map {
   flex: 1;
   min-height: 0;
+}
+
+/* Planejador de parada e ritmo do pneu (spec 16) */
+.pit-plan {
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+}
+.pit-plan h3 {
+  margin: 0;
+}
+.pit-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+}
+.pit-field {
+  display: grid;
+  gap: 2px;
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+}
+.pit-field .ui-input {
+  width: 8em;
+  min-height: 44px;
+}
+.pit-result {
+  margin: 0;
+  font-size: var(--fs-sm);
+}
+.tyre-pace {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: var(--fs-sm);
+}
+.tyre-pace[data-state="dropping"] {
+  color: var(--warn);
 }

@@ -4124,5 +4124,314 @@
     "Puedes cambiarlo después en Configuración → Cuentas y datos."
   ],
   "simulação": ["simulation", "simulación"],
-  "personalizado": ["custom", "personalizado"]
+  "personalizado": ["custom", "personalizado"],
+  "Minha meta": ["My goal", "Mi meta"],
+  "Meta definida: {0}": ["Goal set: {0}", "Meta definida: {0}"],
+  "Digite o tempo no formato 1:45.000.": [
+    "Type the time as 1:45.000.",
+    "Escribe el tiempo como 1:45.000."
+  ],
+  "Não foi possível salvar a meta.": ["Could not save the goal.", "No se pudo guardar la meta."],
+  "Meta para": ["Goal for", "Meta para"],
+  "Qualquer carro": ["Any car", "Cualquier coche"],
+  "Meta": ["Goal", "Meta"],
+  "Falta": ["Left", "Falta"],
+  "Batida!": ["Reached!", "¡Lograda!"],
+  "Caminho percorrido até a meta": ["Progress towards the goal", "Camino recorrido hacia la meta"],
+  "Defina o tempo que você quer fazer nesta pista. O delta ao vivo, o engenheiro e o resumo passam a mostrar quanto falta.": [
+    "Set the time you want on this track. The live delta, the engineer and the summary will show how far you are.",
+    "Define el tiempo que quieres en esta pista. El delta en vivo, el ingeniero y el resumen mostrarán cuánto falta."
+  ],
+  "Mudar a meta": ["Change the goal", "Cambiar la meta"],
+  "Tempo da meta": ["Goal time", "Tiempo de la meta"],
+  "Sugestão: {0}, a sua volta ideal (soma dos melhores setores).": [
+    "Suggestion: {0}, your ideal lap (sum of the best sectors).",
+    "Sugerencia: {0}, tu vuelta ideal (suma de los mejores sectores)."
+  ],
+  "Sugestão: {0}, 0,5% abaixo da sua melhor volta.": [
+    "Suggestion: {0}, 0.5% under your best lap.",
+    "Sugerencia: {0}, 0,5 % por debajo de tu mejor vuelta."
+  ],
+  "Minutos, segundos e milésimos, como no jogo.": [
+    "Minutes, seconds and thousandths, like in the game.",
+    "Minutos, segundos y milésimas, como en el juego."
+  ],
+  "Atualizar meta": ["Update goal", "Actualizar meta"],
+  "Definir meta": ["Set goal", "Definir meta"],
+  "Sugerir": ["Suggest", "Sugerir"],
+  "Definir mesmo assim": ["Set it anyway", "Definir de todos modos"],
+  "Remover meta": ["Remove goal", "Quitar meta"],
+  "Remover a meta?": ["Remove the goal?", "¿Quitar la meta?"],
+  "Metas batidas": ["Goals reached", "Metas logradas"],
+  "batida em {0}": ["reached on {0}", "lograda el {0}"],
+  "A meta é mais lenta que a sua melhor volta. Confirme se é isso mesmo ou digite um tempo menor.": [
+    "The goal is slower than your best lap. Confirm it is intended or type a smaller time.",
+    "La meta es más lenta que tu mejor vuelta. Confirma que es intencional o escribe un tiempo menor."
+  ],
+  "Informe uma meta entre 10 s e 1 hora (ex.: 1:45.000).": [
+    "Enter a goal between 10 s and 1 hour (e.g. 1:45.000).",
+    "Indica una meta entre 10 s y 1 hora (p. ej., 1:45.000)."
+  ],
+  "Meta batida: {0}": ["Goal reached: {0}", "Meta lograda: {0}"],
+  "Meta {0}": ["Goal {0}", "Meta {0}"],
+  "Meta batida!": ["Goal reached!", "¡Meta lograda!"],
+  "Quer uma nova meta? Defina na página da pista, em Minha meta.": [
+    "Want a new goal? Set it on the track page, under My goal.",
+    "¿Quieres una nueva meta? Defínela en la página de la pista, en Mi meta."
+  ],
+  "Setores e volta ideal": ["Sectors and ideal lap", "Sectores y vuelta ideal"],
+  "Todos os carros": ["All cars", "Todos los coches"],
+  "Esta pista ainda não tem voltas válidas suas.": [
+    "This track has no valid laps of yours yet.",
+    "Esta pista aún no tiene vueltas válidas tuyas."
+  ],
+  "Setor": ["Sector", "Sector"],
+  "Melhor tempo": ["Best time", "Mejor tiempo"],
+  "Média das 5 melhores": ["Average of the best 5", "Media de las 5 mejores"],
+  "Sua melhor volta perde": ["Your best lap loses", "Tu mejor vuelta pierde"],
+  "A volta ideal é um teto teórico, calculado com {0} volta(s) válida(s): juntar os melhores setores nem sempre é possível, porque a saída de um setor depende de como você entrou nele.": [
+    "The ideal lap is a theoretical ceiling, built from {0} valid lap(s): putting the best sectors together is not always possible, because the exit of a sector depends on how you entered it.",
+    "La vuelta ideal es un techo teórico, calculado con {0} vuelta(s) válida(s): juntar los mejores sectores no siempre es posible, porque la salida de un sector depende de cómo entraste."
+  ],
+  "Usar a volta ideal como meta": [
+    "Use the ideal lap as my goal",
+    "Usar la vuelta ideal como meta"
+  ],
+  "Melhorando ao longo da sessão": ["Improving through the session", "Mejorando durante la sesión"],
+  "Piorando ao longo da sessão": [
+    "Getting worse through the session",
+    "Empeorando durante la sesión"
+  ],
+  "Última sessão": ["Last session", "Última sesión"],
+  "Melhor sessão": ["Best session", "Mejor sesión"],
+  "Sua melhor volta contra a meta ({0}):": [
+    "Your best lap against the goal ({0}):",
+    "Tu mejor vuelta frente a la meta ({0}):"
+  ],
+  "Sua melhor volta contra a {0} ({1}):": [
+    "Your best lap against the {0} ({1}):",
+    "Tu mejor vuelta frente a la {0} ({1}):"
+  ],
+  "Média das 5 melhores contra essa sessão:": [
+    "Average of the best 5 against the same session:",
+    "Media de las 5 mejores frente a la misma sesión:"
+  ],
+  "Distribuição dos tempos de volta": [
+    "Lap time distribution",
+    "Distribución de los tiempos de vuelta"
+  ],
+  "Resumo da sessão": ["Session summary", "Resumen de la sesión"],
+  "Copiar resumo": ["Copy summary", "Copiar resumen"],
+  "Esta sessão não tem voltas válidas para resumir.": [
+    "This session has no valid laps to summarise.",
+    "Esta sesión no tiene vueltas válidas para resumir."
+  ],
+  "Sessão curta (menos de 3 voltas limpas): o resumo mostra só o essencial, sem tendência.": [
+    "Short session (fewer than 3 clean laps): the summary shows only the essentials, without a trend.",
+    "Sesión corta (menos de 3 vueltas limpias): el resumen muestra solo lo esencial, sin tendencia."
+  ],
+  "Primeira vez nesta pista": ["First time on this track", "Primera vez en esta pista"],
+  "contra o recorde anterior": ["against your previous record", "frente a tu récord anterior"],
+  "{0} válidas · {1} inválidas": ["{0} valid · {1} invalid", "{0} válidas · {1} no válidas"],
+  "Tempo de pista": ["Time on track", "Tiempo en pista"],
+  "Ritmo": ["Pace", "Ritmo"],
+  "Mediana": ["Median", "Mediana"],
+  "Faixa de tempos": ["Time range", "Rango de tiempos"],
+  "Regularidade": ["Consistency", "Regularidad"],
+  "Desvio das voltas limpas:": ["Spread of the clean laps:", "Desviación de las vueltas limpias:"],
+  "Comparar contra": ["Compare against", "Comparar con"],
+  "Primeira vez nesta pista: ainda não há com o que comparar.": [
+    "First time on this track: nothing to compare with yet.",
+    "Primera vez en esta pista: aún no hay con qué comparar."
+  ],
+  "Sem uma sessão anterior com este carro nesta pista para comparar.": [
+    "No earlier session with this car on this track to compare with.",
+    "No hay una sesión anterior con este coche en esta pista para comparar."
+  ],
+  "Onde você ganhou e onde perdeu": [
+    "Where you gained and where you lost",
+    "Dónde ganaste y dónde perdiste"
+  ],
+  "Sua melhor volta desta sessão contra a melhor volta anterior, curva a curva.": [
+    "Your best lap of this session against the previous best lap, corner by corner.",
+    "Tu mejor vuelta de esta sesión frente a la mejor anterior, curva a curva."
+  ],
+  "Ganhou": ["Gained", "Ganaste"],
+  "Perdeu": ["Lost", "Perdiste"],
+  "Para a próxima": ["For next time", "Para la próxima"],
+  "Nada se destaca acima do ruído normal das voltas. Siga o plano.": [
+    "Nothing stands out above the normal lap-to-lap noise. Stick to the plan.",
+    "Nada destaca por encima del ruido normal de las vueltas. Sigue el plan."
+  ],
+  "Ver as voltas": ["See the laps", "Ver las vueltas"],
+  "Abrir a pista": ["Open the track", "Abrir la pista"],
+  "A sessão em {0} terminou": ["The session at {0} has ended", "La sesión en {0} terminó"],
+  "{0} voltas · melhor {1}": ["{0} laps · best {1}", "{0} vueltas · mejor {1}"],
+  "Ver resumo": ["See summary", "Ver resumen"],
+  "Dispensar": ["Dismiss", "Descartar"],
+  "Melhor volta, ritmo, regularidade e o que fazer na próxima, numa tela só.": [
+    "Best lap, pace, consistency and what to do next, on one screen.",
+    "Mejor vuelta, ritmo, regularidad y qué hacer la próxima vez, en una sola pantalla."
+  ],
+  "uma pista": ["a track", "una pista"],
+  "Voltas: {0} ({1} válidas, {2} inválidas)": [
+    "Laps: {0} ({1} valid, {2} invalid)",
+    "Vueltas: {0} ({1} válidas, {2} no válidas)"
+  ],
+  "Melhor volta: {0} (primeira vez nesta pista)": [
+    "Best lap: {0} (first time on this track)",
+    "Mejor vuelta: {0} (primera vez en esta pista)"
+  ],
+  "Melhor volta: {0} ({1} vs. recorde anterior)": [
+    "Best lap: {0} ({1} vs. previous record)",
+    "Mejor vuelta: {0} ({1} vs. récord anterior)"
+  ],
+  "Ritmo: média das 5 melhores {0}, mediana {1}": [
+    "Pace: average of the best 5 {0}, median {1}",
+    "Ritmo: media de las 5 mejores {0}, mediana {1}"
+  ],
+  "Regularidade: desvio de {0} s": [
+    "Consistency: spread of {0} s",
+    "Regularidad: desviación de {0} s"
+  ],
+  "{0} de {1} voltas foram inválidas. Priorize voltas limpas antes de buscar tempo.": [
+    "{0} of {1} laps were invalid. Put clean laps first, then chase time.",
+    "{0} de {1} vueltas fueron no válidas. Prioriza vueltas limpias antes de buscar tiempo."
+  ],
+  "A {0} perdeu {1} s contra a sua melhor volta anterior: comece por ela.": [
+    "{0} lost {1} s against your previous best lap: start there.",
+    "La {0} perdió {1} s frente a tu mejor vuelta anterior: empieza por ahí."
+  ],
+  "A média das suas 5 melhores voltas está {0} s acima da melhor: o ritmo da melhor volta ainda não se repete.": [
+    "The average of your best 5 laps is {0} s above your best: the pace of the best lap does not repeat yet.",
+    "La media de tus 5 mejores vueltas está {0} s por encima de la mejor: el ritmo de la mejor vuelta aún no se repite."
+  ],
+  "O ritmo piorou ao longo da sessão (cerca de {0} s por volta). Uma pausa curta pode ajudar.": [
+    "The pace got worse through the session (about {0} s per lap). A short break may help.",
+    "El ritmo empeoró durante la sesión (unos {0} s por vuelta). Un descanso corto puede ayudar."
+  ],
+  "Nenhuma curva perdeu mais de {0} ms contra a referência. A diferença está no conjunto da volta.": [
+    "No corner lost more than {0} ms against the reference. The difference is spread over the lap.",
+    "Ninguna curva perdió más de {0} ms frente a la referencia. La diferencia está repartida en la vuelta."
+  ],
+  "Provável:": ["Likely:", "Probable:"],
+  "Sem causa clara. Freada {0} m · {1} m na referência; V-mín {2} km/h · {3} km/h.": [
+    "No clear cause. Braking {0} m · {1} m on the reference; min speed {2} km/h · {3} km/h.",
+    "Sin causa clara. Frenada {0} m · {1} m en la referencia; V-mín {2} km/h · {3} km/h."
+  ],
+  "Ver nos gráficos": ["Show on the charts", "Ver en los gráficos"],
+  "Treinar esta curva": ["Drill this corner", "Entrenar esta curva"],
+  "Perdas listadas": ["Listed losses", "Pérdidas listadas"],
+  "outras curvas": ["other corners", "otras curvas"],
+  "Onde você perde tempo": ["Where you lose time", "Dónde pierdes tiempo"],
+  "As curvas que mais custam tempo contra a referência, com a causa provável.": [
+    "The corners that cost the most time against the reference, with the likely cause.",
+    "Las curvas que más tiempo cuestan frente a la referencia, con la causa probable."
+  ],
+  "Treino de {0} iniciado. Volte à tela ao vivo e passe pela curva.": [
+    "{0} drill started. Go back to the live screen and drive through the corner.",
+    "Entrenamiento de {0} iniciado. Vuelve a la pantalla en vivo y pasa por la curva."
+  ],
+  "Não foi possível iniciar o treino.": [
+    "Could not start the drill.",
+    "No se pudo iniciar el entrenamiento."
+  ],
+  "Não foi possível parar o treino.": [
+    "Could not stop the drill.",
+    "No se pudo detener el entrenamiento."
+  ],
+  "Para treinar uma curva, dirija na pista: ela precisa estar identificada e ter curvas detectadas.": [
+    "To drill a corner, drive on the track: it must be identified and have detected corners.",
+    "Para entrenar una curva, conduce en la pista: debe estar identificada y tener curvas detectadas."
+  ],
+  "Na curva": ["In the corner", "En la curva"],
+  "Entrada em {0} m": ["Entry in {0} m", "Entrada en {0} m"],
+  "Chegando à curva": ["Approaching the corner", "Llegando a la curva"],
+  "Dê a volta e volte à curva": [
+    "Drive around to the corner again",
+    "Da la vuelta y vuelve a la curva"
+  ],
+  "Últimas passagens": ["Latest passes", "Últimos pasos"],
+  "Passagem {0}": ["Pass {0}", "Paso {0}"],
+  "vs a melhor": ["vs the best", "vs el mejor"],
+  "Entrada": ["Entry", "Entrada"],
+  "sem freio": ["no braking", "sin frenar"],
+  "(ref. {0} m)": ["(ref. {0} m)", "(ref. {0} m)"],
+  "Treinando": ["Drilling", "Entrenando"],
+  "Passe pela curva. O engenheiro avalia cada passagem e fala só dela.": [
+    "Drive through the corner. The engineer rates each pass and talks only about it.",
+    "Pasa por la curva. El ingeniero evalúa cada paso y habla solo de él."
+  ],
+  "Melhor: {0} s (passagem {1})": ["Best: {0} s (pass {1})", "Mejor: {0} s (paso {1})"],
+  "meta {0} s": ["goal {0} s", "meta {0} s"],
+  "Parar treino": ["Stop drill", "Detener entrenamiento"],
+  "Treino de {0} encerrado": ["{0} drill finished", "Entrenamiento de {0} terminado"],
+  "{0} passagens; melhor trecho {1} s": [
+    "{0} passes; best stretch {1} s",
+    "{0} pasos; mejor tramo {1} s"
+  ],
+  "melhora de {0} s desde a primeira": [
+    "{0} s better than the first",
+    "mejora de {0} s desde el primero"
+  ],
+  "Treinar uma curva": ["Drill a corner", "Entrenar una curva"],
+  "Para treinar uma curva, dirija numa pista identificada com curvas detectadas. O engenheiro passa a falar só da curva escolhida.": [
+    "To drill a corner, drive on an identified track with detected corners. The engineer then talks only about the chosen corner.",
+    "Para entrenar una curva, conduce en una pista identificada con curvas detectadas. El ingeniero pasa a hablar solo de la curva elegida."
+  ],
+  "Escolha…": ["Choose…", "Elige…"],
+  "Meta do trecho (opcional)": ["Stretch goal (optional)", "Meta del tramo (opcional)"],
+  "Começar": ["Start", "Empezar"],
+  "Ganho e perda": ["Gain and loss", "Ganancia y pérdida"],
+  "Linhas": ["Lines", "Líneas"],
+  "Diferença de linha": ["Line difference", "Diferencia de línea"],
+  "O que a cor da sua volta mostra": [
+    "What the colour of your lap shows",
+    "Qué muestra el color de tu vuelta"
+  ],
+  "{0} m à esquerda": ["{0} m to the left", "{0} m a la izquierda"],
+  "{0} m à direita": ["{0} m to the right", "{0} m a la derecha"],
+  "Você passa {0} m à esquerda da referência": [
+    "You run {0} m to the left of the reference",
+    "Pasas {0} m a la izquierda de la referencia"
+  ],
+  "Você passa {0} m à direita da referência": [
+    "You run {0} m to the right of the reference",
+    "Pasas {0} m a la derecha de la referencia"
+  ],
+  "Planejador de parada": ["Pit planner", "Planificador de parada"],
+  "Planejador de parada (estimativa)": [
+    "Pit planner (estimate)",
+    "Planificador de parada (estimación)"
+  ],
+  "Voltas da corrida": ["Race laps", "Vueltas de la carrera"],
+  "Reabastecer até (L)": ["Refuel up to (L)", "Repostar hasta (L)"],
+  "Informe as voltas da corrida para ver quando parar.": [
+    "Enter the race laps to see when to stop.",
+    "Indica las vueltas de la carrera para ver cuándo parar."
+  ],
+  "Não precisa parar: o combustível chega ao fim e sobram ~{0} L.": [
+    "No stop needed: the fuel reaches the end with ~{0} L to spare.",
+    "No hace falta parar: el combustible llega al final y sobran ~{0} L."
+  ],
+  "Entre no box até a volta {0}. Faltam {1} L para terminar: {2} parada(s), reabasteça ~{3} L.": [
+    "Pit by lap {0}. You are {1} L short of finishing: {2} stop(s), refuel ~{3} L.",
+    "Entra a boxes antes de la vuelta {0}. Faltan {1} L para terminar: {2} parada(s), reposta ~{3} L."
+  ],
+  "Com esse limite de reabastecimento não dá para terminar a corrida.": [
+    "With this refuel limit the race cannot be finished.",
+    "Con este límite de repostaje no se puede terminar la carrera."
+  ],
+  "Ritmo do pneu (estimativa): precisa de 4 voltas limpas.": [
+    "Tyre pace (estimate): needs 4 clean laps.",
+    "Ritmo del neumático (estimación): necesita 4 vueltas limpias."
+  ],
+  "Ritmo caindo (~{0} s por volta): o pneu provavelmente está no fim. É uma estimativa pelos tempos de volta.": [
+    "Pace dropping (~{0} s per lap): the tyres are probably done. This is an estimate from the lap times.",
+    "Ritmo cayendo (~{0} s por vuelta): el neumático probablemente está al final. Es una estimación por los tiempos de vuelta."
+  ],
+  "Ritmo estável nas últimas {0} voltas limpas (estimativa).": [
+    "Steady pace over the last {0} clean laps (estimate).",
+    "Ritmo estable en las últimas {0} vueltas limpias (estimación)."
+  ]
 }

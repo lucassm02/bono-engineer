@@ -34,8 +34,11 @@ import {
   type ApiRedetectCornersResult,
   type ApiTraces,
   type ApiTrackAnalysis,
+  type ApiTrackSectors,
   COMPARISON_REFERENCE_KINDS,
   type ComparisonReferenceKind,
+  type CornerLossReport,
+  cornerLossRanking,
   type Id,
   type LapSampleChannel,
   type LapTrace,
@@ -257,6 +260,12 @@ export function analysisRoutes(app: FastifyInstance, ctx: RouteContext): void {
     };
   });
 
+  app.get('/analysis/tracks/:trackId/sectors', async (req): Promise<ApiTrackSectors> => {
+    const trackId = idParam(req.params, 'trackId');
+    const carCode = queryInt(req.query as Obj, 'carCode', 'carCode', { min: 1 });
+    return analysis.getTrackSectors(trackId, carCode !== undefined ? { carCode } : {});
+  });
+
   app.post('/tracks/:id/redetect-corners', async (req): Promise<ApiRedetectCornersResult> => {
     const id = idParam(req.params, 'id');
     if (!store.getTrack(id)) throw notFound('Pista não encontrada.');
@@ -284,6 +293,14 @@ export function analysisRoutes(app: FastifyInstance, ctx: RouteContext): void {
     return analysis.compareLaps(reqId(q, 'lap', 'lap'), refParam(q), {
       topN: queryInt(q, 'topN', 'topN', { min: 1, max: 20 }) ?? 3,
     });
+  });
+
+  /** The corners that lose the most time, with the probable cause of each (spec 15). */
+  app.get('/analysis/compare/corner-loss', async (req): Promise<CornerLossReport> => {
+    const q = req.query as Obj;
+    const topN = queryInt(q, 'topN', 'topN', { min: 1, max: 20 }) ?? 3;
+    const res = await analysis.compareLaps(reqId(q, 'lap', 'lap'), refParam(q), { topN: 20 });
+    return cornerLossRanking(res.comparison, { topN });
   });
 
   app.get('/analysis/delta', async (req): Promise<ApiDistanceDelta> => {

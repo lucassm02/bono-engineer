@@ -306,11 +306,12 @@ export const fuelRule: RadioRule<FuelState> = {
 
     // Race length unknown: autonomy only.
     if (p.lapsOfFuel === null) return [];
-    const band = Math.max(0, Math.min(3, Math.floor(p.lapsOfFuel)));
+    // Whole laps left; anything above 5 is "plenty" (6). Calls at 5, 2, 1 and < 1 lap.
+    const band = Math.max(0, Math.min(6, Math.floor(p.lapsOfFuel)));
     if (s.band !== null && p.lapsOfFuel >= s.band + 1 + FUEL_REARM_LAPS) {
       s.band = null; // refuelled
     }
-    const announce = band <= 2 && (s.band === null || band < s.band);
+    const announce = band in FUEL_LAPS && (s.band === null || band < s.band);
     if (!announce) {
       s.pendingBand = null;
       s.bandSince = null;
@@ -527,6 +528,7 @@ export const cornerCuesRule: RadioRule<CornerCuesState> = {
   priority: 'instruction',
   modes: ['training'],
   profiles: ['learnTrack'],
+  drill: true,
   requires: ['cues', 'progress'],
   init: () => ({
     spoken: new Set<string>(),

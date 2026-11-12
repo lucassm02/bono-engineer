@@ -151,6 +151,7 @@ export const FUEL_LAPS = {
   0: 'Combustível para menos de uma volta.',
   1: 'Combustível para uma volta.',
   2: 'Combustível para duas voltas.',
+  5: 'Combustível para cinco voltas.',
 } as const;
 export type FuelLapsLeft = keyof typeof FUEL_LAPS;
 
@@ -162,6 +163,7 @@ export const ALERT_PHRASES: readonly string[] = [
   LIFT_THROTTLE,
   GOOD_LAP,
   SAME_TIME,
+  FUEL_LAPS[5],
   FUEL_LAPS[2],
   FUEL_LAPS[1],
   FUEL_LAPS[0],

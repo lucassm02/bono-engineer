@@ -12,6 +12,7 @@ import { THEME, withAlpha } from '../../lib/theme.ts';
 import { useCanvasSize } from '../../widgets/useCanvas.ts';
 import { colorAt, gridIndex, type Series, valueAt } from '../lib/chartData.ts';
 import type { CursorBus } from '../lib/cursorBus.ts';
+import { type MapRamp, rampColor } from '../lib/mapRamp.ts';
 
 export interface MapLine {
   id: string;
@@ -20,8 +21,17 @@ export interface MapLine {
   z: Series;
   /** Microsector colours (your line only). */
   colors?: MicrosectorColor[] | null;
+  /** Per-sample values coloured with `ramp` (your line only), instead of the microsectors. */
+  values?: Series | null;
+  ramp?: MapRamp | null;
   width?: number;
   dash?: number[];
+}
+
+/** A text label on your line (spec 17: the larger lateral differences). */
+export interface OverlayMarker {
+  distanceM: number;
+  label: string;
 }
 
 export interface BrakeMarker {
@@ -39,6 +49,7 @@ interface Props {
   lines: MapLine[];
   corners: MapCorner[];
   brakeMarkers: BrakeMarker[];
+  overlayMarkers?: OverlayMarker[];
   range: [number, number] | null;
   focusCorner: string | null;
   bus: CursorBus | null;
@@ -54,6 +65,8 @@ const TONE: Record<MicrosectorColor['tone'], string> = {
   best: THEME.gain,
 };
 
+const NO_MARKERS: OverlayMarker[] = [];
+
 interface Hit {
   id: string;
   x: number;
@@ -68,6 +81,7 @@ export function CompareMap({
   lines,
   corners,
   brakeMarkers,
+  overlayMarkers = NO_MARKERS,
   range,
   focusCorner,
   bus,
@@ -78,8 +92,26 @@ export function CompareMap({
   const hitsRef = useRef<Hit[]>([]);
   const projRef = useRef<{ k: number; ox: number; oy: number } | null>(null);
   const frame = useRef(0);
-  const propsRef = useRef({ outline, distanceM, lines, corners, brakeMarkers, range, focusCorner });
-  propsRef.current = { outline, distanceM, lines, corners, brakeMarkers, range, focusCorner };
+  const propsRef = useRef({
+    outline,
+    distanceM,
+    lines,
+    corners,
+    brakeMarkers,
+    overlayMarkers,
+    range,
+    focusCorner,
+  });
+  propsRef.current = {
+    outline,
+    distanceM,
+    lines,
+    corners,
+    brakeMarkers,
+    overlayMarkers,
+    range,
+    focusCorner,
+  };
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: reads refs only (size, props)
   const draw = useCallback(() => {
@@ -162,7 +194,30 @@ export function CompareMap({
       const w = ln.width ?? (li === 0 ? 3.2 : 2);
       ctx.lineWidth = w;
       ctx.setLineDash(ln.dash ?? []);
-      if (ln.colors?.length) {
+      if (ln.ramp && ln.values) {
+        // Per-segment colour from the channel value at the end of the segment.
+        let prev: [number, number] | null = null;
+        for (let i = 0; i < p.distanceM.length; i++) {
+          const x = ln.x[i];
+          const z = ln.z[i];
+          if (x === null || x === undefined || z === null || z === undefined) {
+            prev = null;
+            continue;
+          }
+          const pt: [number, number] = [toX(x), toY(z)];
+          if (prev) {
+            const rc = rampColor(ln.ramp, ln.values[i]);
+            ctx.strokeStyle = rc ?? ln.color;
+            ctx.globalAlpha = rc ? 1 : 0.35;
+            ctx.beginPath();
+            ctx.moveTo(prev[0], prev[1]);
+            ctx.lineTo(pt[0], pt[1]);
+            ctx.stroke();
+          }
+          prev = pt;
+        }
+        ctx.globalAlpha = 1;
+      } else if (ln.colors?.length) {
         // Per-segment colour from the microsector the segment starts in.
         let prev: [number, number] | null = null;
         for (let i = 0; i < p.distanceM.length; i++) {
@@ -242,6 +297,27 @@ export function CompareMap({
       }
     }
 
+    // Text markers on your line (lateral difference), so the colour is not the only signal.
+    if (subject) {
+      for (const m of p.overlayMarkers) {
+        const x = valueAt(p.distanceM, subject.x, m.distanceM);
+        const z = valueAt(p.distanceM, subject.z, m.distanceM);
+        if (x === null || z === null) continue;
+        ctx.strokeStyle = THEME.warn;
+        ctx.fillStyle = THEME.surface0;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(toX(x), toY(z), 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = THEME.warn;
+        ctx.font = `600 11px ${THEME.font}`;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(m.label, toX(x) + 9, toY(z) - 9);
+      }
+    }
+
     // Corner labels.
     const hits: Hit[] = [];
     ctx.font = `600 12px ${THEME.font}`;
@@ -308,7 +384,7 @@ export function CompareMap({
   // biome-ignore lint/correctness/useExhaustiveDependencies: redraw when inputs change
   useEffect(() => {
     draw();
-  }, [outline, distanceM, lines, corners, brakeMarkers, range, focusCorner, draw]);
+  }, [outline, distanceM, lines, corners, brakeMarkers, overlayMarkers, range, focusCorner, draw]);
 
   useEffect(() => (bus ? bus.subscribe(() => schedule()) : undefined), [bus, schedule]);
   useEffect(

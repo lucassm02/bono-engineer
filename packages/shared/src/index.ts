@@ -11,6 +11,7 @@ export * from './api.ts';
 export * from './brand.ts';
 export * from './cars/index.ts';
 export * from './coach.ts';
+export * from './corner-loss.ts';
 export * from './daily-races.ts';
 export type {
   DesktopDataBridge,
@@ -34,7 +35,9 @@ export {
   type StoredDiscordConfig,
 } from './desktop-discord.ts';
 export * from './domain.ts';
+export * from './drill.ts';
 export * from './driver.ts';
+export * from './goals.ts';
 export {
   ALL_DIAGNOSTIC_CODES,
   type CarClassKnowledge,
@@ -62,8 +65,12 @@ export {
 } from './knowledge/index.ts';
 export * from './language.ts';
 export * from './live.ts';
+export * from './map-overlay.ts';
+export * from './pace-trend.ts';
+export * from './pit-plan.ts';
 export * from './radio/index.ts';
 export { localizedRadioUtterance } from './radio-translations.ts';
+export * from './summary-text.ts';
 export * from './telemetry.ts';
 export * from './track-context.ts';
 export * from './tracks/index.ts';

@@ -37,6 +37,19 @@ export function DeltaGrandeView() {
     );
     setText(e.lap, lapCounterText(f));
     setText(e.predicted, uiText('Prevista {0}', formatLapTime(f.lap.predictedLapMs)));
+    const goal = f.goal;
+    const reached = goal?.reachedLapMs != null;
+    const showGoal = goal !== undefined && (reached || goal.deltaMs !== null);
+    setAttr(e.goal, 'data-on', showGoal ? '1' : '0');
+    setAttr(e.goal, 'data-tone', reached ? 'gain' : deltaTone(goal?.deltaMs));
+    setText(
+      e.goal,
+      !goal || !showGoal
+        ? ''
+        : reached
+          ? uiText('Meta batida: {0}', formatLapTime(goal.reachedLapMs))
+          : uiText('Meta {0}', formatDelta(goal.deltaMs, 2)),
+    );
   });
 
   return (
@@ -51,6 +64,7 @@ export function DeltaGrandeView() {
       </div>
       <DeltaBar className="dg-bar" />
       <div className="dg-ref" ref={set('ref')} />
+      <div className="dg-goal num" ref={set('goal')} data-on="0" data-tone="neutral" />
     </div>
   );
 }

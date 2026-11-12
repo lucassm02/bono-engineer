@@ -449,11 +449,12 @@ function closeLaps(ctx: RadioRuleContext, book: LapBook): ClosedLap | null {
   };
 }
 
-/** Goal lap time: the Consistência target, else the reference lap. */
+/** Goal lap time: the Consistência target, else the track goal, else the reference lap. */
 function goalMs(ctx: RadioRuleContext): number | null {
   const engineer = ctx.frame.engineer;
   return (
     ctx.config.consistencyTargetMs ??
+    ctx.frame.goal?.targetMs ??
     ctx.frame.lap.referenceLapMs ??
     (engineer?.status === 'ready' ? engineer.referenceLapMs : null)
   );

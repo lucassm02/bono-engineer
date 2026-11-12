@@ -31,6 +31,7 @@ export const COMPARE_TRACE_CHANNELS = [
   'delta',
   'x',
   'z',
+  'offset',
 ] as const;
 
 export interface PanelDef {

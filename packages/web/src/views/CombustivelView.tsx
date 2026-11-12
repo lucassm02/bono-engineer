@@ -1,4 +1,5 @@
 import { useMemo, useRef } from 'react';
+import { PitPlanner } from '../components/PitPlanner.tsx';
 import { setAttr, setStyle, setText } from '../lib/dom.ts';
 import { clamp, formatFixed } from '../lib/format.ts';
 import { fuelPlan } from '../lib/fuel.ts';
@@ -172,6 +173,7 @@ export function CombustivelView() {
             <span className="num" ref={set('regen')} />
           </div>
         </div>
+        <PitPlanner />
         <FuelHistory />
       </div>
     </div>

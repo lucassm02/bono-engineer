@@ -13,9 +13,11 @@
 
 import {
   buildChartData,
+  buildSessionSummary,
   type Centerline,
   type ChartChannel,
   type ChartData,
+  CLEAN_LAP_RATIO,
   centerlineFromPolyline,
   checkLapValidity,
   compareLaps as compareLapsPure,
@@ -30,8 +32,10 @@ import {
   pointAtDistance,
   prepareLap,
   resampleLap,
+  sectorTableOf,
   summarizeComparisonForAI,
   summarizeLapForAI,
+  topAverage,
 } from '@gt7/analysis';
 import {
   COMPARISON_REFERENCE_KINDS,
@@ -51,6 +55,10 @@ import {
   type LapDrivingEvents,
   type MicrosectorAnalysis,
   type ResampledTrace,
+  type SectorTable,
+  type SessionSummary,
+  type SummaryBaseline,
+  type SummaryCornerChange,
   type TraceChannel,
   type Track,
   type TrackAnalysis,
@@ -771,6 +779,155 @@ export class AnalysisService {
       colors: report.laps
         .filter((l) => l.lapId !== refId)
         .map((l) => ({ lapId: l.lapId, colors: microsectorColors(report, l.lapId, refId) })),
+    };
+  }
+
+  /**
+   * Summary of a session (spec 12): best lap against the driver's record, pace, consistency,
+   * comparison with the last/best earlier session and the goal, where corners were gained or lost,
+   * and rule-made suggestions. Works for any stored session, open or closed; the corner and
+   * consistency parts are left out (not an error) when they cannot be computed.
+   */
+  async getSessionSummary(sessionId: Id): Promise<SessionSummary> {
+    const session = this.store.getSession(sessionId);
+    if (!session) throw new AnalysisError('notFound', `Sessão ${sessionId} não encontrada.`);
+    const own = (l: Lap) => !l.isReference && !l.flags.includes('replay');
+    const laps = this.store
+      .listLaps(sessionId)
+      .filter(own)
+      .sort((a, b) => a.startedAt - b.startedAt);
+    const summaryLaps = laps.map((l) => ({
+      id: l.id,
+      number: l.number,
+      timeMs: l.timeMs,
+      valid: l.valid,
+    }));
+
+    let previousBestMs: number | null = null;
+    let previousBestLap: Lap | null = null;
+    let lastSession: SummaryBaseline | null = null;
+    let bestSession: SummaryBaseline | null = null;
+    let goalMs: number | null = null;
+    if (session.trackId) {
+      const earlier = this.store
+        .listSessions({ trackId: session.trackId, carCode: session.carCode, limit: 60 })
+        .filter((s) => s.id !== sessionId && s.startedAt < session.startedAt && s.mode === 'live');
+      for (const s of earlier) {
+        const valid = this.store.listLaps(s.id).filter((l) => own(l) && l.valid);
+        if (valid.length === 0) continue;
+        const bestLap = valid.reduce((a, b) => (b.timeMs < a.timeMs ? b : a));
+        if (!previousBestLap || bestLap.timeMs < previousBestLap.timeMs) previousBestLap = bestLap;
+        const clean = valid.filter((l) => l.timeMs <= bestLap.timeMs * CLEAN_LAP_RATIO);
+        const base: SummaryBaseline = {
+          sessionId: s.id,
+          startedAt: s.startedAt,
+          bestLapMs: bestLap.timeMs,
+          top5AvgMs: topAverage(clean.map((l) => l.timeMs)),
+          lapCount: valid.length,
+        };
+        if (!lastSession || s.startedAt > lastSession.startedAt) lastSession = base;
+        if (!bestSession || base.bestLapMs < bestSession.bestLapMs) bestSession = base;
+      }
+      previousBestMs = previousBestLap?.timeMs ?? null;
+      const active = this.store.getActiveGoal(session.trackId, session.carCode);
+      const ids = new Set(laps.map((l) => l.id));
+      const reachedHere = this.store
+        .listGoalHistory(session.trackId)
+        .find((g) => g.achievedLapId !== null && ids.has(g.achievedLapId));
+      goalMs = (active ?? reachedHere)?.targetMs ?? null;
+    }
+
+    const validLaps = laps.filter((l) => l.valid);
+    const bestLap = validLaps.length
+      ? validLaps.reduce((a, b) => (b.timeMs < a.timeMs ? b : a))
+      : null;
+
+    let cornerChanges: SummaryCornerChange[] | null = null;
+    if (bestLap && previousBestLap) {
+      try {
+        const cmp = await this.compareLaps(bestLap.id, previousBestLap.id, { topN: 20 });
+        cornerChanges = cmp.comparison.rows.map((r) => ({
+          cornerId: r.corner.id,
+          name: r.corner.name ?? null,
+          deltaMs: Math.round(r.timeLostMs),
+        }));
+      } catch {
+        cornerChanges = null;
+      }
+    }
+
+    let consistencyHighlights: string[] = [];
+    if (validLaps.length >= 3 && session.trackId) {
+      try {
+        const report = await this.getConsistency({ sessionId });
+        consistencyHighlights = report.highlights
+          .map((h) => h.message)
+          .filter((m): m is string => typeof m === 'string' && m.length > 0);
+      } catch {
+        consistencyHighlights = [];
+      }
+    }
+
+    return buildSessionSummary({
+      session: {
+        id: session.id,
+        trackId: session.trackId,
+        carCode: session.carCode,
+        startedAt: session.startedAt,
+        endedAt: session.endedAt,
+        trackTimeMs: session.trackTimeMs ?? null,
+      },
+      laps: summaryLaps,
+      previousBestMs,
+      lastSession,
+      bestSession,
+      goalMs,
+      cornerChanges,
+      consistencyHighlights,
+    });
+  }
+
+  /**
+   * Sector table of a track (spec 14): best time per sector, the lap that made it and the ideal
+   * lap, over the fastest valid own laps (replays and references left out), optionally of one car.
+   */
+  async getTrackSectors(
+    trackId: Id,
+    opts: { carCode?: number; maxLaps?: number } = {},
+  ): Promise<{
+    trackId: Id;
+    carCode: number | null;
+    table: SectorTable;
+    laps: { lapId: Id; number: number; startedAt: number; timeMs: number }[];
+  }> {
+    const track = this.getTrackOrThrow(trackId);
+    const laps = this.store
+      .listLapsForTrack(trackId, {
+        ...(opts.carCode !== undefined ? { carCode: opts.carCode } : {}),
+        validOnly: true,
+        includeReferences: false,
+        limit: (opts.maxLaps ?? 30) * 2,
+      })
+      .filter(isPersonalLap)
+      .slice(0, opts.maxLaps ?? 30);
+    if (laps.length === 0) {
+      throw new AnalysisError('invalidArgument', 'Esta pista ainda não tem voltas válidas suas.');
+    }
+    const prepared = await Promise.all(laps.map((l) => this.preparedLap(l)));
+    const L = Math.min(...prepared.map((p) => p.lengthM));
+    const table = sectorTableOf(
+      computeMicrosectors(prepared, { sectorStartsM: sectorStarts(track, L) }),
+    );
+    return {
+      trackId,
+      carCode: opts.carCode ?? null,
+      table,
+      laps: laps.map((l) => ({
+        lapId: l.id,
+        number: l.number,
+        startedAt: l.startedAt,
+        timeMs: l.timeMs,
+      })),
     };
   }
 

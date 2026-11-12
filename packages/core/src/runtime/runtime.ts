@@ -32,11 +32,13 @@ import {
   type ApiSessionCurrent,
   type ConsoleConnection,
   type ConsoleIpSource,
+  type CornerDrill,
   type DeltaReferenceKind,
   decodeFlags,
   type Id,
   isPacketFormat,
   type LapCompletedEvent,
+  type LiveDrill,
   type LiveFrame,
   type NoticeMessage,
   type PacketFormat,
@@ -755,6 +757,30 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
   /** Re-reads the active track after edits (rename, corners, sector gates). */
   refreshTrack(): void {
     this.engine.refreshTrack();
+  }
+
+  /** The goal of a track was set, changed or removed: the live frames read it again. */
+  refreshGoal(): void {
+    this.engine.refreshGoal();
+  }
+
+  /** The corner drill in progress (spec 18), null when none. */
+  get drill(): LiveDrill | null {
+    return this.engine.drill;
+  }
+
+  /** Starts drilling a corner of the current track. Null: no track yet or no such corner. */
+  startCornerDrill(cornerId: string, opts: { targetMs?: number | null } = {}): LiveDrill | null {
+    const d = this.engine.startCornerDrill(cornerId, opts);
+    if (d) this.#emitStatus();
+    return d;
+  }
+
+  /** Stops the drill; the passes are stored with the session. */
+  stopCornerDrill(): CornerDrill | null {
+    const d = this.engine.stopCornerDrill();
+    this.#emitStatus();
+    return d;
   }
 
   // ---------------------------------------------------------------------------------------------

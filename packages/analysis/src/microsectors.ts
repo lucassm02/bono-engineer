@@ -8,6 +8,8 @@ import {
   type Id,
   type MicrosectorColor,
   type MicrosectorReport,
+  type SectorTable,
+  type SectorTableRow,
 } from '@gt7/shared';
 import { equalSectors } from './compare.ts';
 import { type PreparedLap, timeAtDistance } from './prepare.ts';
@@ -87,6 +89,50 @@ export function computeMicrosectors(
     bestLapMs: Math.round(bestLap.lapTimeMs),
     theoreticalBestMs: Math.round(sum(bm.ms)),
     theoreticalBestSectorsMs: Math.round(sum(bs.ms)),
+  };
+}
+
+const SECTOR_AVG_LAPS = 5;
+
+/**
+ * The sector table of a set of laps (spec 14): per sector the best time, the lap that made it, the
+ * average of the best five and what the best lap leaves on the table; plus the ideal lap. The laps
+ * must already be the valid ones (the table does no filtering).
+ */
+export function sectorTable(laps: readonly PreparedLap[], opts: { sectorStartsM?: number[] } = {}) {
+  const report = computeMicrosectors(laps, {
+    ...(opts.sectorStartsM ? { sectorStartsM: opts.sectorStartsM } : {}),
+  });
+  return sectorTableOf(report);
+}
+
+/** {@link sectorTable} over an existing microsector report. */
+export function sectorTableOf(report: MicrosectorReport): SectorTable {
+  const best = report.laps.find((l) => l.lapId === report.bestLapId)!;
+  const rows: SectorTableRow[] = report.sectorStartsM.map((fromM, i) => {
+    const times = report.laps.map((l) => l.sectorMs[i]!).sort((a, b) => a - b);
+    const top = times.slice(0, SECTOR_AVG_LAPS);
+    const bestMs = report.bestSectorMs[i]!;
+    return {
+      index: i,
+      fromM,
+      toM: report.sectorStartsM[i + 1] ?? report.lengthM,
+      bestMs,
+      bestLapId: report.bestSectorLapIds[i]!,
+      avgTopMs: Math.round(top.reduce((a, b) => a + b, 0) / top.length),
+      bestLapLossMs: Math.max(0, best.sectorMs[i]! - bestMs),
+    };
+  });
+  const idealLapMs = rows.reduce((a, r) => a + r.bestMs, 0);
+  return {
+    lengthM: report.lengthM,
+    sectorStartsM: report.sectorStartsM,
+    rows,
+    lapCount: report.laps.length,
+    bestLapId: report.bestLapId,
+    bestLapMs: report.bestLapMs,
+    idealLapMs,
+    gainMs: Math.max(0, report.bestLapMs - idealLapMs),
   };
 }
 

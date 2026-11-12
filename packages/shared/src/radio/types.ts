@@ -134,6 +134,8 @@ export interface RadioRule<S = unknown> {
   profiles?: readonly TrainingProfile[];
   /** Car alert: allowed by Livre and by Corrida. */
   carAlert?: boolean;
+  /** Runs during a corner drill (env.drill): the drill rules and the corner calls. */
+  drill?: boolean;
   /** Lowest speech level that lets the rule speak ('detailed' = Detalhado only). */
   level?: 'essential' | 'detailed';
   requires?: readonly RadioChannel[];
@@ -223,6 +225,8 @@ export interface RadioStepEnv {
   outputLatencyMs?: number;
   /** Corner training: only these corners get corner calls. */
   focusCornerIds?: readonly string[] | null;
+  /** A corner drill is running (frame.drill): the engineer speaks only about that corner. */
+  drill?: boolean;
   /** Aprender pista: corners where the help is always on (not reduced after repeated success). */
   assistCornerIds?: readonly string[] | null;
   /** Training block started by the driver; a change ends the previous block. null = automatic. */

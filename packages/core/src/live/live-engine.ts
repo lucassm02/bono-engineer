@@ -34,11 +34,15 @@
 import { EventEmitter } from 'node:events';
 import {
   type ConnectionState,
+  type CornerDrill,
   type DeltaReferenceKind,
+  DRILL_APPROACH_M,
   type DrivingEventModel,
   decodeFlags,
   EMPTY_TRACK_CONTEXT,
   type EngineerCue,
+  GOAL_CELEBRATION_MS,
+  type Goal,
   type Id,
   type IngestorState,
   type IngestorStats,
@@ -48,9 +52,11 @@ import {
   type LapTrace,
   type LearningInvalidReason,
   type LiveCornerPass,
+  type LiveDrill,
   type LiveEngineerFrame,
   type LiveFrame,
   type LiveGForce,
+  type LiveGoal,
   type LiveLearning,
   type LiveTrackContext,
   type LiveTrackInfo,
@@ -80,6 +86,7 @@ import {
   MemoryEngineContext,
   type TrackRecords,
 } from './context.ts';
+import { CornerDrillTracker } from './corner-drill.ts';
 import {
   type CornerHintProvider,
   type CornerHintTargets,
@@ -246,6 +253,8 @@ export interface LiveEngineEvents {
   trackMismatch: [TrackMismatchInfo];
   /** The driver's track choice for today changed or expired. */
   hintChanged: [TrackHint | null];
+  /** A corner drill ended (stopped, or its session or track ended). */
+  drillEnded: [CornerDrill];
   stateChanged: [ConnectionState, ConnectionState];
   /** Every accepted packet (only built while someone listens). */
   packet: [EnginePacketInfo];
@@ -415,6 +424,23 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   #sessionBestSectors: (number | null)[] = [];
   #lastLapMs: number | null = null;
   #fuelHistory: number[] = [];
+  /** Corner drill in progress (spec 18). */
+  #drill: {
+    tracker: CornerDrillTracker;
+    id: Id;
+    trackId: Id;
+    sessionId: Id | null;
+  } | null = null;
+  /** Goal of the current track+car, read from the context (spec 13). */
+  #goalCache: { key: string; goal: Goal | null } | null = null;
+  /** The goal reached by the latest lap, kept for the celebration window. */
+  #goalReached: {
+    goalId: Id;
+    targetMs: number;
+    carCode: number | null;
+    lapMs: number;
+    at: number;
+  } | null = null;
 
   // track
   #track: Track | null = null;
@@ -794,6 +820,154 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     this.emit('trackChanged', this.trackInfo);
   }
 
+  /** Forgets the cached goal so the next frame reads it again (after the driver edits it). */
+  refreshGoal(): void {
+    this.#goalCache = null;
+  }
+
+  /** The corner drill in progress, as the frames carry it (spec 18). */
+  get drill(): LiveDrill | null {
+    return this.#drill?.tracker.frame() ?? null;
+  }
+
+  /**
+   * Starts drilling one corner of the current track: from now on every pass through it is
+   * measured, whatever the lap. Replaces a drill already running. Returns null when there is no
+   * track or the corner does not exist.
+   */
+  startCornerDrill(cornerId: string, opts: { targetMs?: number | null } = {}): LiveDrill | null {
+    const track = this.#track;
+    const corner = track?.corners.find((c) => c.id === cornerId);
+    if (!track || !corner) return null;
+    this.stopCornerDrill();
+    const ref = this.#deltaRef;
+    const targets = this.#cornerTargets(
+      track,
+      corner,
+      ref ? { lap: ref.lap, trace: ref.trace } : null,
+    );
+    const L = track.lengthM;
+    const refAt = targets?.referenceBrakePointM;
+    let referenceBrakeM: number | null = null;
+    if (refAt != null && Number.isFinite(refAt)) {
+      const back = (((corner.entryM - refAt) % L) + L) % L;
+      if (back > 0 && back <= DRILL_APPROACH_M) referenceBrakeM = Math.round(back);
+    }
+    const tracker = new CornerDrillTracker({
+      corner: {
+        id: corner.id,
+        name: corner.name ?? null,
+        entryM: corner.entryM,
+        exitM: corner.exitM,
+      },
+      lengthM: L,
+      startedAt: this.#lastReceivedAt ?? Date.now(),
+      targetMs: opts.targetMs ?? null,
+      referenceBrakeM,
+    });
+    this.#drill = {
+      tracker,
+      id: this.#newId(),
+      trackId: track.id,
+      sessionId: this.#session?.id ?? null,
+    };
+    return tracker.frame();
+  }
+
+  /** Stops the drill, stores it when it had passes and returns it (null without a drill). */
+  stopCornerDrill(): CornerDrill | null {
+    const d = this.#drill;
+    this.#drill = null;
+    if (!d) return null;
+    const drill: CornerDrill = {
+      id: d.id,
+      sessionId: d.sessionId,
+      trackId: d.trackId,
+      cornerId: d.tracker.corner.id,
+      passes: [...d.tracker.passes],
+      startedAt: d.tracker.startedAt,
+      endedAt: this.#lastReceivedAt ?? Date.now(),
+      targetMs: d.tracker.targetMs,
+    };
+    if (drill.passes.length > 0) this.#ctx.saveDrill?.(drill);
+    this.emit('drillEnded', drill);
+    return drill;
+  }
+
+  /** The goal being chased on the current track and car (cached per track+car). */
+  #activeGoal(): Goal | null {
+    const track = this.#track;
+    if (!track) return null;
+    const car = this.#carCode();
+    const key = `${track.id}|${car}`;
+    if (this.#goalCache?.key !== key) {
+      this.#goalCache = { key, goal: this.#ctx.getActiveGoal?.(track.id, car) ?? null };
+    }
+    return this.#goalCache.goal;
+  }
+
+  /** The goal block of a frame: the active goal, or the one just reached while it is celebrated. */
+  #goalFrame(now: number): LiveGoal | undefined {
+    const reached = this.#goalReached;
+    if (reached && now - reached.at < GOAL_CELEBRATION_MS) {
+      return {
+        id: reached.goalId,
+        targetMs: reached.targetMs,
+        carCode: reached.carCode,
+        deltaMs: null,
+        reachedLapMs: reached.lapMs,
+        reachedAt: reached.at,
+      };
+    }
+    const goal = this.#activeGoal();
+    if (!goal) return undefined;
+    return {
+      id: goal.id,
+      targetMs: goal.targetMs,
+      carCode: goal.carCode,
+      deltaMs: this.#goalDeltaMs(goal.targetMs),
+      reachedLapMs: null,
+      reachedAt: null,
+    };
+  }
+
+  /**
+   * Elapsed time minus the time a lap at the goal pace would have here: the delta reference is
+   * stretched so that its total equals the target (without a reference the pace is uniform).
+   */
+  #goalDeltaMs(targetMs: number): number | null {
+    const lap = this.#lap;
+    if (!lap?.timed) return null;
+    const ref = this.#deltaRef;
+    let expected: number;
+    if (ref && ref.timeMs > 0) {
+      expected = (ref.timeAt(lap.dist) * targetMs) / ref.timeMs;
+    } else {
+      const length = this.#track?.lengthM ?? 0;
+      if (!(length > 0)) return null;
+      expected = targetMs * clamp(lap.dist / length, 0, 1);
+    }
+    return Number.isFinite(expected) ? Math.round(lap.elapsedMs - expected) : null;
+  }
+
+  /** Marks the goal as reached when this valid own lap is at or under the target (once). */
+  #checkGoal(lapRow: Lap, personal: boolean): boolean {
+    if (!personal || !lapRow.trackId) return false;
+    const goal = this.#activeGoal();
+    if (!goal || lapRow.timeMs > goal.targetMs) return false;
+    const at = this.#lastReceivedAt ?? Date.now();
+    this.#ctx.markGoalAchieved?.(goal.id, lapRow.id, at);
+    this.#goalReached = {
+      goalId: goal.id,
+      targetMs: goal.targetMs,
+      carCode: goal.carCode,
+      lapMs: lapRow.timeMs,
+      at,
+    };
+    this.#goalCache = null;
+    return true;
+  }
+
   /**
    * Ends the active session (discarding an unfinished lap). `endedAt` defaults to the last
    * packet time.
@@ -819,6 +993,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   #finishSession(reason: SessionEndReason, endedAt?: number): void {
     const s = this.#session;
     if (!s) return;
+    this.stopCornerDrill();
     s.endedAt = Math.max(s.startedAt, endedAt ?? this.#lastReceivedAt ?? Date.now());
     s.trackTimeMs = Math.round(this.#trackTimeMs);
     const persisted = !this.#ephemeral;
@@ -1382,6 +1557,18 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     }
     lap.dist = dist;
 
+    // ---- corner drill (spec 18): measured by position, whatever the lap ----
+    if (this.#drill) {
+      if (lap.reacquire && lap.flags.has('discontinuity')) this.#drill.tracker.reset();
+      this.#drill.tracker.step({
+        distanceM: dist,
+        dtMs: dPk * this.#msPerPacket,
+        speedKmh: p.speedMps * 3.6,
+        brake: pedalToUnit(p.brake),
+        at: this.#lastReceivedAt ?? Date.now(),
+      });
+    }
+
     // ---- off track (C format surfaces) ----
     if (p.surfaceTypes) {
       const off = p.surfaceTypes.every((c) => c !== 'T' && c !== 'C');
@@ -1769,6 +1956,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     }
 
     this.#ctx.saveLap(lapRow, trace);
+    const goalReached = this.#checkGoal(lapRow, personal);
 
     // ---- session bookkeeping ----
     session.lapCount++;
@@ -1828,6 +2016,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       fuelUsedL,
       completedAt: this.#lastReceivedAt ?? Date.now(),
       trackId: track?.id ?? null,
+      ...(goalReached ? { goalReached: true } : {}),
     };
     this.emit('sessionUpdated', { ...session });
     this.emit('lapCompleted', {
@@ -1868,6 +2057,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       this.emit('trackChanged', this.trackInfo);
       return;
     }
+    this.stopCornerDrill(); // the corner belongs to the previous track
     this.#track = track;
     const cl = this.#ctx.getCenterline(track.id);
     this.#line = cl && cl.x.length >= 2 ? centerlinePolyline(cl) : null;
@@ -2107,6 +2297,8 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     const flagsInvalid = lap ? INVALIDATING.some((f) => lap.flags.has(f)) : true;
     const state = this.#composeState();
     const slip = wheelSlipRatios(p);
+    const goal = this.#goalFrame(now);
+    const goalPart = goal ? { goal } : {};
     return {
       seq: ++this.#seq,
       sessionId: this.#session?.id ?? null,
@@ -2174,6 +2366,8 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       nextCorner: this.#nextCorner(dist),
       engineer: this.#engineerFrame(p, state),
       ...(this.#passes.length ? { cornerPasses: this.#passes } : {}),
+      ...goalPart,
+      ...(this.#drill ? { drill: this.#drill.tracker.frame() } : {}),
       link: this.#link ?? {
         rateHz: 0,
         lossPct: 0,

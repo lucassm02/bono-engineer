@@ -158,10 +158,10 @@ export function SessionSavedToast() {
         className="ui-btn"
         data-variant="secondary"
         data-size="sm"
-        href={routes.session(toast.sessionId)}
+        href={routes.summary(toast.sessionId)}
         onClick={dismissSessionSaved}
       >
-        {uiText('Ver')}
+        {uiText('Ver resumo')}
       </a>
       <button
         type="button"

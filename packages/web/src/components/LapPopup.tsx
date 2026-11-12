@@ -41,6 +41,11 @@ export function LapPopup() {
               {uiText('Melhor da sessão')}
             </span>
           )}
+          {ev.goalReached && (
+            <span className="ui-badge" data-tone="purple">
+              {uiText('Meta batida!')}
+            </span>
+          )}
           {!ev.valid && (
             <span className="ui-badge" data-tone="loss">
               {uiText('Inválida')}
@@ -75,6 +80,11 @@ export function LapPopup() {
           </span>
         ))}
       </div>
+      {ev.goalReached && (
+        <div className="lap-popup-learned">
+          {uiText('Quer uma nova meta? Defina na página da pista, em Minha meta.')}
+        </div>
+      )}
       {learned && <div className="lap-popup-learned">{uiText(learnedPopupText(ctx.corners))}</div>}
       {best !== null && (
         <div className="lap-popup-best">

@@ -8,6 +8,7 @@ import type {
   EngineerCue,
   EngineerCueKind,
   LiveCornerPass,
+  LiveDrill,
   LiveEngineerFrame,
   LiveFrame,
 } from '../live.ts';
@@ -81,6 +82,8 @@ export class RadioSim {
     atM: number;
     make: (lap: number) => Partial<LiveCornerPass> | null;
   }[] = [];
+  /** Corner drill carried by the frames (spec 18). */
+  drill: LiveDrill | null = null;
   /** Engineer status when there are no marks. */
   engineerStatus: Exclude<LiveEngineerFrame['status'], 'ready'> = 'waitingReference';
   dtMs = 50;
@@ -262,6 +265,7 @@ export class RadioSim {
             },
       engineer,
       ...(this.passes.length ? { cornerPasses: this.passes.slice(-2) } : {}),
+      ...(this.drill ? { drill: this.drill } : {}),
       link: { rateHz: 60, lossPct: 0, lost: 0, received: this.seq, lastPacketAt: this.t },
     };
   }

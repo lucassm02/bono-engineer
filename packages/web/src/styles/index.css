@@ -902,6 +902,17 @@ button {
   font-size: clamp(14px, min(2.8cqw, 5cqh), 26px);
   color: var(--text);
 }
+/* Goal pace (spec 13): a small line under the reference, hidden without a goal. */
+.dg-goal {
+  text-align: center;
+  font-size: clamp(13px, min(2.4cqw, 4.4cqh), 22px);
+  font-weight: 600;
+  color: var(--text);
+  opacity: 0.9;
+}
+.dg-goal[data-on="0"] {
+  display: none;
+}
 @container (orientation: portrait) {
   .dg-value {
     font-size: min(31cqw, 36cqh);

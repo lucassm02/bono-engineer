@@ -199,20 +199,45 @@ describe('combustível', () => {
     expect(decision.label).toMatch(/^Combustível: faltam \d+,?\.?\d* L · economize/);
   });
 
-  it('without the race length: autonomy only, at 2, 1 and < 1 lap', () => {
+  it('without the race length: autonomy only, at 5, 2, 1 and < 1 lap', () => {
     const h = harness({ mode: 'race' });
     h.sim.fuel.perLapAvg = 3;
-    h.sim.fuel.level = 20;
+    h.sim.fuel.level = 20; // 6.7 laps: nothing yet
     h.run(5000);
+    expect(h.said()).toEqual([]);
+    h.sim.fuel.level = 16; // 5.3 laps
+    h.run(4000);
+    h.sim.fuel.level = 11; // 3.7: no call between 5 and 2
+    h.run(4000);
     h.sim.fuel.level = 8; // 2.7 laps
     h.run(4000);
     h.sim.fuel.level = 5; // 1.7
     h.run(4000);
     h.sim.fuel.level = 2; // 0.7
     h.run(4000);
-    expect(h.said()).toEqual([FUEL_LAPS[2], FUEL_LAPS[1], FUEL_LAPS[0]]);
-    expect(h.spoken.map((s) => s.decision.priority)).toEqual(['strategy', 'strategy', 'critical']);
+    expect(h.said()).toEqual([FUEL_LAPS[5], FUEL_LAPS[2], FUEL_LAPS[1], FUEL_LAPS[0]]);
+    expect(h.spoken.map((s) => s.decision.priority)).toEqual([
+      'strategy',
+      'strategy',
+      'strategy',
+      'critical',
+    ]);
     expect(h.said()).not.toContain(FUEL_SHORT);
+  });
+
+  it('does not say "five laps" when the tank starts below five, and says it again after a refuel', () => {
+    const h = harness({ mode: 'race' });
+    h.sim.fuel.perLapAvg = 3;
+    h.sim.fuel.level = 11; // 3.7 laps
+    h.run(5000);
+    expect(h.said()).toEqual([]);
+    h.sim.fuel.level = 5; // 1.7
+    h.run(4000);
+    h.sim.fuel.level = 40; // refuelled
+    h.run(4000);
+    h.sim.fuel.level = 16; // 5.3 laps again
+    h.run(4000);
+    expect(h.said()).toEqual([FUEL_LAPS[1], FUEL_LAPS[5]]);
   });
 
   it('stays silent without consumption (Sport Mode time trial: 100/100)', () => {

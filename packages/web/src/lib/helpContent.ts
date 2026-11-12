@@ -421,6 +421,94 @@ const PT: HelpContent = {
     },
 
     {
+      id: 'meta-da-pista',
+      topic: 'tracks',
+      title: 'Definir uma meta de tempo',
+      summary:
+        'Diga quanto você quer fazer na pista. O delta, o engenheiro e o resumo passam a mostrar quanto falta.',
+      steps: [
+        'Abra a pista na Início e, em Melhores voltas, vá em Minha meta.',
+        'Digite o tempo (1:45.000) ou toque em Sugerir: é a volta ideal ou 0,5% abaixo da sua melhor.',
+        'Toque em Definir meta. Ao vivo, uma linha pequena mostra a diferença para o ritmo da meta.',
+      ],
+      note: 'Ao bater a meta, o engenheiro diz “Boa volta.” e a meta vai para as batidas. Uma meta mais lenta que a sua melhor volta pede confirmação. Vale por pista (e por carro, se escolher). Entra no backup .bono.',
+      links: [lnk('Início', routes.home())],
+      keywords: 'meta objetivo alvo tempo sugerir volta ideal bater',
+    },
+    {
+      id: 'setores-e-volta-ideal',
+      topic: 'tracks',
+      title: 'Setores e volta ideal',
+      summary: 'A volta ideal é a soma dos seus melhores setores. É um teto, não uma promessa.',
+      items: [
+        'Na pista, aba Setores: o melhor tempo de cada setor, de qual volta veio, a média das 5 melhores e quanto a sua melhor volta deixa de ganhar.',
+        'A volta ideal e o ganho possível aparecem embaixo.',
+        'Usar a volta ideal como meta cria a meta com esse tempo.',
+      ],
+      note: 'Nem sempre dá para juntar os melhores setores: a saída de um setor depende de como você entrou nele. Só entram suas voltas válidas, sem replays nem referências.',
+      links: [lnk('Início', routes.home())],
+      keywords: 'setor setores volta ideal teórica melhor trecho soma',
+    },
+    {
+      id: 'resumo-da-sessao',
+      topic: 'tracks',
+      title: 'Resumo da sessão',
+      summary: 'Uma tela só para responder: foi uma boa sessão e o que fazer na próxima.',
+      items: [
+        'Melhor volta contra o seu recorde anterior (ou “primeira vez” na pista).',
+        'Ritmo (média das 5 melhores e mediana), regularidade e se o ritmo melhorou ou piorou.',
+        'Comparação com a última sessão, a melhor ou a meta.',
+        'Onde você ganhou e perdeu, curva a curva, e até 3 dicas.',
+      ],
+      note: 'Abre pelo aviso “Sessão salva”, pelo cartão na Início ou pelo botão Resumo da sessão. Voltas bem mais lentas que a melhor ficam de fora do ritmo. Com menos de 3 voltas limpas o resumo é reduzido. Copiar resumo gera texto.',
+      links: [lnk('Todas as sessões', routes.sessions())],
+      keywords: 'resumo sessão ritmo regularidade tendência dicas comparar',
+    },
+    {
+      id: 'onde-perde-tempo',
+      topic: 'tracks',
+      title: 'Onde você perde tempo',
+      summary:
+        'Ao comparar duas voltas, o Bono lista as curvas que mais custam e a causa provável.',
+      items: [
+        'Onde você perde tempo: até 3 curvas, com o tempo perdido e o número que sustenta a causa (“freia 14 m antes”).',
+        'Sem causa clara, aparecem só a perda e os números da freada e da V-mín.',
+        'O mapa muda a cor da sua volta: ganho e perda, velocidade, freio, acelerador ou diferença de linha, com marcadores em texto.',
+      ],
+      note: 'Curvas abaixo de 20 ms ficam de fora. As perdas listadas, as outras curvas e as retas somam o delta da volta. Cause provável é uma hipótese: confira nos gráficos.',
+      links: [lnk('Comparar voltas', routes.compare({}))],
+      keywords: 'perda curva causa provável mapa cor velocidade freio acelerador linha diferença',
+    },
+    {
+      id: 'treinar-uma-curva',
+      topic: 'tracks',
+      title: 'Treinar uma curva',
+      summary: 'Escolha uma curva e o engenheiro avalia cada passagem, falando só dela.',
+      steps: [
+        'No Ao vivo, abra a tela Treino de curva, escolha a curva e toque em Começar. Ou use Treinar esta curva na comparação.',
+        'Passe pela curva quantas vezes quiser, em qualquer volta. O tempo vai da entrada à saída da curva.',
+        'Toque em Parar treino para ver o resumo: passagens, melhor trecho e quanto melhorou.',
+      ],
+      note: 'O engenheiro só fala antes da curva (freada) e depois dela (comparação com a melhor passagem), nunca dentro. As passagens ficam salvas na sessão. O treino acaba sozinho ao fechar a sessão ou trocar de pista.',
+      links: [lnk('Ao vivo', routes.live())],
+      keywords: 'treino curva drill passagem trecho engenheiro foco',
+    },
+    {
+      id: 'combustivel-e-pneus',
+      topic: 'tracks',
+      title: 'Combustível, parada e ritmo do pneu',
+      summary: 'O Bono estima as voltas de combustível, quando parar e se o pneu está no fim.',
+      items: [
+        'Combustível: voltas restantes pela média das últimas voltas, com aviso por rádio com 2 voltas, 1 e menos de 1.',
+        'Planejador de parada: informe as voltas da corrida e até quanto reabastecer; ele diz a volta limite para entrar no box.',
+        'Ritmo do pneu: o jogo não envia o desgaste, então o Bono olha os tempos de volta. Voltas limpas ficando mais lentas indicam pneu no fim.',
+      ],
+      note: 'Tudo isso é estimativa, não leitura do jogo. A temperatura dos pneus continua nas telas Pneus e no rádio.',
+      links: [lnk('Ao vivo', routes.live())],
+      keywords: 'combustível pneu desgaste parada box reabastecer planejador ritmo',
+    },
+
+    {
       id: 'discord-configurar',
       topic: 'discord',
       title: 'Configurar o Discord em 4 passos',
@@ -885,6 +973,94 @@ const EN: HelpContent = {
       note: 'It stays off until you say yes to the question on Home. The data comes from DG EDGE, fetched from your PC at most once an hour. To turn it on or off, go to Settings → Accounts and data → Daily Races.',
       links: [lnk('Daily Races', routes.dailies())],
       keywords: 'daily races dg edge medals week ranking reference first place',
+    },
+
+    {
+      id: 'meta-da-pista',
+      topic: 'tracks',
+      title: 'Set a lap time goal',
+      summary:
+        'Say what time you want on the track. The delta, the engineer and the summary will show how far you are.',
+      steps: [
+        'Open the track from Home and go to My goal under Best laps.',
+        'Type the time (1:45.000) or tap Suggest: the ideal lap or 0.5% under your best.',
+        'Tap Set goal. Live, a small line shows the difference to the goal pace.',
+      ],
+      note: 'When you reach it, the engineer says “Good lap.” and the goal moves to Goals reached. A goal slower than your best lap asks for confirmation. It is per track (and per car, if you pick one). It is included in the .bono backup.',
+      links: [lnk('Home', routes.home())],
+      keywords: 'goal target time suggest ideal lap reach',
+    },
+    {
+      id: 'setores-e-volta-ideal',
+      topic: 'tracks',
+      title: 'Sectors and ideal lap',
+      summary: 'The ideal lap is the sum of your best sectors. It is a ceiling, not a promise.',
+      items: [
+        'On the track, the Sectors tab: the best time of each sector, which lap made it, the average of the best 5 and what your best lap leaves behind.',
+        'The ideal lap and the possible gain are at the bottom.',
+        'Use the ideal lap as my goal sets the goal to that time.',
+      ],
+      note: 'Putting the best sectors together is not always possible: the exit of a sector depends on how you entered it. Only your valid laps count, without replays or references.',
+      links: [lnk('Home', routes.home())],
+      keywords: 'sector sectors ideal lap theoretical best sum',
+    },
+    {
+      id: 'resumo-da-sessao',
+      topic: 'tracks',
+      title: 'Session summary',
+      summary: 'One screen to answer: was it a good session and what to do next.',
+      items: [
+        'Best lap against your previous record (or “first time” on the track).',
+        'Pace (average of the best 5 and median), consistency and whether the pace got better or worse.',
+        'Comparison with the last session, the best one or the goal.',
+        'Where you gained and lost, corner by corner, and up to 3 tips.',
+      ],
+      note: 'It opens from the “Session saved” notice, the card on Home or the Session summary button. Laps much slower than the best stay out of the pace. With fewer than 3 clean laps the summary is reduced. Copy summary makes plain text.',
+      links: [lnk('All sessions', routes.sessions())],
+      keywords: 'summary session pace consistency trend tips compare',
+    },
+    {
+      id: 'onde-perde-tempo',
+      topic: 'tracks',
+      title: 'Where you lose time',
+      summary:
+        'Comparing two laps, Bono lists the corners that cost the most and the likely cause.',
+      items: [
+        'Where you lose time: up to 3 corners, with the time lost and the number behind the cause (“brakes 14 m earlier”).',
+        'With no clear cause, you see only the loss and the braking and min-speed numbers.',
+        'The map changes the colour of your lap: gain and loss, speed, brake, throttle or line difference, with text markers.',
+      ],
+      note: 'Corners under 20 ms are left out. The listed losses, the other corners and the straights add up to the lap delta. A likely cause is a hypothesis: check it on the charts.',
+      links: [lnk('Compare laps', routes.compare({}))],
+      keywords: 'loss corner cause likely map colour speed brake throttle line difference',
+    },
+    {
+      id: 'treinar-uma-curva',
+      topic: 'tracks',
+      title: 'Drill a corner',
+      summary: 'Pick one corner and the engineer rates every pass, talking only about it.',
+      steps: [
+        'On Live, open the Corner drill screen, pick the corner and tap Start. Or use Drill this corner in a comparison.',
+        'Drive through the corner as many times as you like, on any lap. The time runs from the corner entry to its exit.',
+        'Tap Stop drill to see the summary: passes, best stretch and how much you improved.',
+      ],
+      note: 'The engineer talks only before the corner (braking) and after it (comparison with the best pass), never inside it. Passes are saved with the session. The drill ends by itself when the session closes or the track changes.',
+      links: [lnk('Live', routes.live())],
+      keywords: 'drill corner pass stretch engineer focus',
+    },
+    {
+      id: 'combustivel-e-pneus',
+      topic: 'tracks',
+      title: 'Fuel, pit stop and tyre pace',
+      summary: 'Bono estimates the laps of fuel, when to stop and whether the tyres are done.',
+      items: [
+        'Fuel: laps left from the average of the last laps, with a radio call at 2 laps, 1 lap and less than 1.',
+        'Pit planner: enter the race laps and how far to refuel; it gives the last lap to enter the pits.',
+        'Tyre pace: the game does not send wear, so Bono reads the lap times. Clean laps getting slower point to tired tyres.',
+      ],
+      note: 'All of this is an estimate, not a game reading. Tyre temperature stays on the Tyres screen and on the radio.',
+      links: [lnk('Live', routes.live())],
+      keywords: 'fuel tyre wear pit stop refuel planner pace',
     },
 
     {
@@ -1358,6 +1534,96 @@ const ES: HelpContent = {
       links: [lnk('Carreras diarias', routes.dailies())],
       keywords:
         'carreras diarias daily races dg edge medallas semana ranking referencia primer lugar',
+    },
+
+    {
+      id: 'meta-da-pista',
+      topic: 'tracks',
+      title: 'Definir una meta de tiempo',
+      summary:
+        'Indica qué tiempo quieres en la pista. El delta, el ingeniero y el resumen mostrarán cuánto falta.',
+      steps: [
+        'Abre la pista desde Inicio y ve a Mi meta, en Mejores vueltas.',
+        'Escribe el tiempo (1:45.000) o toca Sugerir: la vuelta ideal o 0,5 % por debajo de tu mejor.',
+        'Toca Definir meta. En vivo, una línea pequeña muestra la diferencia con el ritmo de la meta.',
+      ],
+      note: 'Al lograrla, el ingeniero dice «Buena vuelta.» y la meta pasa a Metas logradas. Una meta más lenta que tu mejor vuelta pide confirmación. Es por pista (y por coche, si eliges uno). Entra en la copia .bono.',
+      links: [lnk('Inicio', routes.home())],
+      keywords: 'meta objetivo tiempo sugerir vuelta ideal lograr',
+    },
+    {
+      id: 'setores-e-volta-ideal',
+      topic: 'tracks',
+      title: 'Sectores y vuelta ideal',
+      summary: 'La vuelta ideal es la suma de tus mejores sectores. Es un techo, no una promesa.',
+      items: [
+        'En la pista, pestaña Sectores: el mejor tiempo de cada sector, de qué vuelta salió, la media de las 5 mejores y lo que tu mejor vuelta deja sin ganar.',
+        'La vuelta ideal y la ganancia posible aparecen abajo.',
+        'Usar la vuelta ideal como meta crea la meta con ese tiempo.',
+      ],
+      note: 'No siempre se pueden juntar los mejores sectores: la salida de un sector depende de cómo entraste. Solo cuentan tus vueltas válidas, sin repeticiones ni referencias.',
+      links: [lnk('Inicio', routes.home())],
+      keywords: 'sector sectores vuelta ideal teórica mejor suma',
+    },
+    {
+      id: 'resumo-da-sessao',
+      topic: 'tracks',
+      title: 'Resumen de la sesión',
+      summary: 'Una sola pantalla para responder: fue una buena sesión y qué hacer la próxima vez.',
+      items: [
+        'Mejor vuelta frente a tu récord anterior (o «primera vez» en la pista).',
+        'Ritmo (media de las 5 mejores y mediana), regularidad y si el ritmo mejoró o empeoró.',
+        'Comparación con la última sesión, la mejor o la meta.',
+        'Dónde ganaste y perdiste, curva a curva, y hasta 3 consejos.',
+      ],
+      note: 'Se abre desde el aviso «Sesión guardada», la tarjeta de Inicio o el botón Resumen de la sesión. Las vueltas mucho más lentas que la mejor quedan fuera del ritmo. Con menos de 3 vueltas limpias el resumen es reducido. Copiar resumen genera texto.',
+      links: [lnk('Todas las sesiones', routes.sessions())],
+      keywords: 'resumen sesión ritmo regularidad tendencia consejos comparar',
+    },
+    {
+      id: 'onde-perde-tempo',
+      topic: 'tracks',
+      title: 'Dónde pierdes tiempo',
+      summary:
+        'Al comparar dos vueltas, Bono lista las curvas que más cuestan y la causa probable.',
+      items: [
+        'Dónde pierdes tiempo: hasta 3 curvas, con el tiempo perdido y el número que sostiene la causa («frenas 14 m antes»).',
+        'Sin causa clara, solo ves la pérdida y los números de frenada y V-mín.',
+        'El mapa cambia el color de tu vuelta: ganancia y pérdida, velocidad, freno, acelerador o diferencia de línea, con marcadores de texto.',
+      ],
+      note: 'Las curvas por debajo de 20 ms quedan fuera. Las pérdidas listadas, las otras curvas y las rectas suman el delta de la vuelta. Una causa probable es una hipótesis: compruébala en los gráficos.',
+      links: [lnk('Comparar vueltas', routes.compare({}))],
+      keywords:
+        'pérdida curva causa probable mapa color velocidad freno acelerador línea diferencia',
+    },
+    {
+      id: 'treinar-uma-curva',
+      topic: 'tracks',
+      title: 'Entrenar una curva',
+      summary: 'Elige una curva y el ingeniero evalúa cada paso, hablando solo de ella.',
+      steps: [
+        'En En vivo, abre la pantalla Entrenamiento de curva, elige la curva y toca Empezar. O usa Entrenar esta curva en una comparación.',
+        'Pasa por la curva las veces que quieras, en cualquier vuelta. El tiempo va de la entrada a la salida de la curva.',
+        'Toca Detener entrenamiento para ver el resumen: pasos, mejor tramo y cuánto mejoraste.',
+      ],
+      note: 'El ingeniero solo habla antes de la curva (frenada) y después (comparación con el mejor paso), nunca dentro. Los pasos se guardan con la sesión. El entrenamiento termina solo al cerrar la sesión o cambiar de pista.',
+      links: [lnk('En vivo', routes.live())],
+      keywords: 'entrenamiento curva paso tramo ingeniero foco',
+    },
+    {
+      id: 'combustivel-e-pneus',
+      topic: 'tracks',
+      title: 'Combustible, parada y ritmo del neumático',
+      summary:
+        'Bono estima las vueltas de combustible, cuándo parar y si el neumático está al final.',
+      items: [
+        'Combustible: vueltas restantes según la media de las últimas vueltas, con aviso por radio con 2 vueltas, 1 y menos de 1.',
+        'Planificador de parada: indica las vueltas de la carrera y hasta cuánto repostar; te dice la vuelta límite para entrar a boxes.',
+        'Ritmo del neumático: el juego no envía el desgaste, así que Bono mira los tiempos de vuelta. Vueltas limpias cada vez más lentas indican neumático al final.',
+      ],
+      note: 'Todo esto es una estimación, no una lectura del juego. La temperatura de los neumáticos sigue en la pantalla Neumáticos y en la radio.',
+      links: [lnk('En vivo', routes.live())],
+      keywords: 'combustible neumático desgaste parada boxes repostar planificador ritmo',
     },
 
     {

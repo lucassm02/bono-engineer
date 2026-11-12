@@ -1,5 +1,6 @@
 import type { LiveFrame } from '@gt7/shared';
 import { useRef } from 'react';
+import { DrillSection } from '../components/DrillSection.tsx';
 import { type CornerHintExt, distanceToBrake } from '../lib/cornerPass.ts';
 import { setAttr, setStyle, setText } from '../lib/dom.ts';
 import { clamp, deltaTone, formatDelta, formatInt } from '../lib/format.ts';
@@ -224,6 +225,7 @@ export function TreinoCurvaView() {
           'Passe por uma curva para ver o resultado: frenagem, V-mín e retomada contra a referência.',
         )}
       </section>
+      <DrillSection />
       <div className="treino-controls" data-no-gesture>
         <button
           type="button"

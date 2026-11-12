@@ -13,19 +13,29 @@ import type {
   DrivingEvent,
   EngineerRadioLog,
   Lap,
+  MapColorMode,
   MapCorner,
 } from '@gt7/shared';
+import { lateralDifference, lateralMarkers, lateralSide, seriesRange } from '@gt7/shared';
 import { type CSSProperties, useCallback, useEffect, useMemo, useState } from 'react';
 import { Icon } from '../../components/ui/Icon.tsx';
 import { humanizeError } from '../../lib/copy.ts';
-import { formatDelta, formatLapTime } from '../../lib/format.ts';
+import { formatDelta, formatFixed, formatLapTime } from '../../lib/format.ts';
 import { t as uiText } from '../../lib/i18n.ts';
 import { navigate, type Route, routes } from '../../lib/route.ts';
 import { THEME } from '../../lib/theme.ts';
+import { startDrill, useDrill } from '../../state/drill.ts';
 import { flushEngineerJournal } from '../../state/engineerJournal.ts';
+import { addNotice } from '../../state/uiStore.ts';
 import { api, urls } from '../api.ts';
 import { CarName } from '../components/CarName.tsx';
-import { type BrakeMarker, CompareMap, type MapLine } from '../components/CompareMap.tsx';
+import {
+  type BrakeMarker,
+  CompareMap,
+  type MapLine,
+  type OverlayMarker,
+} from '../components/CompareMap.tsx';
+import { CornerLossPanel } from '../components/CornerLossPanel.tsx';
 import { CornerTable } from '../components/CornerTable.tsx';
 import { DrivingEventsPanel } from '../components/DrivingEventsPanel.tsx';
 import { EngineerRadioReview } from '../components/EngineerRadioReview.tsx';
@@ -45,6 +55,7 @@ import {
 } from '../lib/chartData.ts';
 import { CursorBus } from '../lib/cursorBus.ts';
 import { formatDateTime, REFERENCE_KIND_LABELS } from '../lib/labels.ts';
+import { type MapRamp, type RampMode, rampGradient } from '../lib/mapRamp.ts';
 import { useFetch } from '../useFetch.ts';
 
 type RefKind = (typeof COMPARISON_REFERENCE_KINDS)[number];
@@ -58,6 +69,60 @@ export const LAP_COLORS = {
 } as const;
 
 const MAX_EXTRA = 2;
+
+/** Per-sample colouring of your line on the map, plus the lateral difference to the reference. */
+interface MapOverlay {
+  diff: (number | null)[];
+  values?: (number | null)[];
+  ramp?: MapRamp;
+}
+
+/** What the colour of your line on the map can show (spec 17). */
+const MAP_MODES: { id: MapColorMode; label: string }[] = [
+  {
+    id: 'time',
+    get label() {
+      return uiText('Ganho e perda');
+    },
+  },
+  {
+    id: 'lines',
+    get label() {
+      return uiText('Linhas');
+    },
+  },
+  {
+    id: 'speed',
+    get label() {
+      return uiText('Velocidade');
+    },
+  },
+  {
+    id: 'brake',
+    get label() {
+      return uiText('Freio');
+    },
+  },
+  {
+    id: 'throttle',
+    get label() {
+      return uiText('Acelerador');
+    },
+  },
+  {
+    id: 'diff',
+    get label() {
+      return uiText('Diferença de linha');
+    },
+  },
+];
+
+/** The ends of the colour legend, in the unit of the channel. */
+function rampEnd(mode: RampMode, end: 'lo' | 'hi', v: number): string {
+  if (mode === 'speed') return `${Math.round(v)} km/h`;
+  if (mode === 'diff') return end === 'lo' ? '0 m' : `${formatFixed(v, 1)} m`;
+  return `${Math.round(v * 100)}%`;
+}
 
 export interface CompareData {
   cmp: ApiComparison;
@@ -323,18 +388,72 @@ export function CompareView({
     [lap, refLap, extra, trackLaps],
   );
 
+  const [mapMode, setMapMode] = useState<MapColorMode>('time');
+  // What the colour of your line shows (spec 17): the channel values, scaled to a ramp.
+  const overlay = useMemo((): MapOverlay | null => {
+    if (!traces) return null;
+    const diff = lateralDifference(
+      lapSeries(traces, lap.id, 'offset'),
+      lapSeries(traces, refLap.id, 'offset'),
+    );
+    const series = (key: string, scale = 1) => lapSeries(traces, lap.id, key, scale);
+    if (mapMode === 'speed') {
+      const values = series('speed');
+      const r = seriesRange(values);
+      return r ? { values, ramp: { mode: 'speed', lo: r[0], hi: r[1] }, diff } : { diff };
+    }
+    if (mapMode === 'brake') {
+      return { values: series('brake'), ramp: { mode: 'brake', lo: 0, hi: 1 }, diff };
+    }
+    if (mapMode === 'throttle') {
+      return { values: series('throttle'), ramp: { mode: 'throttle', lo: 0, hi: 1 }, diff };
+    }
+    if (mapMode === 'diff') {
+      const r = seriesRange(
+        diff.map((v) => (v === null ? null : Math.abs(v))),
+        0,
+        98,
+      );
+      return { values: diff, ramp: { mode: 'diff', lo: 0, hi: Math.max(1, r?.[1] ?? 1) }, diff };
+    }
+    return { diff };
+  }, [traces, mapMode, lap.id, refLap.id]);
+
   const mapLines: MapLine[] = useMemo(() => {
     if (!traces) return [];
-    const subjectColors = micro?.colors.find((x) => x.lapId === lap.id)?.colors ?? null;
+    const subjectColors =
+      mapMode === 'time' ? (micro?.colors.find((x) => x.lapId === lap.id)?.colors ?? null) : null;
     return chartLaps.slice(0, 2).map((l, i) => ({
       id: l.id,
       color: l.color,
       x: lapSeries(traces, l.id, 'x'),
       z: lapSeries(traces, l.id, 'z'),
       colors: i === 0 ? subjectColors : null,
+      ...(i === 0 && overlay?.ramp ? { values: overlay.values, ramp: overlay.ramp } : {}),
       width: i === 0 ? 3.4 : 2,
     }));
-  }, [traces, micro, chartLaps, lap.id]);
+  }, [traces, micro, chartLaps, lap.id, mapMode, overlay]);
+
+  // The larger differences get a text label, so the map does not rely on colour alone.
+  const diffMarkers = useMemo(
+    () =>
+      overlay && traces && mapMode === 'diff' ? lateralMarkers(traces.distanceM, overlay.diff) : [],
+    [overlay, traces, mapMode],
+  );
+  const overlayMarkers: OverlayMarker[] = useMemo(
+    () =>
+      diffMarkers.map((m) => {
+        const s = lateralSide(m.diffM);
+        return {
+          distanceM: m.distanceM,
+          label: uiText(
+            s.side === 'left' ? '{0} m à esquerda' : '{0} m à direita',
+            formatFixed(s.meters, 1),
+          ),
+        };
+      }),
+    [diffMarkers],
+  );
 
   const brakeMarkers: BrakeMarker[] = useMemo(() => {
     const out: BrakeMarker[] = [];
@@ -375,14 +494,19 @@ export function CompareView({
   const sectorDeltas = c.sectorDeltasMs ?? [];
   const isReplay = !!c.referenceIsReplay;
   const otherLaps = trackLaps.filter((l) => l.id !== lap.id);
-  const worstCorners = useMemo(
-    () =>
-      c.rows
-        .filter((r) => r.timeLostMs > 0)
-        .sort((a, b) => b.timeLostMs - a.timeLostMs)
-        .slice(0, 5),
-    [c.rows],
-  );
+  const [drilling, setDrilling] = useState<string | null>(null);
+  const drillCorner = useCallback(async (cornerId: string) => {
+    setDrilling(cornerId);
+    await startDrill(cornerId, null);
+    setDrilling(null);
+    if (useDrill.getState().drill?.cornerId === cornerId) {
+      addNotice(
+        'info',
+        uiText('Treino de {0} iniciado. Volte à tela ao vivo e passe pela curva.', cornerId),
+        7000,
+      );
+    }
+  }, []);
   const resetRange = () => {
     setRange(null);
     setFocus(null);
@@ -626,27 +750,21 @@ export function CompareView({
             </div>
           )}
         </div>
-        {worstCorners.length > 0 && (
-          <div className="cmp-losses">
-            <span className="ui-stat-label">
-              {uiText('Onde você mais perde tempo (clique para dar zoom)')}
-            </span>
-            <div className="cmp-losses-list">
-              {worstCorners.map((r) => (
-                <button
-                  key={r.corner.id}
-                  type="button"
-                  className="ui-chip"
-                  aria-pressed={focus === r.corner.id}
-                  onClick={() => zoomCorner(r.corner.id)}
-                >
-                  <strong>{r.corner.id}</strong>
-                  <span className="num">{formatDelta(r.timeLostMs)}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+      </Panel>
+
+      <Panel
+        title={uiText('Onde você perde tempo')}
+        description={uiText(
+          'As curvas que mais custam tempo contra a referência, com a causa provável.',
         )}
+        className="cmp-loss"
+      >
+        <CornerLossPanel
+          comparison={c}
+          onZoom={zoomCorner}
+          onDrill={demo ? undefined : drillCorner}
+          busyCorner={drilling}
+        />
       </Panel>
 
       {warnings.length > 0 && (
@@ -704,17 +822,61 @@ export function CompareView({
         </div>
         <aside className="cmp-side">
           <section className="ui-card cmp-mapbox" aria-label={uiText('Mapa da pista')}>
+            <fieldset className="cmp-modes" aria-label={uiText('O que a cor da sua volta mostra')}>
+              {MAP_MODES.map((m) => (
+                <label key={m.id} className="ui-chip" data-on={mapMode === m.id ? '1' : '0'}>
+                  <input
+                    type="radio"
+                    name="map-mode"
+                    checked={mapMode === m.id}
+                    onChange={() => setMapMode(m.id)}
+                  />
+                  {m.label}
+                </label>
+              ))}
+            </fieldset>
             <CompareMap
               outline={track ? { x: track.polyline.x, z: track.polyline.z } : null}
               distanceM={traces?.distanceM ?? []}
               lines={mapLines}
               corners={corners}
               brakeMarkers={brakeMarkers}
+              overlayMarkers={overlayMarkers}
               range={range}
               focusCorner={focus}
               bus={bus}
               onCorner={zoomCorner}
             />
+            {overlay?.ramp && (
+              <div className="cmp-ramp">
+                <span
+                  className="cmp-ramp-bar"
+                  style={{ background: rampGradient(overlay.ramp.mode) }}
+                />
+                <span className="cmp-ramp-ends num">
+                  <span>{rampEnd(overlay.ramp.mode, 'lo', overlay.ramp.lo)}</span>
+                  <span>{rampEnd(overlay.ramp.mode, 'hi', overlay.ramp.hi)}</span>
+                </span>
+              </div>
+            )}
+            {diffMarkers.length > 0 && (
+              <ul className="cmp-diff-list">
+                {diffMarkers.map((m) => {
+                  const s = lateralSide(m.diffM);
+                  return (
+                    <li key={m.distanceM}>
+                      <span className="num">{Math.round(m.distanceM)} m</span>{' '}
+                      {uiText(
+                        s.side === 'left'
+                          ? 'Você passa {0} m à esquerda da referência'
+                          : 'Você passa {0} m à direita da referência',
+                        formatFixed(s.meters, 1),
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
             <div className="cmp-map-legend">
               <span>
                 <i style={{ background: LAP_COLORS.subject }} />
@@ -724,14 +886,18 @@ export function CompareView({
                 <i style={{ background: LAP_COLORS.reference }} />
                 {` ${uiText('referência')}`}
               </span>
-              <span>
-                <i style={{ background: THEME.gain }} />
-                {` ${uiText('ganha tempo')}`}
-              </span>
-              <span>
-                <i style={{ background: THEME.loss }} />
-                {` ${uiText('perde tempo')}`}
-              </span>
+              {mapMode === 'time' && (
+                <>
+                  <span>
+                    <i style={{ background: THEME.gain }} />
+                    {` ${uiText('ganha tempo')}`}
+                  </span>
+                  <span>
+                    <i style={{ background: THEME.loss }} />
+                    {` ${uiText('perde tempo')}`}
+                  </span>
+                </>
+              )}
               <span>
                 <i className="cmp-map-ring" />
                 {` ${uiText('frenagem')}`}

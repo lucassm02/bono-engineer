@@ -283,6 +283,85 @@ export interface LiveGForce {
   vertical: number | null;
 }
 
+/** Passes shown in the drill card and kept in the frame. */
+export const DRILL_HISTORY = 10;
+
+/** One pass through the corner being drilled (spec 18). */
+export interface LiveDrillPass {
+  /** 1-based pass number in this drill. */
+  n: number;
+  /** Time from the corner entry to its exit (ms). */
+  timeMs: number;
+  entrySpeedKmh: number;
+  minSpeedKmh: number;
+  exitSpeedKmh: number;
+  /** Where braking started, metres before the corner entry; null = no braking in the approach. */
+  brakePointM: number | null;
+  /** Epoch ms of the exit. */
+  at: number;
+}
+
+/**
+ * The corner drill in the frame (spec 18): the driver picked one corner and the engineer talks
+ * only about it. Passes are measured by position (entry to exit of the track's corner), so slow
+ * laps between passes and laps that are not valid or complete do not matter.
+ */
+export interface LiveDrill {
+  cornerId: string;
+  cornerName: string | null;
+  startedAt: number;
+  /** approach = within DRILL_APPROACH_M of the entry; in = between entry and exit. */
+  phase: 'away' | 'approach' | 'in';
+  /** Distance to the entry (m, ahead), null when unknown. */
+  distanceToEntryM: number | null;
+  /** The last DRILL_HISTORY passes, oldest first. */
+  passes: LiveDrillPass[];
+  /** Passes so far in this drill. */
+  count: number;
+  /** Fastest pass of the drill, null before the first. */
+  best: LiveDrillPass | null;
+  /** The driver's target for the stretch time (ms), when set. */
+  targetMs: number | null;
+  /** Reference braking point, metres before the entry, when a reference exists. */
+  referenceBrakeM: number | null;
+}
+
+/** Distance before the entry from which the drill counts as approaching (m). */
+export const DRILL_APPROACH_M = 400;
+
+/** A drill that was stopped, as stored with the session (spec 18). */
+export interface CornerDrill {
+  id: Id;
+  sessionId: Id | null;
+  trackId: Id;
+  cornerId: string;
+  /** Every pass of the drill, oldest first. */
+  passes: LiveDrillPass[];
+  startedAt: number;
+  endedAt: number;
+  targetMs: number | null;
+}
+
+/** How long (ms) a reached goal stays in the frame so the screen and the radio can celebrate. */
+export const GOAL_CELEBRATION_MS = 20_000;
+
+/** The active goal of the track and car in the frame (spec 13). */
+export interface LiveGoal {
+  id: Id;
+  targetMs: number;
+  /** Null = any car. */
+  carCode: number | null;
+  /**
+   * Where the current lap stands against the goal pace (+ = behind, ms): the elapsed time minus
+   * the time the goal lap would have at this distance. Null outside a timed lap.
+   */
+  deltaMs: number | null;
+  /** Lap time that reached the goal, kept for GOAL_CELEBRATION_MS after the lap; else null. */
+  reachedLapMs: number | null;
+  /** Epoch ms of the lap that reached the goal (matches reachedLapMs). */
+  reachedAt: number | null;
+}
+
 /** One dashboard frame (server → clients, ~30–60 Hz). Keep it JSON-serializable. */
 export interface LiveFrame {
   sessionId?: Id | null;
@@ -321,6 +400,10 @@ export interface LiveFrame {
    * accumulates them by id. Omitted while none was made. (core, additive)
    */
   cornerPasses?: LiveCornerPass[];
+  /** The driver's goal for this track and car; omitted while there is none. (core, additive) */
+  goal?: LiveGoal;
+  /** The corner drill in progress; omitted otherwise. (core, additive) */
+  drill?: LiveDrill;
   /** UDP link quality. */
   link: Pick<IngestorStats, 'rateHz' | 'lossPct' | 'lost' | 'received' | 'lastPacketAt'>;
 }
@@ -350,4 +433,6 @@ export interface LapCompletedEvent {
   completedAt: number;
   /** Track the lap was identified on, null if unknown. (core, additive) */
   trackId?: Id | null;
+  /** This lap reached the active goal of the track and car. (core, additive) */
+  goalReached?: boolean;
 }

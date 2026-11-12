@@ -5,7 +5,17 @@
  * the SQLite-backed one lives in the store module.
  */
 
-import type { Id, Lap, LapTrace, Session, Track, TrackCenterline, Vec2 } from '@gt7/shared';
+import type {
+  CornerDrill,
+  Goal,
+  Id,
+  Lap,
+  LapTrace,
+  Session,
+  Track,
+  TrackCenterline,
+  Vec2,
+} from '@gt7/shared';
 import {
   type IdentifyResult,
   identifyOrCreateTrack,
@@ -56,6 +66,12 @@ export interface LiveEngineContext {
    * (spec 06: the track the driver chose did not match the laps). Returns how many laps changed.
    */
   reassignSessionTrack?(sessionId: Id, trackId: Id): number;
+  /** The goal being chased on the track and car (spec 13); optional, absent = no goals. */
+  getActiveGoal?(trackId: Id, carCode: number): Goal | null;
+  /** Marks a goal as reached by a lap (once). Returns whether it changed. */
+  markGoalAchieved?(goalId: Id, lapId: Id, at: number): boolean;
+  /** Stores a finished corner drill (spec 18); optional, absent = drills are not kept. */
+  saveDrill?(drill: CornerDrill): void;
 }
 
 /** True if the lap counts for personal records (own driving, valid). */
@@ -113,6 +129,8 @@ export class MemoryEngineContext implements LiveEngineContext {
   readonly laps = new Map<Id, StoredLap>();
   readonly tracks = new Map<Id, Track>();
   readonly centerlines = new Map<Id, TrackCenterline>();
+  readonly goals = new Map<Id, Goal>();
+  readonly drills: CornerDrill[] = [];
   readonly #newId: () => Id;
   readonly #tolerances: MatchTolerances | undefined;
 
@@ -123,6 +141,24 @@ export class MemoryEngineContext implements LiveEngineContext {
 
   saveSession(session: Session): void {
     this.sessions.set(session.id, { ...session });
+  }
+
+  saveDrill(drill: CornerDrill): void {
+    this.drills.push({ ...drill, passes: [...drill.passes] });
+  }
+
+  getActiveGoal(trackId: Id, carCode: number): Goal | null {
+    const open = [...this.goals.values()].filter(
+      (g) => g.trackId === trackId && g.achievedAt === null,
+    );
+    return open.find((g) => g.carCode === carCode) ?? open.find((g) => g.carCode === null) ?? null;
+  }
+
+  markGoalAchieved(goalId: Id, lapId: Id, at: number): boolean {
+    const g = this.goals.get(goalId);
+    if (!g || g.achievedAt !== null) return false;
+    this.goals.set(goalId, { ...g, achievedAt: at, achievedLapId: lapId });
+    return true;
   }
 
   reassignSessionTrack(sessionId: Id, trackId: Id): number {
@@ -264,6 +300,18 @@ export class EphemeralContext implements LiveEngineContext {
   getTrackRecords(trackId: Id, carCode: number, sectorCount: number): TrackRecords {
     return this.#base.getTrackRecords(trackId, carCode, sectorCount);
   }
+
+  /** Unsaved sessions read the goals but never write them. */
+  getActiveGoal(trackId: Id, carCode: number): Goal | null {
+    return this.#base.getActiveGoal?.(trackId, carCode) ?? null;
+  }
+
+  markGoalAchieved(): boolean {
+    return false;
+  }
+
+  /** Drills of an unsaved session are not kept. */
+  saveDrill(): void {}
 
   loadLap(lapId: Id): StoredLap | null {
     return this.laps.get(lapId) ?? this.#base.loadLap(lapId);

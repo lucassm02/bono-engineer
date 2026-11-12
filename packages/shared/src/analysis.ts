@@ -613,6 +613,174 @@ export interface LapComparisonResult {
   summary: AiSummary;
 }
 
+// ---------------------------------------------------------------------------------------------
+// Time lost per corner (spec 15)
+// ---------------------------------------------------------------------------------------------
+
+/** A probable cause of a corner loss, with the number that supports it. */
+export interface CornerLossReason {
+  kind: CornerFinding['kind'];
+  /** Diagnosis with numbers, pt-BR ("Você freia 18 m antes da referência na T1"). */
+  message: string;
+  /** The one action that goes with it, pt-BR. */
+  action: string | null;
+  confidence: FindingConfidence;
+  costMs: number | null;
+}
+
+export interface CornerLossRow {
+  cornerId: string;
+  name: string | null;
+  /** Time lost in the corner zone (ms, > 0), subject − reference. */
+  lossMs: number;
+  phaseLoss: CornerPhaseLoss | null;
+  /** Probable causes, strongest first; empty when no rule is confident enough (show the loss only). */
+  reasons: CornerLossReason[];
+  /** [subject, reference] brake point (m) and minimum speed (km/h) of the corner. */
+  brakePointM: [number | null, number | null];
+  minSpeedKmh: [number | null, number | null];
+}
+
+/**
+ * The corners where a lap loses the most time against another. Listed losses + `otherCornersMs` +
+ * `straightsMs` add up to `totalDeltaMs` (within rounding).
+ */
+export interface CornerLossReport {
+  lapA: Id;
+  lapB: Id;
+  totalDeltaMs: number;
+  rows: CornerLossRow[];
+  /** All the other corners together (gains, small losses and losses past the list), ms. */
+  otherCornersMs: number;
+  /** Time on the straights and other stretches outside the corner zones, ms. */
+  straightsMs: number;
+  /** Corners below this loss (ms) are not listed. */
+  minLossMs: number;
+  referenceIsReplay: boolean;
+  warnings: string[];
+}
+
+// ---------------------------------------------------------------------------------------------
+// Session summary (spec 12)
+// ---------------------------------------------------------------------------------------------
+
+export type SummaryTrend = 'improving' | 'steady' | 'worsening';
+
+/** The earlier session a summary compares with (same track and car). */
+export interface SummaryBaseline {
+  sessionId: Id;
+  startedAt: number;
+  bestLapMs: number;
+  /** Average of its (up to) 5 best clean laps. */
+  top5AvgMs: number | null;
+  lapCount: number;
+}
+
+/** This session against one baseline; negative = faster than it. */
+export interface SummaryComparison {
+  baselineMs: number;
+  /** Best lap of the session − baseline best (ms). */
+  bestDeltaMs: number;
+  /** Average of the 5 best of the session − baseline's (ms), null when either is unknown. */
+  paceDeltaMs: number | null;
+  /** Session the baseline comes from (null for the goal). */
+  sessionId: Id | null;
+  startedAt: number | null;
+}
+
+/** How one corner changed against the baseline lap (negative = gained, positive = lost). */
+export interface SummaryCornerChange {
+  cornerId: string;
+  name: string | null;
+  deltaMs: number;
+}
+
+/** A rule-made suggestion: `text` is a pt-BR template with {0}, {1} placeholders for `values`. */
+export interface SummarySuggestion {
+  code: 'invalidLaps' | 'cornerLoss' | 'inconsistent' | 'paceGap' | 'worsening';
+  text: string;
+  values: (string | number)[];
+}
+
+export interface SessionSummary {
+  sessionId: Id;
+  trackId: Id | null;
+  carCode: number;
+  startedAt: number;
+  endedAt: number | null;
+  /** Time driven (pauses and time off the track out) when known, else the session span. */
+  durationMs: number | null;
+  laps: { total: number; valid: number; invalid: number };
+  /** Fewer than 3 clean laps: no pace spread, trend or suggestions about consistency. */
+  reduced: boolean;
+  best: {
+    lapId: Id;
+    lapNumber: number;
+    timeMs: number;
+    /** Best valid lap on the track and car before this session, null the first time. */
+    previousBestMs: number | null;
+    /** best − previous best (ms, negative = improved), null the first time. */
+    deltaMs: number | null;
+    firstTime: boolean;
+  } | null;
+  pace: {
+    top5AvgMs: number;
+    medianMs: number;
+    fastestMs: number;
+    slowestMs: number;
+    /** slowest − fastest clean lap (ms). */
+    spreadMs: number;
+    histogram: { fromMs: number; toMs: number; count: number }[];
+  } | null;
+  consistency: {
+    stdDevMs: number;
+    trend: SummaryTrend | null;
+    /** Change of the lap time per lap (ms), from a straight line through the clean laps. */
+    slopeMsPerLap: number | null;
+  } | null;
+  comparisons: {
+    lastSession: SummaryComparison | null;
+    bestSession: SummaryComparison | null;
+    goal: SummaryComparison | null;
+  };
+  /** Where the session gained and lost against the previous best lap; null without data. */
+  corners: { gains: SummaryCornerChange[]; losses: SummaryCornerChange[] } | null;
+  suggestions: SummarySuggestion[];
+}
+
+/** One sector of the track in the sector table (spec 14). */
+export interface SectorTableRow {
+  index: number;
+  fromM: number;
+  toM: number;
+  /** Best time of the sector among the laps (ms). */
+  bestMs: number;
+  /** Lap that made it. */
+  bestLapId: Id;
+  /** Average of the (up to) 5 best times of the sector (ms). */
+  avgTopMs: number;
+  /** What the best lap spends in this sector above the best sector time (ms, ≥ 0). */
+  bestLapLossMs: number;
+}
+
+/**
+ * Best time per sector and the ideal lap (sum of the best sectors) of a set of laps. The ideal lap
+ * is a ceiling, not a promise: the exit of a sector depends on how the car entered it.
+ */
+export interface SectorTable {
+  lengthM: number;
+  sectorStartsM: number[];
+  rows: SectorTableRow[];
+  /** Laps that entered the table. */
+  lapCount: number;
+  bestLapId: Id;
+  bestLapMs: number;
+  /** Sum of the best sectors (≤ best lap). */
+  idealLapMs: number;
+  /** best lap − ideal lap (≥ 0). */
+  gainMs: number;
+}
+
 export interface MicrosectorAnalysis {
   report: MicrosectorReport;
   referenceLapId: Id;

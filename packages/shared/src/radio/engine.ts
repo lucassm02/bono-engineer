@@ -90,6 +90,8 @@ export class RadioEngine {
   readonly #rules: readonly AnyRadioRule[];
   readonly #logLimit: number;
   #config: RadioEngineConfig;
+  /** A corner drill is running (env.drill): only the drill rules and car alerts speak. */
+  #drilling = false;
   #log: RadioDecision[] = [];
   #seq = 0;
   #states = new Map<string, unknown>();
@@ -122,6 +124,16 @@ export class RadioEngine {
 
   get config(): Readonly<RadioEngineConfig> {
     return this.#config;
+  }
+
+  /**
+   * The configuration the rules see. During a corner drill the engineer works as in Treino with
+   * the corner calls on, whatever the driver's mode is: the drill is a mode of its own.
+   */
+  get #cfg(): RadioEngineConfig {
+    return this.#drilling
+      ? { ...this.#config, mode: 'training', trainingProfile: 'learnTrack' }
+      : this.#config;
   }
 
   /** Decisions so far, oldest first (bounded by `logLimit`). */
@@ -284,7 +296,8 @@ export class RadioEngine {
       engineer?.status === 'ready'
         ? engineer.cues.filter((cue) => !focus || (cue.cornerId && focus.has(cue.cornerId)))
         : [];
-    const config = this.#config;
+    this.#drilling = env.drill === true;
+    const config = this.#cfg;
     const audio = env.audio === 'ready' && config.speechLevel !== 'mute';
     const ctx: RadioRuleContext = {
       frame,
@@ -320,6 +333,7 @@ export class RadioEngine {
     // 2. Each eligible rule confirms its condition.
     const evaluated: Evaluated[] = [];
     this.#rules.forEach((rule, index) => {
+      if (this.#drilling && !rule.drill && !rule.carAlert) return;
       if (!ruleRuns(rule, config)) return;
       const missing = rule.requires?.find((channel) => !channels.has(channel));
       if (missing) {
@@ -487,7 +501,7 @@ export class RadioEngine {
   /** Mode, level, per-corner limit and interval. */
   #block(item: Evaluated, frame: LiveFrame, phase: RadioPhase, t: number): string | null {
     const { rule, candidate, priority } = item;
-    const config = this.#config;
+    const config = this.#cfg;
     const phaseReason = phaseBlock(candidate, priority, config, phase);
     if (phaseReason) return phaseReason;
     if (candidate.cornerId) {
@@ -607,7 +621,7 @@ export class RadioEngine {
       frameSeq: frame.seq,
       lap: frame.lap.lap,
       distanceM: frame.distanceM,
-      mode: this.#config.mode,
+      mode: this.#cfg.mode,
       phase,
       ruleId: rule.id,
       priority,

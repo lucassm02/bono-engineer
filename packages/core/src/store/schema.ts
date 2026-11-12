@@ -122,6 +122,34 @@ export const MIGRATIONS: readonly string[] = [
     PRIMARY KEY (lap_id, device_id, reference_lap_id)
   );
   `,
+  // v6 — the lap time the driver wants to reach on a track (spec 13)
+  `
+  CREATE TABLE IF NOT EXISTS goals (
+    id TEXT PRIMARY KEY,
+    track_id TEXT NOT NULL,
+    car_code INTEGER,
+    target_ms INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    achieved_at INTEGER,
+    achieved_lap_id TEXT
+  );
+  CREATE INDEX IF NOT EXISTS goals_track ON goals(track_id, created_at);
+  `,
+  // v7 — corner drills: the passes of one corner practised in a session (spec 18)
+  `
+  CREATE TABLE IF NOT EXISTS corner_drills (
+    id TEXT PRIMARY KEY,
+    session_id TEXT,
+    track_id TEXT NOT NULL,
+    corner_id TEXT NOT NULL,
+    passes_json TEXT NOT NULL,
+    target_ms INTEGER,
+    started_at INTEGER NOT NULL,
+    ended_at INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS corner_drills_session ON corner_drills(session_id);
+  CREATE INDEX IF NOT EXISTS corner_drills_track ON corner_drills(track_id, corner_id);
+  `,
 ];
 
 export const SCHEMA_VERSION = MIGRATIONS.length;

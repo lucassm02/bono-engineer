@@ -26,13 +26,16 @@ import type {
   CoachTranscriptEntry,
   CoachUsage,
   Corner,
+  CornerDrill,
   DeviceProfile,
   EngineerRadioCall,
   EngineerRadioLog,
+  Goal,
   Id,
   Lap,
   LapFlag,
   LapTrace,
+  LiveDrillPass,
   ReferenceMeta,
   SectorGate,
   Session,
@@ -48,6 +51,7 @@ import {
 } from '../trace/trace-file.ts';
 import { detectCloudFolder } from '../util/cloud-folder.ts';
 import { DB_FILE, migratePreviousDataDir } from '../util/data-dir.ts';
+import { newId } from '../util/ids.ts';
 import { getSchemaVersion, migrate } from './schema.ts';
 
 const gzipAsync = promisify(gzip);
@@ -295,6 +299,8 @@ export class Gt7Store {
   deleteTrack(id: Id): boolean {
     this.db.prepare('UPDATE laps SET track_id = NULL WHERE track_id = ?').run(id);
     this.db.prepare('UPDATE sessions SET track_id = NULL WHERE track_id = ?').run(id);
+    this.db.prepare('DELETE FROM goals WHERE track_id = ?').run(id);
+    this.db.prepare('DELETE FROM corner_drills WHERE track_id = ?').run(id);
     return Number(this.db.prepare('DELETE FROM tracks WHERE id = ?').run(id).changes) > 0;
   }
 
@@ -609,6 +615,175 @@ export class Gt7Store {
       referenceLapId: row.reference_lap_id,
       calls: JSON.parse(row.calls_json) as EngineerRadioCall[],
     }));
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // Corner drills (spec 18)
+  // ---------------------------------------------------------------------------------------------
+
+  #drill(r: Row): CornerDrill {
+    return {
+      id: String(r.id),
+      sessionId: strOrNull(r.session_id),
+      trackId: String(r.track_id),
+      cornerId: String(r.corner_id),
+      passes: json<LiveDrillPass[]>(r.passes_json, []),
+      startedAt: num(r.started_at),
+      endedAt: num(r.ended_at),
+      targetMs: numOrNull(r.target_ms),
+    };
+  }
+
+  saveDrill(d: CornerDrill): void {
+    this.db
+      .prepare(
+        `INSERT INTO corner_drills (id, session_id, track_id, corner_id, passes_json, target_ms, started_at, ended_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(id) DO UPDATE SET passes_json = excluded.passes_json,
+           target_ms = excluded.target_ms, ended_at = excluded.ended_at`,
+      )
+      .run(
+        d.id,
+        d.sessionId,
+        d.trackId,
+        d.cornerId,
+        JSON.stringify(d.passes),
+        d.targetMs,
+        d.startedAt,
+        d.endedAt,
+      );
+  }
+
+  /** Drills of a session, oldest first. */
+  listDrills(sessionId: Id): CornerDrill[] {
+    return (
+      this.db
+        .prepare('SELECT * FROM corner_drills WHERE session_id = ? ORDER BY started_at')
+        .all(sessionId) as Row[]
+    ).map((r) => this.#drill(r));
+  }
+
+  /** Drills of a corner across sessions, newest first. */
+  listDrillsForCorner(trackId: Id, cornerId: string, limit = 20): CornerDrill[] {
+    return (
+      this.db
+        .prepare(
+          'SELECT * FROM corner_drills WHERE track_id = ? AND corner_id = ? ORDER BY started_at DESC LIMIT ?',
+        )
+        .all(trackId, cornerId, limit) as Row[]
+    ).map((r) => this.#drill(r));
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // Goals (spec 13)
+  // ---------------------------------------------------------------------------------------------
+
+  #goal(r: Row): Goal {
+    return {
+      id: String(r.id),
+      trackId: String(r.track_id),
+      carCode: numOrNull(r.car_code),
+      targetMs: num(r.target_ms),
+      createdAt: num(r.created_at),
+      achievedAt: numOrNull(r.achieved_at),
+      achievedLapId: strOrNull(r.achieved_lap_id),
+    };
+  }
+
+  /**
+   * The goal being chased on a track: the one for this car when there is one, else the one for any
+   * car. Reached goals are history, not active.
+   */
+  getActiveGoal(trackId: Id, carCode: number | null): Goal | null {
+    const rows = (
+      this.db
+        .prepare(
+          `SELECT * FROM goals WHERE track_id = ? AND achieved_at IS NULL
+           ORDER BY created_at DESC`,
+        )
+        .all(trackId) as Row[]
+    ).map((r) => this.#goal(r));
+    return (
+      (carCode !== null ? rows.find((g) => g.carCode === carCode) : undefined) ??
+      rows.find((g) => g.carCode === null) ??
+      null
+    );
+  }
+
+  /** Reached goals of a track, newest first. */
+  listGoalHistory(trackId: Id): Goal[] {
+    return (
+      this.db
+        .prepare(
+          `SELECT * FROM goals WHERE track_id = ? AND achieved_at IS NOT NULL
+           ORDER BY achieved_at DESC`,
+        )
+        .all(trackId) as Row[]
+    ).map((r) => this.#goal(r));
+  }
+
+  /**
+   * Sets the goal of a track and car (`carCode` null = any car), replacing the active one of the
+   * same scope. Returns the stored goal.
+   */
+  setGoal(trackId: Id, carCode: number | null, targetMs: number, now = Date.now()): Goal {
+    const goal: Goal = {
+      id: newId(),
+      trackId,
+      carCode,
+      targetMs: Math.round(targetMs),
+      createdAt: now,
+      achievedAt: null,
+      achievedLapId: null,
+    };
+    this.db.exec('BEGIN');
+    try {
+      this.db
+        .prepare(
+          `DELETE FROM goals WHERE track_id = ? AND achieved_at IS NULL
+           AND ((? IS NULL AND car_code IS NULL) OR car_code = ?)`,
+        )
+        .run(trackId, carCode, carCode);
+      this.db
+        .prepare(
+          `INSERT INTO goals (id, track_id, car_code, target_ms, created_at, achieved_at, achieved_lap_id)
+           VALUES (?, ?, ?, ?, ?, NULL, NULL)`,
+        )
+        .run(goal.id, goal.trackId, goal.carCode, goal.targetMs, goal.createdAt);
+      this.db.exec('COMMIT');
+    } catch (e) {
+      this.db.exec('ROLLBACK');
+      throw e;
+    }
+    return goal;
+  }
+
+  /** Removes the active goal of the scope. Returns whether there was one. */
+  clearGoal(trackId: Id, carCode: number | null): boolean {
+    return (
+      Number(
+        this.db
+          .prepare(
+            `DELETE FROM goals WHERE track_id = ? AND achieved_at IS NULL
+             AND ((? IS NULL AND car_code IS NULL) OR car_code = ?)`,
+          )
+          .run(trackId, carCode, carCode).changes,
+      ) > 0
+    );
+  }
+
+  /** Marks a goal as reached, once: a goal that was already reached stays as it was. */
+  markGoalAchieved(goalId: Id, lapId: Id, at: number): boolean {
+    return (
+      Number(
+        this.db
+          .prepare(
+            `UPDATE goals SET achieved_at = ?, achieved_lap_id = ?
+             WHERE id = ? AND achieved_at IS NULL`,
+          )
+          .run(at, lapId, goalId).changes,
+      ) > 0
+    );
   }
 
   /** Laps of a session in lap order. */

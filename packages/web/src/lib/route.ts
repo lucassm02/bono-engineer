@@ -6,6 +6,7 @@
  *   #/inicio                          home: history organised by track (default outside a race)
  *   #/analise                         all sessions list
  *   #/analise/sessao/:sessionId       session detail (laps)
+ *   #/analise/sessao/:sessionId/resumo   session summary (spec 12)
  *   #/analise/comparar?lap=&ref=&extra=a,b   lap comparison
  *   #/analise/pista/:trackId?session= track page (consistency, evolution)
  *   #/captura                         reference capture
@@ -21,6 +22,7 @@ export type RouteName =
   | 'home'
   | 'sessions'
   | 'session'
+  | 'summary'
   | 'compare'
   | 'track'
   | 'capture'
@@ -85,6 +87,9 @@ export function parseRoute(hash: string): Route {
   if (a === 'analise') {
     if (segs.length === 1) return r('sessions');
     if (b === 'sessao' && c && segs.length === 3) return r('session', { id: c });
+    if (b === 'sessao' && c && segs.length === 4 && segs[3] === 'resumo') {
+      return r('summary', { id: c });
+    }
     if (b === 'comparar' && segs.length === 2) return r('compare');
     if (b === 'pista' && c && segs.length === 3) return r('track', { id: c });
     return r('notFound');
@@ -127,6 +132,8 @@ export const routes = {
   sessions: (q: { track?: string; car?: string | number } = {}) =>
     href('/analise', { track: q.track, car: q.car }),
   session: (id: string) => href(`/analise/sessao/${encodeURIComponent(id)}`),
+  /** Session summary: best lap, pace, consistency, what to do next. */
+  summary: (id: string) => href(`/analise/sessao/${encodeURIComponent(id)}/resumo`),
   compare: (q: { lap?: string; ref?: string; extra?: string[]; corner?: string }) =>
     href('/analise/comparar', {
       lap: q.lap,

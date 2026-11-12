@@ -113,14 +113,18 @@ function EngineerHud() {
       run.laps.length < TRAINING_LAPS &&
       (!run.sessionId || run.sessionId === f.sessionId);
     const engineer = f.engineer;
-    const focusCornerIds = inTraining
-      ? run.trackId === f.track?.id &&
-        run.carCode === f.car.carCode &&
-        engineer?.status === 'ready' &&
-        run.referenceId === engineer.referenceLapId
-        ? run.corners.map((corner) => corner.id)
-        : []
-      : null;
+    // a corner drill (spec 18) makes the engineer talk only about that corner
+    const drilling = f.drill !== undefined;
+    const focusCornerIds = drilling
+      ? [f.drill!.cornerId]
+      : inTraining
+        ? run.trackId === f.track?.id &&
+          run.carCode === f.car.carCode &&
+          engineer?.status === 'ready' &&
+          run.referenceId === engineer.referenceLapId
+          ? run.corners.map((corner) => corner.id)
+          : []
+        : null;
     const env: RadioStepEnv = {
       audio:
         muted ||
@@ -134,7 +138,8 @@ function EngineerHud() {
             : 'ready',
       sampleAgeMs: now - live.receivedAt,
       focusCornerIds,
-      assistCornerIds: cornerCalls ? focusCornerIds : null,
+      assistCornerIds: cornerCalls || drilling ? focusCornerIds : null,
+      ...(drilling ? { drill: true } : {}),
     };
     const out = radioEngine.step(f, env);
     if (out.stop) stopEngineerVoice();

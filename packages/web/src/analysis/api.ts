@@ -11,8 +11,11 @@ import type {
   ApiDailyRaces,
   ApiDataSummary,
   ApiDiscoveryScanResult,
+  ApiDrillState,
+  ApiDrillStop,
   ApiErrorBody,
   ApiEvolution,
+  ApiGoalPut,
   ApiImportMode,
   ApiImportResult,
   ApiLapAnalysis,
@@ -25,6 +28,8 @@ import type {
   ApiStatus,
   ApiTraces,
   ApiTrackAnalysis,
+  ApiTrackGoal,
+  ApiTrackSectors,
   CoachConfig,
   CoachConfigPatch,
   CoachReport,
@@ -32,11 +37,13 @@ import type {
   DeviceInfo,
   EngineerRadioLog,
   FirewallStatus,
+  Goal,
   LanInfo,
   Lap,
   ReferenceCaptureStatus,
   Session,
   SessionDetail,
+  SessionSummary,
   StartCaptureRequest,
   Track,
   TrackRecognition,
@@ -161,6 +168,7 @@ export const api = {
   sessions: (q: { trackId?: string; carCode?: number; mode?: string; limit?: number } = {}) =>
     get<Session[]>(`/api/sessions${qs({ limit: 500, ...q })}`),
   session: (id: string) => get<SessionDetail>(`/api/sessions/${enc(id)}`),
+  sessionSummary: (id: string) => get<SessionSummary>(`/api/sessions/${enc(id)}/summary`),
   deleteSession: (id: string) => request<{ ok: true }>('DELETE', `/api/sessions/${enc(id)}`),
   lap: (id: string) => get<Lap>(`/api/laps/${enc(id)}`),
   engineerRadio: (id: string) => get<EngineerRadioLog[]>(`/api/laps/${enc(id)}/engineer-radio`),
@@ -208,8 +216,20 @@ export const api = {
     request<Track>('PUT', `/api/tracks/${enc(trackId)}/sectors`, { count }),
   redetectCorners: (trackId: string) =>
     request<ApiRedetectCornersResult>('POST', `/api/tracks/${enc(trackId)}/redetect-corners`),
+  drill: () => get<ApiDrillState>('/api/drill'),
+  startDrill: (cornerId: string, targetMs?: number | null) =>
+    request<ApiDrillState>('POST', '/api/drill', { cornerId, targetMs: targetMs ?? null }),
+  stopDrill: () => request<ApiDrillStop>('DELETE', '/api/drill'),
+  trackGoal: (trackId: string, carCode?: number | null) =>
+    get<ApiTrackGoal>(`/api/tracks/${enc(trackId)}/goal${qs({ carCode })}`),
+  setGoal: (trackId: string, body: ApiGoalPut) =>
+    request<Goal>('PUT', `/api/tracks/${enc(trackId)}/goal`, body),
+  clearGoal: (trackId: string, carCode?: number | null) =>
+    request<{ ok: true }>('DELETE', `/api/tracks/${enc(trackId)}/goal${qs({ carCode })}`),
 
   trackAnalysis: (trackId: string) => get<ApiTrackAnalysis>(`/api/analysis/tracks/${enc(trackId)}`),
+  trackSectors: (trackId: string, carCode?: number) =>
+    get<ApiTrackSectors>(`/api/analysis/tracks/${enc(trackId)}/sectors${qs({ carCode })}`),
   lapAnalysis: (lapId: string) => get<ApiLapAnalysis>(`/api/analysis/laps/${enc(lapId)}`),
   lapEvents: (lapId: string) => get<ApiLapDrivingEvents>(`/api/analysis/laps/${enc(lapId)}/events`),
   compare: (lap: string, ref: string) =>

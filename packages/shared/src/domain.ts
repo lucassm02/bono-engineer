@@ -244,3 +244,21 @@ export interface TrackCenterline {
   y: number[];
   z: number[];
 }
+
+/** Lap time range a goal can have (ms): 10 s to 1 hour. */
+export const GOAL_RANGE_MS = [10_000, 3_600_000] as const;
+
+/**
+ * The lap time the driver wants to reach on a track (spec 13). One is active per track and car
+ * (`carCode` null = any car); reaching it fills `achievedAt` and the goal stays in the history.
+ */
+export interface Goal {
+  id: Id;
+  trackId: Id;
+  /** Null = valid for any car. */
+  carCode: number | null;
+  targetMs: number;
+  createdAt: number;
+  achievedAt: number | null;
+  achievedLapId: Id | null;
+}

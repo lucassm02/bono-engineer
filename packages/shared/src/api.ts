@@ -15,11 +15,14 @@ import type {
   LapDrivingEvents,
   MapCorner,
   MicrosectorAnalysis,
+  SectorTable,
   TraceChannel,
   TrackAnalysis,
   TrackSectorRange,
 } from './analysis.ts';
-import type { Id, LapSampleChannel, Track } from './domain.ts';
+import type { Goal, Id, LapSampleChannel, Track } from './domain.ts';
+import type { DrillSummary } from './drill.ts';
+import type { CornerDrill, LiveDrill } from './live.ts';
 
 /** Prefix of the analysis REST endpoints. */
 export const API_ANALYSIS_PREFIX = '/api/analysis';
@@ -101,6 +104,19 @@ export interface ApiTraces {
   laps: { lapId: Id; channels: Record<string, (number | null)[]> }[];
 }
 
+/**
+ * GET /api/analysis/tracks/:trackId/sectors?carCode=: best time per sector, the lap that made it
+ * and the ideal lap, over the fastest valid own laps of the track (400 `invalidArgument` while
+ * there is none).
+ */
+export interface ApiTrackSectors {
+  trackId: Id;
+  carCode: number | null;
+  table: SectorTable;
+  /** The laps behind the table, to name the lap of each best sector. */
+  laps: { lapId: Id; number: number; startedAt: number; timeMs: number }[];
+}
+
 /** GET /api/analysis/microsectors?laps=a,b,c&ref=: microsectors, colors, theoretical best. */
 export type ApiMicrosectors = MicrosectorAnalysis;
 
@@ -137,6 +153,56 @@ export const API_LAP_CSV_COLUMNS = [
   'y',
   'z',
 ] as const;
+
+/** GET /api/drill: the corner drill in progress (null when none). */
+export interface ApiDrillState {
+  drill: LiveDrill | null;
+}
+
+/** POST /api/drill. */
+export interface ApiDrillStart {
+  cornerId: string;
+  /** Target for the stretch time (ms), optional. */
+  targetMs?: number | null;
+}
+
+/** DELETE /api/drill: the drill that ended (null without passes) and its summary. */
+export interface ApiDrillStop {
+  drill: CornerDrill | null;
+  summary: DrillSummary | null;
+}
+
+/**
+ * GET /api/tracks/:id/goal?carCode=: the active goal of the track (for the car, else for any car),
+ * the history of reached goals and a suggested target (null without enough laps).
+ */
+export interface ApiTrackGoal {
+  trackId: Id;
+  active: Goal | null;
+  history: Goal[];
+  suggestion: ApiGoalSuggestion | null;
+  /** Best valid own lap on the track (and car, when given), the reference of the progress. */
+  bestLapMs: number | null;
+  /** Best valid own lap from before the active goal was set: where the progress starts. */
+  baselineMs: number | null;
+}
+
+/** A realistic target: the ideal lap or 0.5 % under the best lap, whichever is slower (spec 13). */
+export interface ApiGoalSuggestion {
+  targetMs: number;
+  basis: 'idealLap' | 'bestLap';
+  /** Ideal lap (sum of the best sectors), when it could be computed. */
+  idealLapMs: number | null;
+}
+
+/** PUT /api/tracks/:id/goal. */
+export interface ApiGoalPut {
+  targetMs: number;
+  /** Null or absent = any car. */
+  carCode?: number | null;
+  /** Accept a target slower than the best lap (the server refuses it otherwise). */
+  allowSlower?: boolean;
+}
 
 /** POST /api/tracks/:id/redetect-corners. */
 export interface ApiRedetectCornersResult {

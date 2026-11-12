@@ -41,6 +41,7 @@ const fixed: Record<string, Translation> = {
   'Alivia o acelerador.': ['Lift off the throttle.', 'Levanta el pie del acelerador.'],
   'Boa volta.': ['Good lap.', 'Buena vuelta.'],
   'Mesmo tempo.': ['Same time.', 'Mismo tiempo.'],
+  'Combustível para cinco voltas.': ['Five laps of fuel left.', 'Combustible para cinco vueltas.'],
   'Combustível para duas voltas.': ['Two laps of fuel left.', 'Combustible para dos vueltas.'],
   'Combustível para uma volta.': ['One lap of fuel left.', 'Combustible para una vuelta.'],
   'Combustível para menos de uma volta.': [

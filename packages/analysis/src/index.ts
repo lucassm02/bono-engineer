@@ -66,6 +66,8 @@ export {
   MICROSECTOR_TONE_COLORS,
   type MicrosectorOptions,
   microsectorColors,
+  sectorTable,
+  sectorTableOf,
 } from './microsectors.ts';
 export {
   channel,
@@ -96,6 +98,15 @@ export {
   type ResampleOptions,
   resampleLap,
 } from './resample.ts';
+export {
+  buildSessionSummary,
+  CLEAN_LAP_RATIO,
+  lapSlope,
+  paceTrend,
+  type SessionSummaryInput,
+  type SummaryLap,
+  topAverage,
+} from './session-summary.ts';
 export {
   type ComparisonSummaryAI,
   type ComparisonSummaryOptions,

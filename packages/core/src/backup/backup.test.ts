@@ -180,6 +180,31 @@ describe('backup .bono', () => {
     expect(b.listSessions({}).length).toBe(1);
   });
 
+  it('carries the goals of a track and follows the circuit that was matched', async () => {
+    const a = open();
+    a.insertTrack(track('trk-a', 'Meu circuito'));
+    a.saveSession(session('s1', 'trk-a'));
+    const reached = a.setGoal('trk-a', null, 95_000, 10);
+    a.markGoalAchieved(reached.id, 'l0', 20);
+    a.setGoal('trk-a', 3455, 89_000, 30);
+    await a.flush();
+    const file = join(tempDir(), 'metas.bono');
+    await createBackup(a, { laps: true, settings: false, recordings: false }, file, META);
+
+    const b = open();
+    b.insertTrack(track('trk-b', 'Circuito dele'));
+    await importBackup(b, file, { mode: 'merge', settings: false }, META);
+    expect(b.getActiveGoal('trk-b', 3455)?.targetMs).toBe(89_000);
+    expect(b.listGoalHistory('trk-b')[0]).toMatchObject({ targetMs: 95_000, achievedAt: 20 });
+
+    // Without laps in the backup, no goal travels either (the track is not there).
+    const only = join(tempDir(), 'cfg.bono');
+    await createBackup(a, { laps: false, settings: true, recordings: false }, only, META);
+    const c = open();
+    await importBackup(c, only, { mode: 'merge', settings: true }, META);
+    expect(c.getActiveGoal('trk-a', 3455)).toBeNull();
+  });
+
   it('adds a circuit that is new to the destination', async () => {
     const a = open();
     a.insertTrack(track('trk-a', 'Circuito grande', 900));

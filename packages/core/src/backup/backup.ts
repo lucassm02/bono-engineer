@@ -119,7 +119,8 @@ function clean(db: DatabaseSync, options: BackupOptions): void {
   if (!options.laps) {
     db.exec(`
       DELETE FROM engineer_radio_logs; DELETE FROM reference_meta; DELETE FROM coach_reports;
-      DELETE FROM laps; DELETE FROM sessions; DELETE FROM track_centerlines; DELETE FROM tracks;
+      DELETE FROM goals; DELETE FROM corner_drills; DELETE FROM laps; DELETE FROM sessions; DELETE FROM track_centerlines;
+      DELETE FROM tracks;
     `);
   }
   db.exec('VACUUM');
@@ -296,7 +297,8 @@ export async function importBackup(
         if (options.mode === 'replace') {
           db.exec(`
             DELETE FROM engineer_radio_logs; DELETE FROM reference_meta; DELETE FROM coach_reports;
-            DELETE FROM laps; DELETE FROM sessions; DELETE FROM track_centerlines; DELETE FROM tracks;
+            DELETE FROM goals; DELETE FROM corner_drills; DELETE FROM laps; DELETE FROM sessions; DELETE FROM track_centerlines;
+            DELETE FROM tracks;
           `);
           if (options.settings) db.exec('DELETE FROM settings; DELETE FROM device_profiles;');
         }
@@ -368,6 +370,8 @@ export async function importBackup(
         copyTable('reference_meta');
         result.coachReports = copyTable('coach_reports', ['track_id']);
         copyTable('engineer_radio_logs');
+        copyTable('goals', ['track_id']);
+        copyTable('corner_drills', ['track_id']);
 
         if (options.settings) {
           const settingsCols = common(db, 'settings');

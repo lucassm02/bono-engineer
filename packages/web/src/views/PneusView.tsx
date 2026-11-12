@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { TyrePace } from '../components/TyrePace.tsx';
 import { SLIP_ALERT, SLIP_WARN, SUSPENSION_RANGE_M, TYRE_TEMP_SCALE } from '../config.ts';
 import { setAttr, setStyle, setText } from '../lib/dom.ts';
 import { clamp, formatInt } from '../lib/format.ts';
@@ -150,6 +151,7 @@ export function PneusView() {
       {card(2)}
       {card(3)}
       <TempLegend />
+      <TyrePace />
     </div>
   );
 }

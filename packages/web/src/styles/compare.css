@@ -767,3 +767,117 @@ fieldset.ui-segmented {
     background: color-mix(in srgb, var(--accent) 14%, var(--surface-2));
   }
 }
+
+/* Onde você perde tempo (spec 15) */
+.cl-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cl-card {
+  display: grid;
+  align-content: start;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+}
+.cl-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+}
+.cl-rank {
+  color: var(--text-3);
+}
+.cl-loss {
+  margin-left: auto;
+  font-size: var(--fs-lg);
+  font-weight: 700;
+}
+.cl-reasons {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--sp-1);
+}
+.cl-prob {
+  color: var(--text-3);
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--track-caps);
+}
+.cl-raw {
+  margin: 0;
+}
+.cl-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.cl-actions .ui-btn {
+  min-height: 44px;
+}
+.cl-sum {
+  margin: var(--sp-3) 0 0;
+}
+
+/* Mapa com cor por canal (spec 17) */
+.cmp-modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+  margin: 0 0 var(--sp-2);
+  padding: 0;
+  border: 0;
+}
+.cmp-modes .ui-chip {
+  position: relative;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: var(--fs-xs);
+  cursor: pointer;
+}
+.cmp-modes .ui-chip[data-on="1"] {
+  border-color: var(--purple);
+  background: var(--purple-soft);
+}
+.cmp-modes input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.cmp-modes .ui-chip:has(input:focus-visible) {
+  outline: 2px solid var(--focus, var(--purple));
+  outline-offset: 2px;
+}
+.cmp-ramp {
+  display: grid;
+  gap: 2px;
+  margin-top: var(--sp-2);
+}
+.cmp-ramp-bar {
+  height: 8px;
+  border-radius: 999px;
+}
+.cmp-ramp-ends {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-3);
+  font-size: var(--fs-2xs);
+}
+.cmp-diff-list {
+  margin: var(--sp-2) 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 2px;
+  color: var(--text-2);
+  font-size: var(--fs-xs);
+}

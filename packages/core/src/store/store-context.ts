@@ -1,6 +1,16 @@
 /** LiveEngineContext backed by Gt7Store (SQLite + trace files). */
 
-import type { Id, Lap, LapTrace, Session, Track, TrackCenterline, Vec2 } from '@gt7/shared';
+import type {
+  CornerDrill,
+  Goal,
+  Id,
+  Lap,
+  LapTrace,
+  Session,
+  Track,
+  TrackCenterline,
+  Vec2,
+} from '@gt7/shared';
 import type { IdentifyTrackInput, LiveEngineContext, TrackRecords } from '../live/context.ts';
 import type { StoredLap } from '../live/delta-reference.ts';
 import {
@@ -61,6 +71,18 @@ export class StoreEngineContext implements LiveEngineContext {
 
   getTrackRecords(trackId: Id, carCode: number, sectorCount: number): TrackRecords {
     return this.store.getTrackRecords(trackId, carCode, sectorCount);
+  }
+
+  getActiveGoal(trackId: Id, carCode: number): Goal | null {
+    return this.store.getActiveGoal(trackId, carCode);
+  }
+
+  markGoalAchieved(goalId: Id, lapId: Id, at: number): boolean {
+    return this.store.markGoalAchieved(goalId, lapId, at);
+  }
+
+  saveDrill(drill: CornerDrill): void {
+    this.store.saveDrill(drill);
   }
 
   #withTrace(lap: Lap | null): StoredLap | null {

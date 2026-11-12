@@ -12,6 +12,7 @@ import type { RouteContext } from './context.ts';
 import { currentSessionRoutes } from './current-session.ts';
 import { dataRoutes } from './data.ts';
 import { deviceRoutes } from './devices.ts';
+import { drillRoutes } from './drill.ts';
 import { eventsRoutes } from './events.ts';
 import { mcpInfoRoutes } from './mcp-info.ts';
 import { sessionRoutes } from './sessions.ts';
@@ -28,6 +29,7 @@ export const ROUTE_MODULES: RouteModule[] = [
   sessionRoutes,
   trackRoutes,
   deviceRoutes,
+  drillRoutes,
   captureRoutes,
   analysisRoutes,
   coachRoutes,

@@ -1,0 +1,112 @@
+/* Resumo da sessão (spec 12) */
+
+.ss-note {
+  margin: 0 0 var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  color: var(--text-2);
+}
+.ss-compare p {
+  margin: 0 0 var(--sp-2);
+}
+.ss-pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.ss-pick .ui-chip {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill, 999px);
+  cursor: pointer;
+}
+.ss-pick .ui-chip[data-on="1"] {
+  border-color: var(--purple);
+  background: var(--purple-soft);
+}
+.ss-pick input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.ss-pick .ui-chip:has(input:focus-visible) {
+  outline: 2px solid var(--focus, var(--purple));
+  outline-offset: 2px;
+}
+.ss-hist-box {
+  margin-top: var(--sp-3);
+}
+.ss-hist {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sp-2);
+  height: 96px;
+}
+.ss-hist-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2px;
+  color: var(--text-3);
+  font-size: var(--fs-2xs);
+}
+.ss-hist-col {
+  flex: 1;
+  height: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: stretch;
+  gap: 2px;
+}
+.ss-hist-bar {
+  display: block;
+  min-height: 2px;
+  border-radius: var(--r-xs, 3px) var(--r-xs, 3px) 0 0;
+  background: var(--purple);
+}
+.ss-hist-bar[data-empty="1"] {
+  background: var(--line);
+}
+.ss-hist-n {
+  text-align: center;
+  color: var(--text-3);
+  font-size: var(--fs-2xs);
+}
+.ss-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: var(--sp-4);
+}
+.ss-list,
+.ss-tips {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--sp-2);
+}
+.ss-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+.ss-tips li {
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--purple);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+}
+[data-trend="improving"] {
+  color: var(--gain);
+}
+[data-trend="worsening"] {
+  color: var(--loss);
+}

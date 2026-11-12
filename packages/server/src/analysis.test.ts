@@ -13,12 +13,16 @@ import type {
   ApiRedetectCornersResult,
   ApiTraces,
   ApiTrackAnalysis,
+  ApiTrackSectors,
   CoachConfig,
   CoachReport,
   CoachReportSummary,
   ConsistencyReport,
+  CornerLossReport,
   EvolutionReport,
+  SessionSummary,
 } from '@gt7/shared';
+import { lateralDifference } from '@gt7/shared';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
@@ -231,6 +235,35 @@ describe('analysis REST, MCP over HTTP and the AI coach', () => {
     expect(ms.body.referenceLapId).toBe(seed.referenceLapId);
     expect(ms.body.report.theoreticalBestMs).toBeLessThanOrEqual(ms.body.report.bestLapMs);
 
+    const loss = await api<CornerLossReport>(
+      'GET',
+      `/api/analysis/compare/corner-loss?lap=${amLaps[0]}&ref=auto&topN=2`,
+    );
+    expect(loss.status).toBe(200);
+    expect(loss.body.lapA).toBe(amLaps[0]);
+    expect(loss.body.rows.length).toBeLessThanOrEqual(2);
+    expect(loss.body.rows[0]?.lossMs ?? 20).toBeGreaterThanOrEqual(20);
+    expect((await api('GET', '/api/analysis/compare/corner-loss')).status).toBe(400);
+
+    const sec = await api<ApiTrackSectors>('GET', `/api/analysis/tracks/${seed.trackId}/sectors`);
+    expect(sec.status).toBe(200);
+    expect(sec.body.table.rows.length).toBeGreaterThanOrEqual(2);
+    expect(sec.body.table.idealLapMs).toBeLessThanOrEqual(sec.body.table.bestLapMs);
+    expect(sec.body.laps.some((l) => l.lapId === sec.body.table.rows[0]!.bestLapId)).toBe(true);
+    const noLaps = await api('GET', `/api/analysis/tracks/${seed.trackId}/sectors?carCode=999999`);
+    expect(noLaps.status).toBe(400);
+
+    const sum = await api<SessionSummary>(
+      'GET',
+      `/api/sessions/${seed.sessions[0]!.sessionId}/summary`,
+    );
+    expect(sum.status).toBe(200);
+    expect(sum.body.sessionId).toBe(seed.sessions[0]!.sessionId);
+    expect(sum.body.laps.total).toBeGreaterThan(0);
+    expect(sum.body.best?.timeMs).toBeGreaterThan(0);
+    expect(sum.body.pace?.top5AvgMs).toBeGreaterThan(0);
+    expect((await api('GET', '/api/sessions/nao-existe/summary')).status).toBe(404);
+
     const cs = await api<ConsistencyReport>(
       'GET',
       `/api/analysis/consistency?sessionId=${seed.sessions[0]!.sessionId}`,
@@ -262,6 +295,19 @@ describe('analysis REST, MCP over HTTP and the AI coach', () => {
       expect(Object.keys(l.channels)).toEqual(['speed', 'throttle', 'brake', 'gear', 'steering']);
       expect(l.channels.speed).toHaveLength(r.body.distanceM.length);
     }
+    // spec 17: two laps on the same track line → their lateral offsets give the map difference
+    const lat = await api<ApiTraces>(
+      'GET',
+      `/api/analysis/traces?laps=${amLaps[0]},${seed.referenceLapId}&channels=offset,x,z&stepM=5`,
+    );
+    expect(lat.status).toBe(200);
+    const [mine, theirs] = lat.body.laps.map((l) => l.channels.offset!);
+    const diff = lateralDifference(mine!, theirs!);
+    const known = diff.filter((v): v is number => v !== null);
+    expect(known.length).toBeGreaterThan(50);
+    expect(lateralDifference(mine!, mine!).every((v) => v === null || v === 0)).toBe(true);
+    expect(Math.max(...known.map(Math.abs))).toBeLessThan(25);
+
     const capped = await api<ApiTraces>(
       'GET',
       `/api/analysis/traces?laps=${amLaps[0]}&channels=speedKmh&maxPoints=50`,
