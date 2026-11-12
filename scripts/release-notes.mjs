@@ -18,6 +18,7 @@ if (start === -1 || !lines[start].startsWith(`## [${version}] - `)) {
 }
 
 const baseDirective = /^<!-- release-notes-base: (\d+\.\d+\.\d+) -->$/;
+const sinceDirective = /^<!-- release-notes-since: (\d+\.\d+\.\d+) -->$/;
 
 function entryLines(startIndex) {
   const end = lines.findIndex(
@@ -28,7 +29,7 @@ function entryLines(startIndex) {
 
 function entryNotes(entry) {
   return entry
-    .filter((line) => !baseDirective.test(line))
+    .filter((line) => !baseDirective.test(line) && !sinceDirective.test(line))
     .join('\n')
     .trim();
 }
@@ -38,9 +39,31 @@ const notes = entryNotes(entry);
 const outputPath = process.argv[2];
 if (!notes || !outputPath) throw new Error('Provide an output path and nonempty release notes.');
 
+/** Every released entry from `since` up to (not including) the current version, newest first. */
+function historySince(since) {
+  const sections = [];
+  let found = false;
+  lines.forEach((line, index) => {
+    const m = /^## \[(\d+\.\d+\.\d+)\] - (\d{4}-\d{2}-\d{2})$/.exec(line);
+    if (!m || index <= start) return;
+    const body = entryNotes(entryLines(index));
+    if (body) sections.push(`### ${m[1]} (${m[2]})\n\n${body.replace(/^### /gm, '#### ')}`);
+    if (m[1] === since) found = true;
+  });
+  if (!found)
+    throw new Error(`Release notes history starts at ${since}, which is not in the changelog.`);
+  const cut = sections.findIndex((section) => section.startsWith(`### ${since} `));
+  return sections.slice(0, cut + 1).join('\n\n');
+}
+
 const baseVersion = baseDirective.exec(entry.find((line) => baseDirective.test(line)) ?? '')?.[1];
+const sinceVersion = sinceDirective.exec(
+  entry.find((line) => sinceDirective.test(line)) ?? '',
+)?.[1];
 let description = notes;
-if (baseVersion) {
+if (sinceVersion) {
+  description = `## New in ${version}\n\n${notes}\n\n## Earlier versions\n\n${historySince(sinceVersion)}`;
+} else if (baseVersion) {
   const base = lines.findIndex(
     (line, index) => index > start && line.startsWith(`## [${baseVersion}] - `),
   );

@@ -7,6 +7,31 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-11
+
+<!-- release-notes-since: 0.1.0 -->
+
+### Added
+
+- Added a 6-step first-run assistant (language and voice, PS5 connection, training style, engineer, dashboard layout, summary) that resumes where it stopped, plus a light invitation for people who already have history. The engineer now stays on or off between launches.
+- Added a guided tour of the live dashboard (run on the demo, so it does not need the PS5 or a car on track) and of the analysis area, with one-time hints and a "Take the tour" button in the menu.
+- Added a live context bar that always shows the track, the car and the engineer state, a three-step guide for the recognition lap, honest engineer status in every mode, and a "Which track is it?" sheet with catalog suggestions.
+- Added an optional track choice before the session starts. A saved track lets the engineer talk from lap 1, with a safe check and correction if the choice turns out wrong.
+- Added a Discord setup wizard (create the bot, paste the token, invite it, pick the voice channel) with an automatic invite link and a channel list. The bot joins when anyone is in the channel, so the user ID is no longer needed. The manual delay calibration stays available as fine-tuning.
+- Added a switch in the live menu to speak through Discord, a custom Windows title bar and a themed scrollbar.
+- Added a public site for GitHub Pages with SEO, English summary, install and Discord guides, and a workflow that publishes it.
+- Added local usage diagnostics in Settings > About (stored only on this device) and Spanish and English translations for all new screens.
+
+### Changed
+
+- Reorganized Settings into six groups (Home, Console, Engineer, Dashboard and devices, Accounts and data, About) with a health summary, search, a compact device list, and advanced options collapsed. Raw packet recording is now off on new installations.
+- Applied one design system (Pit Wall tokens, shared components, a single modal) across the live dashboard and the analysis area, with accessibility fixes for contrast, text size and 44 px touch targets, one glossary for labels, and actionable empty states.
+
+### Fixed
+
+- Fixed the Windows title bar layout on narrow windows.
+- Replaced the misleading "Radio ready" status with the real engineer state when no track or reference exists.
+
 ## [0.1.4] - 2026-11-11
 
 ### Changed
@@ -72,7 +97,8 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Added replay reference capture, distance-aligned lap comparisons, synchronized telemetry charts, consistency and progress analysis, and data exports.
 - Added the driving guide, an Anthropic-powered AI debrief, and MCP tools for telemetry, laps, sessions, tracks, comparisons, and PNG charts.
 
-[Unreleased]: https://github.com/lucassm02/bono-engineer/compare/v0.1.4...main
+[Unreleased]: https://github.com/lucassm02/bono-engineer/compare/v0.2.0...main
+[0.2.0]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.2.0
 [0.1.4]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.1.4
 [0.1.3]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.1.3
 [0.1.2]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.1.2
