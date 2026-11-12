@@ -4,6 +4,7 @@
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { brandIconContents } from '../packages/shared/src/brand.ts';
 import { NOT_FOUND, PAGES, pageUrl, ROOT_DIR, SITE, SITE_DIR } from './config.mjs';
 
 export const esc = (s) =>
@@ -28,8 +29,8 @@ export function shotDims(name) {
   return { width, height: Math.round((h * width) / w) };
 }
 
-/** Marca (mesmo traçado do favicon do app). */
-export const LOGO_SVG = `<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false"><rect width="64" height="64" rx="14" fill="#0b1118"/><g fill="none" stroke="#f7f5ea" stroke-width="3" stroke-linejoin="round"><path d="M16 36.5V14a4 4 0 0 1 4-4h14c6.5 0 9.5 6.5 3.7 10L21 29.5c-3 1.8-5 4-5 7Z"/><path d="M16 36.5C16 31.5 24 29 32.5 29 42 29 50 34 50 42S43 55 34 55H20a4 4 0 0 1-4-4Z"/></g><path fill="#66e4f6" d="m13.2 47.8 5.6-2.9v1.6l-5.6 2.9Z"/></svg>`;
+/** Marca (a mesma do app: packages/shared/src/brand.ts). */
+export const LOGO_SVG = `<svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">${brandIconContents()}</svg>`;
 
 export const ICON_DOWNLOAD = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 4v11"/><path d="m7 11 5 5 5-5"/><path d="M5 20h14"/></svg>`;
 

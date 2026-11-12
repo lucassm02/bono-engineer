@@ -4,7 +4,7 @@
 
 ## Sinal de box
 
-O monograma desenha um B com uma curva fechada no topo, um arco mais aberto na base e uma faixa ciano de largada. A área de análise e o menu ao vivo usam grafite (`#0b1118`) e ciano (`#66e4f6`) nos controles. O traçado do símbolo usa marfim (`#f7f5ea`). Os tempos usam algarismos tabulares para facilitar a leitura de relance.
+O monograma desenha um B de traço contínuo, com uma curva fechada no topo, um arco mais aberto na base e uma faixa ciano de largada. A área de análise e o menu ao vivo usam grafite (`#0b1118`) e ciano (`#66e4f6`) nos controles. O símbolo tem cores próprias: fundo azul-noite (`#040b17`), traço marfim (`#f8f3e7`) e faixa ciano (`#52e5fa`). Os tempos usam algarismos tabulares para facilitar a leitura de relance.
 
 O [símbolo vetorial](../packages/web/public/favicon.svg) é aplicado no web app, no desktop e na bandeja. O arquivo [brand.ts](../packages/shared/src/brand.ts) define o símbolo. Use `npm run brand:icons` para gerar os arquivos web e Windows.
 
