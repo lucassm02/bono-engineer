@@ -25,7 +25,7 @@ aparelho dela. Tudo com padrões bons: cada passo pode ser pulado e retomado dep
 | 3 | **Como você quer treinar?** | Três cartões: **Aprender uma pista** (engenheiro guia curva a curva), **Ganhar tempo** (já conheço a pista), **Só ver o painel** (engenheiro desligado). | Aprender uma pista | `controls.mode/trainingProfile`, `enabled` |
 | 4 | **Engenheiro** | Interruptor "Ligar o engenheiro", volume com som de teste, **onde ele fala**: neste aparelho · Discord (abre o assistente da spec 07, opcional, "Configurar depois"). | ligado, neste aparelho | `enabled` **persistido**, aparelho de áudio |
 | 5 | **Seu painel** | Escolher o preset: **Simples** (Corrida + Delta grande), **Completo** (inclui pneus, motor, inputs), **Corrida de endurance** (combustível, tempos). Opcional: QR para abrir no celular/tablet. | Simples no celular, Completo no desktop | `profile.views` |
-| 6 | **Pronto** | Resumo do que foi configurado ("PS5 192.168.3.26 · Voz Alex · Aprender pista") e dois botões: **Ver o tour** (spec 04) e **Ir para o ao vivo**. | — | `setup.done` |
+| 6 | **Pronto** | Resumo do que foi configurado ("PS5 192.168.3.26 · Voz 1 · Aprender pista") e dois botões: **Ver o tour** (spec 04) e **Ir para o ao vivo**. | — | `setup.done` |
 
 Barra de progresso por etapas ("Passo 3 de 6"), botões **Voltar** e **Pular passo** sempre visíveis;
 "Fazer isso depois" fecha o assistente sem perder o já feito.

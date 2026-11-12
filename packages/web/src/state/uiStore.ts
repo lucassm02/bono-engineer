@@ -52,6 +52,8 @@ export interface UiState {
   pickerOpen: boolean;
   /** Menu sheet with shortcuts to the other areas (history, compare, capture, coach, settings). */
   menuOpen: boolean;
+  /** Tab the next opening of the menu should land on (set by the `?` key, read once). */
+  menuTabRequest: 'help' | null;
   /** Editor of the "Personalizada" grid. */
   layoutEditorOpen: boolean;
   lapPopup: LapCompletedEvent | null;
@@ -96,6 +98,7 @@ export const useUi = create<UiState>()(() => ({
   overlayVisible: false,
   pickerOpen: false,
   menuOpen: false,
+  menuTabRequest: null,
   layoutEditorOpen: false,
   lapPopup: null,
   notices: [],

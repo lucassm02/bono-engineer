@@ -30,9 +30,20 @@ export function bootTarget(i: BootInput): BootTarget {
   return i.timedOut ? 'home' : 'wait';
 }
 
+/**
+ * `?tour=live` / `?tour=analysis`: starts that guided tour as soon as the app opens, with no
+ * first-run condition (for the owner to test after installing; documented in docs/design-system.md).
+ */
+export function tourFromSearch(search: string): 'live' | 'analysis' | null {
+  const v = new URLSearchParams(search).get('tour');
+  return v === 'live' || v === 'analysis' ? v : null;
+}
+
 /** True when the page was opened without any route (installed app / bare URL). */
 export function openedWithoutRoute(hash: string, search: string): boolean {
   if (new URLSearchParams(search).get('mock') === '1') return false;
+  // the tour parameter picks the page by itself (live tour = live, history tour = home)
+  if (tourFromSearch(search)) return false;
   return hash === '' || hash === '#';
 }
 

@@ -7,9 +7,12 @@
 - Oferecer exclusivamente vozes neurais masculinas em português do Brasil para o engenheiro
   de rádio. Os perfis devem soar distintos e manter dicção clara para números, marchas,
   nomes de curvas e alertas curtos.
-- Manter **Alex** como voz padrão proposta e acrescentar **pelo menos duas vozes** no primeiro
+- Manter a primeira voz (**Voz 1**, `radio:alex`) como padrão e acrescentar **pelo menos duas vozes** no primeiro
   lote. Escolher as novas vozes por amostras da mesma frase e validar a licença de distribuição
-  antes de empacotar. Provedor, nomes e timbres finais ficam para a seleção de áudio.
+  antes de empacotar. Provedor e timbres finais ficam para a seleção de áudio. Para o usuário as vozes não têm nome
+  próprio: aparecem numeradas e traduzidas ("Voz 1" a "Voz 3" em pt-BR e es, "Voice 1" a
+  "Voice 3" em en), com uma descrição curta do timbre. O nome técnico fica só no gerador, nos
+  créditos de licença e nos IDs (`radio:alex`, `radio:santa`, `radio:bruno`), que não mudam.
 - Retirar **Dora**, os demais perfis femininos e todas as vozes do sistema, navegador ou
   dispositivo do seletor e do caminho de reprodução do engenheiro. Remover a inscrição no
   catálogo de vozes do navegador e o fallback para síntese do dispositivo.
@@ -46,8 +49,8 @@ funcionar sem acesso a serviço externo, síntese online ou agente de IA.
 
 ## Critérios de aceite
 
-- O seletor exibe Alex e as novas vozes neurais masculinas em pt-BR. Cada voz permite ouvir a
-  mesma prévia, com nomes distintos. Nenhuma voz feminina ou do dispositivo fica disponível.
+- O seletor exibe as vozes neurais masculinas numeradas (Voz 1, Voz 2 e Voz 3 em pt-BR). Cada voz
+  permite ouvir a mesma prévia, com números e descrições distintos. Nenhuma voz feminina ou do dispositivo fica disponível.
 - Preferências antigas migram sem impedir a reprodução. Preferências compatíveis e demais
   controles de áudio são preservados.
 - Com acesso externo indisponível, reproduzir alertas de pneus, instruções de curva e resultados

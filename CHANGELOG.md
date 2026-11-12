@@ -7,6 +7,10 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- The radio voices no longer carry first names: they are now Voice 1, Voice 2 and Voice 3 in each language (Voz 1-3 in Portuguese and Spanish), with a short description of the tone. Saved voice preferences keep working.
+
 ## [0.2.0] - 2026-11-11
 
 <!-- release-notes-since: 0.1.0 -->

@@ -6,26 +6,13 @@
 import { type ApiStatus, PRODUCT_NAME } from '@gt7/shared';
 import { useState } from 'react';
 import { t as uiText } from '../../../lib/i18n.ts';
-import {
-  loadSetupState,
-  ONBOARDING_KEY,
-  resetSetupState,
-  saveSetupState,
-} from '../../../lib/onboarding.ts';
-import { saveString } from '../../../lib/storage.ts';
+import { routes } from '../../../lib/route.ts';
 import { applySwUpdate, useSwUpdate } from '../../../lib/swUpdate.ts';
 import { diagnosticRows, resetUsage } from '../../../lib/usage.ts';
-import { openSetupAssistant } from '../../../state/setup.ts';
+import { restartSetupAssistant } from '../../../state/setup.ts';
 import { requestTour } from '../../../state/tour.ts';
 import { Panel } from '../Panel.tsx';
 import { Advanced, CfgRow } from './ConfigRow.tsx';
-
-/** Reabre o assistente do começo: esquece os passos feitos e abre a primeira tela. */
-function resetSetup(): void {
-  saveString(ONBOARDING_KEY, '0');
-  saveSetupState(resetSetupState(loadSetupState()));
-  openSetupAssistant();
-}
 
 /** Contadores de uso deste navegador (RF4): nada sai do PC. */
 function Diagnostics() {
@@ -94,6 +81,14 @@ export function AboutGroup({ status }: { status: ApiStatus }) {
           )}
         </CfgRow>
         <CfgRow
+          title={uiText('Central de ajuda')}
+          description={uiText('Passo a passo para configurar o Bono, problemas comuns e atalhos.')}
+        >
+          <a className="ui-btn" data-variant="secondary" href={routes.help()}>
+            {uiText('Abrir a ajuda')}
+          </a>
+        </CfgRow>
+        <CfgRow
           id="setup-again"
           title={uiText('Refazer o assistente')}
           description={uiText('Passa de novo pela configuração inicial: PS5, voz e telas.')}
@@ -102,8 +97,7 @@ export function AboutGroup({ status }: { status: ApiStatus }) {
             type="button"
             className="ui-btn"
             data-variant="secondary"
-            data-tour="setup-again"
-            onClick={resetSetup}
+            onClick={restartSetupAssistant}
           >
             {uiText('Refazer o assistente')}
           </button>

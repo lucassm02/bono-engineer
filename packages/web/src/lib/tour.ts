@@ -45,7 +45,7 @@ export const TOUR_ANCHORS = {
   trackCard: 'track-card',
   navCompare: 'nav-compare',
   navCapture: 'nav-capture',
-  setupAgain: 'setup-again',
+  navHelp: 'nav-help',
 } as const;
 
 const anchor = (...names: string[]) => names.map((n) => `[data-tour="${n}"]`).join(',');
@@ -112,7 +112,7 @@ export function analysisTourSteps(): TourStep[] {
       id: 'nav',
       selector: anchor(A.nav),
       title: uiText('Barra lateral'),
-      body: uiText('Ao vivo, Início, Comparar, Gravar volta, Coach, Guia e Ajustes.'),
+      body: uiText('Ao vivo, Início, Comparar, Gravar volta, Coach, Guia, Ajuda e Ajustes.'),
       route: '#/inicio',
     },
     {
@@ -135,11 +135,13 @@ export function analysisTourSteps(): TourStep[] {
       body: uiText('Capture a volta de um piloto melhor para usar de referência.'),
     },
     {
-      id: 'setup-again',
-      selector: anchor(A.setupAgain),
-      title: uiText('Ajustes'),
-      body: uiText('Você pode refazer o tour e o assistente quando quiser.'),
-      route: '#/config?s=sobre',
+      id: 'help',
+      selector: anchor(A.navHelp),
+      title: uiText('Ajuda'),
+      body: uiText(
+        'Dúvidas? A Ajuda explica cada tela e deixa refazer o tour ou o assistente quando quiser.',
+      ),
+      route: '#/inicio',
     },
   ];
 }

@@ -2716,9 +2716,9 @@
     "Detección automática restablecida. Bono busca la PS5."
   ],
   "Volume do engenheiro": ["Engineer volume", "Volumen del ingeniero"],
-  "Voz {0} indisponível. Tocando com {1}.": [
-    "Voice {0} unavailable. Using {1}.",
-    "Voz {0} no disponible. Se usa {1}."
+  "{0} indisponível. Tocando com {1}.": [
+    "{0} unavailable. Using {1}.",
+    "{0} no disponible. Se usa {1}."
   ],
   "Voz do engenheiro": ["Engineer voice", "Voz del ingeniero"],
   "Voz do rádio inválida.": ["Invalid radio voice.", "Voz de radio no válida."],
@@ -3553,7 +3553,6 @@
   ],
   "Telas do ao vivo": ["Live screens", "Pantallas de En directo"],
   "Idioma e voz": ["Language and voice", "Idioma y voz"],
-  "Voz {0}": ["Voice {0}", "Voz {0}"],
   "Demonstração, sem PS5": ["Demo, no PS5", "Demostración, sin PS5"],
   "Ainda não conectado": ["Not connected yet", "Aún sin conectar"],
   "Personalizado": ["Custom", "Personalizado"],
@@ -3585,7 +3584,7 @@
     "Choose your engineer’s language and voice. You can change them later in Settings.",
     "Elige el idioma y la voz de tu ingeniero. Puedes cambiarlos después en Configuración."
   ],
-  "Ouvir a voz {0}": ["Listen to voice {0}", "Escuchar la voz {0}"],
+  "Ouvir {0}": ["Listen to {0}", "Escuchar {0}"],
   "Pular tour": ["Skip tour", "Saltar tour"],
   "Próximo": ["Next", "Siguiente"],
   "O engenheiro falou pela primeira vez": [
@@ -3696,10 +3695,6 @@
     "Bloquea los gestos durante la vuelta. Mantén pulsado para desbloquear."
   ],
   "Barra lateral": ["Sidebar", "Barra lateral"],
-  "Ao vivo, Início, Comparar, Gravar volta, Coach, Guia e Ajustes.": [
-    "Live, Home, Compare, Record lap, Coach, Guide and Settings.",
-    "En directo, Inicio, Comparar, Grabar vuelta, Coach, Guía y Ajustes."
-  ],
   "Cartão de pista": ["Track card", "Tarjeta de circuito"],
   "Cada pista guarda suas sessões, melhor volta e evolução.": [
     "Each track keeps its sessions, best lap and progress.",
@@ -3712,10 +3707,6 @@
   "Capture a volta de um piloto melhor para usar de referência.": [
     "Record a better driver’s lap to use as a reference.",
     "Graba la vuelta de un piloto mejor para usarla de referencia."
-  ],
-  "Você pode refazer o tour e o assistente quando quiser.": [
-    "You can redo the tour and the assistant whenever you want.",
-    "Puedes repetir el tour y el asistente cuando quieras."
   ],
   "concluído": ["done", "completado"],
   "pulado": ["skipped", "saltado"],
@@ -3730,5 +3721,74 @@
   "Tour do ao vivo": ["Live tour", "Tour de En directo"],
   "Tour do histórico": ["History tour", "Tour del historial"],
   "Vezes que um tour foi aberto": ["Times a tour was opened", "Veces que se abrió un tour"],
-  "Disponível quando você parar.": ["Available when you stop.", "Disponible cuando te detengas."]
+  "Disponível quando você parar.": ["Available when you stop.", "Disponible cuando te detengas."],
+  "Ver o tour do Ao vivo": ["See the Live tour", "Ver el tour de En directo"],
+  "Refazer o assistente inicial": ["Redo the first-run assistant", "Repetir el asistente inicial"],
+  "Buscar: voz, firewall, Discord…": [
+    "Search: voice, firewall, Discord…",
+    "Buscar: voz, firewall, Discord…"
+  ],
+  "Buscar na ajuda": ["Search help", "Buscar en la ayuda"],
+  "Nenhum artigo tem “{0}”. Tente outra palavra, como voz, firewall ou Discord.": [
+    "No article has “{0}”. Try another word, like voice, firewall or Discord.",
+    "Ningún artículo tiene “{0}”. Prueba otra palabra, como voz, firewall o Discord."
+  ],
+  "1 artigo": ["1 article", "1 artículo"],
+  "{0} artigos": ["{0} articles", "{0} artículos"],
+  "Comece por aqui": ["Start here", "Empieza aquí"],
+  "Um passeio pelo app ou a configuração inicial de novo, quando quiser.": [
+    "A walkthrough of the app, or the first-run setup again, whenever you like.",
+    "Un recorrido por la app, o la configuración inicial otra vez, cuando quieras."
+  ],
+  "Tópicos": ["Topics", "Temas"],
+  "Procurando técnica de pilotagem?": [
+    "Looking for driving technique?",
+    "¿Buscas técnica de conducción?"
+  ],
+  "Abra o Guia de pilotagem.": ["Open the Driving guide.", "Abre la Guía de conducción."],
+  "Artigos deste tópico": ["Articles in this topic", "Artículos de este tema"],
+  "Artigo não encontrado": ["Article not found", "Artículo no encontrado"],
+  "Esse artigo não existe na ajuda. Veja os tópicos para achar o que procura.": [
+    "That article is not in the help. Browse the topics to find what you need.",
+    "Ese artículo no está en la ayuda. Mira los temas para encontrar lo que buscas."
+  ],
+  "Voltar à ajuda": ["Back to help", "Volver a la ayuda"],
+  "Central de ajuda": ["Help center", "Centro de ayuda"],
+  "Tire dúvidas e aprenda a configurar o Bono, passo a passo.": [
+    "Get answers and learn to set up Bono, step by step.",
+    "Resuelve dudas y aprende a configurar Bono, paso a paso."
+  ],
+  "Ajuda sobre {0}": ["Help on {0}", "Ayuda sobre {0}"],
+  "Abrir a ajuda": ["Open help", "Abrir la ayuda"],
+  "Ao vivo, Início, Comparar, Gravar volta, Coach, Guia, Ajuda e Ajustes.": [
+    "Live, Home, Compare, Record lap, Coach, Guide, Help and Settings.",
+    "En directo, Inicio, Comparar, Grabar vuelta, Coach, Guía, Ayuda y Ajustes."
+  ],
+  "Dúvidas? A Ajuda explica cada tela e deixa refazer o tour ou o assistente quando quiser.": [
+    "Questions? Help explains each screen and lets you redo the tour or the assistant any time.",
+    "¿Dudas? La Ayuda explica cada pantalla y te deja repetir el tour o el asistente cuando quieras."
+  ],
+  "Passo a passo para configurar o Bono, problemas comuns e atalhos.": [
+    "Step-by-step setup for Bono, common problems and shortcuts.",
+    "Configuración paso a paso de Bono, problemas comunes y atajos."
+  ],
+  "Passo a passo, problemas comuns e atalhos": [
+    "Step by step, common problems and shortcuts",
+    "Paso a paso, problemas comunes y atajos"
+  ],
+  "Idioma, voz, PS5, engenheiro e telas, de novo": [
+    "Language, voice, PS5, engineer and screens, again",
+    "Idioma, voz, PS5, ingeniero y pantallas, otra vez"
+  ],
+  "Atalhos de teclado": ["Keyboard shortcuts", "Atajos de teclado"],
+  "abre a ajuda": ["opens help", "abre la ayuda"],
+  "ajuda ·": ["help ·", "ayuda ·"],
+  "trava ou destrava os gestos": [
+    "locks or unlocks the gestures",
+    "bloquea o desbloquea los gestos"
+  ],
+  "troca de tela": ["switches screen", "cambia de pantalla"],
+  "escolher as telas": ["chooses screens", "elige las pantallas"],
+  "troca a referência do delta": ["changes the delta reference", "cambia la referencia del delta"],
+  "fecha menu, seletor ou tour": ["closes menu, picker or tour", "cierra menú, selector o tour"]
 }

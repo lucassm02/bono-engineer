@@ -24,7 +24,7 @@ import {
   SUMMARY_LABELS,
   TRAINING_PROFILE_LABELS,
 } from '../lib/radioLabels.ts';
-import { RADIO_VOICES } from '../lib/radioVoices.ts';
+import { RADIO_VOICES, voiceLabel } from '../lib/radioVoices.ts';
 import { routes } from '../lib/route.ts';
 import {
   type EngineerPace,
@@ -81,7 +81,7 @@ function VoiceSelect() {
     >
       {RADIO_VOICES.filter((voice) => voice.language === language).map((voice) => (
         <option key={voice.id} value={voice.id}>
-          {`${voice.name} · ${voice.description}`}
+          {`${voiceLabel(voice)} · ${voice.description}`}
         </option>
       ))}
     </select>

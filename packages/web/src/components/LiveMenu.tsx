@@ -1,12 +1,13 @@
 /**
  * Saída sempre disponível do painel ao vivo: o botão de menu ao lado do cadeado abre uma gaveta com
- * três abas — Navegar (as outras áreas do app), Engenheiro (rádio) e Painel (telas e comportamento).
- * Teclado: M abre/fecha; Esc, fundo e foco vêm do componente Modal.
+ * quatro abas — Navegar (as outras áreas do app), Engenheiro (rádio), Ao vivo (telas e comportamento)
+ * e Ajuda (tour, central de ajuda e atalhos de teclado).
+ * Teclado: M abre/fecha, ? abre direto na Ajuda; Esc, fundo e foco vêm do componente Modal.
  */
 
 import { type KeyboardEvent, useEffect, useId, useMemo, useState } from 'react';
 import { t as uiText } from '../lib/i18n.ts';
-import { routes } from '../lib/route.ts';
+import { navigate, routes } from '../lib/route.ts';
 import { bumpUsage, isNewcomer, loadMenuTab, type MenuTabId, saveMenuTab } from '../lib/usage.ts';
 import {
   closeMenu,
@@ -16,6 +17,7 @@ import {
   setLocked,
 } from '../state/actions.ts';
 import { useEngineer } from '../state/engineer.ts';
+import { restartSetupAssistant } from '../state/setup.ts';
 import { requestTour } from '../state/tour.ts';
 import { useUi } from '../state/uiStore.ts';
 import { EngineerControls } from './EngineerControls.tsx';
@@ -129,6 +131,12 @@ const TABS: readonly { id: TabId; label: string }[] = [
       return uiText('Ao vivo');
     },
   },
+  {
+    id: 'help',
+    get label() {
+      return uiText('Ajuda');
+    },
+  },
 ];
 
 /** Botão flutuante, à esquerda do cadeado. */
@@ -186,31 +194,98 @@ function LinkList({ entries }: { entries: readonly Entry[] }) {
   );
 }
 
-function HelpSection() {
+const SHORTCUTS: readonly { keys: readonly string[]; text: () => string }[] = [
+  { keys: ['?'], text: () => uiText('abre a ajuda') },
+  { keys: ['M'], text: () => uiText('abre e fecha o menu') },
+  { keys: ['L'], text: () => uiText('trava ou destrava os gestos') },
+  { keys: ['←', '→'], text: () => uiText('troca de tela') },
+  { keys: ['Enter'], text: () => uiText('escolher as telas') },
+  { keys: ['D'], text: () => uiText('troca a referência do delta') },
+  { keys: ['Esc'], text: () => uiText('fecha menu, seletor ou tour') },
+];
+
+/** Ajuda: o tour, a central de ajuda (`#/ajuda`), o assistente inicial e os atalhos de teclado. */
+function HelpTab() {
   return (
-    <section className="bn-section" aria-labelledby="bn-help">
-      <h3 id="bn-help" className="ui-eyebrow">
-        {uiText('Ajuda')}
-      </h3>
-      <ul className="ui-list">
-        <li>
-          <button
-            type="button"
-            className="ui-list-item"
-            onClick={() => {
-              closeMenu();
-              requestTour('live');
-            }}
-          >
-            <ListItemBody
-              icon="info"
-              title={uiText('Ver o tour')}
-              hint={uiText('Gestos e botões do ao vivo, numa demonstração')}
-            />
-          </button>
-        </li>
-      </ul>
-    </section>
+    <div className="bn-stack">
+      <section className="bn-section" aria-labelledby="bn-help">
+        <h3 id="bn-help" className="ui-eyebrow">
+          {uiText('Ajuda')}
+        </h3>
+        <ul className="ui-list">
+          <li>
+            <button
+              type="button"
+              className="ui-list-item"
+              onClick={() => {
+                closeMenu();
+                requestTour('live');
+              }}
+            >
+              <ListItemBody
+                icon="info"
+                title={uiText('Ver o tour')}
+                hint={uiText('Gestos e botões do ao vivo, numa demonstração')}
+              />
+            </button>
+          </li>
+          <li>
+            <a
+              className="ui-list-item"
+              href={routes.help()}
+              onClick={(e) => {
+                e.preventDefault();
+                closeMenu();
+                navigate(routes.help());
+              }}
+            >
+              <ListItemBody
+                icon="help"
+                title={uiText('Central de ajuda')}
+                hint={uiText('Passo a passo, problemas comuns e atalhos')}
+              />
+            </a>
+          </li>
+          <li>
+            <button
+              type="button"
+              className="ui-list-item"
+              onClick={() => {
+                closeMenu();
+                restartSetupAssistant();
+              }}
+            >
+              <ListItemBody
+                icon="refresh"
+                title={uiText('Refazer o assistente inicial')}
+                hint={uiText('Idioma, voz, PS5, engenheiro e telas, de novo')}
+              />
+            </button>
+          </li>
+        </ul>
+      </section>
+      <section className="ui-card bn-card" aria-labelledby="bn-keys">
+        <div className="ui-card-head">
+          <h3 id="bn-keys" className="ui-card-title">
+            {uiText('Atalhos de teclado')}
+          </h3>
+        </div>
+        <dl className="bn-keys">
+          {SHORTCUTS.map((s) => (
+            <div key={s.keys.join('+')} className="bn-key-row">
+              <dt>
+                {s.keys.map((k) => (
+                  <kbd key={k} className="ui-kbd">
+                    {k}
+                  </kbd>
+                ))}
+              </dt>
+              <dd>{s.text()}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+    </div>
   );
 }
 
@@ -229,7 +304,6 @@ function NavigateTab() {
         </h3>
         <LinkList entries={SETUP} />
       </section>
-      <HelpSection />
     </div>
   );
 }
@@ -310,6 +384,7 @@ export function LiveMenuSheet() {
   const [tab, setTab] = useState<TabId>(loadMenuTab);
   const engineerOn = useEngineer((s) => s.enabled);
   const base = useId();
+  const request = useUi((s) => s.menuTabRequest);
 
   function selectTab(next: TabId) {
     setTab(next);
@@ -319,6 +394,13 @@ export function LiveMenuSheet() {
   useEffect(() => {
     if (open) bumpUsage('menuOpens');
   }, [open]);
+
+  // `?` asks for the Help tab once (the choice is not saved as the "last tab")
+  useEffect(() => {
+    if (!request) return;
+    if (open) setTab(request);
+    useUi.setState({ menuTabRequest: null });
+  }, [open, request]);
 
   function onTabKey(e: KeyboardEvent<HTMLDivElement>) {
     const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
@@ -347,6 +429,8 @@ export function LiveMenuSheet() {
           <p className="bn-foot-hint">
             <kbd className="ui-kbd">M</kbd>
             {` ${uiText('abre e fecha o menu ·')} `}
+            <kbd className="ui-kbd">?</kbd>
+            {` ${uiText('ajuda ·')} `}
             <kbd className="ui-kbd">Esc</kbd> {uiText('fecha')}
           </p>
           <button type="button" className="ui-btn" onClick={closeMenu}>
@@ -391,6 +475,7 @@ export function LiveMenuSheet() {
         {tab === 'nav' && <NavigateTab />}
         {tab === 'engineer' && <EngineerControls />}
         {tab === 'panel' && <PanelTab />}
+        {tab === 'help' && <HelpTab />}
       </div>
     </Modal>
   );

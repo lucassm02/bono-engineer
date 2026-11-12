@@ -42,6 +42,20 @@ describe('router', () => {
     expect(parseRoute('#/captura').name).toBe('capture');
     expect(parseRoute('#/config?s=mcp')).toMatchObject({ name: 'config', query: { s: 'mcp' } });
     expect(parseRoute('#/coach/r1')).toMatchObject({ name: 'coach', params: { id: 'r1' } });
+    expect(parseRoute('#/ajuda').name).toBe('help');
+    expect(parseRoute('#/ajuda?t=discord')).toMatchObject({
+      name: 'help',
+      query: { t: 'discord' },
+    });
+    expect(parseRoute('#/ajuda/sem-sinal')).toMatchObject({
+      name: 'help',
+      params: { id: 'sem-sinal' },
+    });
+    expect(parseRoute('#/ajuda/a/b').name).toBe('notFound');
+    expect(routes.help()).toBe('#/ajuda');
+    expect(routes.help('discord')).toBe('#/ajuda?t=discord');
+    expect(routes.help(undefined, 'sem-sinal')).toBe('#/ajuda/sem-sinal');
+    expect(isAnalysisRoute(parseRoute('#/ajuda'))).toBe(true);
     expect(parseRoute('#/nada').name).toBe('notFound');
     expect(parseRoute('#/analise/x/y/z').name).toBe('notFound');
     expect(isAnalysisRoute(parseRoute('#/config'))).toBe(true);

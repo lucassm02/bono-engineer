@@ -57,7 +57,7 @@ export type EngineerAudioTarget = 'here' | 'discord' | 'other';
 export interface EngineerStateInput {
   enabled: boolean;
   muted: boolean;
-  /** Nome da voz escolhida, quando conhecido. */
+  /** Rótulo da voz escolhida ("Voz 1"), quando conhecido. */
   voiceName?: string | null;
   audio: EngineerAudioTarget;
 }
@@ -87,7 +87,7 @@ export function engineerStateText(i: EngineerStateInput): StateText {
       detail: uiText('As instruções aparecem só na tela. Ative o som para ouvir.'),
     };
   }
-  const voice = i.voiceName ? uiText('Voz {0}', i.voiceName) : null;
+  const voice = i.voiceName ? i.voiceName : null;
   return {
     title: uiText('Engenheiro ligado'),
     detail: [voice, AUDIO_TARGET_TEXT[i.audio]()].filter(Boolean).join(' · '),

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-// Synthetic manifest: Santa lacks one phrase that Alex has, and one that nobody has.
+// Synthetic manifest: voice 2 (santa) lacks one phrase that voice 1 (alex) has, and one that nobody has.
 vi.mock('./radio-manifest.json', () => ({
   default: {
     format: 1,

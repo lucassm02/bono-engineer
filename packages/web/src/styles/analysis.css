@@ -1275,6 +1275,18 @@ textarea.a-input {
   .a-nav .a-nav-end {
     margin-top: 0;
   }
+  /* A ajuda não cabe na barra de 7 itens: no celular ela é o botão "?" do cabeçalho. */
+  .a-app .a-side .a-nav a.a-nav-help {
+    display: none;
+  }
+  .a-mtop .a-help-btn {
+    flex: none;
+  }
+  .a-mtop .a-help-btn[aria-current="page"] {
+    border-color: var(--accent-line);
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
   .a-nav-label {
     display: none;
   }

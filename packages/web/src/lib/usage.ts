@@ -74,8 +74,8 @@ export function isNewcomer(now = Date.now()): boolean {
   return now - since < NEWCOMER_DAYS * 24 * 60 * 60 * 1000;
 }
 
-export type MenuTabId = 'nav' | 'engineer' | 'panel';
-const MENU_TABS: readonly MenuTabId[] = ['nav', 'engineer', 'panel'];
+export type MenuTabId = 'nav' | 'engineer' | 'panel' | 'help';
+const MENU_TABS: readonly MenuTabId[] = ['nav', 'engineer', 'panel', 'help'];
 
 /** Última aba aberta no menu do ao vivo ("Navegar" na primeira vez). */
 export function loadMenuTab(): MenuTabId {

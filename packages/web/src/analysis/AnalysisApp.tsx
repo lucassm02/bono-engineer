@@ -11,13 +11,14 @@ import { UpdateNotice } from '../components/UpdateNotice.tsx';
 import { Icon, type IconName } from '../components/ui/Icon.tsx';
 import { t as uiText } from '../lib/i18n.ts';
 import type { Route } from '../lib/route.ts';
-import { routes } from '../lib/route.ts';
+import { navigate, routes } from '../lib/route.ts';
 import { dismissNotice, useUi } from '../state/uiStore.ts';
 import { CapturePage } from './pages/CapturePage.tsx';
 import { CoachPage } from './pages/CoachPage.tsx';
 import { ComparePage } from './pages/ComparePage.tsx';
 import { ConfigPage } from './pages/ConfigPage.tsx';
 import { GuidePage } from './pages/GuidePage.tsx';
+import { HelpPage } from './pages/HelpPage.tsx';
 import { HomePage } from './pages/HomePage.tsx';
 import { SessionPage } from './pages/SessionPage.tsx';
 import { SessionsPage } from './pages/SessionsPage.tsx';
@@ -32,6 +33,7 @@ import '../styles/track-page.css';
 import '../styles/capture-page.css';
 import '../styles/config.css';
 import '../styles/coach.css';
+import '../styles/help.css';
 
 interface NavItem {
   icon: IconName;
@@ -114,6 +116,20 @@ const MAIN_NAV: NavItem[] = [
     },
   },
 ];
+
+/** Desktop: above Settings, at the foot of the sidebar. Phone: a button in the header (the bottom bar keeps its 7 items). */
+const HELP: NavItem = {
+  icon: 'help',
+  tour: 'nav-help',
+  names: ['help'],
+  href: routes.help(),
+  get label() {
+    return uiText('Ajuda');
+  },
+  get short() {
+    return uiText('Ajuda');
+  },
+};
 
 const SETTINGS: NavItem = {
   icon: 'config',
@@ -238,6 +254,8 @@ function page(route: Route): ReactNode {
       return <CoachPage route={route} />;
     case 'guide':
       return <GuidePage route={route} />;
+    case 'help':
+      return <HelpPage route={route} />;
     default:
       return <NotFound />;
   }
@@ -259,7 +277,25 @@ function NavLink({ item, route, className }: { item: NavItem; route: Route; clas
   );
 }
 
+/** `?` opens the help center, the same key as in the live dashboard (not while typing). */
+function useHelpKey(): void {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== '?' || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (
+        e.target instanceof HTMLElement &&
+        e.target.closest('input, textarea, select, [contenteditable]')
+      )
+        return;
+      navigate(routes.help());
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+}
+
 export default function AnalysisApp({ route }: { route: Route }) {
+  useHelpKey();
   useEffect(() => {
     const el = document.documentElement;
     el.dataset.area = 'analysis';
@@ -287,7 +323,8 @@ export default function AnalysisApp({ route }: { route: Route }) {
           {MAIN_NAV.map((n) => (
             <NavLink key={n.label} item={n} route={route} />
           ))}
-          <NavLink item={SETTINGS} route={route} className="a-nav-end" />
+          <NavLink item={HELP} route={route} className="a-nav-end a-nav-help" />
+          <NavLink item={SETTINGS} route={route} />
         </nav>
         <div className="a-side-foot">
           <ConnectionPill />
@@ -298,6 +335,15 @@ export default function AnalysisApp({ route }: { route: Route }) {
           <ProductBrand />
         </a>
         <ConnectionPill />
+        <a
+          className="ui-icon-btn a-help-btn"
+          href={HELP.href}
+          data-tour={HELP.tour}
+          aria-label={uiText('Abrir a ajuda')}
+          aria-current={route.name === 'help' ? 'page' : undefined}
+        >
+          <Icon name="help" size={22} />
+        </a>
       </header>
       <main className="a-main">
         <PageBoundary resetKey={`${route.name}/${route.params.id ?? ''}`}>

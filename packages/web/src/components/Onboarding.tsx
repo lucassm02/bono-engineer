@@ -209,6 +209,19 @@ export default function Onboarding() {
               <>
                 <button
                   type="button"
+                  className="ui-btn bn-foot-left"
+                  data-variant="ghost"
+                  data-size="sm"
+                  onClick={() => {
+                    close('finished');
+                    navigate(routes.help());
+                  }}
+                >
+                  <Icon name="help" size={18} />
+                  {uiText('Central de ajuda')}
+                </button>
+                <button
+                  type="button"
                   className="ui-btn"
                   data-variant="secondary"
                   onClick={() => {

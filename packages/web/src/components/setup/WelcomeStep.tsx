@@ -14,7 +14,7 @@ import {
   useLanguage,
 } from '../../lib/i18n.ts';
 import { detectLanguage } from '../../lib/onboarding.ts';
-import { RADIO_VOICES } from '../../lib/radioVoices.ts';
+import { RADIO_VOICES, voiceLabel } from '../../lib/radioVoices.ts';
 import { loadString } from '../../lib/storage.ts';
 import { setEngineerVoice, testEngineerVoice, useEngineer } from '../../state/engineer.ts';
 import { Icon } from '../ui/Icon.tsx';
@@ -84,7 +84,7 @@ export function WelcomeStep() {
                   onChange={() => setEngineerVoice(voice.id, pace)}
                 />
                 <span className="su-option-text">
-                  <strong>{voice.name}</strong>
+                  <strong>{voiceLabel(voice)}</strong>
                   <span>{voice.description}</span>
                 </span>
               </label>
@@ -94,7 +94,7 @@ export function WelcomeStep() {
                 data-variant="secondary"
                 data-size="sm"
                 disabled={!canPlay || loading}
-                aria-label={uiText('Ouvir a voz {0}', voice.name)}
+                aria-label={uiText('Ouvir {0}', voiceLabel(voice))}
                 onClick={() => {
                   if (voiceUri !== voice.id) setEngineerVoice(voice.id, pace);
                   testEngineerVoice();

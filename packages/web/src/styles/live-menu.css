@@ -479,3 +479,33 @@ fieldset.bn-segmented {
     display: none;
   }
 }
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Aba Ajuda: atalhos de teclado                                                                   */
+/* ---------------------------------------------------------------------------------------------- */
+
+.bn-keys {
+  display: grid;
+  margin: 0;
+}
+.bn-key-row {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0;
+  border-top: 1px solid var(--line-soft);
+}
+.bn-key-row:first-child {
+  border-top: 0;
+}
+.bn-key-row dt {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+}
+.bn-key-row dd {
+  margin: 0;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}

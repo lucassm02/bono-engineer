@@ -7,7 +7,7 @@
 import { type ApiSettings, DISCORD_RADIO_DEVICE_ID, type FirewallStatus } from '@gt7/shared';
 import { useEffect, useMemo, useState } from 'react';
 import { t as uiText } from '../../../lib/i18n.ts';
-import { radioVoice } from '../../../lib/radioVoices.ts';
+import { voiceLabelOf } from '../../../lib/radioVoices.ts';
 import { routes } from '../../../lib/route.ts';
 import { loadString } from '../../../lib/storage.ts';
 import { rescanConsole } from '../../../net/consoleActions.ts';
@@ -111,7 +111,7 @@ export function HealthSummary({
     () =>
       buildHealth({
         link,
-        engineer: { enabled, muted, voiceName: radioVoice(voiceUri)?.name ?? null, audio },
+        engineer: { enabled, muted, voiceName: voiceLabelOf(voiceUri), audio },
         recording: settings ? { autoCapture: settings.autoCapture, raw: settings.record } : null,
         discord,
         devicesOnline,

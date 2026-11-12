@@ -2,6 +2,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { tourFromSearch } from './boot.ts';
 import { parseRoute } from './route.ts';
 import {
   analysisTourSteps,
@@ -87,6 +88,21 @@ describe('tour contract', () => {
   it('every anchor of the table is used by a step', () => {
     const used = new Set(TOURS.flatMap(([, s]) => s.flatMap((x) => selectorAnchors(x.selector))));
     for (const anchor of Object.values(TOUR_ANCHORS)) expect(used.has(anchor), anchor).toBe(true);
+  });
+});
+
+describe('tour from the address', () => {
+  it('reads ?tour=live and ?tour=analysis, and nothing else', () => {
+    expect(tourFromSearch('?tour=live')).toBe('live');
+    expect(tourFromSearch('?mock=1&tour=analysis')).toBe('analysis');
+    expect(tourFromSearch('?tour=other')).toBeNull();
+    expect(tourFromSearch('')).toBeNull();
+  });
+
+  it('the analysis tour ends on the Help item of the sidebar', () => {
+    const last = analysisTourSteps().at(-1);
+    expect(last?.id).toBe('help');
+    expect(selectorAnchors(last?.selector ?? '')).toEqual(['nav-help']);
   });
 });
 

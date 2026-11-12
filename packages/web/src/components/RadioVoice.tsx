@@ -1,5 +1,5 @@
 import { t, useLanguage } from '../lib/i18n.ts';
-import { defaultRadioVoice, RADIO_VOICES, radioVoice } from '../lib/radioVoices.ts';
+import { defaultRadioVoice, RADIO_VOICES, voiceLabel, voiceLabelOf } from '../lib/radioVoices.ts';
 import {
   setEngineerVoice,
   stopEngineerPreview,
@@ -23,7 +23,7 @@ export function RadioVoicePicker() {
       >
         {RADIO_VOICES.filter((voice) => voice.language === language).map((voice) => (
           <option key={voice.id} value={voice.id}>
-            {`${voice.name} · ${voice.description}`}
+            {`${voiceLabel(voice)} · ${voice.description}`}
           </option>
         ))}
       </select>
@@ -59,9 +59,9 @@ export function RadioVoiceStatus() {
       ? t('Áudio do engenheiro indisponível. As instruções continuam na tela.')
       : fallback
         ? t(
-            'Voz {0} indisponível. Tocando com {1}.',
-            radioVoice(voiceUri)?.name ?? '',
-            defaultRadioVoice(language).name,
+            '{0} indisponível. Tocando com {1}.',
+            voiceLabelOf(voiceUri) ?? '',
+            voiceLabel(defaultRadioVoice(language)),
           )
         : null;
   return (

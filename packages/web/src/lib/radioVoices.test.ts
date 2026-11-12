@@ -19,15 +19,17 @@ import {
   migrateRadioVoice,
   RADIO_VOICES,
   radioVoice,
+  voiceLabel,
+  voiceLabelOf,
 } from './radioVoices.ts';
 
 const WEB = join(import.meta.dirname, '..', '..');
 const voices = manifest.voices as Record<string, { file: string; clips: Record<string, number[]> }>;
 
 describe('catálogo de vozes neurais', () => {
-  it('offers three neural voices per language and keeps Alex as the Portuguese default', () => {
+  it('offers three neural voices per language and keeps radio:alex (Voz 1) as the Portuguese default', () => {
     expect(DEFAULT_RADIO_VOICE).toBe('radio:alex');
-    expect(radioVoice(DEFAULT_RADIO_VOICE)?.name).toBe('Alex');
+    expect(radioVoice(DEFAULT_RADIO_VOICE)?.slot).toBe(1);
     for (const language of ['pt-BR', 'en', 'es'] as const) {
       expect(RADIO_VOICES.filter((v) => v.language === language)).toHaveLength(3);
       expect(defaultRadioVoice(language).language).toBe(language);
@@ -35,6 +37,23 @@ describe('catálogo de vozes neurais', () => {
     expect(new Set(RADIO_VOICES.map((v) => v.name)).size).toBe(RADIO_VOICES.length);
     expect(RADIO_VOICES.every((v) => v.id.startsWith('radio:'))).toBe(true);
     expect(RADIO_VOICES.some((v) => /dora/i.test(v.id))).toBe(false);
+  });
+
+  it('names the voices by number, following the language, with no proper name', () => {
+    const labels = (language: string) =>
+      RADIO_VOICES.filter((v) => v.language === language).map(voiceLabel);
+    expect(labels('pt-BR')).toEqual(['Voz 1', 'Voz 2', 'Voz 3']);
+    expect(labels('en')).toEqual(['Voice 1', 'Voice 2', 'Voice 3']);
+    expect(labels('es')).toEqual(['Voz 1', 'Voz 2', 'Voz 3']);
+    expect(voiceLabelOf('radio:alex')).toBe('Voz 1');
+    expect(voiceLabelOf('radio:santa')).toBe('Voz 2');
+    expect(voiceLabelOf('radio:bruno')).toBe('Voz 3');
+    expect(voiceLabelOf('radio:en-onyx')).toBe('Voice 3');
+    expect(voiceLabelOf('radio:dora')).toBeNull();
+    for (const v of RADIO_VOICES) {
+      expect(voiceLabel(v)).not.toMatch(new RegExp(v.name, 'i'));
+      expect(v.description).not.toMatch(new RegExp(v.name, 'i'));
+    }
   });
 
   it('updates the UI and voice together, remembering the voice selected for each language', () => {

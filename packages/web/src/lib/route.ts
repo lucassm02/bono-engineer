@@ -12,6 +12,8 @@
  *   #/config                          settings
  *   #/coach[/:reportId]?session=&lap=&ref=&corner=   AI coach
  *   #/guia?q=&classe=&topico=         driving guide (coach knowledge base)
+ *   #/ajuda?t=<topic>&q=              help center (topics, search)
+ *   #/ajuda/<article-id>              one help article
  */
 
 export type RouteName =
@@ -25,6 +27,7 @@ export type RouteName =
   | 'config'
   | 'coach'
   | 'guide'
+  | 'help'
   | 'notFound';
 
 export interface Route {
@@ -88,6 +91,10 @@ export function parseRoute(hash: string): Route {
   if (a === 'captura' && segs.length === 1) return r('capture');
   if (a === 'config' && segs.length === 1) return r('config');
   if (a === 'guia' && segs.length === 1) return r('guide');
+  if (a === 'ajuda') {
+    if (segs.length === 1) return r('help');
+    if (b && segs.length === 2) return r('help', { id: b });
+  }
   if (a === 'coach') {
     if (segs.length === 1) return r('coach');
     if (b && segs.length === 2) return r('coach', { id: b });
@@ -130,6 +137,9 @@ export const routes = {
   capture: () => href('/captura'),
   guide: (q: { q?: string; classe?: string; topico?: string } = {}) =>
     href('/guia', { q: q.q, classe: q.classe, topico: q.topico }),
+  /** Help center: `help()` home, `help('discord')` a topic, `help(undefined, 'no-signal')` one article. */
+  help: (topic?: string, article?: string) =>
+    article ? href(`/ajuda/${encodeURIComponent(article)}`) : href('/ajuda', { t: topic }),
   config: (section?: string) => href('/config', { s: section }),
   coach: (q: { id?: string; session?: string; lap?: string; ref?: string; corner?: string } = {}) =>
     href(q.id ? `/coach/${encodeURIComponent(q.id)}` : '/coach', {

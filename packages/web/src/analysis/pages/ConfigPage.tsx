@@ -10,6 +10,7 @@ import { type ReactNode, useEffect, useMemo, useRef, useState, useSyncExternalSt
 import { EngineerSettingsPanel } from '../../components/EngineerSettingsPanel.tsx';
 import { FullscreenButton } from '../../components/FullscreenButton.tsx';
 import { Icon } from '../../components/ui/Icon.tsx';
+import { CONFIG_GROUP_HELP } from '../../lib/helpContent.ts';
 import { t as uiText } from '../../lib/i18n.ts';
 import { ONBOARDING_KEY } from '../../lib/onboarding.ts';
 import { type Route, routes } from '../../lib/route.ts';
@@ -261,7 +262,19 @@ export function ConfigPage({ route }: { route: Route }) {
       <PageHead
         title={uiText('Configurações')}
         sub={uiText('Tudo se ajusta aqui: nada de arquivo de configuração.')}
-        actions={<FullscreenButton />}
+        actions={
+          <>
+            <a
+              className="ui-icon-btn cfg-help"
+              href={routes.help(CONFIG_GROUP_HELP[group])}
+              aria-label={uiText('Ajuda sobre {0}', groupInfo?.label ?? '')}
+              title={uiText('Ajuda sobre {0}', groupInfo?.label ?? '')}
+            >
+              <Icon name="help" size={18} />
+            </a>
+            <FullscreenButton />
+          </>
+        }
       />
 
       {showSearch && (

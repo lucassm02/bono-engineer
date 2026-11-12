@@ -5,9 +5,23 @@
  */
 
 import { create } from 'zustand';
+import {
+  loadSetupState,
+  ONBOARDING_KEY,
+  resetSetupState,
+  saveSetupState,
+} from '../lib/onboarding.ts';
+import { saveString } from '../lib/storage.ts';
 import { useUi } from './uiStore.ts';
 
 export const useSetupInvite = create<{ visible: boolean }>()(() => ({ visible: false }));
+
+/** Reopens the assistant from the start: forgets the steps done and opens the first screen. */
+export function restartSetupAssistant(): void {
+  saveString(ONBOARDING_KEY, '0');
+  saveSetupState(resetSetupState(loadSetupState()));
+  openSetupAssistant();
+}
 
 /** Opens the assistant where it stopped ("Continuar o assistente", "Refazer o assistente"). */
 export function openSetupAssistant(): void {

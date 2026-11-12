@@ -24,6 +24,7 @@ import {
   closeMenu,
   closePicker,
   cycleDeltaReference,
+  openHelpMenu,
   openPicker,
   setLocked,
   showOverlay,
@@ -52,6 +53,17 @@ function onKey(e: KeyboardEvent): void {
     return;
   }
   if (s.onboarding === 'active' || s.connectionPanelOpen) return;
+  if (
+    e.key === '?' &&
+    !e.ctrlKey &&
+    !e.metaKey &&
+    !e.altKey &&
+    !s.pickerOpen &&
+    !s.layoutEditorOpen
+  ) {
+    openHelpMenu();
+    return;
+  }
   if (e.key.toLowerCase() === 'm' && !s.pickerOpen && !s.layoutEditorOpen) {
     toggleMenu();
     return;

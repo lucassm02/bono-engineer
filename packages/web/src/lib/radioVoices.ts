@@ -12,8 +12,21 @@ export interface RadioVoice {
   /** Manifest key / pack file prefix. */
   pack: string;
   language: Language;
+  /**
+   * Technical name of the source voice. Never shown to the user (see `voiceLabel`); only the
+   * generator and the license credits use it.
+   */
   name: string;
+  /** Position in the picker, 1 to 3: the user knows the voice as 'Voz 1', 'Voice 2'... */
+  slot: 1 | 2 | 3;
   description: string;
+}
+
+const VOICE_WORD: Record<Language, string> = { 'pt-BR': 'Voz', en: 'Voice', es: 'Voz' };
+
+/** What the user reads: 'Voz 1' / 'Voice 1' / 'Voz 1', by the language of the voice. */
+export function voiceLabel(voice: Pick<RadioVoice, 'language' | 'slot'>): string {
+  return `${VOICE_WORD[voice.language]} ${voice.slot}`;
 }
 
 export const RADIO_VOICES: readonly RadioVoice[] = [
@@ -22,6 +35,7 @@ export const RADIO_VOICES: readonly RadioVoice[] = [
     pack: 'alex',
     language: 'pt-BR',
     name: 'Alex',
+    slot: 1,
     description: 'timbre médio, direto',
   },
   {
@@ -29,6 +43,7 @@ export const RADIO_VOICES: readonly RadioVoice[] = [
     pack: 'santa',
     language: 'pt-BR',
     name: 'Santa',
+    slot: 2,
     description: 'mais claro e enérgico',
   },
   {
@@ -36,6 +51,7 @@ export const RADIO_VOICES: readonly RadioVoice[] = [
     pack: 'bruno',
     language: 'pt-BR',
     name: 'Bruno',
+    slot: 3,
     description: 'grave e calmo',
   },
   {
@@ -43,6 +59,7 @@ export const RADIO_VOICES: readonly RadioVoice[] = [
     pack: 'en-michael',
     language: 'en',
     name: 'Michael',
+    slot: 1,
     description: 'direct, mid-range',
   },
   {
@@ -50,6 +67,7 @@ export const RADIO_VOICES: readonly RadioVoice[] = [
     pack: 'en-nick',
     language: 'en',
     name: 'Nick',
+    slot: 2,
     description: 'clear and energetic',
   },
   {
@@ -57,6 +75,7 @@ export const RADIO_VOICES: readonly RadioVoice[] = [
     pack: 'en-onyx',
     language: 'en',
     name: 'Onyx',
+    slot: 3,
     description: 'deep and calm',
   },
   {
@@ -64,6 +83,7 @@ export const RADIO_VOICES: readonly RadioVoice[] = [
     pack: 'es-alex',
     language: 'es',
     name: 'Álex',
+    slot: 1,
     description: 'tono medio y directo',
   },
   {
@@ -71,6 +91,7 @@ export const RADIO_VOICES: readonly RadioVoice[] = [
     pack: 'es-santos',
     language: 'es',
     name: 'Santos',
+    slot: 2,
     description: 'claro y enérgico',
   },
   {
@@ -78,9 +99,16 @@ export const RADIO_VOICES: readonly RadioVoice[] = [
     pack: 'es-bruno',
     language: 'es',
     name: 'Bruno ES',
+    slot: 3,
     description: 'grave y tranquilo',
   },
 ];
+
+/** Label of a saved voice ID (`null` when the ID is not in the catalog). */
+export function voiceLabelOf(id: string): string | null {
+  const voice = RADIO_VOICES.find((v) => v.id === id);
+  return voice ? voiceLabel(voice) : null;
+}
 
 export const DEFAULT_RADIO_VOICE = 'radio:alex';
 

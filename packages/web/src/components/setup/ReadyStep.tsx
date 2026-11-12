@@ -1,5 +1,5 @@
 /**
- * Step 6 · Pronto. A summary of what was set up ("PS5 192.168.3.26 · Voz Alex · Aprender pista") with
+ * Step 6 · Pronto. A summary of what was set up ("PS5 192.168.3.26 · Voz 1 · Aprender pista") with
  * what was left for later marked, so nothing looks done that is not. The buttons are the shell's.
  */
 
@@ -7,7 +7,7 @@ import { matchScreenPreset, SCREEN_PRESETS } from '../../analysis/lib/configNav.
 import { isLinkFound } from '../../lib/consoleLink.ts';
 import { LANGUAGE_NAMES, t as uiText, useLanguage } from '../../lib/i18n.ts';
 import { type SetupState, type TrainChoice, trainChoiceFrom } from '../../lib/onboarding.ts';
-import { radioVoice } from '../../lib/radioVoices.ts';
+import { voiceLabelOf } from '../../lib/radioVoices.ts';
 import { useConsoleConnection } from '../../state/consoleLink.ts';
 import { useEngineer } from '../../state/engineer.ts';
 import { useUi } from '../../state/uiStore.ts';
@@ -41,7 +41,7 @@ export function ReadyStep({ state }: { state: SetupState }) {
     {
       id: 'welcome',
       label: uiText('Idioma e voz'),
-      value: `${LANGUAGE_NAMES[language]} · ${uiText('Voz {0}', radioVoice(voiceUri)?.name ?? '')}`,
+      value: `${LANGUAGE_NAMES[language]} · ${voiceLabelOf(voiceUri) ?? ''}`,
       done: steps.welcome === 'done',
     },
     {

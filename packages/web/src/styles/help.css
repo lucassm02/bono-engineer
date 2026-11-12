@@ -1,0 +1,330 @@
+/*
+ * Central de ajuda (#/ajuda). Só tokens do Pit Wall: nenhuma cor solta. O traço próprio da página
+ * são os passos numerados, desenhados como o quadro de box (número em ciano numa coluna, uma linha
+ * fina ligando um passo ao próximo); o resto fica quieto, em cartões `ui-card`.
+ */
+
+.hp-page {
+  display: grid;
+  gap: var(--sp-4);
+  max-width: 980px;
+}
+.hp-page .a-pagehead {
+  margin-bottom: 0;
+}
+.hp-search {
+  max-width: 560px;
+}
+.hp-body {
+  display: grid;
+  gap: var(--sp-5);
+  min-width: 0;
+}
+.hp-h2 {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--fs-xl);
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+.hp-count {
+  margin: 0 0 var(--sp-2);
+  color: var(--text-3);
+  font-size: var(--fs-sm);
+}
+.hp-foot {
+  margin: 0;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
+
+/* ---------------------------------------------------------------- comece por aqui */
+.hp-start {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3) var(--sp-5);
+}
+.hp-start-sub {
+  margin: var(--sp-1) 0 0;
+  max-width: 44ch;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
+.hp-start-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+/* ---------------------------------------------------------------- cartões de tópicos */
+.hp-topics {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr));
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.hp-topic {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-3);
+  height: 100%;
+  min-height: 76px;
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  color: var(--text);
+  text-decoration: none;
+  transition:
+    border-color var(--dur-fast) var(--ease),
+    background var(--dur-fast) var(--ease);
+}
+.hp-topic:hover {
+  border-color: var(--accent-line);
+  background: var(--surface-3);
+  text-decoration: none;
+}
+.hp-topic:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+.hp-topic-icon {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-sm);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.hp-topic-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.hp-topic-title {
+  font-weight: 700;
+  line-height: 1.25;
+}
+.hp-topic-desc {
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--fs-sm);
+  line-height: 1.35;
+}
+.hp-topic-count {
+  min-width: 24px;
+  padding: 1px 8px;
+  border-radius: var(--r-pill);
+  background: var(--surface-4);
+  color: var(--text-2);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-align: center;
+}
+
+/* ---------------------------------------------------------------- tópico aberto */
+.hp-topic-view {
+  display: grid;
+  gap: var(--sp-4);
+}
+.hp-topic-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.hp-topic-head .hp-h2 {
+  margin: 0;
+}
+.hp-toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.hp-stack {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+/* ---------------------------------------------------------------- artigo */
+.hp-article {
+  display: grid;
+  gap: var(--sp-3);
+  scroll-margin-top: calc(var(--a-mtop-h, 0px) + var(--sp-4));
+}
+.hp-article-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-1) var(--sp-3);
+}
+.hp-article-title {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  line-height: 1.25;
+}
+.hp-article-title a {
+  color: var(--text);
+  text-decoration: none;
+}
+.hp-article-title a:hover {
+  color: var(--accent);
+}
+.hp-summary {
+  margin: 0;
+  max-width: 68ch;
+  color: var(--text-2);
+}
+
+/* Passos: número em ciano numa coluna, linha fina até o próximo passo. */
+.hp-steps {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: hp-step;
+}
+.hp-steps > li {
+  position: relative;
+  max-width: 68ch;
+  padding: 0 0 var(--sp-3) 40px;
+  line-height: 1.5;
+  counter-increment: hp-step;
+}
+.hp-steps > li::before {
+  content: counter(hp-step);
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--accent-line);
+  border-radius: var(--r-pill);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: var(--fs-xs);
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+.hp-steps > li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 30px;
+  bottom: 4px;
+  left: 12.5px;
+  width: 1px;
+  background: var(--line);
+}
+.hp-steps > li:last-child {
+  padding-bottom: 0;
+}
+
+.hp-items {
+  display: grid;
+  gap: var(--sp-2);
+  max-width: 68ch;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.hp-items > li {
+  position: relative;
+  padding-left: var(--sp-4);
+  line-height: 1.5;
+}
+.hp-items > li::before {
+  content: "";
+  position: absolute;
+  top: 0.62em;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+}
+
+.hp-keys {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  max-width: 520px;
+}
+.hp-key-row {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0;
+  border-top: 1px solid var(--line-soft);
+}
+.hp-key-row:first-child {
+  border-top: 0;
+}
+.hp-key-row dt {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+}
+.hp-key-row dd {
+  margin: 0;
+  color: var(--text-2);
+}
+
+.hp-note {
+  max-width: 68ch;
+  margin: 0;
+  padding: var(--sp-2) var(--sp-3);
+  border-left: 2px solid var(--accent-dim);
+  background: var(--surface-3);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+.hp-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.hp-links .ui-btn[data-variant="ghost"] {
+  padding-inline: var(--sp-2);
+  color: var(--accent);
+}
+
+/* ---------------------------------------------------------------- resultados da busca */
+.hp-results .ui-list-item {
+  border-color: var(--line);
+  background: var(--surface-2);
+}
+.hp-results .ui-badge {
+  flex: none;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .hp-start-actions .ui-btn {
+    width: 100%;
+  }
+  .hp-key-row {
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+  .hp-results .ui-list-item {
+    flex-wrap: wrap;
+  }
+  .hp-results .ui-badge {
+    max-width: 100%;
+  }
+}

@@ -29,7 +29,7 @@ function link(state: ConsoleConnection['state'], consoleIp: string | null = null
 
 const base: HealthInput = {
   link: link('receiving', '192.168.0.20'),
-  engineer: { enabled: true, muted: false, voiceName: 'Alex', audio: 'here' },
+  engineer: { enabled: true, muted: false, voiceName: 'Voz 1', audio: 'here' },
   recording: { autoCapture: true, raw: false },
   discord: null,
   devicesOnline: 0,

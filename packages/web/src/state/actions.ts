@@ -132,6 +132,11 @@ export function toggleMenu(): void {
   useUi.setState((s) => ({ menuOpen: !s.menuOpen, overlayVisible: false }));
 }
 
+/** `?`: opens the menu straight on its Help tab (or switches to it when already open). */
+export function openHelpMenu(): void {
+  useUi.setState({ menuOpen: true, menuTabRequest: 'help', overlayVisible: false });
+}
+
 export function closeMenu(): void {
   useUi.setState({ menuOpen: false });
 }

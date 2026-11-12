@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App.tsx';
 import { api } from './analysis/api.ts';
 import { TitleBar } from './components/TitleBar.tsx';
-import { BOOT_WAIT_MS, bootTarget, openedWithoutRoute } from './lib/boot.ts';
+import { BOOT_WAIT_MS, bootTarget, openedWithoutRoute, tourFromSearch } from './lib/boot.ts';
 import { applyDocumentLanguage, setLanguage, t as uiText, useLanguage } from './lib/i18n.ts';
 import { isSafeToPrompt, SAFE_SPEED_KMH } from './lib/liveContext.ts';
 import {
@@ -19,7 +19,7 @@ import { setupKeepAwake } from './lib/wakeLock.ts';
 import { startConnection } from './net/connection.ts';
 import { useLiveContext } from './state/liveContext.ts';
 import { useSetupInvite } from './state/setup.ts';
-import { useTour } from './state/tour.ts';
+import { requestTour, useTour } from './state/tour.ts';
 import { useHint } from './state/tourHints.ts';
 import { addNotice, useUi } from './state/uiStore.ts';
 import './styles/tokens.css';
@@ -42,6 +42,10 @@ const SetupInvite = lazy(() => import('./components/setup/SetupInvite.tsx'));
 const Tour = lazy(() => import('./components/ui/Tour.tsx'));
 const TourHint = lazy(() => import('./components/ui/TourHint.tsx'));
 
+/** `?tour=live|analysis` of the address the page was opened with (read once, before any rerender). */
+const URL_TOUR = tourFromSearch(location.search);
+let urlTourStarted = false;
+
 applyDocumentLanguage();
 void window.bonoDesktop
   ?.getLanguage()
@@ -53,7 +57,12 @@ startConnection();
 startSwUpdateWatch();
 setupKeepAwake((mode) => {
   useUi.setState({ keepAwake: mode });
-  if (mode !== 'wakeLock' && !isAnalysisRoute(parseRoute(location.hash))) {
+  // Sem a dica na demonstração (o tour roda sobre ela): o aviso cobriria o destaque do passo.
+  if (
+    mode !== 'wakeLock' &&
+    useUi.getState().source !== 'mock' &&
+    !isAnalysisRoute(parseRoute(location.hash))
+  ) {
     addNotice(
       'info',
       uiText('Dica: desative o bloqueio automático da tela para ela não apagar.'),
@@ -124,6 +133,11 @@ function useBootGate(): boolean {
  */
 function useOnboardingGate(): void {
   useEffect(() => {
+    // opened to test a tour: the assistant stays out of the way
+    if (URL_TOUR) {
+      useUi.setState({ onboarding: 'off' });
+      return;
+    }
     const forced = new URLSearchParams(location.search).get('onboarding') === '1';
     const state = loadSetupState();
     const legacyDone = loadString(ONBOARDING_KEY) === '1';
@@ -185,10 +199,29 @@ function useOnboardingGate(): void {
   }, []);
 }
 
+/**
+ * `?tour=live` / `?tour=analysis`: once the first page is chosen, starts that tour (like
+ * `?onboarding=1` forces the assistant). The parameter is removed from the address so a reload or a
+ * language change does not start it again.
+ */
+function useUrlTour(ready: boolean): void {
+  useEffect(() => {
+    if (!URL_TOUR || !ready || urlTourStarted) return;
+    urlTourStarted = true;
+    const url = new URL(location.href);
+    url.searchParams.delete('tour');
+    history.replaceState(history.state, '', `${url.pathname}${url.search}${url.hash}`);
+    // the analysis chunk and the first frames need a moment before the anchors exist
+    // not cancelled on cleanup: StrictMode runs the effect twice and the flag above already guards it
+    setTimeout(() => requestTour(URL_TOUR), 400);
+  }, [ready]);
+}
+
 function Root() {
   const route = useHashRoute();
   const deciding = useBootGate();
   useOnboardingGate();
+  useUrlTour(!deciding);
   const onboarding = useUi((s) => s.onboarding === 'active');
   const invite = useSetupInvite((s) => s.visible);
   const touring = useTour((s) => s.active !== null);

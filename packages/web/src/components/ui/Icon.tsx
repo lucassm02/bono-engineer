@@ -26,6 +26,7 @@ export type IconName =
   | 'plus'
   | 'search'
   | 'info'
+  | 'help'
   | 'alert'
   | 'trash'
   | 'edit'
@@ -74,6 +75,11 @@ const PATHS: Record<IconName, string[]> = {
   plus: ['M12 5v14M5 12h14'],
   search: ['M4 11a7 7 0 1 0 14 0a7 7 0 1 0-14 0', 'M16 16l4 4'],
   info: ['M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0', 'M12 11v5', 'M12 8h.01'],
+  help: [
+    'M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0',
+    'M9.6 9.4a2.5 2.5 0 1 1 3.6 2.2c-.8.4-1.2 1-1.2 1.9',
+    'M12 17h.01',
+  ],
   alert: ['M12 4l9 16H3z', 'M12 10v4', 'M12 17h.01'],
   trash: ['M5 7h14', 'M9 7V4h6v3', 'M7 7l1 13h8l1-13'],
   edit: ['M4 20h4L19 9l-4-4L4 16z'],
