@@ -7,14 +7,23 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-12
+
+<!-- release-notes-since: 0.1.0 -->
+
 ### Added
 
+- Added a help center (Help in the menu, `#/ajuda`) with short guides by topic, in Portuguese, English and Spanish, and URL parameters to start the guided tours directly (`?tour=live` and `?tour=analysis`).
 - Added Daily Races: the three races of the week with their rules, medal times, top 100 and top 1000, most used cars and 1st place, shown next to your best lap on the same track. They are off until you say yes to a one-time question on Home, then read from DG EDGE on your own PC (at most once an hour, cached, honouring `robots.txt`, with a link back to the source), and can be turned off in Settings. Only the time and car of 1st place are kept, never the player's name. "Use as reference" opens the replay capture with the ranking time filled in.
 - Added a choice of data folder in the Windows app (including OneDrive, Dropbox and similar folders, with a safer write mode there) and `.bono` backups: export sessions, laps and settings (never keys or passwords) and import them to add to or replace your history.
 
 ### Changed
 
 - The radio voices no longer carry first names: they are now Voice 1, Voice 2 and Voice 3 in each language (Voz 1-3 in Portuguese and Spanish), with a short description of the tone. Saved voice preferences keep working.
+
+### Fixed
+
+- Filled in the longest straight of SUGO in the track catalogue (704.5 m), which was empty.
 
 ## [0.2.0] - 2026-11-11
 
@@ -106,7 +115,8 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Added replay reference capture, distance-aligned lap comparisons, synchronized telemetry charts, consistency and progress analysis, and data exports.
 - Added the driving guide, an Anthropic-powered AI debrief, and MCP tools for telemetry, laps, sessions, tracks, comparisons, and PNG charts.
 
-[Unreleased]: https://github.com/lucassm02/bono-engineer/compare/v0.2.0...main
+[Unreleased]: https://github.com/lucassm02/bono-engineer/compare/v0.3.0...main
+[0.3.0]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.3.0
 [0.2.0]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.2.0
 [0.1.4]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.1.4
 [0.1.3]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.1.3
