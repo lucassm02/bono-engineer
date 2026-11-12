@@ -106,7 +106,7 @@ export function EngineerReference({
         </div>
         <div className="bn-fields">
           <label className="ui-field">
-            <span className="ui-label">{uiText('Comparar o painel com')}</span>
+            <span className="ui-label">{uiText('Comparar o delta com')}</span>
             <select
               className="ui-select"
               value={selectedId ? `lap:${selectedId}` : (current?.kind ?? profileKind)}
@@ -171,7 +171,7 @@ export function EngineerReference({
           {!refId && !needsFallback && (
             <p className="ui-help">
               {uiText(
-                'O painel mostra os detalhes assim que encontrar a volta para o carro e traçado atuais.',
+                'Os detalhes aparecem assim que o Bono encontrar a volta para o carro e traçado atuais.',
               )}
             </p>
           )}

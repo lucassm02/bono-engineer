@@ -39,7 +39,7 @@ import {
   Tag,
   useTitle,
 } from '../components/ui.tsx';
-import { carMatchesFilter, isCarFiltering, lapsPerCar } from '../lib/carFilter.ts';
+import { carMatchesFilter, isCarFiltering, lapsPerCar, NO_CAR_FILTER } from '../lib/carFilter.ts';
 import { cornerLabel, fixed, signed } from '../lib/chartData.ts';
 import {
   dayHeading,
@@ -542,7 +542,7 @@ function BestLapsTab({ trackId, hasTopReference }: { trackId: string; hasTopRefe
   const filtering = isCarFiltering(carFilter);
   if (groups.length === 0 && !filtering) {
     return (
-      <Empty>
+      <Empty action={{ label: uiText('Abrir a tela ao vivo'), href: routes.live() }}>
         <p>{uiText('Ainda não há voltas válidas nesta pista.')}</p>
         <p className="dim">
           {uiText('Complete uma volta limpa (sem sair da pista) e ela aparece aqui.')}
@@ -565,7 +565,12 @@ function BestLapsTab({ trackId, hasTopReference }: { trackId: string; hasTopRefe
         </>
       )}
       {groups.length === 0 && (
-        <Empty>
+        <Empty
+          action={{
+            label: uiText('Mostrar todos os carros'),
+            onClick: () => setCarFilter(NO_CAR_FILTER),
+          }}
+        >
           <p>{uiText('Nenhuma volta válida com esse carro nesta pista.')}</p>
         </Empty>
       )}
@@ -634,7 +639,7 @@ function SessionsTab({ sessions }: { sessions: Session[] }) {
   );
   if (sessions.length === 0) {
     return (
-      <Empty>
+      <Empty action={{ label: uiText('Abrir a tela ao vivo'), href: routes.live() }}>
         <p>{uiText('Nenhuma sessão nesta pista ainda.')}</p>
       </Empty>
     );
@@ -654,7 +659,12 @@ function SessionsTab({ sessions }: { sessions: Session[] }) {
         </>
       )}
       {groups.length === 0 && (
-        <Empty>
+        <Empty
+          action={{
+            label: uiText('Mostrar todos os carros'),
+            onClick: () => setCarFilter(NO_CAR_FILTER),
+          }}
+        >
           <p>{uiText('Nenhuma sessão com esse carro nesta pista.')}</p>
         </Empty>
       )}
@@ -1027,7 +1037,7 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
             </div>
           ) : (
             <div className="ui-empty a-empty">
-              <strong>{uiText('Nenhuma volta do top guardada para esta pista')}</strong>
+              <strong>{uiText('Nenhuma volta de referência guardada para esta pista')}</strong>
               <p>
                 {uiText(
                   'Assista ao replay de um piloto do ranking no Time Trial e o app grava a volta dele como alvo para você comparar.',
@@ -1035,7 +1045,7 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
               </p>
               <a className="a-btn" href={routes.capture()}>
                 <Icon name="capture" size={18} />
-                {uiText('Capturar uma referência')}
+                {uiText('Gravar volta de replay')}
               </a>
             </div>
           )}
@@ -1058,7 +1068,7 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
                 onCorner={onCorner}
               />
             ) : (
-              <Empty>
+              <Empty action={{ label: uiText('Abrir a tela ao vivo'), href: routes.live() }}>
                 {uiText('A pista ainda não tem linha de referência (complete uma volta limpa).')}
               </Empty>
             )}

@@ -91,6 +91,29 @@ function pickLaps(base) {
   );
 }
 
+/** Dá um nome à pista da demonstração (sem nome, o app pergunta "qual é?" e a faixa mostra "Dar nome"). */
+async function nameDemoTrack(base, trackId) {
+  if (!trackId) return;
+  try {
+    await fetch(`${base}/api/tracks/${trackId}`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'Circuito de Demonstração' }),
+      signal: AbortSignal.timeout(3000),
+    });
+  } catch {
+    // sem nome a captura sai igual, só menos bonita
+  }
+}
+
+/** Antes de fotografar o ao vivo: engenheiro ligado e sem os rótulos da primeira semana nos botões. */
+const PREPARE_LIVE =
+  "localStorage.setItem('gt7.engineer.enabled', 'true'); localStorage.setItem('bono.usage.v1', JSON.stringify({ since: Date.now() - 30 * 864e5, counters: {} })); location.reload()";
+
+/** O convite "Novidades no Bono" aparece para quem nunca respondeu (perfil novo do Electron): some antes da foto. */
+const DISMISS_INVITE =
+  "[...document.querySelectorAll('.su-invite button')].find((b) => /agora não/i.test(b.textContent))?.click()";
+
 /** Rola a página da análise até os gráficos (a rolagem é a da janela; `instant` ignora o scroll suave do app). */
 const SCROLL_MAIN = "window.scrollTo({ top: 600, behavior: 'instant' })";
 
@@ -100,32 +123,53 @@ const demo = serverArg
 let code = 0;
 try {
   await waitFor(() => getJson(`${demo.base}/api/status`), 'servidor de demonstração', 180_000);
-  const { best, other } = await pickLaps(demo.base);
-  const live = `${demo.base}/?mock=1#/painel`;
+  const { session, best, other } = await pickLaps(demo.base);
+  await nameDemoTrack(demo.base, session.trackId);
+  // ao vivo com o servidor de demonstração (sem o selo "Demonstração" do modo mock): mostra a faixa de contexto
+  const live = `${demo.base}/#/painel`;
   const shots = [
-    { name: 'ao-vivo', url: live, width: 1440, height: 860, waitMs: 14000 },
+    {
+      name: 'ao-vivo',
+      url: live,
+      width: 1440,
+      height: 860,
+      waitMs: 6000,
+      steps: [
+        { js: PREPARE_LIVE, waitMs: 9000 },
+        // a janela invisível não tem voz: o cartão diria "áudio indisponível", então ele fica recolhido
+        {
+          js: "document.querySelector('.engineer-hud-btn[aria-pressed=true]')?.click()",
+          waitMs: 700,
+        },
+      ],
+    },
     {
       name: 'comparar-voltas',
       url: `${demo.base}/?s=comparar#/analise/comparar?lap=${best.id}&ref=${other.id}`,
       width: 1440,
       height: 860,
       waitMs: 4500,
-      steps: [{ js: SCROLL_MAIN, waitMs: 800 }],
+      steps: [
+        { js: DISMISS_INVITE, waitMs: 600 },
+        { js: SCROLL_MAIN, waitMs: 800 },
+      ],
     },
     {
       name: 'inicio-por-pista',
       url: `${demo.base}/?s=inicio#/inicio`,
       width: 1440,
       height: 860,
-      waitMs: 3500,
+      waitMs: 4500,
+      steps: [{ js: DISMISS_INVITE, waitMs: 800 }],
     },
     {
       name: 'menu-engenheiro',
-      url: `${demo.base}/?mock=1&s=menu#/painel`,
+      url: `${demo.base}/?s=menu#/painel`,
       width: 1440,
       height: 860,
       waitMs: 4000,
       steps: [
+        { js: PREPARE_LIVE, waitMs: 6000 },
         { js: "document.querySelector('button[aria-label^=Menu]')?.click()", waitMs: 900 },
         {
           js: "[...document.querySelectorAll('[role=tab]')].find((t) => /engenheiro/i.test(t.textContent))?.click()",

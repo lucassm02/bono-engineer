@@ -65,7 +65,7 @@ export function completeEngineerTrainingLap(event: LapCompletedEvent): void {
     useEngineerTraining.setState({
       run: {
         ...run,
-        notice: 'O rádio mudou de aparelho. Selecione este aparelho para retomar o treino.',
+        notice: 'O engenheiro mudou de aparelho. Selecione este aparelho para retomar o treino.',
       },
     });
     return;

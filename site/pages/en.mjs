@@ -8,7 +8,7 @@ export const FAQ_EN = [
   },
   {
     q: 'Do I need a PC, or does it work with just the PS5?',
-    a: 'You need a Windows PC on the same network as the PS5. Gran Turismo 7 sends telemetry over the network and Bono runs on the PC. A phone or tablet on the same network works as a second dashboard.',
+    a: 'You need a Windows PC on the same network as the PS5. Gran Turismo 7 sends telemetry over the network and Bono runs on the PC. A phone or tablet on the same network works as a second screen.',
   },
   {
     q: 'Windows says the installer is not safe. What now?',
@@ -32,7 +32,7 @@ export function render(ctx) {
   const v = SITE.version;
   const hero = ctx.pic(
     'ao-vivo',
-    'Bono live dashboard showing a delta of minus 0.033 seconds in green, gear 2, 96 km/h and the shift lights',
+    'Bono Live screen with the context strip (track, car and engineer), the delta against your best lap, gear, speed, lap times, sectors and the shift lights',
     { eager: true, sizes: '(min-width: 1000px) 62vw, 100vw' },
   );
   const body = `
@@ -57,12 +57,12 @@ export function render(ctx) {
 <section class="sec" id="what-it-does" aria-labelledby="h-does">
   <div class="wrap split">
     <div class="split-head">
-      <h2 id="h-does">A race engineer, not just a dashboard</h2>
+      <h2 id="h-does">A race engineer, not just a screen of numbers</h2>
       <p>From warm-up to debrief, Bono follows the session and shows what to practise on the next lap.</p>
     </div>
     <ul class="rows">
       <li class="row">
-        <div><h3>Live dashboard</h3><p>Delta against your best lap or a top-driver replay, gear, revs, tyres, fuel and track map. Eleven screens, on the PC or on a tablet on the same network.</p></div>
+        <div><h3>Live</h3><p>Delta against your best lap or a top-driver replay, gear, revs, tyres, fuel and track map. Eleven screens, on the PC or on a tablet on the same network.</p></div>
         <div class="read gain">−0.033<small>live delta, in seconds</small></div>
       </li>
       <li class="row">
@@ -86,7 +86,7 @@ export function render(ctx) {
     <h2 id="h-how">Connect, drive, analyse</h2>
     <ol class="sectors">
       <li class="sector"><span class="tag" aria-hidden="true">S1</span><h3>Connect the PS5</h3><p>Install Bono on a PC on the same network as the console. It finds the PS5 by itself and a first-run assistant guides you.</p></li>
-      <li class="sector"><span class="tag" aria-hidden="true">S2</span><h3>Drive</h3><p>Open GT7 and enter a track. The dashboard lights up, the engineer talks and every lap is recorded with sectors, validity and telemetry traces.</p></li>
+      <li class="sector"><span class="tag" aria-hidden="true">S2</span><h3>Drive</h3><p>Open GT7 and enter a track. The Live screen lights up, the engineer talks and every lap is recorded with sectors, validity and telemetry traces.</p></li>
       <li class="sector"><span class="tag" aria-hidden="true">S3</span><h3>Analyse</h3><p>Compare with your best lap or a top replay, see where the time went and practise one corner at a time.</p></li>
     </ol>
   </div>
@@ -106,8 +106,8 @@ export function render(ctx) {
         <figcaption><strong>Home by track</strong>Your best times per track and car, with progress and what is left to gain.</figcaption>
       </figure>
       <figure class="fig">
-        ${ctx.pic('menu-engenheiro', 'Engineer menu open over the live dashboard', { sizes: '(min-width: 900px) 590px, 100vw' })}
-        <figcaption><strong>Engineer menu</strong>Pick the mode (practice, qualifying or race), speech level and radio voice without leaving the dashboard.</figcaption>
+        ${ctx.pic('menu-engenheiro', 'Engineer menu open over the Live screen', { sizes: '(min-width: 900px) 590px, 100vw' })}
+        <figcaption><strong>Engineer menu</strong>Pick the mode (practice, qualifying or race), speech level and engineer voice without leaving Live.</figcaption>
       </figure>
     </div>
   </div>

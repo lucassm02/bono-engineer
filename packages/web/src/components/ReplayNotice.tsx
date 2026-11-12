@@ -21,7 +21,7 @@ export function ReplayNotice() {
       <span className="ui-dot" data-tone="accent" aria-hidden="true" />
       <span className="replay-text">
         {armed
-          ? (capture?.hint ?? uiText('Captura de referência em andamento.'))
+          ? (capture?.hint ?? uiText('Gravação da volta de replay em andamento.'))
           : uiText('Não conta como sessão: nada é gravado nos seus tempos.')}
       </span>
       {source === 'server' && (

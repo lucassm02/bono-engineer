@@ -4,9 +4,10 @@
  * Teclado: M abre/fecha; Esc, fundo e foco vêm do componente Modal.
  */
 
-import { type KeyboardEvent, useId, useState } from 'react';
+import { type KeyboardEvent, useEffect, useId, useMemo, useState } from 'react';
 import { t as uiText } from '../lib/i18n.ts';
 import { routes } from '../lib/route.ts';
+import { bumpUsage, isNewcomer, loadMenuTab, type MenuTabId, saveMenuTab } from '../lib/usage.ts';
 import {
   closeMenu,
   dispatchProfile,
@@ -14,6 +15,7 @@ import {
   openPicker,
   setLocked,
 } from '../state/actions.ts';
+import { useEngineer } from '../state/engineer.ts';
 import { requestTour } from '../state/tour.ts';
 import { useUi } from '../state/uiStore.ts';
 import { EngineerControls } from './EngineerControls.tsx';
@@ -55,7 +57,7 @@ const AREAS: readonly Entry[] = [
   {
     icon: 'capture',
     get label() {
-      return uiText('Captura de referência');
+      return uiText('Gravar volta de replay');
     },
     get hint() {
       return uiText('Gravar a volta de um replay');
@@ -91,23 +93,23 @@ const SETUP: readonly Entry[] = [
       return uiText('Configurações');
     },
     get hint() {
-      return uiText('Console, dispositivos, dados e IA');
+      return uiText('Console, aparelhos, dados e IA');
     },
     href: routes.config(),
   },
   {
     icon: 'remote',
     get label() {
-      return uiText('Dispositivo remoto');
+      return uiText('Abrir em outro aparelho');
     },
     get hint() {
-      return uiText('QR Code e endereço para abrir o painel em outro aparelho');
+      return uiText('QR Code e endereço para abrir o ao vivo em outro aparelho');
     },
     href: routes.config('acesso-remoto'),
   },
 ];
 
-type TabId = 'nav' | 'engineer' | 'panel';
+type TabId = MenuTabId;
 const TABS: readonly { id: TabId; label: string }[] = [
   {
     id: 'nav',
@@ -124,7 +126,7 @@ const TABS: readonly { id: TabId; label: string }[] = [
   {
     id: 'panel',
     get label() {
-      return uiText('Painel');
+      return uiText('Ao vivo');
     },
   },
 ];
@@ -132,18 +134,27 @@ const TABS: readonly { id: TabId; label: string }[] = [
 /** Botão flutuante, à esquerda do cadeado. */
 export function MenuButton() {
   const open = useUi((s) => s.menuOpen);
+  // na primeira semana o botão diz o que é (e a tecla); depois só o ícone
+  const newcomer = useMemo(() => isNewcomer(), []);
   return (
     <button
       type="button"
       className="live-menu-btn"
       data-no-gesture
       data-tour="menu"
-      aria-label={uiText('Menu: histórico, comparação, captura e ajustes')}
+      aria-label={uiText('Menu: histórico, comparação, gravar volta e ajustes')}
+      title={uiText('Menu (tecla M)')}
       aria-haspopup="dialog"
       aria-expanded={open}
+      aria-keyshortcuts="M"
       onClick={() => useUi.setState({ menuOpen: !open, overlayVisible: false })}
     >
       <Icon name="menu" />
+      {newcomer && (
+        <span className="live-btn-label" aria-hidden="true">
+          {uiText('Menu')}
+        </span>
+      )}
     </button>
   );
 }
@@ -246,7 +257,7 @@ function PanelTab() {
             >
               <ListItemBody
                 icon="live"
-                title={uiText('Telas do painel ao vivo')}
+                title={uiText('Escolher as telas')}
                 hint={hint ?? uiText('Escolher e ordenar as telas deste aparelho')}
               />
             </button>
@@ -296,15 +307,25 @@ function PanelTab() {
 
 export function LiveMenuSheet() {
   const open = useUi((s) => s.menuOpen);
-  const [tab, setTab] = useState<TabId>('nav');
+  const [tab, setTab] = useState<TabId>(loadMenuTab);
+  const engineerOn = useEngineer((s) => s.enabled);
   const base = useId();
+
+  function selectTab(next: TabId) {
+    setTab(next);
+    saveMenuTab(next);
+  }
+
+  useEffect(() => {
+    if (open) bumpUsage('menuOpens');
+  }, [open]);
 
   function onTabKey(e: KeyboardEvent<HTMLDivElement>) {
     const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
     if (!step) return;
     e.preventDefault();
     const next = TABS[(TABS.findIndex((t) => t.id === tab) + step + TABS.length) % TABS.length]!;
-    setTab(next.id);
+    selectTab(next.id);
     document.getElementById(`${base}-tab-${next.id}`)?.focus();
   }
 
@@ -329,7 +350,7 @@ export function LiveMenuSheet() {
             <kbd className="ui-kbd">Esc</kbd> {uiText('fecha')}
           </p>
           <button type="button" className="ui-btn" onClick={closeMenu}>
-            {uiText('Voltar ao painel')}
+            {uiText('Voltar à tela ao vivo')}
           </button>
         </>
       }
@@ -350,9 +371,14 @@ export function LiveMenuSheet() {
             aria-selected={tab === t.id}
             aria-controls={`${base}-panel-${t.id}`}
             tabIndex={tab === t.id ? 0 : -1}
-            onClick={() => setTab(t.id)}
+            onClick={() => selectTab(t.id)}
           >
             {t.label}
+            {t.id === 'engineer' && (
+              <span className="bn-tab-state" data-on={engineerOn ? '1' : '0'}>
+                {engineerOn ? uiText('ligado') : uiText('desligado')}
+              </span>
+            )}
           </button>
         ))}
       </div>

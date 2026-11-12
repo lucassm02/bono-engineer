@@ -264,7 +264,7 @@ function SettingsForm({ bridge }: { bridge: DesktopDiscordBridge }) {
               </fieldset>
               <p className="cfg-hint">
                 {uiText(
-                  'Para calibrar, entre no canal pelo PS5 e inicie o teste. Para ouvir as instruções, escolha Discord · PS5 em Aparelho que toca o rádio no painel ao vivo.',
+                  'Para calibrar, entre no canal pelo PS5 e inicie o teste. Para ouvir as instruções, escolha Discord · PS5 em Aparelho do engenheiro, na tela ao vivo.',
                 )}
               </p>
             </form>

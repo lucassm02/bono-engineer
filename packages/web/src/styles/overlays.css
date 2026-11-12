@@ -69,9 +69,14 @@
   color: var(--tone);
 }
 .lap-popup-ref {
-  font-size: 0.5em;
+  font-size: max(12px, 0.5em);
   font-weight: 500;
   color: var(--text-3);
+}
+.lap-popup-hint {
+  margin-top: var(--sp-2);
+  font-size: var(--fs-sm);
+  color: var(--text-2);
 }
 .lap-popup-sectors {
   display: grid;
@@ -330,6 +335,9 @@ button.bn-view-main:focus-visible {
   font-size: var(--fs-sm);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.bn-view-row[data-current="1"] .bn-view-desc {
+  color: var(--text-2); /* sobre o fundo da tela atual, text-3 não chega a AA */
 }
 .bn-view-actions {
   display: flex;

@@ -102,7 +102,7 @@ export function EngineerRadioReview({
       {otherReferences.map((id) => (
         <p key={id} className="cmp-table-note">
           <a href={routes.compare({ lap: lapId, ref: id })}>
-            {uiText('Ver chamadas com a referência usada no rádio')}
+            {uiText('Ver chamadas com a referência usada pelo engenheiro')}
           </a>
         </p>
       ))}

@@ -283,7 +283,7 @@
   background: var(--surface-2);
   color: var(--text-3);
   font-weight: 700;
-  font-size: 0.65em;
+  font-size: max(12px, 0.65em);
   letter-spacing: var(--track-caps);
   text-transform: uppercase;
   text-align: left;
@@ -312,7 +312,7 @@
   width: 3em;
 }
 .tempos-sector {
-  font-size: 0.92em;
+  font-size: max(12px, 0.92em);
   padding: 0.12em 0.5em;
   border-left-width: 0.25em;
 }
@@ -344,7 +344,7 @@
     font-size: min(5.6cqw, 3.4cqh);
   }
   .tempos-table {
-    font-size: min(3.4cqw, 2.4cqh);
+    font-size: max(12px, min(3.4cqw, 2.4cqh));
   }
   .tempos-table td,
   .tempos-table th {
@@ -443,7 +443,7 @@
   align-items: flex-end;
 }
 .fuel-level small {
-  font-size: 0.5em;
+  font-size: max(12px, 0.5em);
   color: var(--text-3);
 }
 .fuel-pct {
@@ -643,7 +643,7 @@
   letter-spacing: var(--track-caps);
   text-transform: uppercase;
   text-align: right;
-  font-size: 0.7em;
+  font-size: max(12px, 0.7em);
   padding-bottom: var(--sp-1);
 }
 .forcas-peaks th:first-child,
@@ -806,7 +806,8 @@
   --verdict: var(--loss);
 }
 .treino-result[data-fresh="1"] {
-  background: color-mix(in srgb, var(--verdict) 28%, var(--surface-2));
+  /* destaque de resultado novo sem escurecer demais o fundo (texto colorido segue em AA) */
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--verdict) 40%, transparent);
 }
 .treino-result[data-show="0"] {
   display: none;
@@ -842,11 +843,11 @@
   font-size: clamp(12px, min(2.1cqw, 4.2cqh), 20px);
 }
 .treino-res-table th {
-  color: var(--text-3);
+  color: var(--text-2); /* sobre o cartão tingido de veredito, text-3 não chega a AA */
   font-weight: 700;
   letter-spacing: var(--track-caps);
   text-transform: uppercase;
-  font-size: 0.7em;
+  font-size: max(12px, 0.7em);
   text-align: right;
 }
 .treino-res-table td {
@@ -866,9 +867,12 @@
   color: var(--loss);
   font-weight: 700;
 }
+.treino-result .readout-label {
+  color: var(--text-2);
+}
 .treino-basis {
   font-size: var(--fs-xs);
-  color: var(--text-3);
+  color: var(--text-2);
   margin-top: auto;
 }
 .treino-controls {
@@ -934,6 +938,11 @@
   z-index: 2;
   opacity: 0.9;
 }
+@media (pointer: coarse) {
+  .ui-btn.grid-edit-btn {
+    min-height: var(--tap);
+  }
+}
 
 .gw {
   position: absolute;
@@ -945,7 +954,7 @@
   min-width: 0;
 }
 .gw-label {
-  font-size: clamp(9px, min(12cqh, 8cqw), 16px);
+  font-size: clamp(12px, min(12cqh, 8cqw), 16px);
   font-weight: 700;
   letter-spacing: var(--track-caps);
   text-transform: uppercase;
@@ -961,11 +970,11 @@
   white-space: nowrap;
 }
 .gw-big small {
-  font-size: 0.4em;
+  font-size: max(12px, 0.4em);
   color: var(--text-3);
 }
 .gw-sub {
-  font-size: clamp(9px, min(12cqh, 8cqw), 16px);
+  font-size: clamp(12px, min(12cqh, 8cqw), 16px);
 }
 .gw-delta .gw-big {
   font-size: min(56cqh, 18cqw);

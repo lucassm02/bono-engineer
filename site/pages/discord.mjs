@@ -43,8 +43,8 @@ export function render(ctx) {
   </ol>
 
   <h2>Ligue o rádio</h2>
-  <p>Na janela do Bono, aperte <kbd>M</kbd> para abrir o menu, entre em <strong>Engenheiro</strong> e ligue <strong>Falar pelo Discord</strong>. Ele liga o bot e escolhe <strong>Discord · PS5</strong> como o aparelho que toca o rádio. Desligar devolve o som a cada aparelho.</p>
-  <p>O bot entra no canal quando você entra e sai quando o canal esvazia. A saída pelo Discord começa em <strong>Treino</strong>, no perfil <strong>Aprender pista</strong>. Em um tablet na mesma rede, escolha <strong>Discord · PS5</strong> em <strong>Aparelho que toca o rádio</strong>. O Bono do PC precisa estar aberto.</p>
+  <p>Na janela do Bono, aperte <kbd>M</kbd> para abrir o menu, entre em <strong>Engenheiro</strong> e ligue <strong>Falar pelo Discord</strong>. Ele liga o bot e escolhe <strong>Discord · PS5</strong> como o aparelho do engenheiro. Desligar devolve o som a cada aparelho.</p>
+  <p>O bot entra no canal quando você entra e sai quando o canal esvazia. A saída pelo Discord começa em <strong>Treino</strong>, no perfil <strong>Aprender pista</strong>. Em um tablet na mesma rede, escolha <strong>Discord · PS5</strong> em <strong>Aparelho do engenheiro</strong>. O Bono do PC precisa estar aberto.</p>
 
   <h2>Acerte o atraso (opcional)</h2>
   <p>Sem calibrar, o Bono usa um atraso padrão de 300 ms, e o som pode chegar um pouco depois da curva. O Bono usa o atraso e a sua velocidade recente para falar antes. Calibre uma vez e de novo se mudar de rede, de região de voz ou de headset.</p>

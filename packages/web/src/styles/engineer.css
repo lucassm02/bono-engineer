@@ -46,6 +46,11 @@
 .engineer-hud-settings {
   pointer-events: auto;
 }
+@media (pointer: coarse) {
+  .engineer-hud-settings {
+    min-height: var(--tap);
+  }
+}
 .engineer-hud-call {
   display: flex;
   align-items: baseline;
@@ -72,12 +77,18 @@
     bottom: calc(var(--safe-b) + 72px);
   }
   .app:has(.engineer-hud) {
-    --live-portrait-footer-space: 144px;
+    /* cartão (≈120 px) + 72 px de controles: a grade termina acima dele, sem esconder tempos */
+    --live-portrait-footer-space: 212px;
   }
 }
 
 @media (min-width: 481px) and (min-height: 480px) {
   .app:has(.engineer-hud) .view {
-    padding-bottom: calc(var(--safe-b) + 144px);
+    padding-bottom: calc(var(--safe-b) + 176px);
+  }
+  @media (pointer: coarse) {
+    .app:has(.engineer-hud) .view {
+      padding-bottom: calc(var(--safe-b) + 212px);
+    }
   }
 }

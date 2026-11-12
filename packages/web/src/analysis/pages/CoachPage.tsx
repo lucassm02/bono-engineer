@@ -7,6 +7,7 @@
 import type { CoachConfig, CoachReport, CoachReportSummary, Lap, Session } from '@gt7/shared';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '../../components/ui/Icon.tsx';
+import { humanizeError } from '../../lib/copy.ts';
 import { formatLapTime } from '../../lib/format.ts';
 import { t as uiText } from '../../lib/i18n.ts';
 import { navigate, type Route, routes } from '../../lib/route.ts';
@@ -181,7 +182,8 @@ export function CoachPage({ route }: { route: Route }) {
         );
       })
       .catch((e: Error) => {
-        if (alive) setEntries([{ role: 'assistant', text: '', tools: [], error: e.message }]);
+        if (alive)
+          setEntries([{ role: 'assistant', text: '', tools: [], error: humanizeError(e).text }]);
       });
     return () => {
       alive = false;

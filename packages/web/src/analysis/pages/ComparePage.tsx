@@ -17,6 +17,7 @@ import type {
 } from '@gt7/shared';
 import { type CSSProperties, useCallback, useEffect, useMemo, useState } from 'react';
 import { Icon } from '../../components/ui/Icon.tsx';
+import { humanizeError } from '../../lib/copy.ts';
 import { formatDelta, formatLapTime } from '../../lib/format.ts';
 import { t as uiText } from '../../lib/i18n.ts';
 import { navigate, type Route, routes } from '../../lib/route.ts';
@@ -187,7 +188,7 @@ export function ComparePage({ route }: { route: Route }) {
         radio: radio.data ?? undefined,
         events: events.data,
       }}
-      tracesError={traces.error?.message ?? null}
+      tracesError={traces.error ? humanizeError(traces.error).text : null}
       trackLaps={trackLaps.data ?? []}
       refParam={ref}
       extra={extra}

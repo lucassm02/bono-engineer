@@ -24,6 +24,7 @@
   pointer-events: none;
 }
 .live-context[data-variant="menu"] {
+  padding: 3px; /* espaço para o anel de foco da primeira pílula */
   position: static;
   flex-wrap: wrap;
   height: auto;
@@ -414,4 +415,13 @@
 }
 .status-screen .lc-card.lc-card-chosen strong {
   font-size: var(--fs-md);
+}
+
+/* Toque: o item da faixa continua em 26 px, o alvo chega a 44 px por fora (spec 01, C3). */
+@media (pointer: coarse) {
+  button.lc-item::before {
+    content: "";
+    position: absolute;
+    inset: -9px -4px;
+  }
 }

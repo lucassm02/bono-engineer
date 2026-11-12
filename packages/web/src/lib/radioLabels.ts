@@ -54,7 +54,7 @@ export const SPEECH_LEVEL_LABELS = {
     return uiText('Detalhado');
   },
   get mute() {
-    return uiText('Mudo · só painel');
+    return uiText('Mudo · só na tela');
   },
 } as const;
 

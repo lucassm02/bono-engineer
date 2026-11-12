@@ -16,7 +16,7 @@ import { Icon } from '../ui/Icon.tsx';
 const TRAIN_LABEL: Record<TrainChoice, () => string> = {
   learn: () => uiText('Aprender pista'),
   time: () => uiText('Ganhar tempo'),
-  view: () => uiText('Só o painel'),
+  view: () => uiText('Só acompanhar ao vivo'),
 };
 
 interface Row {

@@ -28,7 +28,7 @@ const CARDS: Record<TrainChoice, { icon: IconName; title: () => string; text: ()
   },
   view: {
     icon: 'live',
-    title: () => uiText('Só ver o painel'),
+    title: () => uiText('Só acompanhar ao vivo'),
     text: () => uiText('Engenheiro desligado. Só os números na tela.'),
   },
 };

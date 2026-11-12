@@ -122,7 +122,7 @@ export function EngineerControls() {
         <ToggleRow
           title={uiText('Engenheiro ao vivo')}
           description={uiText(
-            'Instruções em voz e na tela. Quando tudo corre bem, o rádio fica em silêncio.',
+            'Instruções em voz e na tela. Quando tudo corre bem, o engenheiro fica em silêncio.',
           )}
           checked={enabled}
           onChange={(next) => setEngineerEnabled(next, audioHere)}
@@ -134,7 +134,7 @@ export function EngineerControls() {
       <section className="ui-card bn-card" aria-labelledby="engineer-radio-title">
         <div className="ui-card-head">
           <h3 id="engineer-radio-title" className="ui-card-title">
-            {uiText('Como o rádio ajuda')}
+            {uiText('Como o engenheiro ajuda')}
           </h3>
         </div>
         <div className="bn-fields">
@@ -277,7 +277,7 @@ export function EngineerControls() {
           {controls.mode === 'training' && controls.trainingProfile !== 'free' && !consistency && (
             <ToggleRow
               title={uiText('Reforço positivo')}
-              description={uiText('O rádio também avisa quando você acerta a curva.')}
+              description={uiText('O engenheiro também avisa quando você acerta a curva.')}
               checked={controls.praise}
               onChange={(praise) => setRadioControls({ praise })}
             />
@@ -333,7 +333,7 @@ export function EngineerControls() {
 
           <label className="ui-field">
             <span className="ui-label bn-label-row">
-              {uiText('Volume do rádio')}
+              {uiText('Volume do engenheiro')}
               <output className="num">{Math.round(controls.volume * 100)}%</output>
             </span>
             <input
@@ -368,7 +368,7 @@ export function EngineerControls() {
           <hr className="ui-divider" />
 
           <label className="ui-field">
-            <span className="ui-label">{uiText('Aparelho que toca o rádio')}</span>
+            <span className="ui-label">{uiText('Aparelho do engenheiro')}</span>
             <select
               className="ui-select"
               value={audioDevice}
@@ -398,12 +398,12 @@ export function EngineerControls() {
                 ? uiText(
                     'O som sai pelo canal do Discord. O Bono para Windows precisa estar aberto com o rádio do Discord ativado.',
                   )
-                : uiText('Ative o engenheiro no aparelho escolhido para ouvir o rádio.')}
+                : uiText('Ative o engenheiro no aparelho escolhido para ouvi-lo.')}
             </p>
           )}
           {deviceError && (
             <p className="bn-note" data-tone="loss" role="status">
-              {uiText('Não foi possível alterar o aparelho do rádio.')}
+              {uiText('Não foi possível alterar o aparelho do engenheiro.')}
             </p>
           )}
         </div>

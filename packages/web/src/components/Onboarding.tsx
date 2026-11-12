@@ -33,6 +33,7 @@ import {
   withCurrent,
 } from '../lib/onboarding.ts';
 import { navigate, routes } from '../lib/route.ts';
+import { bumpUsage } from '../lib/usage.ts';
 import { useConsoleConnection } from '../state/consoleLink.ts';
 import { useEngineer } from '../state/engineer.ts';
 import { requestTour } from '../state/tour.ts';
@@ -54,7 +55,7 @@ const TITLES: Record<SetupScreen, () => string> = {
   console: () => uiText('Conecte o PS5'),
   mode: () => uiText('Como você quer treinar?'),
   engineer: () => uiText('Seu engenheiro'),
-  panel: () => uiText('Seu painel'),
+  panel: () => uiText('Suas telas ao vivo'),
   ready: () => uiText('Tudo pronto!'),
 };
 
@@ -81,7 +82,10 @@ export default function Onboarding() {
   const draft = useRef<SetupDraft>({});
   // reopened: what was saved as closed is open again, so a close of the app now resumes here
   // biome-ignore lint/correctness/useExhaustiveDependencies: once, with the state of the first render
-  useEffect(() => saveSetupState(progress.state), []);
+  useEffect(() => {
+    saveSetupState(progress.state);
+    bumpUsage('setupOpens');
+  }, []);
   const autoMoved = useRef(false);
   const discord = useDiscordSetup();
   const conn = useConsoleConnection();

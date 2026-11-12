@@ -87,10 +87,10 @@ const MAIN_NAV: NavItem[] = [
     names: ['capture'],
     href: routes.capture(),
     get label() {
-      return uiText('Captura de referência');
+      return uiText('Gravar volta de replay');
     },
     get short() {
-      return uiText('Captura');
+      return uiText('Gravar');
     },
   },
   {
@@ -143,7 +143,15 @@ class PageBoundary extends Component<
       return (
         <div className="ui-card a-error" data-tone="loss" role="alert">
           <strong>{uiText('Esta página falhou ao desenhar')}</strong>
-          <p>{this.state.error.message}</p>
+          <p>
+            {uiText(
+              'Tente recarregar. Se continuar, abra o detalhe técnico ao relatar o problema.',
+            )}
+          </p>
+          <details className="a-error-detail">
+            <summary>{uiText('Detalhe técnico')}</summary>
+            <code>{this.state.error.message}</code>
+          </details>
           <button type="button" className="a-btn a-btn-ghost" onClick={() => location.reload()}>
             {uiText('Recarregar')}
           </button>
@@ -203,7 +211,7 @@ function NotFound() {
           {uiText('Ir para o início')}
         </a>
         <a className="a-btn a-btn-ghost" href={routes.live()}>
-          {uiText('Voltar ao painel ao vivo')}
+          {uiText('Voltar à tela ao vivo')}
         </a>
       </div>
     </div>

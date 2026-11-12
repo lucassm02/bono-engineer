@@ -103,10 +103,12 @@ function SearchResults({
   results,
   query,
   onPick,
+  onClear,
 }: {
   results: ConfigEntry[];
   query: string;
   onPick: (e: ConfigEntry) => void;
+  onClear: () => void;
 }) {
   if (results.length === 0) {
     return (
@@ -118,6 +120,9 @@ function SearchResults({
             query,
           )}
         </p>
+        <button type="button" className="ui-btn" data-variant="secondary" onClick={onClear}>
+          {uiText('Limpar a busca')}
+        </button>
       </div>
     );
   }
@@ -296,6 +301,7 @@ export function ConfigPage({ route }: { route: Route }) {
         <SearchResults
           results={results}
           query={query.trim()}
+          onClear={() => setQuery('')}
           onPick={(e) => {
             setFocus(e);
             setQuery('');

@@ -136,7 +136,7 @@ export const CONFIG_GROUPS: readonly ConfigGroupInfo[] = [
   {
     id: 'painel',
     get label() {
-      return uiText('Painel e aparelhos');
+      return uiText('Ao vivo e aparelhos');
     },
     get description() {
       return uiText('Telas de cada aparelho e acesso pelo celular');

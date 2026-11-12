@@ -97,7 +97,8 @@
 }
 /* Em telas de toque todo botão ganha alvo de 44 px. */
 @media (pointer: coarse) {
-  .ui-btn {
+  .ui-btn,
+  .ui-btn[data-size="sm"] {
     min-height: var(--tap);
   }
 }
@@ -315,6 +316,17 @@ textarea.ui-input {
   opacity: 0.4;
   cursor: default;
 }
+/* Toque: a chave continua 44x26, o alvo chega a 44x44 (spec 01, C3). */
+@media (pointer: coarse) {
+  .ui-switch::before {
+    content: "";
+    position: absolute;
+    inset: -9px 0;
+  }
+  .ui-range {
+    height: var(--tap);
+  }
+}
 
 /* ---------------------------------------------------------------------------------------------- */
 /* Segmentado (2–4 opções mutuamente exclusivas)                                                   */
@@ -361,7 +373,7 @@ textarea.ui-input {
 }
 @media (pointer: coarse) {
   .ui-segmented > button {
-    min-height: 38px;
+    min-height: var(--tap);
   }
 }
 

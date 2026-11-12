@@ -230,13 +230,13 @@ function EmptyHome({ hiddenDemo, onShowDemo }: { hiddenDemo: boolean; onShowDemo
           </a>
         )}
         <a className="a-btn a-btn-ghost" href={routes.live()}>
-          {uiText('Abrir o painel ao vivo')}
+          {uiText('Abrir a tela ao vivo')}
         </a>
       </div>
       {!hiddenDemo && (
         <p className="dim a-small">
           {`${uiText(
-            'A demonstração mostra o painel ao vivo com um piloto simulado. Para ver o histórico preenchido com voltas de exemplo, rode',
+            'A demonstração mostra a tela ao vivo com um piloto simulado. Para ver o histórico preenchido com voltas de exemplo, rode',
           )} `}
           <code>npm run demo</code>
           {` ${uiText('no PC.')}`}
@@ -306,7 +306,7 @@ export function HomePage() {
           <div className="a-actions a-hero-actions">
             <a className="a-btn a-btn-lg" href={routes.live()}>
               <Icon name="live" size={20} />
-              {uiText('Abrir painel ao vivo')}
+              {uiText('Abrir a tela ao vivo')}
             </a>
             <a className="a-btn a-btn-lg a-btn-ghost" href={routes.sessions()}>
               {uiText('Todas as sessões')}

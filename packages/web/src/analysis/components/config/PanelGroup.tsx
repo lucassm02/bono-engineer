@@ -1,5 +1,5 @@
 /**
- * Grupo "Painel e aparelhos": a lista compacta de aparelhos (uma linha cada, com o preset de telas;
+ * Grupo "Ao vivo e aparelhos": a lista compacta de aparelhos (uma linha cada, com o preset de telas;
  * os detalhes só ao expandir), o acesso pelo celular (QR + endereços) e o acesso pela rede do
  * Windows em linguagem simples ("Liberado" / "Bloqueado — Corrigir").
  */

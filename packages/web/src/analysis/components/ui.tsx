@@ -3,6 +3,7 @@
 import { PRODUCT_NAME } from '@gt7/shared';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { Icon } from '../../components/ui/Icon.tsx';
+import { humanizeError } from '../../lib/copy.ts';
 import { t as uiText } from '../../lib/i18n.ts';
 import { routes } from '../../lib/route.ts';
 import type { ApiError } from '../api.ts';
@@ -88,7 +89,8 @@ export function ErrorBox({
   onRetry?: () => void;
   compact?: boolean;
 }) {
-  const msg = typeof error === 'string' ? error : error.message;
+  const human = humanizeError(typeof error === 'string' ? error : error.message);
+  const msg = human.text;
   const offline = typeof error !== 'string' && (error as ApiError).offline;
   return (
     <div
@@ -98,9 +100,15 @@ export function ErrorBox({
     >
       <strong>{offline ? uiText('Servidor fora do ar') : uiText('Algo deu errado')}</strong>
       <p>{uiText(msg)}</p>
+      {human.detail && (
+        <details className="a-error-detail">
+          <summary>{uiText('Detalhe técnico')}</summary>
+          <code>{human.detail}</code>
+        </details>
+      )}
       {offline && !compact && (
         <p className="dim">
-          {uiText('O painel ao vivo continua funcionando em modo demonstração (')}
+          {uiText('A tela ao vivo continua funcionando em modo demonstração (')}
           <a href="/?mock=1">{uiText('abrir')}</a>
           {uiText('), mas a análise precisa dos dados gravados no servidor.')}
         </p>
@@ -114,8 +122,29 @@ export function ErrorBox({
   );
 }
 
-export function Empty({ children }: { children: ReactNode }) {
-  return <div className="ui-empty a-empty">{children}</div>;
+/** Estado vazio: diz o que falta e, quando há o que fazer, oferece um único botão. */
+export function Empty({
+  children,
+  action,
+}: {
+  children: ReactNode;
+  action?: { label: string; href?: string; onClick?: () => void };
+}) {
+  return (
+    <div className="ui-empty a-empty">
+      {children}
+      {action &&
+        (action.href ? (
+          <a className="a-btn" href={action.href}>
+            {action.label}
+          </a>
+        ) : (
+          <button type="button" className="a-btn" onClick={action.onClick}>
+            {action.label}
+          </button>
+        ))}
+    </div>
+  );
 }
 
 /** Two-step destructive button: first click asks, second confirms (no blocking dialogs). */

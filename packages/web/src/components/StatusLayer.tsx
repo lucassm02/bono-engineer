@@ -89,12 +89,12 @@ export function StatusLayer() {
           <>
             <h1>{uiText('Sem conexão com o servidor')}</h1>
             <p>
-              {`${uiText('O painel não encontrou o servidor em')} `}
+              {`${uiText('A tela não encontrou o servidor em')} `}
               <strong>{host}</strong>.{wsEverOpened ? uiText(' A conexão caiu.') : ''}
             </p>
             <ul>
               <li>{uiText('Confira se o servidor está rodando no PC.')}</li>
-              <li>{uiText('O PC e o dispositivo remoto precisam estar na mesma rede local.')}</li>
+              <li>{uiText('O PC e o aparelho precisam estar na mesma rede local.')}</li>
               <li>{uiText('Use o endereço ou o QR code mostrado na tela do PC.')}</li>
             </ul>
             <p className="status-muted">
@@ -164,7 +164,7 @@ export function StatusLayer() {
         {kind === 'menu' && (
           <>
             <h1>{uiText('No menu')}</h1>
-            <p>{uiText('O painel volta sozinho quando o carro estiver na pista.')}</p>
+            <p>{uiText('A tela volta sozinha quando o carro estiver na pista.')}</p>
             <TrackPromptCard />
           </>
         )}

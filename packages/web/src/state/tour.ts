@@ -16,6 +16,7 @@ import {
   type TourOutcome,
   withOutcome,
 } from '../lib/tour.ts';
+import { bumpUsage } from '../lib/usage.ts';
 import { enterTourDemo, leaveTourDemo } from '../net/connection.ts';
 import { useLiveContext } from './liveContext.ts';
 import { addNotice, useUi } from './uiStore.ts';
@@ -64,6 +65,7 @@ function begin(id: TourId): void {
   } else if (onLiveRoute()) {
     navigate(routes.home());
   }
+  bumpUsage('tourStarts');
   useTour.setState({
     active: id,
     index: 0,
@@ -94,6 +96,7 @@ export function endTour(outcome: TourOutcome): void {
   const t = useTour.getState();
   if (!t.active) return;
   saveTourState(withOutcome(loadTourState(), t.active, outcome));
+  bumpUsage(outcome === 'done' ? 'tourFinished' : 'tourSkipped');
   if (t.demo) leaveTourDemo();
   useTour.setState({
     active: null,

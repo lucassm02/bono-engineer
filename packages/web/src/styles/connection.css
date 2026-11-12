@@ -44,6 +44,7 @@
 }
 
 .cx-chip {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -447,5 +448,14 @@
   .ob-check {
     animation: none;
     stroke-dashoffset: 0;
+  }
+}
+
+/* Toque: a pílula continua pequena, o alvo chega a 44 px por fora (spec 01, C3). */
+@media (pointer: coarse) {
+  .cx-chip::before {
+    content: "";
+    position: absolute;
+    inset: calc((var(--tap) - 100%) / -2) -4px;
   }
 }

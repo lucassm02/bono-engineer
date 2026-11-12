@@ -9,7 +9,7 @@ export const FAQ = [
   },
   {
     q: 'Preciso de um PC ou funciona só com o PS5?',
-    a: 'Você precisa de um PC com Windows na mesma rede do PS5. O jogo envia a telemetria pela rede e o Bono roda no PC. Um celular ou tablet na mesma rede vira um segundo painel.',
+    a: 'Você precisa de um PC com Windows na mesma rede do PS5. O jogo envia a telemetria pela rede e o Bono roda no PC. Um celular ou tablet na mesma rede vira uma segunda tela.',
   },
   {
     q: 'O que o Bono faz com o meu PS5 e com o jogo?',
@@ -43,7 +43,7 @@ export function render(ctx) {
   const v = SITE.version;
   const hero = ctx.pic(
     'ao-vivo',
-    'Painel ao vivo do Bono com o delta de −0,033 s em verde, marcha 2, 96 km/h e as luzes de troca de marcha acesas',
+    'Tela ao vivo do Bono com a faixa de contexto (pista, carro e engenheiro), o delta contra a melhor volta, marcha, velocidade, tempos, setores e as luzes de troca de marcha',
     {
       eager: true,
       sizes: '(min-width: 1000px) 62vw, 100vw',
@@ -72,12 +72,12 @@ export function render(ctx) {
 <section class="sec" id="o-que-faz" aria-labelledby="h-faz">
   <div class="wrap split">
     <div class="split-head">
-      <h2 id="h-faz">Um engenheiro de pista, não só um painel</h2>
+      <h2 id="h-faz">Um engenheiro de pista, não só uma tela de números</h2>
       <p>Do aquecimento ao debrief, o Bono acompanha a sessão e mostra o que treinar na próxima volta.</p>
     </div>
     <ul class="rows">
       <li class="row">
-        <div><h3>Painel ao vivo</h3><p>Delta contra a sua melhor volta ou contra um replay do top, marcha, rotação, pneus, combustível e mapa. São 11 telas, no PC ou num tablet na mesma rede.</p></div>
+        <div><h3>Ao vivo</h3><p>Delta contra a sua melhor volta ou contra um replay do top, marcha, rotação, pneus, combustível e mapa. São 11 telas, no PC ou num tablet na mesma rede.</p></div>
         <div class="read gain">−0,033<small>delta ao vivo, em segundos</small></div>
       </li>
       <li class="row">
@@ -109,7 +109,7 @@ export function render(ctx) {
       <li class="sector">
         <span class="tag" aria-hidden="true">S2</span>
         <h3>Pilote</h3>
-        <p>Abra o GT7 e entre numa pista. O painel acende, o engenheiro fala e cada volta é gravada com setores, validade e traços de telemetria.</p>
+        <p>Abra o GT7 e entre numa pista. A tela ao vivo acende, o engenheiro fala e cada volta é gravada com setores, validade e traços de telemetria.</p>
         <p><a href="${ctx.rel('discord')}">Ouvir no headset do PS5</a></p>
       </li>
       <li class="sector">
@@ -136,8 +136,8 @@ export function render(ctx) {
         <figcaption><strong>Início por pista</strong>Seus melhores tempos por pista e por carro, com a evolução e o que ainda dá para ganhar.</figcaption>
       </figure>
       <figure class="fig">
-        ${ctx.pic('menu-engenheiro', 'Menu do engenheiro aberto sobre o painel ao vivo, na aba Engenheiro', { sizes: '(min-width: 900px) 590px, 100vw' })}
-        <figcaption><strong>Menu do engenheiro</strong>Escolha o modo (treino, classificação ou corrida), o nível de fala e a voz do rádio, sem sair do painel.</figcaption>
+        ${ctx.pic('menu-engenheiro', 'Menu do engenheiro aberto sobre a tela ao vivo, na aba Engenheiro', { sizes: '(min-width: 900px) 590px, 100vw' })}
+        <figcaption><strong>Menu do engenheiro</strong>Escolha o modo (treino, classificação ou corrida), o nível de fala e a voz do engenheiro, sem sair da tela ao vivo.</figcaption>
       </figure>
     </div>
   </div>

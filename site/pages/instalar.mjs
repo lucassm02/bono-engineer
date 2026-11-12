@@ -7,7 +7,7 @@ export function render(ctx) {
 <div class="wrap page-head">
   <p class="crumbs"><a href="${ctx.rel('home')}">Início</a> / Como instalar</p>
   <h1>Como instalar a telemetria do GT7 no PS5</h1>
-  <p class="lead">Baixe o Bono no PC, libere o firewall, conecte o PS5 e abra o painel ao vivo. É o mesmo caminho do assistente de primeira execução, com os detalhes que ele não cabe mostrar.</p>
+  <p class="lead">Baixe o Bono no PC, libere o firewall, conecte o PS5 e abra a tela ao vivo. É o mesmo caminho do assistente de primeira execução, com os detalhes que ele não cabe mostrar.</p>
   <div class="cta-row"><a class="btn" href="${SITE.releases}" rel="noopener">${ICON_DOWNLOAD}Baixar o Bono ${v}</a></div>
 </div>
 
@@ -35,20 +35,20 @@ export function render(ctx) {
     </li>
     <li>
       <h3>Libere o firewall</h3>
-      <p>Quando o Firewall do Windows perguntar, permita o Bono nas <strong>redes privadas</strong>. O GT7 envia os dados para a porta UDP 33740 do PC, e o painel no celular usa a porta TCP 8770.</p>
-      <p>Se não perguntou e o painel fica esperando o jogo, crie as regras à mão. Abra o PowerShell como administrador e rode:</p>
+      <p>Quando o Firewall do Windows perguntar, permita o Bono nas <strong>redes privadas</strong>. O GT7 envia os dados para a porta UDP 33740 do PC, e o ao vivo no celular usa a porta TCP 8770.</p>
+      <p>Se não perguntou e a tela fica esperando o jogo, crie as regras à mão. Abra o PowerShell como administrador e rode:</p>
       <pre><code>New-NetFirewallRule -DisplayName 'Bono Engineer (telemetria GT7)' -Direction Inbound -Protocol UDP -LocalPort 33740 -Action Allow -Profile Private
-New-NetFirewallRule -DisplayName 'Bono Engineer (painel remoto)' -Direction Inbound -Protocol TCP -LocalPort 8770 -Action Allow -Profile Private</code></pre>
-      <p>Se o Bono avisar que o painel usa outra porta, use essa porta na regra TCP.</p>
+New-NetFirewallRule -DisplayName 'Bono Engineer (acesso remoto)' -Direction Inbound -Protocol TCP -LocalPort 8770 -Action Allow -Profile Private</code></pre>
+      <p>Se o Bono avisar que usa outra porta, use essa porta na regra TCP.</p>
     </li>
     <li>
       <h3>Conecte o PS5</h3>
-      <p>Siga o assistente de primeira execução, abra o GT7 no PS5 e entre numa pista. No Bono, abra <strong>Ao vivo</strong>: o painel acende assim que os dados chegam.</p>
+      <p>Siga o assistente de primeira execução, abra o GT7 no PS5 e entre numa pista. No Bono, abra <strong>Ao vivo</strong>: a tela acende assim que os dados chegam.</p>
       <p>Se a busca automática não achar o console, abra <strong>Configurações</strong>, depois <strong>Integração de telemetria</strong>, clique em <strong>Usar outro IP</strong> e digite o IP do PS5. Você acha o IP nas configurações de rede do console.</p>
     </li>
     <li>
-      <h3>Abra o painel no celular ou no tablet</h3>
-      <p>Em <strong>Configurações</strong>, <strong>Dispositivo remoto</strong>, escaneie o QR code ou abra o endereço de rede que aparece ali. Use o aparelho na horizontal. Dá para adicionar o painel à tela inicial.</p>
+      <h3>Abra o ao vivo no celular ou no tablet</h3>
+      <p>No menu do Ao vivo, abra <strong>Abrir em outro aparelho</strong> (ou <strong>Configurações → Ao vivo e aparelhos</strong>), escaneie o QR code ou abra o endereço de rede que aparece ali. Use o aparelho na horizontal. Dá para adicionar o Bono à tela inicial.</p>
     </li>
   </ol>
 
@@ -62,7 +62,7 @@ New-NetFirewallRule -DisplayName 'Bono Engineer (painel remoto)' -Direction Inbo
       <tbody>
         <tr><td>O Bono fica “aguardando o jogo”</td><td>Entre numa pista no GT7. Confira a regra UDP, se o PC e o PS5 estão na mesma sub-rede e se a rede não isola aparelhos (rede de convidados faz isso). Tente informar o IP do console.</td></tr>
         <tr><td>Porta UDP já em uso</td><td>Feche a outra ferramenta de telemetria que usa a porta 33740.</td></tr>
-        <tr><td>O celular não abre o painel</td><td>Abra o endereço exato que o Bono mostra. Confira se a rede é privada, a regra TCP e a porta em uso.</td></tr>
+        <tr><td>O celular não abre o ao vivo</td><td>Abra o endereço exato que o Bono mostra. Confira se a rede é privada, a regra TCP e a porta em uso.</td></tr>
         <tr><td>Falta um dado em um replay ou modo do jogo</td><td>Os canais mudam conforme o formato do pacote, o modo e o carro. Alguns replays não enviam o volante, e alguns modos não dão um consumo de combustível confiável.</td></tr>
         <tr><td>O rádio no Discord pede para conferir o canal</td><td>Confira as permissões <strong>Ver canal</strong>, <strong>Conectar</strong> e <strong>Falar</strong> do bot naquele canal. Veja o <a href="${ctx.rel('discord')}">passo a passo do Discord</a>.</td></tr>
       </tbody>

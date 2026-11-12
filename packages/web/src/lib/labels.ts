@@ -90,7 +90,7 @@ export const DELTA_REFERENCE_LABELS: Record<DeltaReferenceKind, string> = {
     return uiText('Melhor da sessão');
   },
   get reference() {
-    return uiText('Top capturado');
+    return uiText('Volta de referência');
   },
 };
 

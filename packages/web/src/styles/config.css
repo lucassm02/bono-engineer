@@ -170,11 +170,33 @@
   line-height: 1.5;
   color: var(--text-3);
 }
+.cfg-diag {
+  display: grid;
+  gap: var(--sp-1);
+  max-width: 480px;
+  margin: 0;
+}
+.cfg-diag-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: var(--sp-2) 0;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: var(--fs-sm);
+}
+.cfg-diag dt {
+  color: var(--text-2);
+}
+.cfg-diag dd {
+  margin: 0;
+  color: var(--text);
+  text-align: right;
+}
 .cfg-hint code,
 .cfg-lead code,
 .cfg-note code {
   font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-  font-size: 0.9em;
+  font-size: max(12px, 0.9em);
   padding: 1px 5px;
   border-radius: var(--r-xs);
   background: var(--surface-3);

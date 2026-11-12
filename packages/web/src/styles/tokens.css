@@ -64,7 +64,7 @@
     sans-serif;
   --font-ui:
     system-ui, "Segoe UI Variable", "Segoe UI", -apple-system, "Helvetica Neue", Arial, sans-serif;
-  --fs-2xs: 11px; /* rótulo em caixa alta, microcopy */
+  --fs-2xs: 12px; /* rótulo em caixa alta, microcopy (mínimo de leitura: 12 px) */
   --fs-xs: 12px; /* legenda, meta */
   --fs-sm: 13px; /* texto secundário, tabela densa */
   --fs-md: 15px; /* corpo */

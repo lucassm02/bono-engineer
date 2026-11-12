@@ -79,7 +79,7 @@ export function ViewPicker() {
       onClose={closePicker}
       size="xl"
       className="bn-picker-modal"
-      title={uiText('Telas deste dispositivo')}
+      title={uiText('Telas deste aparelho')}
       subtitle="Toque no nome para ir à tela. As setas mudam a ordem do carrossel; a estrela marca a tela inicial."
       footer={
         <>
@@ -230,7 +230,7 @@ export function ViewPicker() {
 
           <dl className="bn-facts">
             <div>
-              <dt>{uiText('Dispositivo')}</dt>
+              <dt>{uiText('Aparelho')}</dt>
               <dd>
                 {profile.name} <span className="dim">({profile.deviceId})</span>
               </dd>
@@ -252,10 +252,10 @@ export function ViewPicker() {
           </dl>
 
           <div className="bn-note" data-tone="info">
-            <strong>{uiText('Gestos do painel')}</strong>
+            <strong>{uiText('Gestos do ao vivo')}</strong>
             <p>
               {uiText(
-                'Deslize para trocar de tela. Toque: nome da tela. Toque duplo: troca a referência do delta. Segure: abre este painel.',
+                'Deslize para trocar de tela. Toque: nome da tela. Toque duplo: troca a referência do delta. Segure: abre este menu.',
               )}
             </p>
           </div>

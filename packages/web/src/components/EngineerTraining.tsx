@@ -141,12 +141,12 @@ export function EngineerTraining({
           <>
             <p className="ui-help">
               {uiText(
-                'Escolha até duas curvas. O rádio foca nelas por cinco voltas válidas e compara todas com a mesma referência. No perfil Aprender pista, escolher uma curva reativa a ajuda nela.',
+                'Escolha até duas curvas. O engenheiro foca nelas por cinco voltas válidas e compara todas com a mesma referência. No perfil Aprender pista, escolher uma curva reativa a ajuda nela.',
               )}
             </p>
             {!audioHere && (
               <p className="bn-note" data-tone="warn">
-                {uiText('Inicie o treino no aparelho que toca o rádio.')}
+                {uiText('Inicie o treino no aparelho do engenheiro.')}
               </p>
             )}
             {!recording && (

@@ -129,6 +129,11 @@
   font-size: var(--fs-sm);
   line-height: 1.4;
 }
+/* Sobre o fundo de item escolhido, o texto de ajuda sobe para text-2 (AA). */
+.su-option[data-checked="1"] .su-option-text span,
+.su-card[data-checked="1"] .su-card-text span {
+  color: var(--text-2);
+}
 .su-card-text {
   flex: 1;
 }

@@ -8,6 +8,7 @@
 import { type DesktopDiscordBridge, DISCORD_RADIO_DEVICE_ID } from '@gt7/shared';
 import { useEffect, useState } from 'react';
 import { api } from '../analysis/api.ts';
+import { humanizeError } from '../lib/copy.ts';
 import { t as uiText } from '../lib/i18n.ts';
 import { routes } from '../lib/route.ts';
 import { useUi } from '../state/uiStore.ts';
@@ -74,7 +75,7 @@ function Switch({ bridge }: { bridge: DesktopDiscordBridge }) {
     } catch (cause) {
       const message =
         cause instanceof Error ? cause.message : uiText('Não foi possível alterar o Discord.');
-      setError(message.replace(/^Error invoking remote method '[^']+': Error: /, ''));
+      setError(humanizeError(message).text);
     } finally {
       setBusy(false);
     }

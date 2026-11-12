@@ -282,7 +282,7 @@ export function trainChoiceFrom(
 }
 
 // ---------------------------------------------------------------------------------------------
-// "Seu painel" (step 5)
+// "Suas telas ao vivo" (step 5)
 // ---------------------------------------------------------------------------------------------
 
 /** Simple on a phone/tablet in the hand, complete on a PC. */

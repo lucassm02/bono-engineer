@@ -1,9 +1,10 @@
 /** Small always-mounted UI pieces: overlay header, dots, lock, notices, demo badge, arrows. */
 
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { TIMINGS } from '../config.ts';
 import { t as uiText } from '../lib/i18n.ts';
 import { CONNECTION_STATE_LABELS, DELTA_REFERENCE_LABELS, VIEW_LABELS } from '../lib/labels.ts';
+import { isNewcomer } from '../lib/usage.ts';
 import { goToView, setLocked } from '../state/actions.ts';
 import { addNotice, dismissNotice, useUi } from '../state/uiStore.ts';
 import { CaptureStatus, SessionSavedToast } from './CaptureStatus.tsx';
@@ -111,6 +112,7 @@ export function EdgeArrows() {
 export function LockButton() {
   const locked = useUi((s) => s.profile.locked);
   const [holding, setHolding] = useState(false);
+  const newcomer = useMemo(() => isNewcomer(), []);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fired = useRef(false);
 
@@ -129,6 +131,10 @@ export function LockButton() {
       data-locked={locked ? '1' : '0'}
       data-holding={holding ? '1' : '0'}
       aria-label={locked ? uiText('Destravar gestos (segure)') : uiText('Travar gestos')}
+      title={
+        locked ? uiText('Destravar gestos (segure; tecla L)') : uiText('Travar gestos (tecla L)')
+      }
+      aria-keyshortcuts="L"
       aria-pressed={locked}
       style={{ ['--hold-ms' as string]: `${TIMINGS.longPressMs}ms` }}
       onContextMenu={(e) => e.preventDefault()}
@@ -152,6 +158,11 @@ export function LockButton() {
       }}
     >
       <Icon name={locked ? 'lock' : 'unlock'} />
+      {newcomer && (
+        <span className="live-btn-label" aria-hidden="true">
+          {locked ? uiText('Destravar') : uiText('Travar')}
+        </span>
+      )}
     </button>
   );
 }

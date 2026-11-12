@@ -106,7 +106,7 @@ export function CaptureStatus({ variant }: { variant: 'live' | 'bar' }) {
         data-tone={view.tone}
         data-no-gesture
         href={routes.capture()}
-        title={uiText('{0} Abrir a captura de referência.', view.title)}
+        title={uiText('{0} Abrir a gravação da volta de replay.', view.title)}
       >
         {inner}
       </a>

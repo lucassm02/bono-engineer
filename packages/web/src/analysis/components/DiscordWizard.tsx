@@ -16,6 +16,7 @@ import {
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { Icon } from '../../components/ui/Icon.tsx';
 import { Modal } from '../../components/ui/Modal.tsx';
+import { humanizeError } from '../../lib/copy.ts';
 import { t as uiText } from '../../lib/i18n.ts';
 import '../../styles/discord.css';
 
@@ -27,7 +28,7 @@ const POLL_MS = 3000;
 /** Tira o prefixo técnico que o Electron põe nas mensagens de erro vindas do aplicativo. */
 export function bridgeError(cause: unknown, fallback: string): string {
   const message = cause instanceof Error && cause.message ? cause.message : fallback;
-  return uiText(message.replace(/^Error invoking remote method '[^']+': Error: /, ''));
+  return uiText(humanizeError(message).text);
 }
 
 export function groupByGuild(channels: readonly DiscordVoiceChannel[]) {

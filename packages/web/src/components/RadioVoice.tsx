@@ -14,7 +14,7 @@ export function RadioVoicePicker() {
   const pace = useEngineer((state) => state.pace);
   return (
     <label className="ui-field">
-      <span className="ui-label">{t('Voz do rádio')}</span>
+      <span className="ui-label">{t('Voz do engenheiro')}</span>
       <select
         className="ui-select"
         disabled={typeof AudioContext === 'undefined' && !window.bonoDiscord}
@@ -56,7 +56,7 @@ export function RadioVoiceStatus() {
   const fallback = useEngineer((state) => state.voiceFallback);
   const message =
     typeof AudioContext === 'undefined' || error
-      ? t('Áudio do rádio indisponível. As instruções continuam na tela.')
+      ? t('Áudio do engenheiro indisponível. As instruções continuam na tela.')
       : fallback
         ? t(
             'Voz {0} indisponível. Tocando com {1}.',

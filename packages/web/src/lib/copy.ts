@@ -6,6 +6,7 @@
  * Só acrescente aqui; mudar um termo existente muda a tela inteira.
  */
 
+import type { DeltaReferenceKind } from '@gt7/shared';
 import { t as uiText } from './i18n.ts';
 
 /** Termos oficiais. */
@@ -127,5 +128,70 @@ export function devicesStateText(online: number): StateText {
     title:
       online === 1 ? uiText('1 aparelho online') : uiText('{0} aparelhos online', String(online)),
     detail: uiText('Cada um mostra as telas que você escolheu para ele.'),
+  };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Volta sem referência (aviso ao fechar a volta)
+// ---------------------------------------------------------------------------------------------
+
+/** Diz o que fazer quando a volta fechou sem delta: nunca só "Sem referência". */
+export function noReferenceHint(kind: DeltaReferenceKind): string {
+  return kind === 'reference'
+    ? uiText('Grave uma volta de replay para ter com o que comparar.')
+    : uiText('Dê mais uma volta: ela passa a ser a referência.');
+}
+
+// ---------------------------------------------------------------------------------------------
+// Erros: texto humano na frente, detalhe técnico recolhido
+// ---------------------------------------------------------------------------------------------
+
+export interface HumanError {
+  /** Frase para o piloto, já no idioma da interface. */
+  text: string;
+  /** Mensagem original, só quando ela é técnica demais para ficar à vista. */
+  detail: string | null;
+}
+
+const ELECTRON_PREFIX = /^Error invoking remote method '[^']+':\s*(?:Error:\s*)?/;
+const ERROR_CLASS_PREFIX = /^(?:[A-Z][A-Za-z]*Error):\s*/;
+
+export function humanizeError(raw: unknown): HumanError {
+  const original = (typeof raw === 'string' ? raw : raw instanceof Error ? raw.message : '').trim();
+  if (!original) return { text: uiText('Algo deu errado. Tente de novo.'), detail: null };
+  const msg = original.replace(ELECTRON_PREFIX, '').replace(ERROR_CLASS_PREFIX, '').trim();
+  if (
+    /failed to fetch|networkerror|load failed|fetch failed|econnrefused|econnreset|socket hang up/i.test(
+      msg,
+    )
+  ) {
+    return {
+      text: uiText(
+        'Não foi possível falar com o Bono. Confira se ele está aberto e tente de novo.',
+      ),
+      detail: original,
+    };
+  }
+  if (/unexpected token|not valid json|unexpected end of json/i.test(msg)) {
+    return {
+      text: uiText(
+        'O Bono respondeu algo que não deu para ler. Atualize a página e tente de novo.',
+      ),
+      detail: original,
+    };
+  }
+  if (/\b(?:EADDRINUSE|EACCES|EPERM|ENOENT|ETIMEDOUT|EBUSY)\b/.test(msg)) {
+    return {
+      text: uiText('O Windows impediu essa ação. Tente de novo ou reinicie o Bono.'),
+      detail: original,
+    };
+  }
+  const firstLine = msg.split('\n')[0]?.trim() ?? msg;
+  if (/\n\s+at\s/.test(msg)) {
+    return { text: firstLine || uiText('Algo deu errado. Tente de novo.'), detail: original };
+  }
+  return {
+    text: msg || uiText('Algo deu errado. Tente de novo.'),
+    detail: msg === original ? null : original,
   };
 }

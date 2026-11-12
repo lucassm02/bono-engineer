@@ -4,6 +4,7 @@
  */
 
 import { type ApiStatus, PRODUCT_NAME } from '@gt7/shared';
+import { useState } from 'react';
 import { t as uiText } from '../../../lib/i18n.ts';
 import {
   loadSetupState,
@@ -13,6 +14,7 @@ import {
 } from '../../../lib/onboarding.ts';
 import { saveString } from '../../../lib/storage.ts';
 import { applySwUpdate, useSwUpdate } from '../../../lib/swUpdate.ts';
+import { diagnosticRows, resetUsage } from '../../../lib/usage.ts';
 import { openSetupAssistant } from '../../../state/setup.ts';
 import { requestTour } from '../../../state/tour.ts';
 import { Panel } from '../Panel.tsx';
@@ -23,6 +25,39 @@ function resetSetup(): void {
   saveString(ONBOARDING_KEY, '0');
   saveSetupState(resetSetupState(loadSetupState()));
   openSetupAssistant();
+}
+
+/** Contadores de uso deste navegador (RF4): nada sai do PC. */
+function Diagnostics() {
+  const [rows, setRows] = useState(() => diagnosticRows());
+  return (
+    <Advanced summary={uiText('Diagnóstico')}>
+      <p className="cfg-hint">
+        {uiText(
+          'Contadores simples de uso, guardados só neste navegador. Nada é enviado para fora do seu PC.',
+        )}
+      </p>
+      <dl className="cfg-diag">
+        {rows.map((row) => (
+          <div key={row.id} className="cfg-diag-row">
+            <dt>{row.label}</dt>
+            <dd className="num">{row.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <button
+        type="button"
+        className="ui-btn"
+        data-variant="secondary"
+        onClick={() => {
+          resetUsage();
+          setRows(diagnosticRows());
+        }}
+      >
+        {uiText('Zerar contadores')}
+      </button>
+    </Advanced>
+  );
 }
 
 export function AboutGroup({ status }: { status: ApiStatus }) {
@@ -100,6 +135,8 @@ export function AboutGroup({ status }: { status: ApiStatus }) {
           </button>
         </CfgRow>
       </div>
+
+      <Diagnostics />
 
       <Advanced summary={uiText('Detalhes técnicos e licenças')}>
         <p className="cfg-hint">

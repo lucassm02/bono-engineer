@@ -32,8 +32,32 @@
 .live-menu-btn {
   right: calc(var(--safe-r) + 44px);
 }
+
+/* Rótulo curto na primeira semana (spec 01, A6): acima do botão, sem cobrir os números. */
+.live-btn-label {
+  position: absolute;
+  bottom: calc(100% + var(--sp-1));
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--surface-1) 92%, transparent);
+  color: var(--text-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  pointer-events: none;
+}
 .engineer-hud-btn {
   right: calc(var(--safe-r) + 88px);
+}
+.live-menu-btn::before,
+.engineer-hud-btn::before {
+  content: "";
+  position: absolute;
+  inset: -2px; /* alvo de toque de 44 px */
 }
 .live-menu-btn:hover,
 .live-menu-btn[aria-expanded="true"],
@@ -277,6 +301,16 @@
   flex: 1;
   padding-inline: var(--sp-2);
 }
+.bn-tab-state {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--text-3);
+}
+.bn-tab-state[data-on="1"] {
+  color: var(--gain);
+}
 .bn-tabpanel {
   min-width: 0;
 }
@@ -378,6 +412,11 @@
   background: var(--surface-3);
   font-size: var(--fs-sm);
   cursor: pointer;
+}
+@media (pointer: coarse) {
+  .bn-check {
+    min-height: var(--tap);
+  }
 }
 .bn-check:has(input:checked) {
   border-color: var(--accent-line);

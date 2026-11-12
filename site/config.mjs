@@ -45,7 +45,7 @@ export const PAGES = [
     description:
       'Telemetria do Gran Turismo 7 no PC, com engenheiro de pista no rádio e comparação de voltas. Grátis para Windows, sem conta e com dados só no seu PC.',
     og: { lines: ['Seu engenheiro', 'de pista no', 'Gran Turismo 7'], shot: 'ao-vivo' },
-    ogAlt: 'Painel ao vivo do Bono Engineer com delta, marcha e velocidade',
+    ogAlt: 'Tela ao vivo do Bono Engineer com delta, marcha e velocidade',
     alternates: { 'pt-BR': 'home', en: 'en' },
   },
   {
@@ -96,7 +96,7 @@ export const PAGES = [
     description:
       'Free Windows app for Gran Turismo 7 on PlayStation: live telemetry, a race engineer on the radio, lap comparison and Discord voice. Data stays on your PC.',
     og: { lines: ['Your race', 'engineer for', 'Gran Turismo 7'], shot: 'ao-vivo' },
-    ogAlt: 'Bono Engineer live dashboard showing delta, gear and speed',
+    ogAlt: 'Bono Engineer Live screen showing delta, gear and speed',
     alternates: { 'pt-BR': 'home', en: 'en' },
   },
 ];
@@ -110,7 +110,7 @@ export const NOT_FOUND = {
   description:
     'Esse endereço não existe no site do Bono Engineer. Volte ao início ou abra um dos guias.',
   og: { lines: ['Página não', 'encontrada'], shot: 'ao-vivo' },
-  ogAlt: 'Painel ao vivo do Bono Engineer',
+  ogAlt: 'Tela ao vivo do Bono Engineer',
   noindex: true,
 };
 

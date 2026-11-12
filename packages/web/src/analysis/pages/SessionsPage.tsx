@@ -9,7 +9,13 @@ import { api } from '../api.ts';
 import { CarName } from '../components/CarName.tsx';
 import { CarFilterChips, CarFilterField } from '../components/CarPicker.tsx';
 import { Empty, ErrorBox, Loading, PageHead, Tag, useTitle } from '../components/ui.tsx';
-import { carMatchesFilter, isCarFiltering, lapsPerCar, pickCar } from '../lib/carFilter.ts';
+import {
+  carMatchesFilter,
+  isCarFiltering,
+  lapsPerCar,
+  NO_CAR_FILTER,
+  pickCar,
+} from '../lib/carFilter.ts';
 import { fullTrackName } from '../lib/history.ts';
 import { formatDateTime, SESSION_MODE_LABELS } from '../lib/labels.ts';
 import { useCarFilter } from '../lib/useCarFilter.ts';
@@ -62,7 +68,7 @@ export function SessionsPage({ route }: { route: Route }) {
         actions={
           <>
             <a className="a-btn a-btn-ghost" href={routes.capture()}>
-              {uiText('Capturar referência')}
+              {uiText('Gravar volta de replay')}
             </a>
             <a className="a-btn" href={routes.coach()}>
               {uiText('Debrief com IA')}
@@ -103,7 +109,20 @@ export function SessionsPage({ route }: { route: Route }) {
       ) : !sessions.data ? (
         <Loading />
       ) : list.length === 0 ? (
-        <Empty>
+        <Empty
+          action={
+            sessions.data.length === 0
+              ? { label: uiText('Abrir a tela ao vivo'), href: routes.live() }
+              : {
+                  label: uiText('Limpar filtros'),
+                  onClick: () => {
+                    setCarFilter(NO_CAR_FILTER);
+                    setMode('');
+                    navigate(routes.sessions({}), true);
+                  },
+                }
+          }
+        >
           {sessions.data.length === 0 ? (
             <>
               <strong>{uiText('Nenhuma sessão gravada ainda')}</strong>

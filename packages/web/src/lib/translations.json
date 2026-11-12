@@ -80,9 +80,9 @@
   "{0} · áudio indisponível": ["{0} · audio unavailable", "{0} · audio no disponible"],
   "{0} · sem som": ["{0} · muted", "{0} · sin sonido"],
   "{0} ({1}). Diferença: {2}": ["{0} ({1}). Difference: {2}", "{0} ({1}). Diferencia: {2}"],
-  "{0} Abrir a captura de referência.": [
-    "{0} Open reference capture.",
-    "{0} Abrir captura de referencia."
+  "{0} Abrir a gravação da volta de replay.": [
+    "{0} Open the replay lap recording.",
+    "{0} Abrir la grabación de la vuelta de repetición."
   ],
   "{0} Abrir a sessão em andamento.": [
     "{0} Open the current session.",
@@ -149,9 +149,9 @@
     "Bono will delete the key saved on this PC and AI Coach will stop working here.",
     "Bono borrará la clave guardada en este PC y Coach IA dejará de funcionar aquí."
   ],
-  "A demonstração mostra o painel ao vivo com um piloto simulado. Para ver o histórico preenchido com voltas de exemplo, rode": [
-    "The demo shows the live dashboard with a simulated driver. To see history with sample laps, run",
-    "La demostración muestra el panel en directo con un piloto simulado. Para ver el historial con vueltas de ejemplo, ejecuta"
+  "A demonstração mostra a tela ao vivo com um piloto simulado. Para ver o histórico preenchido com voltas de exemplo, rode": [
+    "The demo shows the Live screen with a simulated driver. To see history with sample laps, run",
+    "La demostración muestra la pantalla En directo con un piloto simulado. Para ver el historial con vueltas de ejemplo, ejecuta"
   ],
   "A pista ainda não tem linha de referência (complete uma volta limpa).": [
     "No reference line yet. Complete a clean lap.",
@@ -229,8 +229,7 @@
     "Open Settings → Discord radio",
     "Abrir Configuración → Radio en Discord"
   ],
-  "Abrir o painel ao vivo": ["Open the live dashboard", "Abrir el panel en directo"],
-  "Abrir painel ao vivo": ["Open live dashboard", "Abrir panel en directo"],
+  "Abrir a tela ao vivo": ["Open Live", "Abrir En directo"],
   "absoluta.": ["URL.", "absoluta."],
   "Ação do piloto": ["Driver action", "Acción del piloto"],
   "Aceleração": ["Acceleration", "Aceleración"],
@@ -324,7 +323,7 @@
   ],
   "Ainda sem volta válida.": ["No valid lap yet.", "Aún no hay vueltas válidas."],
   "Ajuda para achar o PS5": ["Help finding the PS5", "Ayuda para encontrar la PS5"],
-  "Ajustar rádio": ["Radio settings", "Ajustar radio"],
+  "Ajustar engenheiro": ["Engineer settings", "Ajustar ingeniero"],
   "Ajustes": ["Settings", "Ajustes"],
   "Algo deu errado": ["Something went wrong", "Algo salió mal"],
   "Alternativa (netsh, prompt de administrador)": [
@@ -375,7 +374,7 @@
     "Se muestra con línea discontinua en las gráficas (hasta"
   ],
   "Aparelho": ["Device", "Dispositivo"],
-  "Aparelho que toca o rádio": ["Radio output device", "Dispositivo de salida de radio"],
+  "Aparelho do engenheiro": ["Engineer device", "Dispositivo del ingeniero"],
   "Aparelho selecionado · desconectado": [
     "Selected device · disconnected",
     "Dispositivo elegido · desconectado"
@@ -440,17 +439,17 @@
     "Enable automatic recording to resume counting practice laps.",
     "Activa la grabación automática para seguir contando vueltas de entrenamiento."
   ],
-  "Ative o engenheiro no aparelho escolhido para ouvir o rádio.": [
-    "Enable the engineer on the selected device to hear the radio.",
-    "Activa el ingeniero en el dispositivo seleccionado para oír la radio."
+  "Ative o engenheiro no aparelho escolhido para ouvi-lo.": [
+    "Enable the engineer on the selected device to hear them.",
+    "Activa el ingeniero en el dispositivo elegido para oírlo."
   ],
   "Atraso medido em ms": ["Measured delay in ms", "Retardo medido en ms"],
   "Atual": ["Current", "Actual"],
   "Atualizando…": ["Updating…", "Actualizando…"],
   "Atualizar": ["Update", "Actualizar"],
-  "Áudio do rádio indisponível. As instruções continuam na tela.": [
-    "Radio audio unavailable. Instructions remain on screen.",
-    "Audio de radio no disponible. Las instrucciones siguen en pantalla."
+  "Áudio do engenheiro indisponível. As instruções continuam na tela.": [
+    "Engineer audio unavailable. Instructions remain on screen.",
+    "Audio del ingeniero no disponible. Las instrucciones siguen en pantalla."
   ],
   "Áudio do treino ligado": ["Practice audio on", "Audio de entrenamiento activado"],
   "Áudio e ponto indicado": ["Audio and target point", "Audio y punto indicado"],
@@ -521,16 +520,15 @@
   "Calculando microssetores": ["Calculating microsectors", "Calculando microsectores"],
   "Calmo": ["Slow", "Lento"],
   "Cancelar": ["Cancel", "Cancelar"],
-  "Captura": ["Capture", "Captura"],
+  "Gravar": ["Record", "Grabar"],
   "Captura automática de sessões": ["Automatic session capture", "Captura automática de sesiones"],
-  "Captura de referência": ["Capture reference", "Capturar referencia"],
-  "Captura de referência em andamento": [
-    "Reference capture in progress",
-    "Captura de referencia en curso"
+  "Gravação da volta de replay em andamento": [
+    "Replay lap recording in progress",
+    "Grabación de la vuelta de repetición en curso"
   ],
-  "Captura de referência em andamento.": [
-    "Reference capture in progress.",
-    "Captura de referencia en curso."
+  "Gravação da volta de replay em andamento.": [
+    "Replay lap recording in progress.",
+    "Grabación de la vuelta de repetición en curso."
   ],
   "captura de replay": ["replay capture", "captura de repetición"],
   "Captura de replay": ["Replay capture", "Captura de repetición"],
@@ -563,7 +561,6 @@
     "Capturar esta vuelta como referencia"
   ],
   "Capturar outra": ["Capture another", "Capturar otra"],
-  "Capturar referência": ["Capture reference", "Capturar referencia"],
   "Capturar uma referência": ["Capture a reference", "Capturar una referencia"],
   "caracteres)": ["characters)", "caracteres)"],
   "Carregando a análise…": ["Loading analysis…", "Cargando análisis…"],
@@ -582,7 +579,7 @@
     "Coches que aún no están en el catálogo del juego (¿nuevo DLC?)"
   ],
   "Cartão ao fechar a volta": ["Lap finish card", "Tarjeta de fin de vuelta"],
-  "Cartão do rádio": ["Radio card", "Tarjeta de radio"],
+  "Cartão do engenheiro": ["Engineer card", "Tarjeta del ingeniero"],
   "Chamada da referência": ["Reference call", "Llamada de referencia"],
   "Chamadas do engenheiro": ["Engineer calls", "Llamadas del ingeniero"],
   "Chave da API": ["API key", "Clave de API"],
@@ -641,7 +638,7 @@
     "How Bono receives and stores game data.",
     "Cómo recibe y guarda Bono los datos del juego."
   ],
-  "Como o rádio ajuda": ["Radio coaching", "Asistencia de radio"],
+  "Como o engenheiro ajuda": ["How the engineer helps", "Cómo ayuda el ingeniero"],
   "Comparação": ["Comparison", "Comparación"],
   "Comparação de voltas": ["Lap comparison", "Comparación de vueltas"],
   "Comparando as voltas…": ["Comparing laps…", "Comparando vueltas…"],
@@ -650,7 +647,7 @@
   "Comparar com minha melhor": ["Compare with my best", "Comparar con mi mejor vuelta"],
   "Comparar com o meu melhor": ["Compare with my best", "Comparar con mi mejor vuelta"],
   "Comparar com o meu melhor (": ["Compare with my best (", "Comparar con mi mejor vuelta ("],
-  "Comparar o painel com": ["Dashboard reference", "Referencia del panel"],
+  "Comparar o delta com": ["Compare the delta against", "Comparar el delta con"],
   "Comparar voltas": ["Compare laps", "Comparar vueltas"],
   "Complete uma volta limpa (sem sair da pista) e ela aparece aqui.": [
     "Complete a clean lap within track limits to see it here.",
@@ -742,7 +739,7 @@
     "simulated console (demo)",
     "consola simulada (demostración)"
   ],
-  "Console, dispositivos, dados e IA": [
+  "Console, aparelhos, dados e IA": [
     "Console, devices, data and AI",
     "Consola, dispositivos, datos e IA"
   ],
@@ -873,7 +870,7 @@
   ],
   "Desligar {0}": ["Disable {0}", "Desactivar {0}"],
   "Deslize": ["Swipe", "Desliza"],
-  "Deslize para trocar de tela. Toque: nome da tela. Toque duplo: troca a referência do delta. Segure: abre este painel.": [
+  "Deslize para trocar de tela. Toque: nome da tela. Toque duplo: troca a referência do delta. Segure: abre este menu.": [
     "Swipe to change view. Tap to show the view name. Double-tap to change the delta reference. Hold to open this menu.",
     "Desliza para cambiar de vista. Toca para ver el nombre. Toca dos veces para cambiar la referencia del delta. Mantén pulsado para abrir este menú."
   ],
@@ -936,8 +933,7 @@
     "Dismiss the update notice",
     "Cerrar el aviso de actualización"
   ],
-  "Dispositivo": ["Device", "Dispositivo"],
-  "Dispositivo remoto": ["Remote device", "Dispositivo remoto"],
+  "Abrir em outro aparelho": ["Open on another device", "Abrir en otro dispositivo"],
   "Duração": ["Duration", "Duración"],
   "é essa": ["confirm", "confirmar"],
   "e use o prompt “debrief_sessao”.": [
@@ -994,9 +990,9 @@
     "Choose the make, then the car",
     "Elige la marca y después el coche"
   ],
-  "Escolha até duas curvas. O rádio foca nelas por cinco voltas válidas e compara todas com a mesma referência. No perfil Aprender pista, escolher uma curva reativa a ajuda nela.": [
-    "Choose up to two corners. The radio focuses on them for five valid laps and compares each lap against the same reference. In Learn Track, choosing a corner restores calls for it.",
-    "Elige hasta dos curvas. La radio se centra en ellas durante cinco vueltas válidas y compara cada vuelta con la misma referencia. En Aprender circuito, elegir una curva reactiva sus instrucciones."
+  "Escolha até duas curvas. O engenheiro foca nelas por cinco voltas válidas e compara todas com a mesma referência. No perfil Aprender pista, escolher uma curva reativa a ajuda nela.": [
+    "Choose up to two corners. The engineer focuses on them for five valid laps and compares each lap against the same reference. In Learn Track, choosing a corner restores calls for it.",
+    "Elige hasta dos curvas. El ingeniero se centra en ellas durante cinco vueltas válidas y compara cada vuelta con la misma referencia. En Aprender circuito, elegir una curva reactiva sus instrucciones."
   ],
   "Escolha o que o coach deve olhar. Sem escolher nada, ele analisa a melhor volta da sessão mais recente.": [
     "Choose what the coach reviews. By default it analyses the best lap of the latest session.",
@@ -1140,7 +1136,7 @@
   "Gerar debrief": ["Generate debrief", "Generar informe"],
   "Gerar gráfico (PNG)": ["Generate chart (PNG)", "Generar gráfica (PNG)"],
   "Gestos destravados.": ["Gestures unlocked.", "Gestos desbloqueados."],
-  "Gestos do painel": ["Dashboard gestures", "Gestos del panel"],
+  "Gestos do ao vivo": ["Live gestures", "Gestos de En directo"],
   "Gestos travados. Segure o cadeado para destravar.": [
     "Gestures locked. Hold the lock to unlock.",
     "Gestos bloqueados. Mantén pulsado el candado para desbloquear."
@@ -1225,7 +1221,7 @@
     "Identificando el circuito por la posición del coche…"
   ],
   "Idioma": ["Language", "Idioma"],
-  "Idioma do app e do rádio": ["App and radio language", "Idioma del app y de la radio"],
+  "Idioma do app e do engenheiro": ["App and engineer language", "Idioma del app y del ingeniero"],
   "Ignora deslizar, tocar e segurar. Segure o cadeado para destravar.": [
     "Ignores swipes, taps and holds. Hold the lock to unlock.",
     "Ignora deslizamientos, toques y pulsaciones largas. Mantén pulsado el candado para desbloquear."
@@ -1252,16 +1248,16 @@
     "Start five-lap practice",
     "Iniciar entrenamiento de cinco vueltas"
   ],
-  "Inicie o treino no aparelho que toca o rádio.": [
-    "Start practice on the device playing the radio.",
-    "Inicia el entrenamiento en el dispositivo que reproduce la radio."
+  "Inicie o treino no aparelho do engenheiro.": [
+    "Start practice on the engineer device.",
+    "Inicia el entrenamiento en el dispositivo del ingeniero."
   ],
   "Início": ["Home", "Inicio"],
   "Inputs": ["Inputs", "Mandos"],
   "Instruções de freada": ["Braking calls", "Instrucciones de frenada"],
-  "Instruções em voz e na tela. Quando tudo corre bem, o rádio fica em silêncio.": [
-    "Voice and on-screen instructions. The radio stays quiet when things are going well.",
-    "Instrucciones por voz y en pantalla. La radio guarda silencio cuando todo va bien."
+  "Instruções em voz e na tela. Quando tudo corre bem, o engenheiro fica em silêncio.": [
+    "Voice and on-screen instructions. The engineer stays quiet when things are going well.",
+    "Instrucciones por voz y en pantalla. El ingeniero guarda silencio cuando todo va bien."
   ],
   "Integração com IA": ["AI integration", "Integración con IA"],
   "Integração com IA (MCP)": ["AI integration (MCP)", "Integración con IA (MCP)"],
@@ -1431,7 +1427,7 @@
   ],
   "Mostrando os": ["Showing the first", "Se muestran los primeros"],
   "Mostrar a demonstração": ["Show demo data", "Mostrar demostración"],
-  "Mostrar cartão do rádio": ["Show radio card", "Mostrar tarjeta de radio"],
+  "Mostrar cartão do engenheiro": ["Show engineer card", "Mostrar tarjeta del ingeniero"],
   "Mostrar no aparelho": ["Show on device", "Mostrar en dispositivo"],
   "Mostrar tela": ["Show view", "Mostrar vista"],
   "Mostrar todos": ["Show all", "Mostrar todos"],
@@ -1444,7 +1440,7 @@
   "Mover {0} para cima": ["Move {0} up", "Subir {0}"],
   "Mover para antes": ["Move earlier", "Mover antes"],
   "Mover para depois": ["Move later", "Mover después"],
-  "Mudo · só painel": ["Muted · dashboard only", "Silenciado · solo panel"],
+  "Mudo · só na tela": ["Muted · on-screen only", "Silenciado · solo en pantalla"],
   "Na demonstração não há console de verdade: nada foi enviado.": [
     "Demo mode uses a simulated console. Nothing was sent.",
     "La demostración usa una consola simulada. No se envió nada."
@@ -1494,9 +1490,9 @@
     "Tiempo de vuelta no válido. Usa minutos:segundos.milisegundos, por ejemplo 1:30.960."
   ],
   "Não foi possível abrir o {0}": ["Couldn’t open {0}", "No se pudo abrir {0}"],
-  "Não foi possível alterar o aparelho do rádio.": [
-    "Couldn’t change the radio output device.",
-    "No se pudo cambiar el dispositivo de salida de radio."
+  "Não foi possível alterar o aparelho do engenheiro.": [
+    "Couldn’t change the engineer device.",
+    "No se pudo cambiar el dispositivo del ingeniero."
   ],
   "Não foi possível alterar o Discord.": [
     "Couldn’t change the Discord setting.",
@@ -1735,25 +1731,25 @@
     "Most complete format, with raw throttle, brake and steering. Also carries replay data.",
     "Formato más completo, con datos directos de acelerador, freno y volante. También incluye datos de repetición."
   ],
-  "O painel ao vivo continua funcionando em modo demonstração (": [
-    "The live dashboard still works in demo mode (",
-    "El panel en directo sigue funcionando en modo de demostración ("
+  "A tela ao vivo continua funcionando em modo demonstração (": [
+    "The Live screen still works in demo mode (",
+    "La pantalla En directo sigue funcionando en modo de demostración ("
   ],
-  "O painel mostra os detalhes assim que encontrar a volta para o carro e traçado atuais.": [
-    "The dashboard shows details when Bono finds the lap for the current car and layout.",
-    "El panel muestra los detalles al encontrar la vuelta para el coche y trazado actuales."
+  "Os detalhes aparecem assim que o Bono encontrar a volta para o carro e traçado atuais.": [
+    "Details appear once Bono finds the lap for the current car and layout.",
+    "Los detalles aparecen cuando Bono encuentre la vuelta para el coche y trazado actuales."
   ],
-  "O painel não encontrou o servidor em": [
-    "The dashboard couldn’t find the server at",
-    "El panel no encontró el servidor en"
+  "A tela não encontrou o servidor em": [
+    "The screen couldn’t find the server at",
+    "La pantalla no encontró el servidor en"
   ],
-  "O painel volta sozinho quando o carro estiver na pista.": [
-    "The dashboard resumes when the car returns to the track.",
-    "El panel se reanuda cuando el coche vuelve a pista."
+  "A tela volta sozinha quando o carro estiver na pista.": [
+    "The screen resumes when the car returns to the track.",
+    "La pantalla se reanuda cuando el coche vuelve a pista."
   ],
-  "O PC e o dispositivo remoto precisam estar na mesma rede local.": [
-    "The PC and remote device must be on the same local network.",
-    "El PC y el dispositivo remoto deben estar en la misma red local."
+  "O PC e o aparelho precisam estar na mesma rede local.": [
+    "The PC and the device must be on the same local network.",
+    "El PC y el dispositivo deben estar en la misma red local."
   ],
   "O PS5 parou de enviar dados. Se o jogo está aberto, confira se o console continua na mesma rede.": [
     "The PS5 stopped sending data. If the game is open, check that the console is still on the same network.",
@@ -1764,17 +1760,17 @@
     "Qué recibe el coach sobre la clase"
   ],
   "O que treinar": ["What to practise", "Qué practicar"],
-  "O rádio mudou de aparelho. Selecione este aparelho para retomar o treino.": [
-    "The radio output changed. Select this device to resume practice.",
-    "Cambió la salida de radio. Elige este dispositivo para reanudar el entrenamiento."
+  "O engenheiro mudou de aparelho. Selecione este aparelho para retomar o treino.": [
+    "The engineer moved to another device. Select this device to resume practice.",
+    "El ingeniero cambió de dispositivo. Elige este dispositivo para reanudar el entrenamiento."
   ],
   "O rádio no Discord deixa de funcionar até você configurar de novo.": [
     "Discord radio will be unavailable until it is configured again.",
     "La radio en Discord dejará de funcionar hasta que la configures de nuevo."
   ],
-  "O rádio também avisa quando você acerta a curva.": [
-    "The radio also tells you when you get a corner right.",
-    "La radio también avisa cuando haces bien una curva."
+  "O engenheiro também avisa quando você acerta a curva.": [
+    "The engineer also tells you when you get a corner right.",
+    "El ingeniero también avisa cuando haces bien una curva."
   ],
   "O replay não estava em velocidade 1× (use a velocidade normal, sem câmera lenta).": [
     "The replay wasn’t playing at 1×. Use normal speed.",
@@ -1805,7 +1801,7 @@
     "Corner practice needs an identified track with detected corners. Targets come from the delta reference lap.",
     "El entrenamiento requiere un circuito identificado con curvas detectadas. Los objetivos proceden de la vuelta de referencia del delta."
   ],
-  "Ocultar cartão do rádio": ["Hide radio card", "Ocultar tarjeta de radio"],
+  "Ocultar cartão do engenheiro": ["Hide engineer card", "Ocultar tarjeta del ingeniero"],
   "oficiais": ["official", "oficiales"],
   "oficial": ["official", "oficial"],
   "Óleo": ["Oil", "Aceite"],
@@ -1855,7 +1851,6 @@
     "Open dashboards and the view each one is showing.",
     "Paneles abiertos y la vista que muestra cada uno."
   ],
-  "Painel": ["Dashboard", "Panel"],
   "País": ["Country", "País"],
   "Para apagar uma sessão inteira, abra-a e use “Apagar sessão”.": [
     "To remove a whole session, open it and select “Delete session”.",
@@ -2016,9 +2011,9 @@
     "PS5 encendida y conectada a la misma red."
   ],
   "Pular": ["Skip", "Omitir"],
-  "QR Code e endereço para abrir o painel em outro aparelho": [
-    "QR code and address to open the dashboard on another device",
-    "Código QR y dirección para abrir el panel en otro dispositivo"
+  "QR Code e endereço para abrir o ao vivo em outro aparelho": [
+    "QR code and address to open Live on another device",
+    "Código QR y dirección para abrir En directo en otro dispositivo"
   ],
   "QR Code para abrir o painel em outro dispositivo": [
     "QR code to open the dashboard on another device",
@@ -2073,7 +2068,7 @@
   "referência top": ["leaderboard reference", "referencia de la clasificación"],
   "Referência top": ["Leaderboard reference", "Referencia de la clasificación"],
   "referência: {0}": ["reference: {0}", "referencia: {0}"],
-  "Referências capturadas": ["Captured references", "Referencias capturadas"],
+  "Voltas de referência gravadas": ["Recorded reference laps", "Vueltas de referencia grabadas"],
   "Referências do top": ["Leaderboard references", "Referencias de la clasificación"],
   "Referências do top mundial": [
     "World leaderboard references",
@@ -2376,8 +2371,8 @@
     "Vista cambiada por control remoto: {0}"
   ],
   "Telas": ["Views", "Vistas"],
-  "Telas deste dispositivo": ["Views on this device", "Vistas de este dispositivo"],
-  "Telas do painel ao vivo": ["Live dashboard views", "Vistas del panel en directo"],
+  "Telas deste aparelho": ["Screens on this device", "Pantallas de este dispositivo"],
+  "Escolher as telas": ["Choose screens", "Elegir las pantallas"],
   "Telas ligadas": ["Enabled views", "Vistas activadas"],
   "Telemetria de pilotagem": ["Driving telemetry", "Telemetría de conducción"],
   "Telemetria parada": ["Telemetry stopped", "Telemetría detenida"],
@@ -2469,7 +2464,6 @@
     "Token saved · enter a value to replace it",
     "Token guardado · escribe un valor para sustituirlo"
   ],
-  "Top capturado": ["Captured reference", "Referencia capturada"],
   "tópico": ["topic", "tema"],
   "tópicos": ["topics", "temas"],
   "tópicos ·": ["topics ·", "temas ·"],
@@ -2613,9 +2607,9 @@
   "Ver a captura": ["View capture", "Ver captura"],
   "Ver a pista": ["View track", "Ver circuito"],
   "Ver a pista toda": ["Show whole track", "Ver circuito completo"],
-  "Ver chamadas com a referência usada no rádio": [
-    "View calls against the radio reference",
-    "Ver llamadas con la referencia de la radio"
+  "Ver chamadas com a referência usada pelo engenheiro": [
+    "View calls against the engineer’s reference",
+    "Ver llamadas con la referencia del ingeniero"
   ],
   "Ver demonstração": ["View demo", "Ver demostración"],
   "Ver no gráfico": ["View on chart", "Ver en la gráfica"],
@@ -2695,8 +2689,7 @@
   ],
   "Voltar": ["Back", "Atrás"],
   "Voltar ao automático": ["Return to automatic", "Volver a automático"],
-  "Voltar ao painel": ["Back to dashboard", "Volver al panel"],
-  "Voltar ao painel ao vivo": ["Back to the live dashboard", "Volver al panel en directo"],
+  "Voltar à tela ao vivo": ["Back to Live", "Volver a En directo"],
   "voltas": ["laps", "vueltas"],
   "Voltas": ["Laps", "Vueltas"],
   "Voltas analisadas": ["Laps analysed", "Vueltas analizadas"],
@@ -2722,12 +2715,12 @@
     "Automatic discovery restored. Bono searches for the PS5.",
     "Detección automática restablecida. Bono busca la PS5."
   ],
-  "Volume do rádio": ["Radio volume", "Volumen de radio"],
+  "Volume do engenheiro": ["Engineer volume", "Volumen del ingeniero"],
   "Voz {0} indisponível. Tocando com {1}.": [
     "Voice {0} unavailable. Using {1}.",
     "Voz {0} no disponible. Se usa {1}."
   ],
-  "Voz do rádio": ["Radio voice", "Voz de radio"],
+  "Voz do engenheiro": ["Engineer voice", "Voz del ingeniero"],
   "Voz do rádio inválida.": ["Invalid radio voice.", "Voz de radio no válida."],
   "Voz e som": ["Voice and sound", "Voz y sonido"],
   "vs melhor": ["vs best", "frente a la mejor"],
@@ -2871,7 +2864,7 @@
   ],
   "Entendi": ["Got it", "Entendido"],
   "Manter {0}": ["Keep {0}", "Mantener {0}"],
-  "Gravar volta de replay": ["Record replay lap", "Grabar vuelta de repetición"],
+  "Gravar volta de replay": ["Record a replay lap", "Grabar vuelta de repetición"],
   "Escolher outra referência": ["Choose another reference", "Elegir otra referencia"],
   "Disponível quando você parar": ["Available when you stop", "Disponible cuando te detengas"],
   "Pista de hoje": ["Today's track", "Pista de hoy"],
@@ -2920,5 +2913,822 @@
   "No menu do jogo, antes de entrar na pista, deixa você dizer onde vai treinar. Assim o engenheiro já ajuda na primeira volta. Nunca pergunta com o carro andando.": [
     "In the game menu, before entering the track, lets you say where you will practice. That way the engineer already helps on the first lap. It never asks while the car is moving.",
     "En el menú del juego, antes de entrar en la pista, te deja decir dónde vas a entrenar. Así el ingeniero ya ayuda en la primera vuelta. Nunca pregunta con el coche en movimiento."
-  ]
+  ],
+  "Suas telas ao vivo": ["Your live screens", "Tus pantallas en vivo"],
+  "Só acompanhar ao vivo": ["Just watch live", "Solo seguir en vivo"],
+  "Ao vivo e aparelhos": ["Live and devices", "En directo y dispositivos"],
+  "Tente recarregar. Se continuar, abra o detalhe técnico ao relatar o problema.": [
+    "Try reloading. If it keeps happening, open the technical detail when you report the problem.",
+    "Prueba a recargar. Si sigue pasando, abre el detalle técnico al informar del problema."
+  ],
+  "Detalhe técnico": ["Technical detail", "Detalle técnico"],
+  "Contadores simples de uso, guardados só neste navegador. Nada é enviado para fora do seu PC.": [
+    "Simple usage counters, kept only in this browser. Nothing is sent outside your PC.",
+    "Contadores simples de uso, guardados solo en este navegador. No se envía nada fuera de tu PC."
+  ],
+  "Zerar contadores": ["Reset counters", "Poner los contadores a cero"],
+  "Atualizações": ["Updates", "Actualizaciones"],
+  "Há uma versão nova pronta. Atualizar recarrega a tela.": [
+    "A new version is ready. Updating reloads the screen.",
+    "Hay una versión nueva lista. Actualizar recarga la pantalla."
+  ],
+  "O Bono procura sozinho e avisa quando houver uma versão nova.": [
+    "Bono checks on its own and tells you when a new version is out.",
+    "Bono busca por su cuenta y avisa cuando haya una versión nueva."
+  ],
+  "Atualizar agora": ["Update now", "Actualizar ahora"],
+  "Em dia": ["Up to date", "Al día"],
+  "Refazer o assistente": ["Redo the setup assistant", "Repetir el asistente"],
+  "Passa de novo pela configuração inicial: PS5, voz e telas.": [
+    "Goes through the first-run setup again: PS5, voice and screens.",
+    "Repasa de nuevo la configuración inicial: PS5, voz y pantallas."
+  ],
+  "Refazer o tour": ["Redo the tour", "Repetir el tour"],
+  "Mostra de novo os gestos e botões do ao vivo.": [
+    "Shows the Live gestures and buttons again.",
+    "Muestra de nuevo los gestos y botones de En directo."
+  ],
+  "Ver o tour do histórico": ["See the history tour", "Ver el tour del historial"],
+  "Mostra onde ficam as pistas, a comparação e os ajustes.": [
+    "Shows where tracks, comparison and settings are.",
+    "Muestra dónde están los circuitos, la comparación y los ajustes."
+  ],
+  "Ver o tour": ["See the tour", "Ver el tour"],
+  "Detalhes técnicos e licenças": [
+    "Technical details and licences",
+    "Detalles técnicos y licencias"
+  ],
+  "Servidor na porta": ["Server on port", "Servidor en el puerto"],
+  "O Bono é software livre (licença MIT).": [
+    "Bono is free software (MIT licence).",
+    "Bono es software libre (licencia MIT)."
+  ],
+  "Avançado: conectar ao Claude ou ao Codex (MCP)": [
+    "Advanced: connect to Claude or Codex (MCP)",
+    "Avanzado: conectar con Claude o Codex (MCP)"
+  ],
+  "Vale para o app inteiro e para a voz do engenheiro.": [
+    "Applies to the whole app and to the engineer’s voice.",
+    "Vale para toda la app y para la voz del ingeniero."
+  ],
+  "Idioma do app": ["App language", "Idioma de la app"],
+  "Português, inglês ou espanhol, na tela e na voz.": [
+    "Portuguese, English or Spanish, on screen and in the voice.",
+    "Portugués, inglés o español, en pantalla y en la voz."
+  ],
+  "PS5": ["PS5", "PS5"],
+  "Como o Bono recebe os dados do jogo.": [
+    "How Bono receives the game data.",
+    "Cómo recibe Bono los datos del juego."
+  ],
+  "Gravação": ["Recording", "Grabación"],
+  "Ao entrar numa pista, o app abre a sessão e salva quando você sai. Sem botão de iniciar.": [
+    "When you enter a track, the app opens the session and saves it when you leave. No start button.",
+    "Al entrar en un circuito, la app abre la sesión y la guarda al salir. Sin botón de inicio."
+  ],
+  "Avançado: outro IP, formato do pacote e pacotes brutos": [
+    "Advanced: another IP, packet format and raw packets",
+    "Avanzado: otra IP, formato de paquete y paquetes en bruto"
+  ],
+  "Fixado por você: {0}.": ["Pinned by you: {0}.", "Fijado por ti: {0}."],
+  "Só se a busca automática não achar o console.": [
+    "Only if the automatic search doesn’t find the console.",
+    "Solo si la búsqueda automática no encuentra la consola."
+  ],
+  "Automático": ["Automatic", "Automático"],
+  "Para fixar um formato, escolha um abaixo.": [
+    "To pin a format, choose one below.",
+    "Para fijar un formato, elige uno abajo."
+  ],
+  "Ao escolher um formato, o app para de trocar sozinho. Para voltar, ligue o interruptor “Formato do pacote: automático”.": [
+    "Once you pick a format, the app stops switching on its own. To go back, turn on “Packet format: automatic”.",
+    "Al elegir un formato, la app deja de cambiar sola. Para volver, activa «Formato de paquete: automático»."
+  ],
+  "Gravar volta de replay usa o formato acima: ela não troca mais o formato do pacote, porque o formato atual já entrega os dados do replay.": [
+    "Recording a replay lap uses the format above: it no longer switches the packet format, because the current format already delivers replay data.",
+    "Grabar una vuelta de repetición usa el formato de arriba: ya no cambia el formato del paquete, porque el formato actual ya entrega los datos de la repetición."
+  ],
+  "Gravar pacotes brutos": ["Record raw packets", "Grabar paquetes en bruto"],
+  "Gravação de pacotes brutos desligada.": [
+    "Raw packet recording is off.",
+    "La grabación de paquetes en bruto está desactivada."
+  ],
+  "Gravação de pacotes brutos ligada.": [
+    "Raw packet recording is on.",
+    "La grabación de paquetes en bruto está activada."
+  ],
+  "Como está tudo": ["How everything is", "Cómo está todo"],
+  "Falta configurar": ["Still to set up", "Falta configurar"],
+  "Continuar o assistente": ["Continue the assistant", "Continuar el asistente"],
+  "Resolver": ["Fix", "Resolver"],
+  "{0}: telas {1}.": ["{0}: {1} screens.", "{0}: pantallas {1}."],
+  "online": ["online", "en línea"],
+  "{0} abas": ["{0} tabs", "{0} pestañas"],
+  "offline · {0}": ["offline · {0}", "sin conexión · {0}"],
+  "Telas de {0}": ["Screens of {0}", "Pantallas de {0}"],
+  "Personalizado · {0} telas": ["Custom · {0} screens", "Personalizado · {0} pantallas"],
+  "Detalhes de {0}": ["Details of {0}", "Detalles de {0}"],
+  "Montagem própria": ["Own layout", "Montaje propio"],
+  "Cartão ao fechar a volta desligado.": [
+    "Lap card turned off.",
+    "Tarjeta al cerrar la vuelta desactivada."
+  ],
+  "Cartão ao fechar a volta ligado.": [
+    "Lap card turned on.",
+    "Tarjeta al cerrar la vuelta activada."
+  ],
+  "Gestos travados.": ["Gestures locked.", "Gestos bloqueados."],
+  "Mostrar uma tela agora": ["Show a screen now", "Mostrar una pantalla ahora"],
+  "Troca a tela que o aparelho está mostrando.": [
+    "Changes the screen the device is showing.",
+    "Cambia la pantalla que está mostrando el dispositivo."
+  ],
+  "Para mudar a ordem das telas ou montar a Personalizada, segure a tela no ao vivo.": [
+    "To change the order of screens or build the Custom one, hold the screen on Live.",
+    "Para cambiar el orden de las pantallas o montar la Personalizada, mantén pulsada la pantalla en En directo."
+  ],
+  "Identificador": ["Identifier", "Identificador"],
+  "Escolha as telas de cada aparelho. Abra a linha para ver os detalhes.": [
+    "Choose the screens of each device. Open a row to see the details.",
+    "Elige las pantallas de cada dispositivo. Abre la fila para ver los detalles."
+  ],
+  "Só este aparelho por enquanto. Abra o ao vivo no celular ou no tablet pelo QR Code abaixo.": [
+    "Only this device for now. Open Live on your phone or tablet with the QR code below.",
+    "Solo este dispositivo por ahora. Abre En directo en el móvil o la tableta con el código QR de abajo."
+  ],
+  "Acesso pela rede (Windows)": ["Network access (Windows)", "Acceso por la red (Windows)"],
+  "Liberado ✓": ["Allowed ✓", "Permitido ✓"],
+  "Bloqueado — Corrigir": ["Blocked — Fix", "Bloqueado — Corregir"],
+  "Não verificado": ["Not checked", "Sin verificar"],
+  "O Windows deixa celular e tablet abrirem o ao vivo.": [
+    "Windows lets phones and tablets open Live.",
+    "Windows deja que el móvil y la tableta abran En directo."
+  ],
+  "O Windows está barrando celular e tablet. Libere em um minuto.": [
+    "Windows is blocking phones and tablets. Allow it in a minute.",
+    "Windows está bloqueando el móvil y la tableta. Permítelo en un minuto."
+  ],
+  "Corrigir": ["Fix", "Corregir"],
+  "Acesso verificado.": ["Access verified.", "Acceso verificado."],
+  "Abra o PowerShell como administrador (botão direito no menu Iniciar), cole os comandos abaixo e volte aqui para verificar de novo.": [
+    "Open PowerShell as administrator (right-click the Start menu), paste the commands below and come back here to check again.",
+    "Abre PowerShell como administrador (clic derecho en el menú Inicio), pega los comandos de abajo y vuelve aquí para comprobar de nuevo."
+  ],
+  "Alternativa (prompt de administrador)": [
+    "Alternative (administrator prompt)",
+    "Alternativa (símbolo del sistema como administrador)"
+  ],
+  "Abrir no celular ou tablet": ["Open on a phone or tablet", "Abrir en el móvil o la tableta"],
+  "Funciona pela rede local, sem instalar nada.": [
+    "Works over the local network, nothing to install.",
+    "Funciona por la red local, sin instalar nada."
+  ],
+  "Nenhum endereço de rede disponível. Conecte o PC e o aparelho à mesma rede local.": [
+    "No network address available. Connect the PC and the device to the same local network.",
+    "No hay dirección de red disponible. Conecta el PC y el dispositivo a la misma red local."
+  ],
+  "Escaneie o QR Code com a câmera do aparelho ou abra um dos endereços no navegador. Os dois precisam estar na mesma rede.": [
+    "Scan the QR code with the device camera or open one of the addresses in the browser. Both must be on the same network.",
+    "Escanea el código QR con la cámara del dispositivo o abre una de las direcciones en el navegador. Ambos deben estar en la misma red."
+  ],
+  "Se o navegador oferecer “Adicionar à tela inicial”, use para abrir em tela cheia. Neste PC:": [
+    "If your browser offers “Add to Home Screen”, use it to open fullscreen. On this PC:",
+    "Si tu navegador ofrece «Añadir a pantalla de inicio», úsalo para abrir a pantalla completa. En este PC:"
+  ],
+  "QR Code para abrir o ao vivo em outro aparelho": [
+    "QR code to open Live on another device",
+    "Código QR para abrir En directo en otro dispositivo"
+  ],
+  "O engenheiro fala por um bot seu no canal de voz privado; o PS5 entra no mesmo canal. O token é salvo no armazenamento seguro deste PC.": [
+    "The engineer speaks through your own bot in a private voice channel; the PS5 joins the same channel. The token is saved in this PC’s secure storage.",
+    "El ingeniero habla por un bot tuyo en el canal de voz privado; la PS5 entra en el mismo canal. El token se guarda en el almacenamiento seguro de este PC."
+  ],
+  "Em poucos passos: criar o bot, colar o token, convidar o bot e escolher o canal. Você não precisa copiar nenhum ID.": [
+    "In a few steps: create the bot, paste the token, invite the bot and choose the channel. You don’t need to copy any ID.",
+    "En pocos pasos: crear el bot, pegar el token, invitar al bot y elegir el canal. No hace falta copiar ningún ID."
+  ],
+  "Configurar o Discord": ["Set up Discord", "Configurar Discord"],
+  "Bot do Discord": ["Discord bot", "Bot de Discord"],
+  "Ligado": ["On", "Activado"],
+  "Canal escolhido": ["Chosen channel", "Canal elegido"],
+  "Token salvo · termina em {0}": ["Token saved · ends in {0}", "Token guardado · termina en {0}"],
+  "O som pode chegar um pouco depois; calibre para sincronizar.": [
+    "Sound may arrive a little late; calibrate to sync it.",
+    "El sonido puede llegar un poco tarde; calibra para sincronizarlo."
+  ],
+  "Calibrar o atraso": ["Calibrate the delay", "Calibrar el retardo"],
+  "Reconfigurar": ["Set up again", "Reconfigurar"],
+  "Ajuste fino": ["Fine tuning", "Ajuste fino"],
+  "Padrão: {0} ms": ["Default: {0} ms", "Predeterminado: {0} ms"],
+  "Rode o teste de 10 bipes, meça o atraso no headset e informe as medições separadas por vírgula; o Bono usa o percentil 90. Em branco, vale o padrão de {0} ms.": [
+    "Run the 10-beep test, measure the delay on the headset and enter the measurements separated by commas; Bono uses the 90th percentile. Left blank, the default of {0} ms applies.",
+    "Ejecuta la prueba de 10 pitidos, mide el retardo en el casco e introduce las mediciones separadas por comas; Bono usa el percentil 90. En blanco, vale el valor predeterminado de {0} ms."
+  ],
+  "Só seguir este usuário (opcional)": [
+    "Only follow this user (optional)",
+    "Seguir solo a este usuario (opcional)"
+  ],
+  "ID do usuário no Discord": ["Discord user ID", "ID de usuario de Discord"],
+  "Em branco, o bot entra quando qualquer pessoa entra no canal e sai quando ele esvazia. Preencha para ele acompanhar só uma conta.": [
+    "Left blank, the bot joins when anyone enters the channel and leaves when it empties. Fill it in to follow a single account.",
+    "En blanco, el bot entra cuando cualquiera entra en el canal y sale cuando se vacía. Rellénalo para que siga solo una cuenta."
+  ],
+  "Ligar ao abrir o Bono": ["Turn on when Bono starts", "Activar al abrir Bono"],
+  "Ativa o rádio do Discord sempre que o aplicativo abrir.": [
+    "Turns on Discord radio every time the app opens.",
+    "Activa la radio de Discord cada vez que se abre la app."
+  ],
+  "Salvar ajuste fino": ["Save fine tuning", "Guardar ajuste fino"],
+  "Para calibrar, entre no canal pelo PS5 e inicie o teste. Para ouvir as instruções, escolha Discord · PS5 em Aparelho do engenheiro, na tela ao vivo.": [
+    "To calibrate, join the channel on the PS5 and start the test. To hear the instructions, choose Discord · PS5 under Engineer device on the Live screen.",
+    "Para calibrar, entra en el canal desde la PS5 e inicia la prueba. Para oír las instrucciones, elige Discord · PS5 en Dispositivo del ingeniero, en la pantalla En directo."
+  ],
+  "O token do bot e o canal salvos neste PC serão apagados.": [
+    "The bot token and channel saved on this PC will be erased.",
+    "Se borrarán el token del bot y el canal guardados en este PC."
+  ],
+  "Já criei o bot": ["I’ve created the bot", "Ya he creado el bot"],
+  "Usar outro bot": ["Use another bot", "Usar otro bot"],
+  "Configurar o rádio no Discord": ["Set up Discord radio", "Configurar la radio en Discord"],
+  "Passo {0} de 4 · {1}": ["Step {0} of 4 · {1}", "Paso {0} de 4 · {1}"],
+  "Passos": ["Steps", "Pasos"],
+  "O engenheiro fala por um bot seu, que entra no canal de voz junto com você. Criar o bot leva um minuto.": [
+    "The engineer speaks through your own bot, which joins the voice channel with you. Creating the bot takes a minute.",
+    "El ingeniero habla por un bot tuyo, que entra en el canal de voz contigo. Crear el bot lleva un minuto."
+  ],
+  "Clique em New Application, dê um nome (por exemplo, Bono Rádio) e confirme.": [
+    "Click New Application, give it a name (for example, Bono Radio) and confirm.",
+    "Haz clic en New Application, ponle un nombre (por ejemplo, Bono Radio) y confirma."
+  ],
+  "No menu da esquerda, abra Bot.": [
+    "In the left menu, open Bot.",
+    "En el menú de la izquierda, abre Bot."
+  ],
+  "Clique em Reset Token e copie o token que aparece. Ele é a senha do bot: guarde só para colar no próximo passo.": [
+    "Click Reset Token and copy the token that appears. It’s the bot’s password: keep it only to paste in the next step.",
+    "Haz clic en Reset Token y copia el token que aparece. Es la contraseña del bot: guárdalo solo para pegarlo en el siguiente paso."
+  ],
+  "Abrir o Discord Developer Portal": [
+    "Open the Discord Developer Portal",
+    "Abrir el Discord Developer Portal"
+  ],
+  "Cole o token do bot. Ele é guardado criptografado neste PC e não aparece de novo na tela.": [
+    "Paste the bot token. It’s stored encrypted on this PC and won’t be shown again.",
+    "Pega el token del bot. Se guarda cifrado en este PC y no vuelve a mostrarse."
+  ],
+  "Validando…": ["Validating…", "Validando…"],
+  "Validar token": ["Validate token", "Validar token"],
+  "Conectado como {0}": ["Connected as {0}", "Conectado como {0}"],
+  "Agora convide o bot para o servidor onde está o seu canal de voz. No Discord, escolha o servidor e confirme.": [
+    "Now invite the bot to the server where your voice channel is. In Discord, choose the server and confirm.",
+    "Ahora invita al bot al servidor donde está tu canal de voz. En Discord, elige el servidor y confirma."
+  ],
+  "Convidar para o meu servidor": ["Invite to my server", "Invitar a mi servidor"],
+  "Esperando o bot aparecer no servidor…": [
+    "Waiting for the bot to show up on the server…",
+    "Esperando a que el bot aparezca en el servidor…"
+  ],
+  "Escolha o canal de voz em que o engenheiro vai falar. Use um canal privado: quem entrar nele ouve o rádio.": [
+    "Choose the voice channel where the engineer will speak. Use a private channel: whoever joins it hears the engineer.",
+    "Elige el canal de voz donde hablará el ingeniero. Usa un canal privado: quien entre lo oye."
+  ],
+  "O bot não encontrou canais de voz. Crie um canal de voz no servidor e atualize a lista.": [
+    "The bot found no voice channels. Create a voice channel on the server and refresh the list.",
+    "El bot no encontró canales de voz. Crea un canal de voz en el servidor y actualiza la lista."
+  ],
+  "Sem permissão": ["No permission", "Sin permiso"],
+  "Atualizar lista": ["Refresh list", "Actualizar lista"],
+  "Testar": ["Test", "Probar"],
+  "Entre no canal pelo PS5 (Game Base → Discord) e clique em Testar: o bot toca 10 bipes.": [
+    "Join the channel on the PS5 (Game Base → Discord) and click Test: the bot plays 10 beeps.",
+    "Entra en el canal desde la PS5 (Game Base → Discord) y haz clic en Probar: el bot reproduce 10 pitidos."
+  ],
+  "Calibrar o atraso (opcional)": [
+    "Calibrate the delay (optional)",
+    "Calibrar el retardo (opcional)"
+  ],
+  "Filme o celular perto do headset durante os 10 bipes e meça o tempo entre o BIP na tela e o som. Com várias medições separadas por vírgula, o Bono usa o percentil 90. Sem calibrar, o padrão é {0} ms.": [
+    "Film your phone next to the headset during the 10 beeps and measure the time between the BEEP on screen and the sound. With several measurements separated by commas, Bono uses the 90th percentile. Without calibration, the default is {0} ms.",
+    "Graba con el móvil cerca del casco durante los 10 pitidos y mide el tiempo entre el PITIDO en pantalla y el sonido. Con varias mediciones separadas por comas, Bono usa el percentil 90. Sin calibrar, el valor predeterminado es {0} ms."
+  ],
+  "Nenhuma volta de referência ainda. Grave a volta de um replay acima e ela aparece aqui.": [
+    "No reference lap yet. Record a replay lap above and it shows up here.",
+    "Aún no hay vuelta de referencia. Graba la vuelta de una repetición arriba y aparecerá aquí."
+  ],
+  "Como está tudo agora": ["How everything is now", "Cómo está todo ahora"],
+  "Console": ["Console", "Consola"],
+  "PS5 e gravação das sessões": ["PS5 and session recording", "PS5 y grabación de las sesiones"],
+  "Voz, modo, volume e onde ele fala": [
+    "Voice, mode, volume and where it speaks",
+    "Voz, modo, volumen y dónde habla"
+  ],
+  "Telas de cada aparelho e acesso pelo celular": [
+    "Each device’s screens and phone access",
+    "Pantallas de cada dispositivo y acceso desde el móvil"
+  ],
+  "Contas e dados": ["Accounts and data", "Cuentas y datos"],
+  "Discord, Coach IA, idioma e seus dados": [
+    "Discord, AI Coach, language and your data",
+    "Discord, Coach IA, idioma y tus datos"
+  ],
+  "Versão, assistente e avisos": ["Version, assistant and notices", "Versión, asistente y avisos"],
+  "Estado da conexão e busca do console na rede.": [
+    "Connection state and console search on the network.",
+    "Estado de la conexión y búsqueda de la consola en la red."
+  ],
+  "Salva sessões, voltas e pistas sozinho, sem botão de iniciar.": [
+    "Saves sessions, laps and tracks on its own, no start button.",
+    "Guarda sesiones, vueltas y circuitos por su cuenta, sin botón de inicio."
+  ],
+  "Formato do pacote": ["Packet format", "Formato del paquete"],
+  "Automático por padrão; fixe só se o console não responder.": [
+    "Automatic by default; pin it only if the console doesn’t respond.",
+    "Automático por defecto; fíjalo solo si la consola no responde."
+  ],
+  "Guarda tudo o que o console envia (cerca de 20 KB/s). Deixe desligado.": [
+    "Keeps everything the console sends (about 20 KB/s). Leave it off.",
+    "Guarda todo lo que envía la consola (unos 20 KB/s). Déjalo desactivado."
+  ],
+  "Ligar o engenheiro": ["Turn on the engineer", "Activar el ingeniero"],
+  "Instruções em voz e na tela. Em silêncio quando tudo corre bem.": [
+    "Voice and on-screen instructions. Silent when things are going well.",
+    "Instrucciones por voz y en pantalla. En silencio cuando todo va bien."
+  ],
+  "Voz": ["Voice", "Voz"],
+  "Quem fala com você. Use “Testar voz” para ouvir.": [
+    "Who talks to you. Use “Test voice” to listen.",
+    "Quién te habla. Usa «Probar voz» para oírla."
+  ],
+  "Modo do engenheiro": ["Engineer mode", "Modo del ingeniero"],
+  "Treino, classificação ou corrida; no treino, aprender pista ou ganhar tempo.": [
+    "Practice, qualifying or race; in practice, learn the track or gain time.",
+    "Entrenamiento, clasificación o carrera; en entrenamiento, aprender el circuito o ganar tiempo."
+  ],
+  "Volume": ["Volume", "Volumen"],
+  "Volume da voz do engenheiro neste aparelho.": [
+    "Engineer voice volume on this device.",
+    "Volumen de la voz del ingeniero en este dispositivo."
+  ],
+  "Onde ele fala": ["Where it speaks", "Dónde habla"],
+  "Este aparelho, o Discord ou outro aparelho conectado.": [
+    "This device, Discord or another connected device.",
+    "Este dispositivo, Discord u otro dispositivo conectado."
+  ],
+  "No menu do jogo, deixa você dizer onde vai treinar. Nunca com o carro andando.": [
+    "In the game menu, lets you say where you’ll practice. Never while the car is moving.",
+    "En el menú del juego, te deja decir dónde vas a entrenar. Nunca con el coche en marcha."
+  ],
+  "Essencial, detalhado ou mudo.": [
+    "Essential, detailed or muted.",
+    "Esencial, detallado o silenciado."
+  ],
+  "Calmo, normal ou rápido.": ["Calm, normal or fast.", "Tranquilo, normal o rápido."],
+  "Quanto antes da curva o aviso é dado.": [
+    "How far before the corner the warning comes.",
+    "Cuánto antes de la curva llega el aviso."
+  ],
+  "Com que frequência ele resume o treino.": [
+    "How often it summarises practice.",
+    "Con qué frecuencia resume el entrenamiento."
+  ],
+  "Avisa também quando você acerta a curva.": [
+    "Also tells you when you get the corner right.",
+    "También avisa cuando haces bien la curva."
+  ],
+  "Contra o que o ao vivo e o engenheiro comparam você.": [
+    "What Live and the engineer compare you against.",
+    "Con qué te comparan En directo y el ingeniero."
+  ],
+  "Telas de cada aparelho": ["Each device’s screens", "Pantallas de cada dispositivo"],
+  "Simples, Completo ou Corrida de endurance, por aparelho.": [
+    "Simple, Full or Endurance race, per device.",
+    "Sencillo, Completo o Carrera de resistencia, por dispositivo."
+  ],
+  "Evita trocar de tela sem querer.": [
+    "Avoids changing screen by accident.",
+    "Evita cambiar de pantalla sin querer."
+  ],
+  "QR Code e endereços para a mesma rede.": [
+    "QR code and addresses for the same network.",
+    "Código QR y direcciones para la misma red."
+  ],
+  "Mostra se o Windows está liberando o acesso e corrige quando preciso.": [
+    "Shows whether Windows is allowing access and fixes it when needed.",
+    "Muestra si Windows permite el acceso y lo corrige cuando hace falta."
+  ],
+  "Quem está online e o que cada um mostra agora.": [
+    "Who is online and what each one is showing now.",
+    "Quién está en línea y qué muestra cada uno ahora."
+  ],
+  "Bot no seu canal de voz para ouvir o engenheiro no PS5.": [
+    "Bot in your voice channel so you can hear the engineer on the PS5.",
+    "Bot en tu canal de voz para oír al ingeniero en la PS5."
+  ],
+  "Sua chave da Anthropic e o modelo usado nas análises.": [
+    "Your Anthropic key and the model used for analysis.",
+    "Tu clave de Anthropic y el modelo usado en los análisis."
+  ],
+  "Onde ficam suas sessões e como fazer uma cópia de segurança.": [
+    "Where your sessions are kept and how to back them up.",
+    "Dónde se guardan tus sesiones y cómo hacer una copia de seguridad."
+  ],
+  "Conectar ao Claude ou ao Codex": ["Connect to Claude or Codex", "Conectar con Claude o Codex"],
+  "Deixa um assistente de IA consultar suas voltas (MCP).": [
+    "Lets an AI assistant look at your laps (MCP).",
+    "Deja que un asistente de IA consulte tus vueltas (MCP)."
+  ],
+  "Passa de novo pela configuração inicial.": [
+    "Goes through the first-run setup again.",
+    "Repasa de nuevo la configuración inicial."
+  ],
+  "Escolher a voz do engenheiro": ["Choose the engineer’s voice", "Elegir la voz del ingeniero"],
+  "Conectar o PS5": ["Connect the PS5", "Conectar la PS5"],
+  "Escolher como treinar": ["Choose how to train", "Elegir cómo entrenar"],
+  "Escolher as telas do ao vivo": ["Choose the Live screens", "Elegir las pantallas de En directo"],
+  "PS5 conectado": ["PS5 connected", "PS5 conectada"],
+  "Recebendo telemetria de {0}.": [
+    "Receiving telemetry from {0}.",
+    "Recibiendo telemetría de {0}."
+  ],
+  "Recebendo telemetria.": ["Receiving telemetry.", "Recibiendo telemetría."],
+  "Desligar": ["Turn off", "Desactivar"],
+  "Ligar": ["Turn on", "Activar"],
+  "Discord sem configurar": ["Discord not set up", "Discord sin configurar"],
+  "Configure o bot uma vez para ouvir o engenheiro pelo PS5.": [
+    "Set up the bot once to hear the engineer on the PS5.",
+    "Configura el bot una vez para oír al ingeniero en la PS5."
+  ],
+  "Discord com problema": ["Discord has a problem", "Discord con problemas"],
+  "Abra as configurações do Discord para ver o que houve.": [
+    "Open the Discord settings to see what happened.",
+    "Abre los ajustes de Discord para ver qué pasó."
+  ],
+  "Discord ligado": ["Discord on", "Discord activado"],
+  "Discord desligado": ["Discord off", "Discord desactivado"],
+  "O bot entra no canal quando você entra.": [
+    "The bot joins the channel when you do.",
+    "El bot entra en el canal cuando entras tú."
+  ],
+  "Ligue para o engenheiro falar no canal de voz.": [
+    "Turn on so the engineer speaks in the voice channel.",
+    "Actívalo para que el ingeniero hable en el canal de voz."
+  ],
+  "Ajustar": ["Adjust", "Ajustar"],
+  "1 aparelho online": ["1 device online", "1 dispositivo en línea"],
+  "{0} aparelhos online": ["{0} devices online", "{0} dispositivos en línea"],
+  "Cada um mostra as telas que você escolheu para ele.": [
+    "Each one shows the screens you chose for it.",
+    "Cada uno muestra las pantallas que elegiste para él."
+  ],
+  "Ver aparelhos": ["See devices", "Ver dispositivos"],
+  "Windows bloqueando o acesso": [
+    "Windows is blocking access",
+    "Windows está bloqueando el acceso"
+  ],
+  "Celular e tablet não conseguem abrir o ao vivo até liberar.": [
+    "Phones and tablets can’t open Live until it’s allowed.",
+    "El móvil y la tableta no pueden abrir En directo hasta que se permita."
+  ],
+  "Nenhum aparelho conectado": ["No device connected", "Ningún dispositivo conectado"],
+  "Abra o ao vivo no celular ou no tablet pelo QR Code.": [
+    "Open Live on your phone or tablet with the QR code.",
+    "Abre En directo en el móvil o la tableta con el código QR."
+  ],
+  "Abrir no celular": ["Open on phone", "Abrir en el móvil"],
+  "1 item com problema": ["1 item with a problem", "1 elemento con problemas"],
+  "{0} itens com problema": ["{0} items with a problem", "{0} elementos con problemas"],
+  "1 item pede atenção": ["1 item needs attention", "1 elemento requiere atención"],
+  "{0} itens pedem atenção": ["{0} items need attention", "{0} elementos requieren atención"],
+  "Tudo certo": ["All good", "Todo en orden"],
+  "Simples": ["Simple", "Sencillo"],
+  "Só o essencial para olhar de relance.": [
+    "Just the essentials at a glance.",
+    "Solo lo esencial de un vistazo."
+  ],
+  "Completo": ["Full", "Completo"],
+  "Inclui pneus, inputs e motor.": [
+    "Includes tyres, inputs and engine.",
+    "Incluye neumáticos, inputs y motor."
+  ],
+  "Corrida de endurance": ["Endurance race", "Carrera de resistencia"],
+  "Combustível, tempos e pneus para provas longas.": [
+    "Fuel, times and tyres for long races.",
+    "Combustible, tiempos y neumáticos para carreras largas."
+  ],
+  "Nenhuma configuração tem “{0}”. Tente outra palavra, como voz, delta ou firewall.": [
+    "No setting has “{0}”. Try another word, like voice, delta or firewall.",
+    "Ningún ajuste tiene «{0}». Prueba otra palabra, como voz, delta o firewall."
+  ],
+  "Resultados da busca": ["Search results", "Resultados de la búsqueda"],
+  "Buscar: voz, delta, firewall…": [
+    "Search: voice, delta, firewall…",
+    "Buscar: voz, delta, firewall…"
+  ],
+  "Buscar nas configurações": ["Search settings", "Buscar en los ajustes"],
+  "Grupos de configurações": ["Settings groups", "Grupos de ajustes"],
+  "Mostrar todos os carros": ["Show all cars", "Mostrar todos los coches"],
+  "Nenhuma volta de referência guardada para esta pista": [
+    "No reference lap saved for this track",
+    "Ninguna vuelta de referencia guardada para este circuito"
+  ],
+  "Destravar gestos (segure; tecla L)": [
+    "Unlock gestures (hold; key L)",
+    "Desbloquear gestos (mantén; tecla L)"
+  ],
+  "Travar gestos (tecla L)": ["Lock gestures (key L)", "Bloquear gestos (tecla L)"],
+  "Destravar": ["Unlock", "Desbloquear"],
+  "Travar": ["Lock", "Bloquear"],
+  "O engenheiro fala no canal de voz e você ouve no PS5. O bot entra quando alguém entra no canal.": [
+    "The engineer speaks in the voice channel and you hear it on the PS5. The bot joins when someone enters the channel.",
+    "El ingeniero habla en el canal de voz y lo oyes en la PS5. El bot entra cuando alguien entra en el canal."
+  ],
+  "Quanto detalhe ele dá ao mandar frear.": [
+    "How much detail it gives when telling you to brake.",
+    "Cuánto detalle da al decirte que frenes."
+  ],
+  "Vazio usa o tempo da volta de referência.": [
+    "Empty uses the reference lap time.",
+    "Vacío usa el tiempo de la vuelta de referencia."
+  ],
+  "Aparelho que toca o engenheiro": [
+    "Device that plays the engineer",
+    "Dispositivo que reproduce al ingeniero"
+  ],
+  "Ajustar o Discord": ["Adjust Discord", "Ajustar Discord"],
+  "Não foi possível alterar o aparelho.": [
+    "Couldn’t change the device.",
+    "No se pudo cambiar el dispositivo."
+  ],
+  "Mais opções": ["More options", "Más opciones"],
+  "Menu: histórico, comparação, gravar volta e ajustes": [
+    "Menu: history, comparison, record a lap and settings",
+    "Menú: historial, comparación, grabar vuelta y ajustes"
+  ],
+  "Menu (tecla M)": ["Menu (key M)", "Menú (tecla M)"],
+  "Menu": ["Menu", "Menú"],
+  "Ajuda": ["Help", "Ayuda"],
+  "Gestos e botões do ao vivo, numa demonstração": [
+    "Live gestures and buttons, in a demo",
+    "Gestos y botones de En directo, en una demostración"
+  ],
+  "ligado": ["on", "activado"],
+  "Bem-vindo ao {0}": ["Welcome to {0}", "Te damos la bienvenida a {0}"],
+  "Conecte o PS5": ["Connect the PS5", "Conecta la PS5"],
+  "Como você quer treinar?": ["How do you want to train?", "¿Cómo quieres entrenar?"],
+  "Seu engenheiro": ["Your engineer", "Tu ingeniero"],
+  "Fazer isso depois": ["Do this later", "Hacerlo después"],
+  "Pular passo": ["Skip step", "Saltar paso"],
+  "Ir para o ao vivo": ["Go to Live", "Ir a En directo"],
+  "abra o {0} e entre em uma pista": [
+    "open {0} and get on a track",
+    "abre {0} y entra en un circuito"
+  ],
+  "Pode levar alguns segundos. Se demorar mais de {0} s, eu mostro o que conferir.": [
+    "It can take a few seconds. If it takes longer than {0} s, I’ll show what to check.",
+    "Puede tardar unos segundos. Si tarda más de {0} s, te muestro qué revisar."
+  ],
+  "Sem o PS5 à mão? Veja o Bono com dados simulados.": [
+    "No PS5 at hand? See Bono with simulated data.",
+    "¿Sin la PS5 a mano? Mira Bono con datos simulados."
+  ],
+  "Experimentar com a demonstração": ["Try the demo", "Probar con la demostración"],
+  "Ele fala em voz alta e escreve na tela. Em silêncio quando tudo corre bem.": [
+    "It speaks out loud and writes on screen. Silent when things are going well.",
+    "Habla en voz alta y escribe en pantalla. En silencio cuando todo va bien."
+  ],
+  "Você pode desligar a qualquer momento pelo menu do ao vivo.": [
+    "You can turn it off at any time from the Live menu.",
+    "Puedes desactivarlo en cualquier momento desde el menú de En directo."
+  ],
+  "Ouvir": ["Listen", "Escuchar"],
+  "Este navegador não toca o áudio do engenheiro. As instruções ficam na tela.": [
+    "This browser can’t play the engineer’s audio. Instructions stay on screen.",
+    "Este navegador no reproduce el audio del ingeniero. Las instrucciones quedan en pantalla."
+  ],
+  "Neste aparelho": ["On this device", "En este dispositivo"],
+  "O som sai daqui.": ["Sound comes out of here.", "El sonido sale de aquí."],
+  "Discord": ["Discord", "Discord"],
+  "Pelo canal de voz, para ouvir no PS5. Opcional.": [
+    "Through the voice channel, to hear it on the PS5. Optional.",
+    "Por el canal de voz, para oírlo en la PS5. Opcional."
+  ],
+  "Configurar depois": ["Set up later", "Configurar después"],
+  "Para ouvir em outro aparelho, escolha em Configurações → Engenheiro.": [
+    "To hear it on another device, choose it in Settings → Engineer.",
+    "Para oírlo en otro dispositivo, elígelo en Configuración → Ingeniero."
+  ],
+  "Aprender uma pista": ["Learn a track", "Aprender un circuito"],
+  "O engenheiro guia você curva a curva.": [
+    "The engineer guides you corner by corner.",
+    "El ingeniero te guía curva a curva."
+  ],
+  "Você já conhece a pista. Ele aponta onde ganhar décimos.": [
+    "You already know the track. It points out where to gain tenths.",
+    "Ya conoces el circuito. Señala dónde ganar décimas."
+  ],
+  "Engenheiro desligado. Só os números na tela.": [
+    "Engineer off. Just the numbers on screen.",
+    "Ingeniero desactivado. Solo los números en pantalla."
+  ],
+  "O engenheiro se ajusta ao que você quer fazer agora.": [
+    "The engineer adapts to what you want to do now.",
+    "El ingeniero se adapta a lo que quieres hacer ahora."
+  ],
+  "Abrir também no celular ou tablet": [
+    "Also open on a phone or tablet",
+    "Abrir también en el móvil o la tableta"
+  ],
+  "Nenhum endereço de rede disponível.": [
+    "No network address available.",
+    "No hay dirección de red disponible."
+  ],
+  "Preparando o QR Code…": ["Preparing the QR code…", "Preparando el código QR…"],
+  "Escaneie com a câmera. O aparelho e este PC precisam estar no mesmo Wi-Fi.": [
+    "Scan with the camera. The device and this PC must be on the same Wi-Fi.",
+    "Escanea con la cámara. El dispositivo y este PC deben estar en la misma Wi-Fi."
+  ],
+  "Escolha as telas deste aparelho. Dá para mudar a qualquer hora.": [
+    "Choose this device’s screens. You can change them any time.",
+    "Elige las pantallas de este dispositivo. Puedes cambiarlas cuando quieras."
+  ],
+  "Telas do ao vivo": ["Live screens", "Pantallas de En directo"],
+  "Idioma e voz": ["Language and voice", "Idioma y voz"],
+  "Voz {0}": ["Voice {0}", "Voz {0}"],
+  "Demonstração, sem PS5": ["Demo, no PS5", "Demostración, sin PS5"],
+  "Ainda não conectado": ["Not connected yet", "Aún sin conectar"],
+  "Personalizado": ["Custom", "Personalizado"],
+  "Está tudo no lugar. Falta só a primeira volta.": [
+    "Everything is in place. Only the first lap is missing.",
+    "Todo está en su sitio. Solo falta la primera vuelta."
+  ],
+  "Pronto para pilotar. O que ficou para depois aparece na Início e em Configurações.": [
+    "Ready to drive. Whatever was left for later shows up on Home and in Settings.",
+    "Listo para pilotar. Lo que quedó para después aparece en Inicio y en Configuración."
+  ],
+  "Resumo da configuração": ["Setup summary", "Resumen de la configuración"],
+  "Depois": ["Later", "Después"],
+  "Novidades no Bono": ["What’s new in Bono", "Novedades en Bono"],
+  "Tour guiado pelo ao vivo e um engenheiro mais fácil de ligar e ajustar.": [
+    "A guided tour of Live and an engineer that’s easier to turn on and adjust.",
+    "Un tour guiado por En directo y un ingeniero más fácil de activar y ajustar."
+  ],
+  "Abrir o assistente": ["Open the assistant", "Abrir el asistente"],
+  "Não foi possível ligar o Discord. Tente em Configurações.": [
+    "Couldn’t turn Discord on. Try in Settings.",
+    "No se pudo activar Discord. Prueba en Configuración."
+  ],
+  "Não foi possível desligar o Discord.": [
+    "Couldn’t turn Discord off.",
+    "No se pudo desactivar Discord."
+  ],
+  "Escolha o idioma e a voz do seu engenheiro. Dá para mudar depois em Configurações.": [
+    "Choose your engineer’s language and voice. You can change them later in Settings.",
+    "Elige el idioma y la voz de tu ingeniero. Puedes cambiarlos después en Configuración."
+  ],
+  "Ouvir a voz {0}": ["Listen to voice {0}", "Escuchar la voz {0}"],
+  "Pular tour": ["Skip tour", "Saltar tour"],
+  "Próximo": ["Next", "Siguiente"],
+  "O engenheiro falou pela primeira vez": [
+    "The engineer spoke for the first time",
+    "El ingeniero habló por primera vez"
+  ],
+  "Quer que ele fale menos? Menu → Engenheiro.": [
+    "Want it to talk less? Menu → Engineer.",
+    "¿Quieres que hable menos? Menú → Ingeniero."
+  ],
+  "Esta volta ainda não tem referência": [
+    "This lap has no reference yet",
+    "Esta vuelta aún no tiene referencia"
+  ],
+  "Dê mais uma volta ou grave a volta de um replay para comparar.": [
+    "Do another lap or record a replay lap to compare.",
+    "Da otra vuelta o graba una vuelta de repetición para comparar."
+  ],
+  "Sua primeira sessão foi salva": ["Your first session was saved", "Tu primera sesión se guardó"],
+  "Ela já está no Início, na pista certa.": [
+    "It’s already on Home, under the right track.",
+    "Ya está en Inicio, en el circuito correcto."
+  ],
+  "Fechar a dica": ["Close the tip", "Cerrar el consejo"],
+  "Reconhecer a pista": ["Recognise the track", "Reconocer el circuito"],
+  "fala neste aparelho": ["speaks on this device", "habla en este dispositivo"],
+  "fala pelo Discord": ["speaks through Discord", "habla por Discord"],
+  "fala em outro aparelho": ["speaks on another device", "habla en otro dispositivo"],
+  "Ligue para receber instruções em voz e na tela.": [
+    "Turn on to get voice and on-screen instructions.",
+    "Actívalo para recibir instrucciones por voz y en pantalla."
+  ],
+  "Engenheiro sem som": ["Engineer muted", "Ingeniero sin sonido"],
+  "As instruções aparecem só na tela. Ative o som para ouvir.": [
+    "Instructions show on screen only. Turn the sound on to hear them.",
+    "Las instrucciones aparecen solo en pantalla. Activa el sonido para oírlas."
+  ],
+  "Engenheiro ligado": ["Engineer on", "Ingeniero activado"],
+  "Gravação automática desligada": ["Automatic recording off", "Grabación automática desactivada"],
+  "O ao vivo funciona, mas nenhuma sessão, volta ou pista nova é salva.": [
+    "Live works, but no new session, lap or track is saved.",
+    "En directo funciona, pero no se guarda ninguna sesión, vuelta ni circuito nuevo."
+  ],
+  "Gravação automática ligada": ["Automatic recording on", "Grabación automática activada"],
+  "Salva sessões e voltas sozinha, e guarda também os pacotes brutos.": [
+    "Saves sessions and laps on its own, and keeps raw packets too.",
+    "Guarda sesiones y vueltas por su cuenta, y también conserva los paquetes en bruto."
+  ],
+  "Salva sessões e voltas sozinha quando você entra numa pista.": [
+    "Saves sessions and laps on its own when you enter a track.",
+    "Guarda sesiones y vueltas por su cuenta cuando entras en un circuito."
+  ],
+  "Grave uma volta de replay para ter com o que comparar.": [
+    "Record a replay lap to have something to compare against.",
+    "Graba una vuelta de repetición para tener con qué comparar."
+  ],
+  "Dê mais uma volta: ela passa a ser a referência.": [
+    "Do another lap: it becomes the reference.",
+    "Da otra vuelta: pasa a ser la referencia."
+  ],
+  "Algo deu errado. Tente de novo.": [
+    "Something went wrong. Try again.",
+    "Algo salió mal. Inténtalo de nuevo."
+  ],
+  "Não foi possível falar com o Bono. Confira se ele está aberto e tente de novo.": [
+    "Couldn’t reach Bono. Check that it’s open and try again.",
+    "No se pudo hablar con Bono. Comprueba que esté abierto e inténtalo de nuevo."
+  ],
+  "O Bono respondeu algo que não deu para ler. Atualize a página e tente de novo.": [
+    "Bono answered with something unreadable. Refresh the page and try again.",
+    "Bono respondió algo que no se pudo leer. Actualiza la página e inténtalo de nuevo."
+  ],
+  "O Windows impediu essa ação. Tente de novo ou reinicie o Bono.": [
+    "Windows blocked this action. Try again or restart Bono.",
+    "Windows impidió esta acción. Inténtalo de nuevo o reinicia Bono."
+  ],
+  "Pista e engenheiro": ["Track and engineer", "Circuito e ingeniero"],
+  "Aqui o Bono diz em que pista você está e se o engenheiro está pronto.": [
+    "Here Bono tells you which track you’re on and whether the engineer is ready.",
+    "Aquí Bono te dice en qué circuito estás y si el ingeniero está listo."
+  ],
+  "O delta": ["The delta", "El delta"],
+  "Verde: você está mais rápido que a referência. Vermelho: mais lento.": [
+    "Green: you’re faster than the reference. Red: slower.",
+    "Verde: vas más rápido que la referencia. Rojo: más lento."
+  ],
+  "Marcha e velocidade": ["Gear and speed", "Marcha y velocidad"],
+  "O que você precisa ler de relance, sempre no mesmo lugar.": [
+    "What you need to read at a glance, always in the same place.",
+    "Lo que necesitas leer de un vistazo, siempre en el mismo sitio."
+  ],
+  "Cada setor mostra a diferença para a sua melhor volta.": [
+    "Each sector shows the difference to your best lap.",
+    "Cada sector muestra la diferencia con tu mejor vuelta."
+  ],
+  "Trocar de tela": ["Change screen", "Cambiar de pantalla"],
+  "Deslize para o lado ou use as setas para trocar de tela. Segure a tela para escolher quais mostrar.": [
+    "Swipe sideways or use the arrows to change screen. Hold the screen to choose which ones to show.",
+    "Desliza hacia el lado o usa las flechas para cambiar de pantalla. Mantén pulsada la pantalla para elegir cuáles mostrar."
+  ],
+  "Ligue o engenheiro, troque a voz e vá para o histórico por aqui. Atalho: M.": [
+    "Turn on the engineer, change the voice and go to history from here. Shortcut: M.",
+    "Activa el ingeniero, cambia la voz y ve al historial desde aquí. Atajo: M."
+  ],
+  "Cadeado": ["Padlock", "Candado"],
+  "Trava os gestos durante a volta. Segure para destravar.": [
+    "Locks gestures during the lap. Hold to unlock.",
+    "Bloquea los gestos durante la vuelta. Mantén pulsado para desbloquear."
+  ],
+  "Barra lateral": ["Sidebar", "Barra lateral"],
+  "Ao vivo, Início, Comparar, Gravar volta, Coach, Guia e Ajustes.": [
+    "Live, Home, Compare, Record lap, Coach, Guide and Settings.",
+    "En directo, Inicio, Comparar, Grabar vuelta, Coach, Guía y Ajustes."
+  ],
+  "Cartão de pista": ["Track card", "Tarjeta de circuito"],
+  "Cada pista guarda suas sessões, melhor volta e evolução.": [
+    "Each track keeps its sessions, best lap and progress.",
+    "Cada circuito guarda sus sesiones, mejor vuelta y evolución."
+  ],
+  "Escolha uma volta e uma referência e veja onde está o tempo.": [
+    "Pick a lap and a reference and see where the time is.",
+    "Elige una vuelta y una referencia y mira dónde está el tiempo."
+  ],
+  "Capture a volta de um piloto melhor para usar de referência.": [
+    "Record a better driver’s lap to use as a reference.",
+    "Graba la vuelta de un piloto mejor para usarla de referencia."
+  ],
+  "Você pode refazer o tour e o assistente quando quiser.": [
+    "You can redo the tour and the assistant whenever you want.",
+    "Puedes repetir el tour y el asistente cuando quieras."
+  ],
+  "concluído": ["done", "completado"],
+  "pulado": ["skipped", "saltado"],
+  "ainda não feito": ["not done yet", "aún sin hacer"],
+  "Uso neste navegador": ["Use in this browser", "Uso en este navegador"],
+  "desde hoje": ["since today", "desde hoy"],
+  "Aberturas do menu ao vivo": ["Live menu openings", "Aperturas del menú de En directo"],
+  "Passos do assistente concluídos": [
+    "Assistant steps completed",
+    "Pasos del asistente completados"
+  ],
+  "Tour do ao vivo": ["Live tour", "Tour de En directo"],
+  "Tour do histórico": ["History tour", "Tour del historial"],
+  "Vezes que um tour foi aberto": ["Times a tour was opened", "Veces que se abrió un tour"],
+  "Disponível quando você parar.": ["Available when you stop.", "Disponible cuando te detengas."]
 }

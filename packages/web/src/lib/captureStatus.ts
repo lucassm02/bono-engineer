@@ -93,7 +93,7 @@ export function describeReferenceCapture(
   r: ReferenceCaptureStatus | null | undefined,
 ): CaptureView | null {
   if (!r || r.state === 'idle') return null;
-  const title = r.hint || uiText('Captura de referência em andamento');
+  const title = r.hint || uiText('Gravação da volta de replay em andamento');
   const base = { title, pulse: false, sessionId: null, reference: true } as const;
   switch (r.state) {
     case 'recording':

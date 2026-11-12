@@ -185,7 +185,7 @@ export function render(ctx) {
 
   <section id="usar" aria-labelledby="h-usar">
     <h2 id="h-usar">Como usar o que o Bono mostra</h2>
-    <h3>Treino de curva, no painel ao vivo</h3>
+    <h3>Treino de curva, no ao vivo</h3>
     <p>Ligue a tela <strong>Treino de curva</strong> (segure a tela e ligue na lista de desligadas). Ela mostra a próxima curva, a distância até a freada da referência, as metas de frenagem, velocidade mínima e retomada e, depois de passar, a última passagem item por item:</p>
     <ul>
       <li><strong>Frenagem:</strong> tolerância de 5 m para mais ou para menos. Freio cedo fica vermelho. Freio tarde é só informação.</li>

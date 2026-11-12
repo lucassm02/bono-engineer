@@ -11,6 +11,7 @@
 import { type Lap, makerOfCar, type ReferenceCaptureStatus, type Track } from '@gt7/shared';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '../../components/ui/Icon.tsx';
+import { humanizeError } from '../../lib/copy.ts';
 import { formatLapTime } from '../../lib/format.ts';
 import { t as uiText } from '../../lib/i18n.ts';
 import { routes } from '../../lib/route.ts';
@@ -260,7 +261,7 @@ function SavedCard({
 // ---------------------------------------------------------------------------------------------
 
 export function CapturePage() {
-  useTitle(uiText('Capturar referência'));
+  useTitle(uiText('Gravar volta de replay'));
   const [driver, setDriver] = useState('');
   const [rankingText, setRankingText] = useState('');
   const [carChoice, setCarChoice] = useState<CarChoice>('auto');
@@ -428,7 +429,7 @@ export function CapturePage() {
       setMyBest(null);
       setPhase('running');
     } catch (e) {
-      setError((e as Error).message);
+      setError(humanizeError(e).text);
     } finally {
       setBusy(false);
     }
@@ -439,7 +440,7 @@ export function CapturePage() {
     try {
       setPolled(await api.stopCapture(true));
     } catch (e) {
-      setError((e as Error).message);
+      setError(humanizeError(e).text);
     } finally {
       setBusy(false);
     }
@@ -462,7 +463,7 @@ export function CapturePage() {
   return (
     <div className="cap-page">
       <PageHead
-        title={uiText('Capturar referência')}
+        title={uiText('Gravar volta de replay')}
         sub={uiText(
           'Assista ao replay de um piloto do topo no jogo e grave a volta dele como referência para o delta ao vivo, a comparação e o coach.',
         )}

@@ -15,6 +15,7 @@ import {
   type ViewId,
 } from '@gt7/shared';
 import { create } from 'zustand';
+import { humanizeError } from '../lib/copy.ts';
 import { getDeviceId, guessDeviceName, loadJson, saveJson } from '../lib/storage.ts';
 
 export type DataSource = 'server' | 'mock';
@@ -120,8 +121,10 @@ export function loadLocalProfile(): DeviceProfile | null {
 let noticeSeq = 0;
 const NOTICE_MAX = 3;
 
-export function addNotice(level: Notice['level'], message: string, ttlMs = 3500): void {
+export function addNotice(level: Notice['level'], rawMessage: string, ttlMs = 3500): void {
   const now = Date.now();
+  // erros técnicos (`Error invoking remote method…`, `Failed to fetch`) viram frase humana
+  const message = level === 'error' ? humanizeError(rawMessage).text : rawMessage;
   const n: Notice = { id: ++noticeSeq, level, message, until: now + ttlMs };
   useUi.setState((s) => ({
     notices: [...s.notices.filter((x) => x.message !== message), n].slice(-NOTICE_MAX),

@@ -6,6 +6,7 @@
 import type { Lap } from '@gt7/shared';
 import { type ReactNode, useMemo, useState } from 'react';
 import { Icon } from '../../components/ui/Icon.tsx';
+import { humanizeError } from '../../lib/copy.ts';
 import { formatDelta, formatLapTime, formatSectorTime } from '../../lib/format.ts';
 import { t as uiText } from '../../lib/i18n.ts';
 import { navigate, routes } from '../../lib/route.ts';
@@ -84,7 +85,7 @@ function ReferenceForm({
           });
           onDone(saved);
         } catch (x) {
-          setErr((x as Error).message);
+          setErr(humanizeError(x).text);
         } finally {
           setBusy(false);
         }
@@ -322,7 +323,9 @@ export function SessionPage({ id }: { id: string }) {
       </div>
 
       {laps.length === 0 ? (
-        <Empty>{uiText('Esta sessão ainda não tem voltas completas.')}</Empty>
+        <Empty action={{ label: uiText('Abrir a tela ao vivo'), href: routes.live() }}>
+          {uiText('Esta sessão ainda não tem voltas completas.')}
+        </Empty>
       ) : (
         <div className="a-table-wrap">
           <table className="a-table a-laps a-table-cards">

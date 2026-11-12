@@ -1,5 +1,5 @@
 /**
- * "Referências capturadas": every saved reference lap grouped by track, with driver, car, time,
+ * "Voltas de referência gravadas": every saved reference lap grouped by track, with driver, car, time,
  * where the time comes from and the date. Rename (driver / car / notes) in place, compare with
  * your best lap and delete with a two-step confirmation.
  */
@@ -201,7 +201,7 @@ export function ReferenceList({
   };
 
   return (
-    <Card title={uiText('Referências capturadas')} className="cap-refs" id="referencias">
+    <Card title={uiText('Voltas de referência gravadas')} className="cap-refs" id="referencias">
       {error && !refs ? (
         <ErrorBox error={error} onRetry={onReload} compact />
       ) : !refs ? (
@@ -209,7 +209,7 @@ export function ReferenceList({
       ) : groups.length === 0 ? (
         <Empty>
           {uiText(
-            'Nenhuma referência ainda. Capture a volta de um replay acima e ela aparece aqui.',
+            'Nenhuma volta de referência ainda. Grave a volta de um replay acima e ela aparece aqui.',
           )}
         </Empty>
       ) : (

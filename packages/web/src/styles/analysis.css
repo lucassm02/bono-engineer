@@ -486,6 +486,29 @@ textarea.a-input {
 .a-error-compact {
   padding: var(--sp-3) var(--sp-4);
 }
+.a-error-detail {
+  margin: var(--sp-2) 0;
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+}
+.a-error-detail summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  cursor: pointer;
+}
+.a-error-detail code {
+  display: block;
+  margin-top: var(--sp-1);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  color: var(--text-3);
+}
+@media (pointer: coarse) {
+  .a-error-detail summary {
+    min-height: var(--tap);
+  }
+}
 .a-empty {
   display: grid;
   justify-items: center;
@@ -1192,7 +1215,7 @@ textarea.a-input {
     backdrop-filter: blur(8px);
   }
   .a-mtop .a-brand {
-    min-width: 0;
+    flex: none; /* a marca não encolhe por baixo dos chips de estado */
   }
   .a-mtop .product-brand img {
     width: 32px;
@@ -1238,7 +1261,7 @@ textarea.a-input {
     padding: 6px 0;
     border: 0;
     background: transparent;
-    font-size: clamp(9.5px, 2.8vw, 11px);
+    font-size: var(--fs-xs); /* mínimo de leitura: 12 px */
     font-weight: 600;
     text-align: center;
   }
@@ -1259,6 +1282,7 @@ textarea.a-input {
     display: block;
     max-width: 100%;
     line-height: 1.1;
+    letter-spacing: -0.02em; /* 7 itens em 375 px: "Comparar" não encosta em "Captura" */
   }
   .a-main {
     grid-column: auto;
@@ -1390,5 +1414,50 @@ textarea.a-input {
   }
   .a-table-cards tbody tr:last-child {
     border-bottom: 1px solid var(--line);
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Toque (spec 01, C3): links e chips da análise ganham alvo de 44 px                              */
+/* ---------------------------------------------------------------------------------------------- */
+@media (pointer: coarse) {
+  .a-brand {
+    min-height: var(--tap);
+  }
+  .a-back,
+  .a-title-edit,
+  .a-hero-source,
+  .a-toplap-when,
+  .ui-chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tap);
+  }
+  /* Botões em forma de link: o texto fica como está, a área de toque cresce por fora. */
+  .a-link-btn {
+    position: relative;
+  }
+  .a-link-btn::after {
+    content: "";
+    position: absolute;
+    inset: -12px -6px;
+  }
+  .a-table .a-link-btn::after,
+  .cmp-table .a-link-btn::after {
+    inset: -8px -6px;
+  }
+  .a-table input[type="checkbox"] {
+    width: 24px;
+    height: 24px;
+    margin: 10px;
+  }
+  .cs-chip,
+  .cx-chip {
+    position: relative;
+  }
+  .cs-chip::before {
+    content: "";
+    position: absolute;
+    inset: calc((var(--tap) - 100%) / -2) -4px;
   }
 }

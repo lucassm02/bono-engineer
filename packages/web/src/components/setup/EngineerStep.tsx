@@ -27,7 +27,7 @@ export function EngineerStep({
   discord,
 }: {
   draft: SetupDraft;
-  /** Starts on unless the previous step chose "Só ver o painel". */
+  /** Starts on unless the previous step chose "Só acompanhar ao vivo". */
   defaultOn: boolean;
   discord: DiscordSetup;
 }) {

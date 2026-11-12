@@ -62,9 +62,11 @@ export function EngineerHudButton() {
       type="button"
       className="engineer-hud-btn"
       data-no-gesture
-      aria-label={uiText('Cartão do rádio')}
+      aria-label={uiText('Cartão do engenheiro')}
       aria-pressed={visible}
-      title={visible ? uiText('Ocultar cartão do rádio') : uiText('Mostrar cartão do rádio')}
+      title={
+        visible ? uiText('Ocultar cartão do engenheiro') : uiText('Mostrar cartão do engenheiro')
+      }
       onClick={toggleEngineerHud}
     >
       <Icon name="radio" />
@@ -236,7 +238,7 @@ function EngineerHud() {
           data-size="sm"
           onClick={toggleMenu}
         >
-          {uiText('Ajustar rádio')}
+          {uiText('Ajustar engenheiro')}
         </button>
       </div>
       <div className="engineer-hud-call">

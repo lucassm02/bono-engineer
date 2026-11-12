@@ -11,6 +11,7 @@ import type {
   CoachToolStatus,
   CoachUsage,
 } from '@gt7/shared';
+import { humanizeError } from '../lib/copy.ts';
 import { getLanguage } from '../lib/i18n.ts';
 import { errorFromResponse, OFFLINE_MESSAGE } from './api.ts';
 import { parseSseJson, readSse } from './lib/sse.ts';
@@ -114,7 +115,7 @@ export async function streamCoach(
       finished = true;
       if ((e as Error).name === 'AbortError' || signal.aborted)
         h.onError('aborted', 'Interrompido.');
-      else h.onError('internal', `A conexão caiu: ${(e as Error).message}`);
+      else h.onError('internal', `A conexão caiu: ${humanizeError(e).text}`);
     }
     return;
   }

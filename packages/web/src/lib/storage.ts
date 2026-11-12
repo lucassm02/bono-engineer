@@ -61,6 +61,6 @@ export function getDeviceId(): string {
 /** Friendly default name from the user agent. */
 export function guessDeviceName(ua: string): string {
   if (/iPad|Tablet/i.test(ua)) return 'Tablet';
-  if (/Android|iPhone|Mobile/i.test(ua)) return 'Dispositivo remoto';
+  if (/Android|iPhone|Mobile/i.test(ua)) return 'Outro aparelho';
   return 'PC';
 }

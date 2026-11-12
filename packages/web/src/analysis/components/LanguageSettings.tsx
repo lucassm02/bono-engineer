@@ -17,7 +17,7 @@ export function LanguageSettings() {
       <div className="cfg-stack">
         <div className="cfg-two">
           <label className="ui-field">
-            <span className="ui-label">{t('Idioma do app e do rádio')}</span>
+            <span className="ui-label">{t('Idioma do app e do engenheiro')}</span>
             <select
               className="ui-select"
               value={language}

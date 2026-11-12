@@ -1,4 +1,5 @@
 import { learnedPopupText } from '@gt7/shared';
+import { noReferenceHint } from '../lib/copy.ts';
 import { deltaTone, formatDelta, formatLapTime, formatSectorTime } from '../lib/format.ts';
 import { t as uiText } from '../lib/i18n.ts';
 import { DELTA_REFERENCE_LABELS } from '../lib/labels.ts';
@@ -57,6 +58,9 @@ export function LapPopup() {
           </span>
         )}
       </div>
+      {ev.deltaMs === null && (
+        <div className="lap-popup-hint">{noReferenceHint(ev.deltaReference)}</div>
+      )}
       <div className="lap-popup-sectors">
         {ev.sectorTimesMs.map((t, i) => (
           <span
