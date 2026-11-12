@@ -157,6 +157,8 @@
 
 .ui-field {
   display: grid;
+  /* Campo esticado pela linha vizinha (ajuda de duas linhas): o conteúdo fica no topo, sem espalhar */
+  align-content: start;
   gap: var(--sp-1);
   min-width: 0;
 }

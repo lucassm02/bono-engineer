@@ -1,11 +1,12 @@
 import { SITE } from '../config.mjs';
+import { heroBackdrop, heroDash, liveChip, motionSection, radioCycle } from '../motion.mjs';
 import { faqHtml, faqLd, ICON_DOWNLOAD, softwareLd } from '../render.mjs';
 
 /** Perguntas da home: o texto puro vira também o FAQPage do JSON-LD. */
 export const FAQ = [
   {
     q: 'O Bono Engineer é grátis?',
-    a: 'É. O Bono é grátis e tem código aberto (licença MIT). Não pede conta, assinatura nem cadastro.',
+    a: 'É. O Bono é grátis para uso pessoal e sem fins lucrativos, e não pede conta, assinatura nem cadastro. O código está disponível, mas não é software livre: a licença (PolyForm Noncommercial 1.0.0) permite estudar, modificar e compartilhar para fins não comerciais, e não permite uso comercial.',
   },
   {
     q: 'Preciso de um PC ou funciona só com o PS5?',
@@ -27,6 +28,14 @@ export const FAQ = [
   {
     q: 'O engenheiro fala português?',
     a: 'Fala. A interface e o rádio têm português do Brasil, inglês e espanhol, com três vozes por idioma. As vozes funcionam sem internet.',
+  },
+  {
+    q: 'Como eu faço backup do meu histórico?',
+    a: 'Em Configurações, Contas e dados, use Exportar backup para gerar um arquivo .bono com sessões, voltas e configurações (nunca chaves nem senhas). Em outro PC, Importar backup soma ao histórico existente ou substitui. Também dá para escolher outra pasta de dados, como uma do OneDrive.',
+  },
+  {
+    q: 'O Bono mostra as corridas diárias do GT7?',
+    a: 'Mostra, se você quiser. Na primeira vez o Bono pergunta se você quer ver as novidades semanais. Se você disser que sim, ele lê as páginas públicas do DG EDGE a partir do seu PC, no máximo uma vez por hora, e mostra regras, tempos de medalha e o tempo do 1º lugar ao lado da sua melhor volta. Não guarda nomes de jogadores e dá para desligar a qualquer momento.',
   },
   {
     q: 'Meus dados vão para algum servidor?',
@@ -52,22 +61,27 @@ export function render(ctx) {
 
   const body = `
 <section class="hero">
+  ${heroBackdrop()}
   <div class="wrap hero-grid">
     <div>
       <h1>Seu engenheiro de pista no Gran Turismo 7</h1>
       <p class="lead">O Bono lê a telemetria do seu PS5, mostra o delta ao vivo e avisa pelo rádio onde frear. Depois da sessão, aponta a curva em que você perdeu tempo.</p>
       <div class="cta-row">
         <a class="btn" href="${SITE.releases}" rel="noopener">${ICON_DOWNLOAD}Baixar para Windows</a>
-        <a class="btn btn-ghost" href="#como-funciona">Ver como funciona</a>
+        <a class="btn btn-ghost" href="#motion">Ver como funciona</a>
       </div>
       <p class="fine">Versão <span class="num">${v}</span>. Grátis, sem conta, para Windows 64 bits.</p>
     </div>
     <figure class="shot">
       ${hero}
-      <div class="radio" aria-hidden="true"><b>Engenheiro, treino</b><span>Freada leve em 100 metros</span></div>
+      ${heroDash(ctx)}
+      ${liveChip('pt-BR')}
+      ${radioCycle('pt-BR')}
     </figure>
   </div>
 </section>
+
+${motionSection(ctx, 'pt-BR')}
 
 <section class="sec" id="o-que-faz" aria-labelledby="h-faz">
   <div class="wrap split">
@@ -87,6 +101,14 @@ export function render(ctx) {
       <li class="row">
         <div><h3>Comparar voltas</h3><p>Sobreponha velocidade, freio e acelerador alinhados por distância e veja em qual curva cada décimo foi embora.</p></div>
         <div class="read loss">+0,024<small>a curva que mais custou, em segundos</small></div>
+      </li>
+      <li class="row">
+        <div><h3>Corridas diárias</h3><p>As três corridas da semana do GT7, com regras, tempos de medalha e o tempo do 1º lugar, ao lado da sua melhor volta na mesma pista. Fica desligado até você aceitar.</p></div>
+        <div class="read acc">3 corridas<small>por semana, com medalhas</small></div>
+      </li>
+      <li class="row">
+        <div><h3>Seus dados, do seu jeito</h3><p>Escolha a pasta onde o histórico fica (até uma do OneDrive) e leve tudo para outro PC com um backup .bono. Chaves e senhas nunca entram no arquivo.</p></div>
+        <div class="read">.bono<small>um arquivo com todo o histórico</small></div>
       </li>
       <li class="row">
         <div><h3>Debrief com IA, se você quiser</h3><p>Depois da sessão, um relatório com as três curvas que mais custaram e uma ação para cada. Usa a sua chave da Anthropic. O resto do Bono funciona sem ela.</p></div>
@@ -109,7 +131,7 @@ export function render(ctx) {
       <li class="sector">
         <span class="tag" aria-hidden="true">S2</span>
         <h3>Pilote</h3>
-        <p>Abra o GT7 e entre numa pista. A tela ao vivo acende, o engenheiro fala e cada volta é gravada com setores, validade e traços de telemetria.</p>
+        <p>Abra o GT7 e entre numa pista. A tela ao vivo acende, o engenheiro fala e cada volta é gravada com setores, validade e traços de telemetria. Um tour guiado e a Central de ajuda explicam cada tela.</p>
         <p><a href="${ctx.rel('discord')}">Ouvir no headset do PS5</a></p>
       </li>
       <li class="sector">
@@ -150,8 +172,8 @@ export function render(ctx) {
       <p>Sem conta, sem login, sem servidor do Bono.</p>
     </div>
     <dl class="facts">
-      <div><dt>Tudo local</dt><dd>Sessões, voltas, traços e gravações ficam numa pasta do seu PC. Copie, apague ou leve para outro computador quando quiser.</dd></div>
-      <div><dt>Só sai o que você liga</dt><dd>A rede é usada para falar com o PS5, para o rádio no Discord e para o Debrief com IA. Os dois últimos ficam desligados até você configurar.</dd></div>
+      <div><dt>Tudo local</dt><dd>Sessões, voltas, traços e gravações ficam numa pasta do seu PC, que você pode trocar. Exporte um backup .bono, apague ou leve para outro computador quando quiser.</dd></div>
+      <div><dt>Só sai o que você liga</dt><dd>A rede é usada para falar com o PS5, para o rádio no Discord, para o Debrief com IA e para as corridas diárias. Os três últimos ficam desligados até você configurar ou aceitar.</dd></div>
       <div><dt>Token protegido</dt><dd>O token do bot do Discord é guardado com a criptografia do Windows e não volta para a tela.</dd></div>
       <div><dt>Este site também</dt><dd>Sem cookies, sem analytics e sem fontes carregadas de fora.</dd></div>
     </dl>

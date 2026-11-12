@@ -44,7 +44,6 @@
     box-shadow: var(--shadow-2);
   }
   .a-phone-card > a {
-    padding-right: var(--sp-6);
     font-weight: 650;
     font-size: var(--fs-sm);
   }
@@ -60,13 +59,6 @@
     margin: 0;
     color: var(--text-2);
     font-size: var(--fs-xs);
-  }
-  .ui-icon-btn.a-phone-dismiss {
-    position: absolute;
-    top: var(--sp-1);
-    right: var(--sp-1);
-    width: 28px;
-    height: 28px;
   }
 }
 .a-hero h1 {

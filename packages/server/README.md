@@ -30,6 +30,24 @@ Os tipos de requisição/resposta ficam em `@gt7/shared` (`ws.ts`, `api.ts`, `co
 | GET / POST | `/api/firewall`, `/api/firewall/check` | `FirewallStatus` |
 | GET | `/api/lan` | `LanInfo` (URLs da LAN + QR em SVG) |
 
+### Dados e backup (`/api/data`)
+
+| Método | Rota | Resposta |
+|---|---|---|
+| GET | `/api/data/summary` | Pasta de dados, tamanhos e contagens (sessões, voltas, pistas) |
+| GET | `/api/data/export?laps=&settings=&recordings=` | Baixa um backup `.bono` (zip com `manifest.json`, `data/sessions.db` e os traços). Nunca leva chave, token nem senha |
+| POST | `/api/data/import` | Corpo cru (`application/octet-stream`): guarda o envio e responde com o conteúdo do backup |
+| POST | `/api/data/import/:id/apply` | `{ mode: 'merge' ou 'replace', settings }`. `replace` faz antes um backup de segurança e é recusado com uma sessão ao vivo aberta |
+| DELETE | `/api/data/import/:id` | Descarta o envio |
+
+### Corridas diárias (`/api/events`)
+
+| Método | Rota | Resposta |
+|---|---|---|
+| GET | `/api/events/dailies` | `ApiDailyRaces`: as três corridas da semana, semanas anteriores, `enabled` e `asked`. Só busca no DG EDGE se o usuário ligou (desligado por padrão) |
+| POST | `/api/events/dailies/refresh` | Atualização manual (recusada por 10 minutos depois de qualquer tentativa) |
+| PUT | `/api/events/dailies/enabled` | `{ enabled: boolean }`: responde à pergunta única e liga ou desliga a busca |
+
 ### Sessões, voltas, pistas, dispositivos, captura
 
 | Método | Rota | Resposta |

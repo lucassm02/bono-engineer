@@ -9,6 +9,7 @@ import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { NOT_FOUND, PAGES, pageUrl, ROOT_DIR, SITE, SITE_DIR } from './config.mjs';
+import { MOTION_DIR, MOTION_FILES } from './motion.mjs';
 import { renderOg } from './og.mjs';
 import { checkAssets, htmlDocument, makeCtx } from './render.mjs';
 
@@ -75,6 +76,14 @@ export async function build({ out = DEFAULT_OUT, og = true } = {}) {
 
   // Arquivos estáticos
   cpSync(join(SITE_DIR, 'assets', 'shots'), join(out, 'assets', 'shots'), { recursive: true });
+  // Vídeo curto opcional (site/assets/motion/bono-explainer.webm|mp4 + poster): só os arquivos de mídia.
+  for (const file of Object.values(MOTION_FILES)) {
+    const from = join(MOTION_DIR, file);
+    if (existsSync(from)) {
+      mkdirSync(join(out, 'assets', 'motion'), { recursive: true });
+      cpSync(from, join(out, 'assets', 'motion', file));
+    }
+  }
   const pub = join(ROOT_DIR, 'packages', 'web', 'public');
   cpSync(join(pub, 'favicon.svg'), join(out, 'favicon.svg'));
   cpSync(join(pub, 'apple-touch-icon.png'), join(out, 'apple-touch-icon.png'));

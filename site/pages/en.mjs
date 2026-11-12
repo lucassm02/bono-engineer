@@ -1,10 +1,11 @@
 import { SITE } from '../config.mjs';
+import { heroBackdrop, heroDash, liveChip, motionSection, radioCycle } from '../motion.mjs';
 import { faqHtml, faqLd, ICON_DOWNLOAD, softwareLd } from '../render.mjs';
 
 export const FAQ_EN = [
   {
     q: 'Is Bono Engineer free?',
-    a: 'Yes. Bono is free and open source under the MIT license. There is no account, subscription or sign-up.',
+    a: 'Yes. Bono is free for personal, noncommercial use, with no account, subscription or sign-up. The source code is available but is not open source: the license (PolyForm Noncommercial 1.0.0) allows studying, changing and sharing it for noncommercial purposes, and does not allow commercial use.',
   },
   {
     q: 'Do I need a PC, or does it work with just the PS5?',
@@ -23,6 +24,14 @@ export const FAQ_EN = [
     a: 'Yes. The interface and the radio come in Brazilian Portuguese, English and Spanish, with three offline neural voices per language. Pick the language in Settings.',
   },
   {
+    q: 'How do I back up my history?',
+    a: 'In Settings, Accounts and data, use Export backup to create a .bono file with sessions, laps and settings (never keys or passwords). On another PC, Import backup adds it to the existing history or replaces it. You can also pick another data folder, such as a OneDrive one.',
+  },
+  {
+    q: 'Does Bono show the GT7 Daily Races?',
+    a: 'It does, if you want it. The first time, Bono asks whether you want the weekly news. If you say yes, it reads the public pages of DG EDGE from your PC, at most once an hour, and shows the rules, medal times and the 1st place time next to your best lap. It stores no player names and you can turn it off at any time.',
+  },
+  {
     q: 'Where does my data go?',
     a: 'Nowhere. Sessions, laps and recordings stay in a folder on your PC, and Bono has no server or account. Discord radio and the optional AI debrief use the internet only if you turn them on, and the debrief uses your own Anthropic key.',
   },
@@ -37,22 +46,27 @@ export function render(ctx) {
   );
   const body = `
 <section class="hero">
+  ${heroBackdrop()}
   <div class="wrap hero-grid">
     <div>
       <h1>Your race engineer for Gran Turismo 7</h1>
       <p class="lead">Bono reads the telemetry from your PS5, shows the live delta and tells you over the radio where to brake. After the session, it points to the corner where you lost time.</p>
       <div class="cta-row">
         <a class="btn" href="${SITE.releases}" rel="noopener">${ICON_DOWNLOAD}Download for Windows</a>
-        <a class="btn btn-ghost" href="#how-it-works">How it works</a>
+        <a class="btn btn-ghost" href="#motion">How it works</a>
       </div>
       <p class="fine">Version <span class="num">${v}</span>. Free, no account, Windows 64-bit. The app interface is available in English.</p>
     </div>
     <figure class="shot">
       ${hero}
-      <div class="radio" aria-hidden="true"><b>Engineer, practice</b><span>Light braking in 100 metres</span></div>
+      ${heroDash(ctx)}
+      ${liveChip('en')}
+      ${radioCycle('en')}
     </figure>
   </div>
 </section>
+
+${motionSection(ctx, 'en')}
 
 <section class="sec" id="what-it-does" aria-labelledby="h-does">
   <div class="wrap split">
@@ -74,6 +88,14 @@ export function render(ctx) {
         <div class="read loss">+0.024<small>the costliest corner, in seconds</small></div>
       </li>
       <li class="row">
+        <div><h3>Daily Races</h3><p>The three GT7 races of the week, with the rules, medal times and the 1st place time next to your best lap on the same track. Off until you accept.</p></div>
+        <div class="read acc">3 races<small>a week, with medals</small></div>
+      </li>
+      <li class="row">
+        <div><h3>Your data, your way</h3><p>Pick the folder where your history lives (even a OneDrive one) and move it to another PC with a .bono backup. Keys and passwords never go in the file.</p></div>
+        <div class="read">.bono<small>one file with your whole history</small></div>
+      </li>
+      <li class="row">
         <div><h3>Optional AI debrief</h3><p>A post-session report with the three costliest corners and one action for each. It uses your own Anthropic key. Everything else works without it.</p></div>
         <div class="read">3 corners<small>one action each</small></div>
       </li>
@@ -86,7 +108,7 @@ export function render(ctx) {
     <h2 id="h-how">Connect, drive, analyse</h2>
     <ol class="sectors">
       <li class="sector"><span class="tag" aria-hidden="true">S1</span><h3>Connect the PS5</h3><p>Install Bono on a PC on the same network as the console. It finds the PS5 by itself and a first-run assistant guides you.</p></li>
-      <li class="sector"><span class="tag" aria-hidden="true">S2</span><h3>Drive</h3><p>Open GT7 and enter a track. The Live screen lights up, the engineer talks and every lap is recorded with sectors, validity and telemetry traces.</p></li>
+      <li class="sector"><span class="tag" aria-hidden="true">S2</span><h3>Drive</h3><p>Open GT7 and enter a track. The Live screen lights up, the engineer talks and every lap is recorded with sectors, validity and telemetry traces. A guided tour and a Help center explain each screen.</p></li>
       <li class="sector"><span class="tag" aria-hidden="true">S3</span><h3>Analyse</h3><p>Compare with your best lap or a top replay, see where the time went and practise one corner at a time.</p></li>
     </ol>
   </div>
@@ -120,8 +142,8 @@ export function render(ctx) {
       <p>No account, no login, no Bono server.</p>
     </div>
     <dl class="facts">
-      <div><dt>Local by default</dt><dd>Sessions, laps, traces and recordings live in a folder on your PC. Copy, delete or move them whenever you like.</dd></div>
-      <div><dt>Only what you switch on</dt><dd>The network is used to talk to the PS5, for Discord radio and for the AI debrief. The last two stay off until you set them up.</dd></div>
+      <div><dt>Local by default</dt><dd>Sessions, laps, traces and recordings live in a folder on your PC, which you can change. Export a .bono backup, delete or move them whenever you like.</dd></div>
+      <div><dt>Only what you switch on</dt><dd>The network is used to talk to the PS5, for Discord radio, for the AI debrief and for the Daily Races. The last three stay off until you set them up or accept.</dd></div>
       <div><dt>This site too</dt><dd>No cookies, no analytics and no external fonts.</dd></div>
     </dl>
   </div>

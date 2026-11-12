@@ -7,6 +7,25 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-12
+
+<!-- release-notes-since: 0.1.0 -->
+
+### Added
+
+- Added a 15-second animated film to the site (Portuguese and English) that explains how Bono works in five scenes, with a pause control, and a reserved place for a short silent video (`site/assets/motion`).
+- Animated the site hero: a drawn track with a light comet, the rev lights that fill and flash at the shift, the gear going up, the speed and live delta changing, rotating radio calls, and entrance and scroll effects. Everything stops with "reduce motion" and the page needs no JavaScript.
+
+### Changed
+
+- **Changed the license** of new versions from MIT to the [PolyForm Noncommercial License 1.0.0](LICENSE): the source stays available and the app stays free, and anyone can read, use, change and share it for noncommercial purposes, but commercial use is not allowed. Contributions are welcome under the terms in [CONTRIBUTING.md](CONTRIBUTING.md). Versions up to 0.3.1 remain under the MIT License for everyone who received them.
+- The "Open on your phone" QR code on Home no longer has a close button: it stays in place, since it does not get in the way.
+- Brought the English and Portuguese READMEs, the site, and the server and MCP docs up to date with the guided start and Help center, Daily Races, data folder and `.bono` backups, the Discord wizard, and the current Settings names.
+
+### Fixed
+
+- Fixed the ranking time and driver fields in the replay capture sitting at different heights when one of the help texts took two lines.
+
 ## [0.3.1] - 2026-11-12
 
 <!-- release-notes-since: 0.1.0 -->
@@ -133,7 +152,8 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Added replay reference capture, distance-aligned lap comparisons, synchronized telemetry charts, consistency and progress analysis, and data exports.
 - Added the driving guide, an Anthropic-powered AI debrief, and MCP tools for telemetry, laps, sessions, tracks, comparisons, and PNG charts.
 
-[Unreleased]: https://github.com/lucassm02/bono-engineer/compare/v0.3.1...main
+[Unreleased]: https://github.com/lucassm02/bono-engineer/compare/v0.4.0...main
+[0.4.0]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.4.0
 [0.3.1]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.3.1
 [0.3.0]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.3.0
 [0.2.0]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.2.0

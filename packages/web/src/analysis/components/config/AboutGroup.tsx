@@ -138,7 +138,9 @@ export function AboutGroup({ status }: { status: ApiStatus }) {
           {status.tokenRequired ? uiText(' · acesso com senha (token)') : ''}
         </p>
         <p className="cfg-hint">
-          {uiText('O Bono é software livre (licença MIT).')}{' '}
+          {uiText(
+            'O código do Bono está disponível (licença PolyForm Noncommercial 1.0.0): uso e modificação só para fins não comerciais.',
+          )}{' '}
           {uiText('— dados: gt7info, gt7-datalogger-track-data e gt-telemetry (licenças livres).')}
         </p>
       </Advanced>

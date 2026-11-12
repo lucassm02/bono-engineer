@@ -75,7 +75,8 @@ export function inlineCss() {
     'utf8',
   );
   const site = readFileSync(join(SITE_DIR, 'styles', 'site.css'), 'utf8');
-  cssCache = `${tokens}\n${site}`
+  const motion = readFileSync(join(SITE_DIR, 'styles', 'motion.css'), 'utf8');
+  cssCache = `${tokens}\n${site}\n${motion}`
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/\s+/g, ' ')
     .replace(/\s*([{};,>])\s*/g, '$1')
@@ -176,7 +177,7 @@ function footer(page, ctx) {
     return `<footer class="foot">
   <div class="wrap">
     <div class="foot-grid">
-      <div><p><strong>Bono Engineer</strong> is a free race engineer for Gran Turismo 7 on PlayStation. Open source under the MIT license.</p></div>
+      <div><p><strong>Bono Engineer</strong> is a free race engineer for Gran Turismo 7 on PlayStation. Source available under the PolyForm Noncommercial License 1.0.0 (noncommercial use).</p></div>
       <div><h2>Project</h2><ul><li><a href="${SITE.repo}" rel="noopener">Source on GitHub</a></li><li><a href="${SITE.releases}" rel="noopener">Releases</a></li><li><a href="${SITE.repo}/blob/main/CHANGELOG.md" rel="noopener">Changelog</a></li></ul></div>
       <div><h2>Site</h2><ul><li><a href="${ctx.rel('home')}" lang="pt-BR" hreflang="pt-BR">Português (Brasil)</a></li><li><a href="${ctx.rel('guia')}" lang="pt-BR" hreflang="pt-BR">Driving guide (pt-BR)</a></li></ul></div>
     </div>
@@ -187,7 +188,7 @@ function footer(page, ctx) {
   return `<footer class="foot">
   <div class="wrap">
     <div class="foot-grid">
-      <div><p><strong>Bono Engineer</strong> é um engenheiro de pista grátis para Gran Turismo 7 no PlayStation. Código aberto, licença MIT.</p></div>
+      <div><p><strong>Bono Engineer</strong> é um engenheiro de pista grátis para Gran Turismo 7 no PlayStation. Código disponível sob a licença PolyForm Noncommercial 1.0.0 (uso não comercial).</p></div>
       <div><h2>No site</h2><ul><li><a href="${ctx.rel('instalar')}">Como instalar</a></li><li><a href="${ctx.rel('discord')}">Rádio no Discord</a></li><li><a href="${ctx.rel('guia')}">Guia de pilotagem</a></li><li><a href="${ctx.rel('en')}" lang="en" hreflang="en">English</a></li></ul></div>
       <div><h2>Projeto</h2><ul><li><a href="${SITE.repo}" rel="noopener">Código no GitHub</a></li><li><a href="${SITE.releases}" rel="noopener">Versões para baixar</a></li><li><a href="${SITE.repo}/blob/main/CHANGELOG.md" rel="noopener">Histórico de versões</a></li></ul></div>
     </div>
@@ -228,7 +229,7 @@ export function softwareLd(page) {
     url: pageUrl(page),
     downloadUrl: SITE.releases,
     inLanguage: ['pt-BR', 'en', 'es'],
-    license: 'https://opensource.org/licenses/MIT',
+    license: 'https://polyformproject.org/licenses/noncommercial/1.0.0',
     image: `${SITE.origin}${SITE.base}/assets/og/${page.id}.png`,
     screenshot: `${SITE.origin}${SITE.base}/assets/shots/ao-vivo.png`,
     author: { '@type': 'Person', name: SITE.author },

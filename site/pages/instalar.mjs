@@ -44,7 +44,7 @@ New-NetFirewallRule -DisplayName 'Bono Engineer (acesso remoto)' -Direction Inbo
     <li>
       <h3>Conecte o PS5</h3>
       <p>Siga o assistente de primeira execução, abra o GT7 no PS5 e entre numa pista. No Bono, abra <strong>Ao vivo</strong>: a tela acende assim que os dados chegam.</p>
-      <p>Se a busca automática não achar o console, abra <strong>Configurações</strong>, depois <strong>Integração de telemetria</strong>, clique em <strong>Usar outro IP</strong> e digite o IP do PS5. Você acha o IP nas configurações de rede do console.</p>
+      <p>Se a busca automática não achar o console, abra <strong>Configurações</strong>, depois <strong>Console</strong>, clique em <strong>Usar outro IP</strong> (nas opções avançadas) e digite o IP do PS5. Você acha o IP nas configurações de rede do console.</p>
     </li>
     <li>
       <h3>Abra o ao vivo no celular ou no tablet</h3>
@@ -70,7 +70,7 @@ New-NetFirewallRule -DisplayName 'Bono Engineer (acesso remoto)' -Direction Inbo
   </div>
 
   <h2>Onde ficam os seus dados</h2>
-  <p>O histórico, os traços e as gravações ficam em <code>%APPDATA%\\Bono Engineer</code>. Para fazer backup, feche o Bono e copie a pasta inteira. As configurações da janela e os logs ficam em <code>%LOCALAPPDATA%\\Bono Engineer</code>.</p>
+  <p>O histórico, os traços e as gravações ficam em <code>%APPDATA%\\Bono Engineer</code>. No app para Windows, dá para escolher outra pasta em <strong>Configurações → Contas e dados → Pasta dos dados</strong> (até uma do OneDrive). Para fazer backup, use <strong>Exportar backup</strong> no mesmo lugar, que gera um arquivo <code>.bono</code>; <strong>Importar backup</strong> leva o histórico para outro PC. Também dá para fechar o Bono e copiar a pasta inteira. As configurações da janela e os logs ficam em <code>%LOCALAPPDATA%\\Bono Engineer</code>.</p>
 
   <h2>E depois de instalar</h2>
   <ul>

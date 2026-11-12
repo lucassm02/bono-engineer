@@ -14,7 +14,7 @@ Dois transportes:
 
 ## App instalado (Bono Engineer.exe)
 
-O jeito mais fácil: abra o app em **Configurações → Integração com IA** e copie o trecho, que já vem
+O jeito mais fácil: abra o app em **Configurações → Contas e dados → Conectar ao Claude ou ao Codex** e copie o trecho, que já vem
 com os caminhos desta instalação. O app instalado não tem o repositório nem o `tsx`: o servidor stdio
 vai empacotado como `resources\app.asar\dist\mcp-stdio.cjs` e o próprio executável o roda como Node
 graças a `ELECTRON_RUN_AS_NODE=1` (sem essa variável o .exe abriria outra janela do app):
@@ -107,7 +107,7 @@ ferramentas** (cliente MCP em memória) e os mesmos textos dos prompts (`COACH_P
 ## Codex (Streamable HTTP)
 
 Mantenha o Bono Engineer aberto. Adicione este bloco a `~/.codex/config.toml` e reinicie o Codex.
-Em **Configurações › Integração com IA**, o app oferece um bloco copiável com a porta desta instalação.
+Em **Configurações › Contas e dados › Conectar ao Claude ou ao Codex**, o app oferece um bloco copiável com a porta desta instalação.
 
 ```toml
 [mcp_servers.bono]

@@ -246,3 +246,56 @@ describe('versão', () => {
     assert.ok(/SmartScreen/.test(home));
   });
 });
+
+describe('motion e herói animado', () => {
+  const home = () => PAGES.find((p) => p.id === 'home');
+  const en = () => PAGES.find((p) => p.id === 'en');
+
+  it('a home e a página em inglês trazem o filme de 15 s, com título, descrição e pausa', () => {
+    for (const [page, title, pause] of [
+      [home(), 'Como o Bono funciona, em 15 segundos', 'Pausar a animação'],
+      [en(), 'How Bono works, in 15 seconds', 'Pause the animation'],
+    ]) {
+      const html = htmlOf(page);
+      assert.ok(html.includes('id="motion"'), `${page.id}: seção do motion`);
+      assert.ok(html.includes(`<title id="m-t">${title}</title>`), `${page.id}: título do SVG`);
+      assert.ok(html.includes('id="m-d"'), `${page.id}: descrição do SVG`);
+      assert.ok(html.includes(pause), `${page.id}: controle de pausa`);
+      assert.equal((html.match(/class="m-sc"/g) ?? []).length, 5, `${page.id}: cinco cenas`);
+      assert.ok(!/<video/.test(html), `${page.id}: sem vídeo enquanto não há arquivo`);
+    }
+  });
+
+  it('o herói tem fundo animado, faixa ao vivo, rádio alternado e os números vivos', () => {
+    for (const page of [home(), en()]) {
+      const html = htmlOf(page);
+      for (const cls of ['hero-fx', 'live-chip', 'radio-cycle', 'fx-rpm', 'fx-gear', 'fx-speed']) {
+        assert.ok(html.includes(`class="${cls}`), `${page.id}: ${cls}`);
+      }
+      assert.equal((html.match(/class="radio" style="--i:/g) ?? []).length, 3);
+    }
+  });
+
+  it('o CSS respeita prefers-reduced-motion e não depende de JavaScript', () => {
+    const html = htmlOf(home());
+    assert.ok(/prefers-reduced-motion:reduce/.test(html));
+    assert.ok(!/<script(?![^>]*ld\+json)/.test(html), 'nenhum script além do JSON-LD');
+  });
+
+  it('com um vídeo em site/assets/motion, o site usa o vídeo no lugar do filme', async () => {
+    const { mkdtempSync: mk, writeFileSync: wf } = await import('node:fs');
+    const dir = mk(join(tmpdir(), 'bono-motion-'));
+    try {
+      wf(join(dir, 'bono-explainer.webm'), 'x');
+      const { motionMedia } = await import('./motion.mjs');
+      const html = motionMedia({ asset: (p) => `/${p}` }, 'pt-BR', dir);
+      assert.match(html, /<video[^>]+autoplay[^>]+muted[^>]+loop/);
+      assert.ok(html.includes('src="/assets/motion/bono-explainer.webm"'));
+      assert.ok(!html.includes('type="video/mp4"'));
+      const none = motionMedia({ asset: (p) => `/${p}` }, 'pt-BR', join(dir, 'vazio'));
+      assert.ok(!none.includes('<video'));
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});

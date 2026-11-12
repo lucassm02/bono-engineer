@@ -1,0 +1,1264 @@
+/*
+ * Movimento do site: o filme do Bono (SVG, 15 s em loop), o herói animado e as entradas ao rolar.
+ * Tudo é CSS: sem JavaScript. Regra de ouro: o estilo base de cada elemento é o estado FINAL
+ * (visível); as animações só partem de "escondido". Assim, com prefers-reduced-motion ou num
+ * navegador sem suporte, a página aparece completa e parada.
+ *
+ * O filme tem um ciclo de 15 s e cinco cenas de 3 s. Cada cena (.m-sc) recebe o seu atraso em --d;
+ * os elementos de dentro somam um deslocamento --o e voltam ao estado escondido no fim da janela
+ * (19,5% do ciclo), para o próximo loop começar limpo.
+ */
+
+/* ---- Filme --------------------------------------------------------------------------------- */
+.motion {
+  margin: var(--sp-6) 0 0;
+}
+.m-wrap {
+  display: flex;
+  flex-direction: column;
+}
+.m-wrap > .m-stage {
+  order: 1;
+}
+.m-wrap > .m-caps {
+  order: 2;
+}
+.m-stage,
+.m-video {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--surface-0);
+  box-shadow: var(--shadow-3);
+}
+.m-pause-input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+.m-pause-btn {
+  order: 3;
+  align-self: flex-end;
+  margin-top: var(--sp-3);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 44px;
+  padding: 0 var(--sp-4);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--text-2);
+  font: 600 0.875rem / 1 var(--font-ui);
+  cursor: pointer;
+  opacity: 0.85;
+  transition:
+    opacity 0.2s var(--ease),
+    border-color 0.2s var(--ease);
+}
+.m-pause-btn::before {
+  content: "❚❚";
+  font-size: 0.7rem;
+  letter-spacing: -0.15em;
+  color: var(--accent);
+}
+.m-pause-btn:hover,
+.m-pause-input:focus-visible + .m-pause-btn {
+  opacity: 1;
+  border-color: var(--accent-line);
+}
+.m-pause-input:focus-visible + .m-pause-btn {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.m-pause-input:checked + .m-pause-btn {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+.m-pause-input:checked + .m-pause-btn::before {
+  content: "▶";
+  letter-spacing: 0;
+}
+.m-pause-input:checked ~ .m-stage,
+.m-pause-input:checked ~ .m-stage * {
+  animation-play-state: paused;
+}
+
+/* Quadro base */
+.m-bg {
+  fill: var(--surface-0);
+}
+.m-gridline {
+  fill: none;
+  stroke: var(--line-soft);
+  stroke-width: 1;
+}
+.m-halo {
+  animation: m-pulse 6s ease-in-out infinite alternate;
+}
+.m-brand {
+  fill: var(--text);
+  font: 700 28px var(--font);
+  letter-spacing: 0.02em;
+}
+.m-dot {
+  fill: var(--line-strong);
+  animation: m-dotlit 15s linear infinite;
+  animation-delay: var(--d);
+}
+.m-prog-track {
+  fill: var(--line-soft);
+}
+.m-prog {
+  fill: var(--accent);
+  transform-box: fill-box;
+  transform-origin: left center;
+  animation: m-bar 15s linear infinite;
+}
+
+/* Cenas */
+.m-sc {
+  opacity: 0;
+  animation: m-sc 15s linear infinite both;
+  animation-delay: var(--d);
+}
+.m-cap {
+  fill: var(--text);
+  font: 700 46px var(--font);
+}
+.m-sub {
+  fill: var(--text-2);
+  font: 400 24px var(--font-ui);
+}
+.m-panel {
+  fill: var(--surface-2);
+  stroke: var(--line);
+  stroke-width: 1.5;
+}
+.m-strong {
+  stroke: var(--line-strong);
+}
+.m-label {
+  fill: var(--text-3);
+  font: 600 20px var(--font);
+  letter-spacing: 0.12em;
+}
+.m-label-c {
+  font-size: 17px;
+  letter-spacing: 0.06em;
+}
+.m-num {
+  fill: var(--text);
+  font-family: var(--font);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.m-num.is-loss {
+  fill: var(--loss);
+}
+.m-num.is-gain {
+  fill: var(--gain);
+}
+.m-num.is-purple {
+  fill: var(--purple);
+}
+.m-num.is-warn {
+  fill: var(--warn);
+}
+.m-title-s {
+  fill: var(--text);
+  font: 700 30px var(--font);
+  letter-spacing: 0.02em;
+}
+
+/* Efeitos de entrada (o deslocamento --o escolhe o momento dentro da cena) */
+.m-in {
+  animation: m-in 15s var(--ease) infinite both;
+  animation-delay: calc(var(--d) + var(--o, 0s));
+}
+.m-pop {
+  animation: m-pop 15s var(--ease) infinite both;
+  animation-delay: calc(var(--d) + var(--o, 0s));
+}
+.m-col {
+  animation: m-col 15s steps(1, end) infinite both;
+  animation-delay: calc(var(--d) + var(--o, 0s));
+}
+
+/* Cena 1: PS5 e PC */
+.m-shell {
+  fill: var(--surface-3);
+  stroke: var(--line-strong);
+  stroke-width: 2;
+}
+.m-acc-fill {
+  fill: var(--accent);
+  opacity: 0.85;
+}
+.m-ring {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 3;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: m-ring 15s ease-out infinite both;
+  animation-delay: calc(var(--d) + var(--o, 0s));
+}
+.m-link {
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-width: 3;
+  stroke-dasharray: 3 12;
+  stroke-linecap: round;
+}
+.m-pkt {
+  fill: var(--accent);
+  opacity: 0;
+  offset-path: path("M290 340 C400 260 540 420 660 340");
+  offset-rotate: 0deg;
+  filter: drop-shadow(0 0 6px var(--accent));
+  animation: m-pkt 15s linear infinite both;
+  animation-delay: calc(var(--d) + var(--o, 0s));
+}
+.m-screen {
+  fill: var(--surface-0);
+  stroke: var(--line);
+}
+.m-ok {
+  fill: var(--gain-soft);
+  stroke: var(--gain);
+}
+.m-ok-t {
+  fill: var(--gain);
+  font: 700 18px var(--font);
+}
+
+/* Cena 2: tela ao vivo */
+.m-bartrack {
+  fill: var(--surface-4);
+}
+.m-bar-loss,
+.m-bar-gain,
+.m-bar-speed {
+  transform-box: fill-box;
+  animation-duration: 15s;
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+  animation-delay: var(--d);
+}
+.m-bar-loss {
+  fill: var(--loss);
+  transform-origin: left center;
+  animation-name: m-delta-loss;
+  animation-timing-function: ease-in-out;
+}
+.m-bar-gain {
+  fill: var(--gain);
+  transform-origin: right center;
+  animation-name: m-delta-gain;
+  animation-timing-function: ease-out;
+}
+.m-bar-speed {
+  fill: var(--accent);
+  transform-origin: left center;
+  animation-name: m-speed;
+  animation-timing-function: ease-in-out;
+}
+.m-road {
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-width: 14;
+  stroke-linejoin: round;
+}
+.m-trace {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  animation: m-trace 15s linear infinite both;
+  animation-delay: calc(var(--d) + var(--o, 0s));
+}
+.m-car {
+  fill: var(--text);
+  filter: drop-shadow(0 0 8px var(--accent));
+  offset-path: path(
+    "M40 150 C40 60 140 30 220 50 S330 40 320 120 C312 190 250 200 220 170 S150 150 120 200 C90 240 40 220 40 150Z"
+  );
+  offset-distance: 0%;
+  animation: m-ride 15s linear infinite both;
+  animation-delay: var(--d);
+}
+
+/* Cena 3: rádio */
+.m-road2 {
+  fill: var(--surface-2);
+  stroke: var(--line);
+}
+.m-tick {
+  stroke: var(--line-strong);
+  stroke-width: 2;
+  stroke-dasharray: 4 6;
+}
+.m-brakezone {
+  fill: var(--loss-soft);
+  stroke: var(--loss);
+  stroke-width: 2;
+}
+.m-drive {
+  animation: m-drive 15s cubic-bezier(0.4, 0, 0.6, 1) infinite both;
+  animation-delay: var(--d);
+}
+.m-car2 {
+  fill: var(--accent);
+}
+.m-radio {
+  fill: var(--text);
+  font: 700 44px var(--font);
+}
+.m-word {
+  animation: m-fill 15s linear infinite both;
+  animation-delay: calc(var(--d) + var(--o, 0s));
+}
+.m-wave {
+  fill: var(--accent);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: m-wave 0.55s ease-in-out infinite alternate;
+}
+.m-pill {
+  fill: var(--surface-3);
+  stroke: var(--line);
+}
+.m-pill-acc {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+}
+.m-pill-t {
+  fill: var(--text);
+  font: 600 20px var(--font-ui);
+}
+.m-arrow {
+  fill: none;
+  stroke: var(--accent-dim);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Cena 4: comparação */
+.m-axes line {
+  stroke: var(--line-strong);
+  stroke-width: 2;
+}
+.m-loss-zone {
+  fill: var(--loss-soft);
+  stroke: var(--loss);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 6;
+}
+.m-curve-you,
+.m-curve-ref {
+  fill: none;
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  animation: m-draw 15s ease-in-out infinite both;
+  animation-delay: calc(var(--d) + var(--o, 0s));
+}
+.m-curve-you {
+  stroke: var(--accent);
+}
+.m-curve-ref {
+  stroke: var(--purple);
+}
+.m-badge {
+  fill: var(--loss-soft);
+  stroke: var(--loss);
+}
+.m-badge-t {
+  fill: var(--loss);
+  font: 700 20px var(--font);
+}
+.m-key-you {
+  fill: var(--accent);
+}
+.m-key-ref {
+  fill: var(--purple);
+}
+.m-loss-seg {
+  fill: none;
+  stroke: var(--loss);
+  stroke-width: 14;
+  stroke-linecap: round;
+  stroke-dasharray: 0.14 1;
+  stroke-dashoffset: -0.38;
+  animation: m-fade 15s linear infinite both;
+  animation-delay: calc(var(--d) + var(--o, 0s));
+}
+
+/* Cena 5: fechamento */
+.m-glow {
+  fill: url(#m-glow);
+}
+
+/* ---- Quadro: keyframes --------------------------------------------------------------------- */
+@keyframes m-pulse {
+  from {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes m-bar {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes m-dotlit {
+  0%,
+  19.9% {
+    fill: var(--accent);
+  }
+  20%,
+  100% {
+    fill: var(--line-strong);
+  }
+}
+@keyframes m-sc {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  2.5% {
+    opacity: 1;
+    transform: none;
+  }
+  17.5% {
+    opacity: 1;
+    transform: none;
+  }
+  20% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes m-in {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  2.5% {
+    opacity: 1;
+    transform: none;
+  }
+  19.4% {
+    opacity: 1;
+    transform: none;
+  }
+  19.5%,
+  100% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+@keyframes m-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  2% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+  3.5% {
+    transform: scale(1);
+  }
+  19.4% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  19.5%,
+  100% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+}
+@keyframes m-fade {
+  0% {
+    opacity: 0;
+  }
+  2.5% {
+    opacity: 1;
+  }
+  19.4% {
+    opacity: 1;
+  }
+  19.5%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes m-fill {
+  0% {
+    fill-opacity: 0;
+  }
+  1.5% {
+    fill-opacity: 1;
+  }
+  19.4% {
+    fill-opacity: 1;
+  }
+  19.5%,
+  100% {
+    fill-opacity: 0;
+  }
+}
+@keyframes m-draw {
+  0% {
+    stroke-dashoffset: 1;
+  }
+  9% {
+    stroke-dashoffset: 0;
+  }
+  19.4% {
+    stroke-dashoffset: 0;
+  }
+  19.5%,
+  100% {
+    stroke-dashoffset: 1;
+  }
+}
+@keyframes m-trace {
+  0% {
+    stroke-dashoffset: 1;
+  }
+  18% {
+    stroke-dashoffset: 0;
+  }
+  19.4% {
+    stroke-dashoffset: 0;
+  }
+  19.5%,
+  100% {
+    stroke-dashoffset: 1;
+  }
+}
+@keyframes m-ride {
+  0% {
+    offset-distance: 0%;
+  }
+  18% {
+    offset-distance: 100%;
+  }
+  19.5%,
+  100% {
+    offset-distance: 0%;
+  }
+}
+@keyframes m-col {
+  0% {
+    transform: translateY(0);
+  }
+  5% {
+    transform: translateY(calc(var(--h) * -1));
+  }
+  9% {
+    transform: translateY(calc(var(--h) * -2));
+  }
+  13% {
+    transform: translateY(calc(var(--h) * -3));
+  }
+  19.4% {
+    transform: translateY(calc(var(--h) * -3));
+  }
+  19.5%,
+  100% {
+    transform: translateY(0);
+  }
+}
+@keyframes m-delta-loss {
+  0%,
+  5% {
+    transform: scaleX(1);
+  }
+  13% {
+    transform: scaleX(0);
+  }
+  19.4% {
+    transform: scaleX(0);
+  }
+  19.5%,
+  100% {
+    transform: scaleX(1);
+  }
+}
+@keyframes m-delta-gain {
+  0%,
+  12% {
+    transform: scaleX(0);
+  }
+  16% {
+    transform: scaleX(1);
+  }
+  19.4% {
+    transform: scaleX(1);
+  }
+  19.5%,
+  100% {
+    transform: scaleX(0);
+  }
+}
+@keyframes m-speed {
+  0% {
+    transform: scaleX(0.3);
+  }
+  5% {
+    transform: scaleX(0.62);
+  }
+  9% {
+    transform: scaleX(0.92);
+  }
+  13% {
+    transform: scaleX(0.7);
+  }
+  19.4% {
+    transform: scaleX(0.7);
+  }
+  19.5%,
+  100% {
+    transform: scaleX(0.3);
+  }
+}
+@keyframes m-ring {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  0.5% {
+    opacity: 0.7;
+  }
+  9% {
+    opacity: 0;
+    transform: scale(2.4);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.4);
+  }
+}
+@keyframes m-pkt {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  0.4% {
+    opacity: 1;
+  }
+  5% {
+    offset-distance: 100%;
+    opacity: 1;
+  }
+  5.4%,
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+@keyframes m-drive {
+  0% {
+    transform: translateX(0);
+  }
+  15% {
+    transform: translateX(900px);
+  }
+  19.5% {
+    transform: translateX(900px);
+  }
+  19.6%,
+  100% {
+    transform: translateX(0);
+  }
+}
+@keyframes m-wave {
+  from {
+    transform: scaleY(0.25);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+/* ---- Herói animado ------------------------------------------------------------------------- */
+.hero {
+  position: relative;
+  overflow: hidden;
+}
+.hero .hero-grid {
+  position: relative;
+  z-index: 1;
+}
+.hero-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent);
+  mask-image: linear-gradient(to bottom, #000 55%, transparent);
+}
+.hero-fx svg {
+  width: 100%;
+  height: 100%;
+}
+.hf-track {
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-width: 2;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  opacity: 0.5;
+  animation: hf-draw 2.6s var(--ease) both;
+}
+.hf-track-2 {
+  opacity: 0.28;
+  animation-delay: 0.25s;
+}
+.hf-comet {
+  fill: none;
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  stroke-dasharray: 0.12 1.2;
+  stroke-dashoffset: 0;
+  filter: drop-shadow(0 0 6px var(--accent));
+  animation: hf-comet 7s linear 1.4s infinite both;
+}
+.hf-glow {
+  position: absolute;
+  right: -8%;
+  top: -12%;
+  width: min(70vw, 760px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--accent-soft), transparent);
+  animation: m-pulse 7s ease-in-out infinite alternate;
+}
+.hero .hero-grid > div:first-child > * {
+  animation: rise 0.8s var(--ease) both;
+}
+.hero .hero-grid > div:first-child > :nth-child(2) {
+  animation-delay: 0.12s;
+}
+.hero .hero-grid > div:first-child > :nth-child(3) {
+  animation-delay: 0.24s;
+}
+.hero .hero-grid > div:first-child > :nth-child(4) {
+  animation-delay: 0.36s;
+}
+.hero .shot {
+  animation:
+    shot-in 1s var(--ease) 0.15s both,
+    float 9s ease-in-out 1.2s infinite;
+}
+.hero .shot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-md);
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 42%,
+    rgba(255, 255, 255, 0.07) 50%,
+    transparent 58%
+  );
+  background-size: 300% 100%;
+  animation: sweep 9s ease-in-out 2s infinite;
+}
+.hero .btn:not(.btn-ghost) {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.hero .btn:not(.btn-ghost)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 60%
+  );
+  background-size: 300% 100%;
+  background-position: 120% 0;
+  animation: sweep 6s ease-in-out 3s infinite;
+}
+
+.live-chip {
+  position: absolute;
+  top: -1.1rem;
+  right: var(--sp-4);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-2);
+  font: 700 0.9rem / 1.3 var(--font);
+  animation: radio-in 0.6s var(--ease) 0.9s both;
+}
+.live-chip i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--loss);
+  animation: blink 1.4s ease-in-out infinite;
+}
+.live-chip b {
+  color: var(--text-3);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+}
+.lc-win {
+  display: inline-block;
+  height: 1.3em;
+  min-width: 4.4ch;
+  overflow: hidden;
+}
+.lc-col {
+  display: block;
+  animation: lc-tick 8s steps(1, end) 1.6s infinite both;
+}
+.lc-col em {
+  display: block;
+  height: 1.3em;
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+}
+.lc-col .is-loss {
+  color: var(--loss);
+}
+.lc-col .is-gain {
+  color: var(--gain);
+}
+
+.radio-cycle {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.radio-cycle .radio {
+  opacity: 0;
+  animation: rc 12s var(--ease) infinite both;
+  animation-delay: calc(1.2s + var(--i) * 4s);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+}
+@keyframes shot-in {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.97);
+  }
+}
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+@keyframes sweep {
+  0%,
+  55% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
+}
+@keyframes hf-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+@keyframes hf-comet {
+  from {
+    stroke-dashoffset: 0.12;
+  }
+  to {
+    stroke-dashoffset: -1.2;
+  }
+}
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+@keyframes lc-tick {
+  0% {
+    transform: translateY(0);
+  }
+  20% {
+    transform: translateY(-1.3em);
+  }
+  40% {
+    transform: translateY(-2.6em);
+  }
+  60% {
+    transform: translateY(-3.9em);
+  }
+  92% {
+    transform: translateY(-3.9em);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+@keyframes rc {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  4% {
+    opacity: 1;
+    transform: none;
+  }
+  30% {
+    opacity: 1;
+    transform: none;
+  }
+  34% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ---- Entradas ao rolar (só onde o navegador sabe ligar a animação à rolagem) --------------- */
+@supports (animation-timeline: view()) {
+  .row,
+  .sector,
+  .fig,
+  .facts > div,
+  .dl,
+  .motion {
+    animation: reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 4% cover 26%;
+  }
+}
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---- Sem movimento: tudo parado, mostrando o estado final ---------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .hero-fx .hf-comet,
+  .hf-glow,
+  .m-halo {
+    animation: none;
+  }
+  .hf-track,
+  .hero .shot,
+  .hero .shot::after,
+  .hero .btn::after,
+  .hero .hero-grid > div:first-child > *,
+  .live-chip,
+  .live-chip i,
+  .lc-col,
+  .row,
+  .sector,
+  .fig,
+  .facts > div,
+  .dl,
+  .motion {
+    animation: none;
+  }
+  .hf-comet {
+    display: none;
+  }
+  .lc-col {
+    transform: translateY(-3.9em);
+  }
+  .radio-cycle .radio {
+    animation: none;
+  }
+  .radio-cycle .radio:first-child {
+    opacity: 1;
+  }
+  .m-pause-btn {
+    display: none;
+  }
+  .m-sc {
+    animation: none;
+  }
+  .m-sc[data-still] {
+    opacity: 1;
+  }
+  /* biome-ignore lint/complexity/noImportantStyles: padrão de prefers-reduced-motion, precisa vencer qualquer animação */
+  .m-stage * {
+    animation: none !important;
+  }
+  .m-col {
+    transform: translateY(var(--end));
+  }
+}
+
+/* ---- Números vivos sobre a captura do herói ------------------------------------------------ */
+.fx {
+  display: none;
+}
+@supports (container-type: inline-size) {
+  .fx {
+    display: block;
+    position: absolute;
+    inset: 0;
+    container-type: inline-size;
+    pointer-events: none;
+    border-radius: var(--r-md);
+    overflow: hidden;
+  }
+}
+.fx-cover {
+  position: absolute;
+  left: calc(var(--x) / 1442 * 100%);
+  top: calc(var(--y) / 863 * 100%);
+  width: calc(var(--w) / 1442 * 100%);
+  height: calc(var(--h) / 863 * 100%);
+  background-image: var(--plate);
+  background-repeat: no-repeat;
+  background-size: calc(1442 / var(--sw) * 100%) calc(863 / var(--h) * 100%);
+  background-position: calc(var(--sx) / (1442 - var(--sw)) * 100%)
+    calc(var(--y) / (863 - var(--h)) * 100%);
+}
+
+/* Barra de RPM: 12 luzes (4 verdes, 5 amarelas, 3 vermelhas) que acendem em sequência e piscam */
+.fx-rpm {
+  position: absolute;
+  left: calc(12 / 1442 * 100%);
+  top: calc(40 / 863 * 100%);
+  width: calc(1418 / 1442 * 100%);
+  height: calc(26 / 863 * 100%);
+  -webkit-mask-image: linear-gradient(90deg, #000 95.5%, transparent 95.5%);
+  mask-image: linear-gradient(90deg, #000 95.5%, transparent 95.5%);
+  -webkit-mask-size: 8.3333% 100%;
+  mask-size: 8.3333% 100%;
+  -webkit-mask-repeat: repeat-x;
+  mask-repeat: repeat-x;
+}
+.fx-rpm::before,
+.fx-rpm i {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    var(--gain) 0 33.34%,
+    var(--warn) 33.34% 75%,
+    var(--loss) 75% 100%
+  );
+}
+.fx-rpm::before {
+  opacity: 0.16;
+}
+.fx-rpm i {
+  clip-path: inset(0 100% 0 0);
+  animation: fx-rpm 1.8s steps(12, end) 0s infinite;
+}
+
+/* Marcha e velocidade */
+.fx-gear,
+.fx-speed {
+  position: absolute;
+  font-family: var(--font);
+  font-weight: 700;
+  font-stretch: 75%;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.fx-gear {
+  left: calc(667 / 1442 * 100%);
+  top: calc(238 / 863 * 100%);
+  width: calc(304 / 1442 * 100%);
+  height: calc(192 / 863 * 100%);
+  color: var(--accent);
+  font-size: calc(236 / 1442 * 100cqw);
+}
+.fx-gear span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  animation: fx-gear 7.2s linear 0s infinite both;
+}
+.fx-speed {
+  left: calc(1085 / 1442 * 100%);
+  top: calc(258 / 863 * 100%);
+  width: calc(255 / 1442 * 100%);
+  height: calc(154 / 863 * 100%);
+  overflow: hidden;
+  color: var(--text);
+  font-size: calc(184 / 1442 * 100cqw);
+}
+.fx-col {
+  animation: fx-speed 7.2s steps(8, end) 0s infinite;
+}
+.fx-col span {
+  display: grid;
+  place-items: center;
+  height: calc(154 / 1442 * 100cqw);
+}
+
+@keyframes fx-rpm {
+  0% {
+    clip-path: inset(0 100% 0 0);
+    opacity: 1;
+  }
+  72% {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+  }
+  76% {
+    opacity: 0.15;
+  }
+  80% {
+    opacity: 1;
+  }
+  84% {
+    opacity: 0.15;
+  }
+  88% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 0.15;
+  }
+  95% {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+  100% {
+    clip-path: inset(0 100% 0 0);
+    opacity: 1;
+  }
+}
+@keyframes fx-gear {
+  0% {
+    opacity: 0;
+    transform: scale(0.7) translateY(14%);
+  }
+  1.2% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  2.8% {
+    transform: scale(1);
+  }
+  24.9% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  25%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes fx-speed {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(calc(-8 * 154 / 1442 * 100cqw));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx {
+    display: none;
+  }
+}
+
+/* Legenda em HTML, só em telas estreitas (o texto do filme fica pequeno demais ali) */
+.m-caps {
+  display: none;
+}
+@media (max-width: 700px) {
+  .m-cap,
+  .m-sub {
+    display: none;
+  }
+  .m-caps {
+    display: grid;
+    margin-top: var(--sp-4);
+    min-height: 5.5rem;
+  }
+  .m-caps p {
+    grid-area: 1 / 1;
+    margin: 0;
+    opacity: 0;
+    animation: m-sc 15s linear infinite both;
+    animation-delay: var(--d);
+  }
+  .m-caps b {
+    display: block;
+    font: 700 1.5rem / 1.2 var(--font);
+  }
+  .m-caps span {
+    display: block;
+    margin-top: var(--sp-1);
+    color: var(--text-2);
+    font-size: 1rem;
+    line-height: 1.45;
+  }
+}
+.m-pause-input:checked ~ .m-caps p {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .m-caps p {
+    animation: none;
+  }
+  .m-caps p:last-child {
+    opacity: 1;
+  }
+}

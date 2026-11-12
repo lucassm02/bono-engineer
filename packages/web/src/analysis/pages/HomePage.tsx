@@ -42,29 +42,13 @@ import { formatAgo } from '../lib/labels.ts';
 import { useCarFilter } from '../lib/useCarFilter.ts';
 import { useFetch } from '../useFetch.ts';
 
-const PHONE_QR_DISMISSED_KEY = 'gt7.home.phoneQrDismissed';
-
 function PhoneQrCard() {
-  const [dismissed, setDismissed] = useState(
-    () => loadJson<boolean>(PHONE_QR_DISMISSED_KEY) === true,
-  );
   const lanAddress = useUi((s) => s.serverStatus?.lanUrls[0]);
-  const { data } = useFetch(dismissed ? null : (lanAddress ?? null), api.lan);
-  if (dismissed || !lanAddress || !data?.qrSvgDataUrl) return null;
+  const { data } = useFetch(lanAddress ?? null, api.lan);
+  if (!lanAddress || !data?.qrSvgDataUrl) return null;
 
   return (
     <aside className="a-phone-card ui-card" aria-label={uiText('Abrir no celular')}>
-      <button
-        className="ui-icon-btn a-phone-dismiss"
-        type="button"
-        aria-label={uiText('Fechar QR Code')}
-        onClick={() => {
-          setDismissed(true);
-          saveJson(PHONE_QR_DISMISSED_KEY, true);
-        }}
-      >
-        <Icon name="close" size={16} />
-      </button>
       <a href={routes.config('acesso-remoto')}>{uiText('Abrir no celular')}</a>
       <img src={data.qrSvgDataUrl} alt={uiText('QR Code para abrir o ao vivo em outro aparelho')} />
       <p>{uiText('Escaneie na mesma rede Wi-Fi.')}</p>

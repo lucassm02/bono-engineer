@@ -1080,7 +1080,6 @@
   "faltam regras": ["rules missing", "faltan reglas"],
   "fecha": ["closes", "cierra"],
   "Fechar": ["Close", "Cerrar"],
-  "Fechar QR Code": ["Close QR code", "Cerrar código QR"],
   "Escaneie na mesma rede Wi-Fi.": [
     "Scan on the same Wi-Fi network.",
     "Escanea en la misma red Wi-Fi."
@@ -2970,9 +2969,9 @@
     "Detalles técnicos y licencias"
   ],
   "Servidor na porta": ["Server on port", "Servidor en el puerto"],
-  "O Bono é software livre (licença MIT).": [
-    "Bono is free software (MIT licence).",
-    "Bono es software libre (licencia MIT)."
+  "O código do Bono está disponível (licença PolyForm Noncommercial 1.0.0): uso e modificação só para fins não comerciais.": [
+    "Bono’s source code is available (PolyForm Noncommercial License 1.0.0): use and modification for noncommercial purposes only.",
+    "El código de Bono está disponible (licencia PolyForm Noncommercial 1.0.0): uso y modificación solo para fines no comerciales."
   ],
   "Avançado: conectar ao Claude ou ao Codex (MCP)": [
     "Advanced: connect to Claude or Codex (MCP)",
