@@ -15,6 +15,7 @@ import { api } from '../api.ts';
 import { CarName } from '../components/CarName.tsx';
 import { CarFilterChips, CarFilterField, FilterChip } from '../components/CarPicker.tsx';
 import { PendingSetupCard } from '../components/config/HealthSummary.tsx';
+import { DailiesStrip } from '../components/DailiesStrip.tsx';
 import { NewTrackPrompt } from '../components/TrackNaming.tsx';
 import { TrackThumb } from '../components/TrackThumb.tsx';
 import { ErrorBox, Loading, Tag, useTitle } from '../components/ui.tsx';
@@ -351,6 +352,8 @@ export function HomePage() {
       </section>
 
       <PendingSetupCard onOpenAssistant={openSetupAssistant} />
+
+      <DailiesStrip />
 
       {overview.error && !data ? (
         <ErrorBox error={overview.error} onRetry={overview.reload} />

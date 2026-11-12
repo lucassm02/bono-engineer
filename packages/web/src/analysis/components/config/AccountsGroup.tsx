@@ -21,6 +21,7 @@ import { DiscordSettings } from '../DiscordSettings.tsx';
 import { Panel } from '../Panel.tsx';
 import { ErrorBox, Loading } from '../ui.tsx';
 import { Advanced, CfgRow, rowDomId, useSave } from './ConfigRow.tsx';
+import { DailiesSetting } from './DailiesSetting.tsx';
 import { DataSection } from './DataManager.tsx';
 
 const EFFORT_LABELS: Record<CoachEffort, string> = {
@@ -396,6 +397,7 @@ export function AccountsGroup({ status, openMcp }: { status: ApiStatus; openMcp?
     <>
       <DiscordSettings />
       <CoachSection />
+      <DailiesSetting />
       <DataSection status={status} />
       <LanguageSection />
       <McpSection status={status} forceOpen={openMcp} />

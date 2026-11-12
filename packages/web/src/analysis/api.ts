@@ -8,6 +8,7 @@ import type {
   ApiBackupUpload,
   ApiComparison,
   ApiConsistency,
+  ApiDailyRaces,
   ApiDataSummary,
   ApiDiscoveryScanResult,
   ApiErrorBody,
@@ -231,6 +232,15 @@ export const api = {
     request<ReferenceCaptureStatus>('POST', '/api/capture/stop', { save }),
 
   mcpInfo: () => get<ApiMcpInfo>('/api/mcp/info'),
+  /** Daily Races of the week (read from DG EDGE by the server, cached). */
+  dailyRaces: () => get<ApiDailyRaces>('/api/events/dailies'),
+  dailyRefresh: () =>
+    request<{ ok: boolean; reason?: 'disabled' | 'tooSoon'; data: ApiDailyRaces }>(
+      'POST',
+      '/api/events/dailies/refresh',
+    ),
+  dailySetEnabled: (enabled: boolean) =>
+    request<ApiDailyRaces>('PUT', '/api/events/dailies/enabled', { enabled }),
   dataSummary: () => get<ApiDataSummary>('/api/data/summary'),
   /** Address that downloads a `.bono` backup (a plain link: the browser streams it to disk). */
   dataExportUrl: (o: { laps: boolean; settings: boolean; recordings: boolean }) =>

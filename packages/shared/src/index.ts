@@ -11,6 +11,7 @@ export * from './api.ts';
 export * from './brand.ts';
 export * from './cars/index.ts';
 export * from './coach.ts';
+export * from './daily-races.ts';
 export type {
   DesktopDataBridge,
   DesktopDataCurrent,

@@ -1,0 +1,297 @@
+/* Corridas diárias (#/diarias). Só tokens. */
+
+.dl-week {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sp-2) var(--sp-4);
+  margin: var(--sp-2) 0 var(--sp-3);
+  font-size: var(--fs-xl);
+  font-weight: 750;
+}
+
+.dl-week span {
+  font-size: var(--fs-md);
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.dl-status {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+}
+
+.dl-status[data-tone="warn"] {
+  color: var(--warn);
+}
+
+.dl-note {
+  margin: 0 0 var(--sp-3);
+  color: var(--text-2);
+}
+
+.dl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--sp-4);
+  align-items: start;
+}
+
+.dl-card {
+  display: grid;
+  gap: var(--sp-3);
+  align-content: start;
+}
+
+.dl-head {
+  display: grid;
+  gap: var(--sp-1);
+  justify-items: start;
+}
+
+.dl-track {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: 750;
+  line-height: 1.2;
+}
+
+.dl-car {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  color: var(--text);
+}
+
+.dl-car span {
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+
+.dl-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dl-schedule {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+
+.dl-medals {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-2);
+}
+
+.dl-medal {
+  display: grid;
+  gap: 2px;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--line-soft);
+  border-left-width: 3px;
+  border-radius: var(--r-sm);
+  background: var(--surface-1);
+}
+
+.dl-medal strong {
+  font-size: var(--fs-lg);
+}
+
+.dl-medal small {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+}
+
+.dl-medal[data-medal="platinum"] {
+  border-left-color: var(--accent);
+}
+
+.dl-medal[data-medal="gold"] {
+  border-left-color: var(--warn);
+}
+
+.dl-medal[data-medal="silver"] {
+  border-left-color: var(--text-2);
+}
+
+.dl-medal[data-medal="bronze"] {
+  border-left-color: var(--info);
+}
+
+.dl-medal[data-reached="1"] {
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+}
+
+.dl-mine {
+  display: grid;
+  gap: 2px;
+  padding: var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface-3);
+}
+
+.dl-mine strong {
+  font-size: var(--fs-xl);
+}
+
+.dl-verdict {
+  font-size: var(--fs-sm);
+  color: var(--accent);
+}
+
+.dl-link {
+  justify-self: start;
+  font-size: var(--fs-sm);
+}
+
+.dl-muted {
+  color: var(--text-3);
+  font-size: var(--fs-sm);
+}
+
+.dl-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: var(--sp-2);
+  margin: 0;
+}
+
+.dl-facts div {
+  display: grid;
+  gap: 2px;
+}
+
+.dl-facts dt {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+}
+
+.dl-facts dd {
+  margin: 0;
+  font-weight: 650;
+}
+
+.dl-cars ol {
+  display: grid;
+  gap: 2px;
+  margin: var(--sp-1) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-sm);
+}
+
+.dl-cars li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.dl-leader {
+  display: grid;
+  gap: var(--sp-1);
+  justify-items: start;
+}
+
+.dl-leader p {
+  margin: 0;
+}
+
+.dl-foot {
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--line-soft);
+  font-size: var(--fs-sm);
+}
+
+.dl-past {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dl-past li {
+  display: grid;
+  grid-template-columns: 3.2rem minmax(0, 1fr) minmax(0, 1.2fr);
+  align-items: baseline;
+  gap: var(--sp-3);
+  font-size: var(--fs-sm);
+}
+
+.dl-past-week {
+  color: var(--text-3);
+}
+
+.dl-source {
+  margin: var(--sp-5) 0 0;
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+  max-width: 78ch;
+}
+
+.dl-linkbtn {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .dl-past li {
+    grid-template-columns: 3rem minmax(0, 1fr);
+  }
+
+  .dl-past li .dl-muted {
+    grid-column: 2;
+  }
+}
+
+/* Cartão da Início */
+.dl-strip {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dl-strip li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1.4fr) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sp-3);
+  font-size: var(--fs-sm);
+}
+
+.cap-daily-steps {
+  display: grid;
+  gap: var(--sp-1);
+  margin: 0 0 var(--sp-3);
+  padding-left: var(--sp-5);
+  color: var(--text-2);
+}
+
+@media (max-width: 640px) {
+  .dl-strip li {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .dl-strip li .dl-muted {
+    grid-column: 2;
+  }
+}

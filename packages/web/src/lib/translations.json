@@ -3981,5 +3981,125 @@
   "Sessões: {0} · Voltas: {1} · Pistas: {2}": [
     "Sessions: {0} · Laps: {1} · Tracks: {2}",
     "Sesiones: {0} · Vueltas: {1} · Pistas: {2}"
-  ]
+  ],
+  "Platina": ["Platinum", "Platino"],
+  "Ouro": ["Gold", "Oro"],
+  "Prata": ["Silver", "Plata"],
+  "Bronze": ["Bronze", "Bronce"],
+  "Corridas diárias": ["Daily Races", "Carreras diarias"],
+  "Atualizado há pouco. Tente de novo em alguns minutos.": [
+    "Updated moments ago. Try again in a few minutes.",
+    "Actualizado hace poco. Inténtalo de nuevo en unos minutos."
+  ],
+  "GT7 · Modo Esportivo": ["GT7 · Sport Mode", "GT7 · Modo Deportivo"],
+  "As três corridas da semana, com as regras, os tempos de cada medalha e a sua melhor volta na mesma pista.": [
+    "The three races of the week, with the rules, the time for each medal and your best lap on the same track.",
+    "Las tres carreras de la semana, con las reglas, los tiempos de cada medalla y tu mejor vuelta en la misma pista."
+  ],
+  "Buscando as corridas da semana…": [
+    "Fetching this week’s races…",
+    "Buscando las carreras de la semana…"
+  ],
+  "Corridas diárias desativadas": ["Daily Races are off", "Carreras diarias desactivadas"],
+  "Com isto ligado, o Bono consulta o site DG EDGE a partir do seu PC, no máximo uma vez por hora, para mostrar as corridas da semana.": [
+    "When this is on, Bono checks the DG EDGE site from your PC, at most once an hour, to show this week’s races.",
+    "Con esto activado, Bono consulta el sitio DG EDGE desde tu PC, como máximo una vez por hora, para mostrar las carreras de la semana."
+  ],
+  "Ativar": ["Turn on", "Activar"],
+  "Sem dados ainda": ["No data yet", "Aún sin datos"],
+  "Não consegui buscar as corridas agora: {0}": [
+    "I could not fetch the races now: {0}",
+    "No pude buscar las carreras ahora: {0}"
+  ],
+  "Ainda não há corridas guardadas. Toque em Atualizar.": [
+    "No races saved yet. Tap Update.",
+    "Aún no hay carreras guardadas. Toca Actualizar."
+  ],
+  "Semana {0}": ["Week {0}", "Semana {0}"],
+  "Atualizado {0}.": ["Updated {0}.", "Actualizado {0}."],
+  "A última tentativa falhou: {0}": [
+    "The last attempt failed: {0}",
+    "El último intento falló: {0}"
+  ],
+  "Largada lançada": ["Rolling start", "Salida lanzada"],
+  "Largada parada": ["Standing start", "Salida parada"],
+  "Ajustes liberados": ["Tuning allowed", "Ajustes permitidos"],
+  "Sem ajustes": ["No tuning", "Sin ajustes"],
+  "Vácuo: {0}": ["Slipstream: {0}", "Rebufo: {0}"],
+  "Corrida {0}": ["Race {0}", "Carrera {0}"],
+  "{0} voltas": ["{0} laps", "{0} vueltas"],
+  "Regras": ["Rules", "Reglas"],
+  "Uma corrida a cada {0} min, aos {1}": [
+    "A race every {0} min, at {1}",
+    "Una carrera cada {0} min, a los {1}"
+  ],
+  "Tempos das medalhas": ["Medal times", "Tiempos de las medallas"],
+  "{0}% dos jogadores": ["{0}% of players", "{0}% de los jugadores"],
+  "Sua melhor volta aqui": ["Your best lap here", "Tu mejor vuelta aquí"],
+  "Abaixo do bronze": ["Below bronze", "Por debajo del bronce"],
+  "faltam {0} s para o {1}": ["{0} s short of {1}", "faltan {0} s para el {1}"],
+  "Você ainda não tem voltas nesta pista.": [
+    "You have no laps on this track yet.",
+    "Aún no tienes vueltas en esta pista."
+  ],
+  "Jogadores": ["Players", "Jugadores"],
+  "Top 100": ["Top 100", "Top 100"],
+  "Top 1000": ["Top 1000", "Top 1000"],
+  "Carros mais usados": ["Most used cars", "Coches más usados"],
+  "1º lugar": ["1st place", "1.er lugar"],
+  "Usar como referência": ["Use as reference", "Usar como referencia"],
+  "Ver na íntegra no DG EDGE": ["See the full page on DG EDGE", "Ver completo en DG EDGE"],
+  "Dano leve": ["Light damage", "Daño leve"],
+  "Dano médio": ["Medium damage", "Daño medio"],
+  "Dano pesado": ["Heavy damage", "Daño fuerte"],
+  "Semanas anteriores": ["Previous weeks", "Semanas anteriores"],
+  "Para saber quando uma pista já rodou.": [
+    "To see when a track last ran.",
+    "Para saber cuándo corrió una pista."
+  ],
+  "Dados do": ["Data from", "Datos de"],
+  ", buscados a partir do seu PC e guardados por uma hora. O Bono não republica nada: para ver o ranking e os detalhes, abra o site.": [
+    ", fetched from your PC and kept for an hour. Bono republishes nothing: to see the ranking and the details, open the site.",
+    ", obtenidos desde tu PC y guardados una hora. Bono no republica nada: para ver el ranking y los detalles, abre el sitio."
+  ],
+  "Desativar": ["Turn off", "Desactivar"],
+  "Corridas diárias · Semana {0}": ["Daily Races · Week {0}", "Carreras diarias · Semana {0}"],
+  "As corridas desta semana no GT7.": [
+    "This week’s races in GT7.",
+    "Las carreras de esta semana en GT7."
+  ],
+  "Ver tempos e medalhas": ["See times and medals", "Ver tiempos y medallas"],
+  "Mostra as corridas da semana do GT7, os tempos das medalhas e o 1º lugar, para usar de referência.": [
+    "Shows the week’s GT7 races, the medal times and 1st place, to use as a reference.",
+    "Muestra las carreras de la semana de GT7, los tiempos de las medallas y el 1.er lugar, para usar de referencia."
+  ],
+  "Buscar no {0}": ["Fetch from {0}", "Buscar en {0}"],
+  "O Bono consulta o site a partir deste PC, no máximo uma vez por hora, e guarda o resultado aqui. Nada é enviado de volta.": [
+    "Bono checks the site from this PC, at most once an hour, and keeps the result here. Nothing is sent back.",
+    "Bono consulta el sitio desde este PC, como máximo una vez por hora, y guarda el resultado aquí. No se envía nada de vuelta."
+  ],
+  "Referência da Corrida diária {0}": [
+    "Daily Race {0} reference",
+    "Referencia de la Carrera diaria {0}"
+  ],
+  "1º lugar: {0} · {1}": ["1st place: {0} · {1}", "1.er lugar: {0} · {1}"],
+  "No jogo, abra a Corrida diária {0} e entre em Ranking.": [
+    "In the game, open Daily Race {0} and go to Ranking.",
+    "En el juego, abre la Carrera diaria {0} y entra en Ranking."
+  ],
+  "Escolha o 1º lugar e toque em Replay.": [
+    "Pick 1st place and tap Replay.",
+    "Elige el 1.er lugar y toca Replay."
+  ],
+  "Volte aqui e toque em Capturar esta volta. O piloto e o tempo já estão preenchidos.": [
+    "Come back here and tap Capture this lap. The driver and the time are already filled in.",
+    "Vuelve aquí y toca Capturar esta vuelta. El piloto y el tiempo ya están rellenados."
+  ],
+  "Ver a corrida no DG EDGE": ["See the race on DG EDGE", "Ver la carrera en DG EDGE"],
+  "Liga ou desliga a busca das corridas da semana no DG EDGE.": [
+    "Turns fetching the week’s races from DG EDGE on or off.",
+    "Activa o desactiva la búsqueda de las carreras de la semana en DG EDGE."
+  ],
+  "simulação": ["simulation", "simulación"],
+  "personalizado": ["custom", "personalizado"]
 }

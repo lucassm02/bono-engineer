@@ -11,6 +11,7 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import appPackage from '../../../package.json' with { type: 'json' };
 import { registerAuth, registerOriginGuard } from './auth.ts';
 import { CoachService, type CoachServiceOptions } from './coach/service.ts';
+import { DailyRacesService, type DailyServiceOptions } from './events/daily-service.ts';
 import { FirewallChecker, type FirewallCheckerOptions } from './firewall.ts';
 import { type HubOptions, type HubSocket, WsHub } from './hub.ts';
 import { INSTANCE_HEADER } from './identity.ts';
@@ -41,6 +42,8 @@ export interface CreateAppOptions {
   /** Network interfaces source (tests). */
   interfaces?: InterfacesFn;
   hub?: Omit<HubOptions, 'serverVersion' | 'firewall'>;
+  /** Daily Races (DG EDGE) overrides, for tests: a fake fetch, a clock, no network. */
+  dailies?: Partial<Pick<DailyServiceOptions, 'fetchFn' | 'now' | 'sleep' | 'origin'>>;
   /** Fastify logger (default off; main.ts prints its own messages). */
   logger?: boolean;
   /** Extra REST route modules mounted under /api (later waves). */
@@ -87,6 +90,15 @@ export async function createApp(opts: CreateAppOptions = {}): Promise<Gt7Server>
   hub = new WsHub(runtime, { ...opts.hub, serverVersion, firewall: () => firewall.status });
   const wsHub = hub;
   const coach = new CoachService(runtime, opts.coach);
+  const dailies = new DailyRacesService({
+    dataDir: runtime.store.dataDir,
+    appVersion: serverVersion,
+    enabled: {
+      get: () => runtime.store.getSetting<boolean>('events.dgEdge.enabled', true),
+      set: (value) => runtime.store.setSetting('events.dgEdge.enabled', value),
+    },
+    ...opts.dailies,
+  });
 
   const app = Fastify({
     logger: opts.logger ?? false,
@@ -119,6 +131,7 @@ export async function createApp(opts: CreateAppOptions = {}): Promise<Gt7Server>
       serverVersion,
       simulator: !!opts.simulator,
       coach,
+      dailies,
       mcpStdioScript: opts.mcpStdioScript ?? null,
     };
     // Error/not-found handlers first: the /api child context inherits them at registration.

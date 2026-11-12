@@ -404,6 +404,21 @@ const PT: HelpContent = {
       keywords:
         'backup exportar importar restaurar onedrive dropbox nuvem pasta mudar local armazenamento bono arquivo',
     },
+    {
+      id: 'corridas-diarias',
+      topic: 'tracks',
+      title: 'Corridas diárias da semana',
+      summary: 'As três corridas do GT7, com os tempos das medalhas e o 1º lugar como referência.',
+      steps: [
+        'Abra a Início e toque em Ver tempos e medalhas, ou vá direto a Corridas diárias.',
+        'Cada cartão mostra pista, carro, regras e quanto falta para a próxima medalha, usando a sua melhor volta.',
+        'Para treinar contra o 1º lugar, toque em Usar como referência e siga os passos para gravar o replay.',
+      ],
+      note: 'Os dados vêm do DG EDGE, buscados a partir do seu PC no máximo uma vez por hora. Para desligar, vá em Configurações → Contas e dados → Corridas diárias.',
+      links: [lnk('Corridas diárias', routes.dailies())],
+      keywords:
+        'corridas diárias daily races dg edge medalhas semana ranking referência primeiro lugar',
+    },
 
     {
       id: 'discord-configurar',
@@ -856,6 +871,20 @@ const EN: HelpContent = {
       links: [lnk('Backup and transfer', routes.config('backup'))],
       keywords:
         'backup export import restore onedrive dropbox cloud folder change location storage bono file',
+    },
+    {
+      id: 'corridas-diarias',
+      topic: 'tracks',
+      title: 'This week’s Daily Races',
+      summary: 'The three GT7 races, with the medal times and 1st place as a reference.',
+      steps: [
+        'Open Home and tap See times and medals, or go straight to Daily Races.',
+        'Each card shows track, car, rules and how far you are from the next medal, using your best lap.',
+        'To train against 1st place, tap Use as reference and follow the steps to record the replay.',
+      ],
+      note: 'The data comes from DG EDGE, fetched from your PC at most once an hour. To turn it off, go to Settings → Accounts and data → Daily Races.',
+      links: [lnk('Daily Races', routes.dailies())],
+      keywords: 'daily races dg edge medals week ranking reference first place',
     },
 
     {
@@ -1313,6 +1342,22 @@ const ES: HelpContent = {
       links: [lnk('Copia y traspaso', routes.config('backup'))],
       keywords:
         'copia seguridad exportar importar restaurar onedrive dropbox nube carpeta cambiar ubicación almacenamiento bono archivo',
+    },
+    {
+      id: 'corridas-diarias',
+      topic: 'tracks',
+      title: 'Carreras diarias de la semana',
+      summary:
+        'Las tres carreras de GT7, con los tiempos de las medallas y el 1.er lugar como referencia.',
+      steps: [
+        'Abre Inicio y toca Ver tiempos y medallas, o ve directo a Carreras diarias.',
+        'Cada tarjeta muestra pista, coche, reglas y cuánto te falta para la siguiente medalla, con tu mejor vuelta.',
+        'Para entrenar contra el 1.er lugar, toca Usar como referencia y sigue los pasos para grabar el replay.',
+      ],
+      note: 'Los datos vienen de DG EDGE, obtenidos desde tu PC como máximo una vez por hora. Para desactivarlo, ve a Configuración → Cuentas y datos → Carreras diarias.',
+      links: [lnk('Carreras diarias', routes.dailies())],
+      keywords:
+        'carreras diarias daily races dg edge medallas semana ranking referencia primer lugar',
     },
 
     {

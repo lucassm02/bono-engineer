@@ -7,6 +7,11 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Added Daily Races: the three races of the week with their rules, medal times, top 100 and top 1000, most used cars and 1st place, shown next to your best lap on the same track. They are read from DG EDGE on your own PC (at most once an hour, cached, honouring `robots.txt`, with a link back to the source) and can be turned off in Settings. "Use as reference" opens the replay capture with the 1st place driver and time filled in.
+- Added a choice of data folder in the Windows app (including OneDrive, Dropbox and similar folders, with a safer write mode there) and `.bono` backups: export sessions, laps and settings (never keys or passwords) and import them to add to or replace your history.
+
 ### Changed
 
 - The radio voices no longer carry first names: they are now Voice 1, Voice 2 and Voice 3 in each language (Voz 1-3 in Portuguese and Spanish), with a short description of the tone. Saved voice preferences keep working.

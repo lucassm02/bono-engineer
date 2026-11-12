@@ -17,6 +17,7 @@ import { CapturePage } from './pages/CapturePage.tsx';
 import { CoachPage } from './pages/CoachPage.tsx';
 import { ComparePage } from './pages/ComparePage.tsx';
 import { ConfigPage } from './pages/ConfigPage.tsx';
+import { DailiesPage } from './pages/DailiesPage.tsx';
 import { GuidePage } from './pages/GuidePage.tsx';
 import { HelpPage } from './pages/HelpPage.tsx';
 import { HomePage } from './pages/HomePage.tsx';
@@ -256,6 +257,8 @@ function page(route: Route): ReactNode {
       return <GuidePage route={route} />;
     case 'help':
       return <HelpPage route={route} />;
+    case 'dailies':
+      return <DailiesPage />;
     default:
       return <NotFound />;
   }

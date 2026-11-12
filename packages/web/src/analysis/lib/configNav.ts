@@ -43,6 +43,7 @@ export type ConfigAnchor =
   | 'coach'
   | 'dados'
   | 'backup'
+  | 'diarias'
   | 'mcp'
   | 'idioma'
   | 'sobre';
@@ -68,6 +69,7 @@ const LEGACY: Record<string, ConfigTarget> = {
   coach: { group: 'contas', anchor: 'coach' },
   dados: { group: 'contas', anchor: 'dados' },
   backup: { group: 'contas', anchor: 'backup' },
+  diarias: { group: 'contas', anchor: 'diarias' },
   mcp: { group: 'contas', anchor: 'mcp' },
   sobre: { group: 'sobre', anchor: 'sobre' },
   // apelidos que já existiam
@@ -497,6 +499,18 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
       return uiText('Onde ficam suas sessões. Dá para trocar a pasta, até para o OneDrive.');
     },
     keywords: 'pasta caminho onedrive dropbox nuvem mudar alterar local armazenamento',
+  },
+  {
+    id: 'dailies',
+    group: 'contas',
+    anchor: 'diarias',
+    get title() {
+      return uiText('Corridas diárias');
+    },
+    get description() {
+      return uiText('Liga ou desliga a busca das corridas da semana no DG EDGE.');
+    },
+    keywords: 'diárias daily races dg edge medalhas semana ranking referência',
   },
   {
     id: 'data-export',

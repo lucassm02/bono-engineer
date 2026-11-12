@@ -28,6 +28,7 @@ export type RouteName =
   | 'coach'
   | 'guide'
   | 'help'
+  | 'dailies'
   | 'notFound';
 
 export interface Route {
@@ -91,6 +92,7 @@ export function parseRoute(hash: string): Route {
   if (a === 'captura' && segs.length === 1) return r('capture');
   if (a === 'config' && segs.length === 1) return r('config');
   if (a === 'guia' && segs.length === 1) return r('guide');
+  if (a === 'diarias' && segs.length === 1) return r('dailies');
   if (a === 'ajuda') {
     if (segs.length === 1) return r('help');
     if (b && segs.length === 2) return r('help', { id: b });
@@ -134,7 +136,9 @@ export const routes = {
     }),
   track: (id: string, q: { session?: string; tab?: string } = {}) =>
     href(`/analise/pista/${encodeURIComponent(id)}`, { session: q.session, tab: q.tab }),
-  capture: () => href('/captura'),
+  capture: (q: { daily?: number | string } = {}) => href('/captura', { daily: q.daily }),
+  /** Daily Races of the week (DG EDGE). */
+  dailies: () => href('/diarias'),
   guide: (q: { q?: string; classe?: string; topico?: string } = {}) =>
     href('/guia', { q: q.q, classe: q.classe, topico: q.topico }),
   /** Help center: `help()` home, `help('discord')` a topic, `help(undefined, 'no-signal')` one article. */

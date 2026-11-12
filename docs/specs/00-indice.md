@@ -13,6 +13,9 @@ independente o bastante para virar um PR; as dependências estão na tabela.
 | 06 | [Escolher a pista ao iniciar](06-escolher-pista-ao-iniciar.md) | Engenheiro desde a volta 1 com pista salva (opcional) | 05 | G |
 | 07 | [Discord simplificado](07-discord-simplificado.md) | Sem ID de usuário, convite automático, canal em lista, sem token embutido | — | M |
 | 08 | [Site no GitHub Pages com SEO](08-site-github-pages.md) | Vitrine pública encontrável, com download | 01 (visual pronto), 07 (página do Discord) | M |
+| 09 | [Stints (box confirmado pelo piloto)](09-stints.md) | Dividir a sessão em stints: o carro parado pergunta "está no box?"; ao sair, novo stint | — | M · **futura** |
+| 10 | [Setup entre stints](10-setup-entre-stints.md) | Ficha de setup + comparação de stints; depois sugestões, uma mudança por vez | 09 | G · **futura** |
+| 11 | [Corridas diárias do GT7 (DG EDGE)](11-corridas-diarias.md) | Corridas da semana, medalhas, 1º lugar como referência | — | M · **implementada** |
 
 P = ≤ 2 dias · M = 3–5 dias · G = 1–2 semanas (estimativa de uma pessoa).
 
@@ -33,6 +36,11 @@ P = ≤ 2 dias · M = 3–5 dias · G = 1–2 semanas (estimativa de uma pessoa)
 - **Gravação de pacotes brutos passa a vir desligada** em instalações novas. (spec 02, RF5)
 - **O engenheiro lembra se estava ligado.** Hoje nasce desligado a cada abertura. (spec 03, RF2)
 - **O tour roda sobre a demonstração**, sem depender do PS5. (spec 04, RF4)
+
+## Descartado por ora
+
+- **Pit Wall da equipe ao vivo:** adiado. O modelo sem backend exige VPN entre os pilotos, e o dono não quer mexer com isso agora.
+  O estudo continua no [relatório](../relatorio-stints-setup-pit-wall.md), seção 6.
 
 ## Perguntas em aberto
 
