@@ -10,11 +10,21 @@
  * Demo mode (`--sim`) uses the `demo` subfolder so synthetic laps never mix with real ones.
  */
 
-import { cpSync, existsSync, mkdirSync, mkdtempSync, renameSync, rmSync } from 'node:fs';
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { homedir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, resolve, sep } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { PRODUCT_NAME, PRODUCT_SLUG } from '@gt7/shared';
+import { detectCloudFolder } from './cloud-folder.ts';
 
 export const DATA_DIR_NAME = PRODUCT_NAME;
 export const DATA_DIR_NAME_UNIX = PRODUCT_SLUG;
@@ -158,4 +168,87 @@ export function migrateLegacyData(legacyDir: string, targetDir: string): Migrati
   } catch (e) {
     return { ...base, migrated: false, reason: 'failed', error: (e as Error).message };
   }
+}
+
+export interface DataFolderInfo {
+  /** The folder exists and can be written to. */
+  writable: boolean;
+  /** It already holds a Bono database. */
+  hasData: boolean;
+  /** Sessions found in that database (0 when there is none). */
+  sessions: number;
+  /** The folder is kept in sync by a cloud client, with its name. */
+  cloudProvider: string | null;
+  /** Something else lives in the folder (not a Bono data folder). */
+  hasOtherFiles: boolean;
+}
+
+/** What is in `dir`, for the "change data folder" dialog. Never throws. */
+export function inspectDataFolder(dir: string): DataFolderInfo {
+  const target = resolve(dir);
+  const info: DataFolderInfo = {
+    writable: false,
+    hasData: false,
+    sessions: 0,
+    cloudProvider: detectCloudFolder(target)?.provider ?? null,
+    hasOtherFiles: false,
+  };
+  try {
+    mkdirSync(target, { recursive: true });
+    const probe = join(target, `.bono-write-test-${process.pid}`);
+    writeFileSync(probe, 'ok');
+    rmSync(probe, { force: true });
+    info.writable = true;
+  } catch {
+    return info;
+  }
+  const dbFile = join(target, DB_FILE);
+  info.hasData = existsSync(dbFile);
+  if (info.hasData) {
+    try {
+      const db = new DatabaseSync(dbFile, { readOnly: true, timeout: 3000 });
+      try {
+        const row = db.prepare('SELECT count(*) AS c FROM sessions').get() as { c: number };
+        info.sessions = row.c;
+      } finally {
+        db.close();
+      }
+    } catch {
+      // unreadable or not ours: reported as having data with 0 sessions
+    }
+  } else {
+    info.hasOtherFiles = readdirSync(target).length > 0;
+  }
+  return info;
+}
+
+/**
+ * Copies a data folder to `targetDir` (which must not hold a database yet): a consistent snapshot of
+ * the database (committed WAL included) plus the traces and recordings. The source is never changed.
+ */
+export function copyDataFolder(sourceDir: string, targetDir: string): void {
+  const source = resolve(sourceDir);
+  const target = resolve(targetDir);
+  if (source === target) throw new Error('A pasta nova é a mesma que a atual.');
+  if (target.startsWith(`${source}${sep}`)) {
+    throw new Error('A pasta nova não pode ficar dentro da pasta atual.');
+  }
+  if (existsSync(join(target, DB_FILE))) throw new Error('A pasta nova já tem dados do Bono.');
+  mkdirSync(target, { recursive: true });
+  const sourceDb = join(source, DB_FILE);
+  if (existsSync(sourceDb)) {
+    const db = new DatabaseSync(sourceDb, { readOnly: true, timeout: 5000 });
+    try {
+      db.prepare('VACUUM INTO ?').run(join(target, DB_FILE));
+    } finally {
+      db.close();
+    }
+  }
+  cpSync(source, target, {
+    recursive: true,
+    filter: (path) => {
+      const p = resolve(path);
+      return p !== sourceDb && !p.startsWith(`${sourceDb}-`) && p !== join(source, DEMO_SUBDIR);
+    },
+  });
 }

@@ -40,3 +40,12 @@ describe('desktop state file', () => {
     });
   });
 });
+
+describe('data folder chosen by the user', () => {
+  it('is read back and ignored when empty or not a string', () => {
+    expect(parseDesktopState({ dataDir: 'D:OneDriveBono' }).dataDir).toBe('D:OneDriveBono');
+    expect(parseDesktopState({ dataDir: '   ' }).dataDir).toBeUndefined();
+    expect(parseDesktopState({ dataDir: 42 }).dataDir).toBeUndefined();
+    expect(parseDesktopState(null).dataDir).toBeUndefined();
+  });
+});

@@ -116,6 +116,7 @@ export async function createApp(opts: CreateAppOptions = {}): Promise<Gt7Server>
       firewall,
       httpPort: port,
       tokenRequired: !!token,
+      serverVersion,
       simulator: !!opts.simulator,
       coach,
       mcpStdioScript: opts.mcpStdioScript ?? null,

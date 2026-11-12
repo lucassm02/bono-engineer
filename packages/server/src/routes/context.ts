@@ -15,6 +15,8 @@ export interface RouteContext {
   firewall: FirewallChecker;
   httpPort: number;
   tokenRequired: boolean;
+  /** App version shown in backups. */
+  serverVersion: string;
   /** Demo mode (in-process fake console). */
   simulator: boolean;
   /** In-app AI coach (Debrief com IA). */

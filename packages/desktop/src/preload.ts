@@ -1,4 +1,4 @@
-import type { DesktopDiscordBridge, Language } from '@gt7/shared';
+import type { DesktopDataBridge, DesktopDiscordBridge, Language } from '@gt7/shared';
 import { contextBridge, ipcRenderer } from 'electron';
 
 const discord: DesktopDiscordBridge = {
@@ -22,6 +22,14 @@ const discord: DesktopDiscordBridge = {
   },
 };
 contextBridge.exposeInMainWorld('bonoDiscord', discord);
+const data: DesktopDataBridge = {
+  current: () => ipcRenderer.invoke('bono:data:current'),
+  choose: () => ipcRenderer.invoke('bono:data:choose'),
+  inspect: (dir) => ipcRenderer.invoke('bono:data:inspect', dir),
+  apply: (input) => ipcRenderer.invoke('bono:data:apply', input),
+  openFolder: () => ipcRenderer.invoke('bono:data:open-folder'),
+};
+contextBridge.exposeInMainWorld('bonoData', data);
 contextBridge.exposeInMainWorld('bonoDesktop', {
   getLanguage: () => ipcRenderer.invoke('bono:language:get'),
   setLanguage: (language: Language) => ipcRenderer.invoke('bono:language', language),

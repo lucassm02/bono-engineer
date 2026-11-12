@@ -8,14 +8,27 @@
  */
 
 import { cpSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
-import { publishMigratedFolder } from '@gt7/core';
+import { isAbsolute, join, resolve } from 'node:path';
+import {
+  copyDataFolder,
+  defaultDataDir,
+  inspectDataFolder,
+  publishMigratedFolder,
+} from '@gt7/core';
 import { parseConfig, type RunningServer, StartServerError, startServer } from '@gt7/server';
-import { BRAND_SURFACE, isLanguage, PRODUCT_NAME, WS_PATH } from '@gt7/shared';
+import {
+  BRAND_SURFACE,
+  type DesktopDataCurrent,
+  type DesktopDataFolderInfo,
+  isLanguage,
+  PRODUCT_NAME,
+  WS_PATH,
+} from '@gt7/shared';
 import {
   app,
   BrowserWindow,
   clipboard,
+  dialog,
   ipcMain,
   Menu,
   type MenuItemConstructorOptions,
@@ -126,7 +139,91 @@ function checkLocalSender(event: Electron.IpcMainInvokeEvent): void {
     throw new Error(uiText('Abra as configurações no aplicativo Bono.'));
 }
 
+/** Folder facts for the "change data folder" dialog. */
+function dataFolderInfo(dir: string): DesktopDataFolderInfo {
+  const target = resolve(dir);
+  return { dir: target, ...inspectDataFolder(target) };
+}
+
+/**
+ * Switches the data folder: stops the server (so the database is closed), copies when asked,
+ * remembers the choice in the desktop state (which stays outside the data folder) and restarts.
+ * The old folder is never deleted.
+ */
+async function applyDataFolder(input: unknown): Promise<void> {
+  const r = (typeof input === 'object' && input !== null ? input : {}) as Record<string, unknown>;
+  const mode = r.mode;
+  if (mode !== 'copy' && mode !== 'use' && mode !== 'empty') throw new Error('Modo inválido.');
+  const dir = r.dir;
+  if (dir !== null && (typeof dir !== 'string' || !isAbsolute(dir))) {
+    throw new Error('Escolha uma pasta válida.');
+  }
+  const current = resolve(running?.config.dataDir ?? defaultDataDir());
+  const target = resolve(dir ?? defaultDataDir());
+  if (target === current) throw new Error(uiText('Essa já é a pasta atual.'));
+  const info = inspectDataFolder(target);
+  if (!info.writable) throw new Error(uiText('Não consigo gravar nessa pasta. Escolha outra.'));
+  if (mode === 'use' && !info.hasData) {
+    throw new Error(uiText('Essa pasta não tem dados do Bono.'));
+  }
+  if (mode !== 'use' && info.hasData) {
+    throw new Error(
+      uiText('Essa pasta já tem dados do Bono. Escolha usar os dados que já estão lá.'),
+    );
+  }
+
+  await stopServer();
+  try {
+    if (mode === 'copy') copyDataFolder(current, target);
+  } catch (e) {
+    log(`falha ao copiar os dados para ${target}: ${(e as Error).stack ?? e}`);
+    void boot(); // back to the folder that was in use; nothing was changed
+    throw new Error(uiText('Não foi possível copiar os dados: {0}', (e as Error).message));
+  }
+  const { dataDir: _previous, ...rest } = state;
+  state = dir === null ? rest : { ...rest, dataDir: target };
+  writeDesktopState(STATE_FILE, state);
+  log(`pasta de dados alterada para ${target} (${mode})`);
+  // Let the IPC answer reach the page before the window is taken over by the restart.
+  setImmediate(() => void boot());
+}
+
 function registerDesktopHandlers(): void {
+  ipcMain.handle('bono:data:current', (event) => {
+    checkLocalSender(event);
+    const defaultDir = resolve(defaultDataDir());
+    return {
+      dir: resolve(running?.config.dataDir ?? defaultDir),
+      isDefault: !state.dataDir,
+      defaultDir,
+    } satisfies DesktopDataCurrent;
+  });
+  ipcMain.handle('bono:data:choose', async (event) => {
+    checkLocalSender(event);
+    const options = {
+      title: uiText('Escolher a pasta dos dados'),
+      properties: ['openDirectory', 'createDirectory'] as ('openDirectory' | 'createDirectory')[],
+    };
+    const picked = win
+      ? await dialog.showOpenDialog(win, options)
+      : await dialog.showOpenDialog(options);
+    const first = picked.filePaths[0];
+    return picked.canceled || !first ? null : dataFolderInfo(first);
+  });
+  ipcMain.handle('bono:data:inspect', (event, dir: unknown) => {
+    checkLocalSender(event);
+    if (typeof dir !== 'string' || !isAbsolute(dir)) throw new Error('Pasta inválida.');
+    return dataFolderInfo(dir);
+  });
+  ipcMain.handle('bono:data:apply', async (event, input: unknown) => {
+    checkLocalSender(event);
+    await applyDataFolder(input);
+  });
+  ipcMain.handle('bono:data:open-folder', async (event) => {
+    checkLocalSender(event);
+    const dir = running?.config.dataDir;
+    if (dir) await shell.openPath(dir);
+  });
   const actions = {
     get: () => discord.get(),
     save: (settings: unknown) => discord.save(settings),
@@ -214,7 +311,12 @@ function hardenWebContents(w: BrowserWindow): void {
     if (action) {
       event.preventDefault();
       if (action === 'retry') void boot();
-      else void quitApp();
+      else if (action === 'default-data') {
+        const { dataDir: _chosen, ...rest } = state;
+        state = rest;
+        writeDesktopState(STATE_FILE, state);
+        void boot();
+      } else void quitApp();
       return;
     }
     if (inServerPage(url)) return;
@@ -337,11 +439,12 @@ async function loadCurrent(w: BrowserWindow): Promise<void> {
   else await w.loadURL(toDataUrl(splashHtml(state.language)));
 }
 
-function showError(message: string, detail?: string): void {
+function showError(message: string, detail?: string, offerDefaultData = false): void {
   if (!win || win.isDestroyed()) win = createWindow();
   const page = errorHtml(
     {
       message,
+      ...(offerDefaultData ? { offerDefaultData: true } : {}),
       ...(detail ? { detail } : {}),
       ...(logFilePath() ? { logFile: logFilePath() as string } : {}),
     },
@@ -408,7 +511,22 @@ async function boot(): Promise<void> {
     if (!START_HIDDEN || !tray) win.show();
 
     // Same code and same zero-config rules as `npm start`; the window is the "browser".
-    const base = parseConfig(['--no-open'], process.env);
+    // The folder the user picked (OneDrive, another drive...). If it is not reachable right now
+    // (drive unplugged, sync client offline) we do NOT fall back to an empty default folder.
+    const chosenDir = state.dataDir;
+    if (chosenDir && !existsSync(chosenDir)) {
+      log(`pasta de dados escolhida indisponível: ${chosenDir}`);
+      showError(
+        uiText('A pasta de dados escolhida não está disponível: {0}', chosenDir),
+        undefined,
+        true,
+      );
+      return;
+    }
+    const base = parseConfig(
+      ['--no-open', ...(chosenDir ? ['--data', chosenDir] : [])],
+      process.env,
+    );
     const cfg = {
       ...base,
       webDist: bundledWebDist(__dirname),
@@ -443,6 +561,7 @@ async function boot(): Promise<void> {
     showError(
       msg,
       e instanceof StartServerError && e.kind !== 'port-busy' ? undefined : (e as Error).message,
+      !!state.dataDir,
     );
   } finally {
     booting = false;

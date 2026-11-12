@@ -93,6 +93,7 @@ describe('parsePageAction', () => {
   it('recognizes the error page buttons and nothing else', () => {
     expect(parsePageAction('bono-app://retry')).toBe('retry');
     expect(parsePageAction('bono-app://quit/')).toBe('quit');
+    expect(parsePageAction('bono-app://default-data')).toBe('default-data');
     expect(parsePageAction('bono-app://format-c')).toBeNull();
     expect(parsePageAction('http://127.0.0.1:8770/')).toBeNull();
   });

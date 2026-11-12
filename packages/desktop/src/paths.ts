@@ -95,10 +95,10 @@ export function isOpenableExternally(url: string): boolean {
 
 /** Internal actions of the error page (links with this scheme never leave the app). */
 export const ACTION_SCHEME = 'bono-app:';
-export type PageAction = 'retry' | 'quit';
+export type PageAction = 'retry' | 'quit' | 'default-data';
 
 export function parsePageAction(url: string): PageAction | null {
   if (!url.startsWith(`${ACTION_SCHEME}//`)) return null;
   const name = url.slice(ACTION_SCHEME.length + 2).replace(/[/?#].*$/, '');
-  return name === 'retry' || name === 'quit' ? name : null;
+  return name === 'retry' || name === 'quit' || name === 'default-data' ? name : null;
 }

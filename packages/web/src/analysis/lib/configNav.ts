@@ -42,6 +42,7 @@ export type ConfigAnchor =
   | 'discord'
   | 'coach'
   | 'dados'
+  | 'backup'
   | 'mcp'
   | 'idioma'
   | 'sobre';
@@ -66,6 +67,7 @@ const LEGACY: Record<string, ConfigTarget> = {
   discord: { group: 'contas', anchor: 'discord' },
   coach: { group: 'contas', anchor: 'coach' },
   dados: { group: 'contas', anchor: 'dados' },
+  backup: { group: 'contas', anchor: 'backup' },
   mcp: { group: 'contas', anchor: 'mcp' },
   sobre: { group: 'sobre', anchor: 'sobre' },
   // apelidos que já existiam
@@ -492,9 +494,33 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
       return uiText('Pasta dos dados');
     },
     get description() {
-      return uiText('Onde ficam suas sessões e como fazer uma cópia de segurança.');
+      return uiText('Onde ficam suas sessões. Dá para trocar a pasta, até para o OneDrive.');
     },
-    keywords: 'backup cópia arquivos caminho',
+    keywords: 'pasta caminho onedrive dropbox nuvem mudar alterar local armazenamento',
+  },
+  {
+    id: 'data-export',
+    group: 'contas',
+    anchor: 'backup',
+    get title() {
+      return uiText('Exportar backup');
+    },
+    get description() {
+      return uiText('Leva suas voltas e configurações para outro PC ou guarda uma cópia.');
+    },
+    keywords: 'backup exportar cópia de segurança salvar voltas configurações bono arquivo',
+  },
+  {
+    id: 'data-import',
+    group: 'contas',
+    anchor: 'backup',
+    get title() {
+      return uiText('Importar backup');
+    },
+    get description() {
+      return uiText('Soma ou substitui seu histórico com um arquivo .bono.');
+    },
+    keywords: 'importar restaurar backup abrir arquivo bono voltas',
   },
   {
     id: 'language',

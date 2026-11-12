@@ -4,7 +4,9 @@ import { join, resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
+  copyDataFolder,
   defaultDataDir,
+  inspectDataFolder,
   migrateLegacyData,
   migratePreviousDataDir,
   previousDataFolderName,
@@ -129,4 +131,65 @@ it('migrates committed history from the previous default folder with its traces'
   } finally {
     source.close();
   }
+});
+
+describe('inspectDataFolder / copyDataFolder', () => {
+  const made: string[] = [];
+  const mk = () => {
+    const d = mkdtempSync(join(tmpdir(), 'bono-copy-'));
+    made.push(d);
+    return d;
+  };
+  afterEach(() => {
+    for (const d of made.splice(0)) rmSync(d, { recursive: true, force: true });
+  });
+
+  function seedDb(dir: string, sessions: number) {
+    const db = new DatabaseSync(join(dir, 'sessions.db'));
+    db.exec('PRAGMA journal_mode = WAL; CREATE TABLE sessions (id TEXT PRIMARY KEY)');
+    for (let i = 0; i < sessions; i++) db.prepare('INSERT INTO sessions VALUES (?)').run(`s${i}`);
+    db.close();
+  }
+
+  it('reports an empty folder, a data folder and a folder with other files', () => {
+    const empty = mk();
+    expect(inspectDataFolder(empty)).toMatchObject({
+      writable: true,
+      hasData: false,
+      hasOtherFiles: false,
+    });
+
+    const withData = mk();
+    seedDb(withData, 3);
+    expect(inspectDataFolder(withData)).toMatchObject({ hasData: true, sessions: 3 });
+
+    const other = mk();
+    writeFileSync(join(other, 'foto.jpg'), 'x');
+    expect(inspectDataFolder(other)).toMatchObject({ hasData: false, hasOtherFiles: true });
+  });
+
+  it('copies the database snapshot, traces and recordings without touching the source', () => {
+    const src = mk();
+    seedDb(src, 2);
+    mkdirSync(join(src, 'traces'));
+    writeFileSync(join(src, 'traces', 'a.bin.gz'), 'trace');
+    mkdirSync(join(src, 'recordings'));
+    writeFileSync(join(src, 'recordings', 'r.gt7rec'), 'rec');
+    const dest = join(mk(), 'novo');
+    copyDataFolder(src, dest);
+    expect(inspectDataFolder(dest)).toMatchObject({ hasData: true, sessions: 2 });
+    expect(readFileSync(join(dest, 'traces', 'a.bin.gz'), 'utf8')).toBe('trace');
+    expect(readFileSync(join(dest, 'recordings', 'r.gt7rec'), 'utf8')).toBe('rec');
+    expect(existsSync(join(src, 'sessions.db'))).toBe(true);
+  });
+
+  it('refuses a destination that already has data or sits inside the source', () => {
+    const src = mk();
+    seedDb(src, 1);
+    const withData = mk();
+    seedDb(withData, 1);
+    expect(() => copyDataFolder(src, withData)).toThrow(/já tem dados/);
+    expect(() => copyDataFolder(src, join(src, 'dentro'))).toThrow(/dentro da pasta atual/);
+    expect(() => copyDataFolder(src, src)).toThrow(/mesma/);
+  });
 });

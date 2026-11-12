@@ -10,6 +10,7 @@ import { captureRoutes } from './capture.ts';
 import { coachRoutes } from './coach.ts';
 import type { RouteContext } from './context.ts';
 import { currentSessionRoutes } from './current-session.ts';
+import { dataRoutes } from './data.ts';
 import { deviceRoutes } from './devices.ts';
 import { mcpInfoRoutes } from './mcp-info.ts';
 import { sessionRoutes } from './sessions.ts';
@@ -30,6 +31,7 @@ export const ROUTE_MODULES: RouteModule[] = [
   analysisRoutes,
   coachRoutes,
   mcpInfoRoutes,
+  dataRoutes,
 ];
 
 export async function registerApi(

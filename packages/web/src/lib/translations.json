@@ -3790,5 +3790,196 @@
   "troca de tela": ["switches screen", "cambia de pantalla"],
   "escolher as telas": ["chooses screens", "elige las pantallas"],
   "troca a referência do delta": ["changes the delta reference", "cambia la referencia del delta"],
-  "fecha menu, seletor ou tour": ["closes menu, picker or tour", "cierra menú, selector o tour"]
+  "fecha menu, seletor ou tour": ["closes menu, picker or tour", "cierra menú, selector o tour"],
+  "Suas sessões, voltas e gravações ficam só neste PC, na pasta que você escolher.": [
+    "Your sessions, laps and recordings stay on this PC, in the folder you choose.",
+    "Tus sesiones, vueltas y grabaciones se quedan en este PC, en la carpeta que elijas."
+  ],
+  "Espaço usado": ["Space used", "Espacio usado"],
+  "Abrir pasta": ["Open folder", "Abrir carpeta"],
+  "Alterar pasta…": ["Change folder…", "Cambiar carpeta…"],
+  "Para trocar a pasta, use o aplicativo Bono para Windows.": [
+    "To change the folder, use the Bono app for Windows.",
+    "Para cambiar la carpeta, usa la aplicación Bono para Windows."
+  ],
+  "Pasta sincronizada pelo {0}": ["Folder synced by {0}", "Carpeta sincronizada por {0}"],
+  "Use o Bono em um PC por vez e espere a sincronização terminar antes de abri-lo em outro. Dois PCs na mesma pasta ao mesmo tempo podem corromper o histórico. Para guardar cópias na nuvem com segurança, prefira exportar um backup para essa pasta.": [
+    "Use Bono on one PC at a time and wait for the sync to finish before opening it on another. Two PCs on the same folder at once can corrupt the history. To keep copies in the cloud safely, export a backup to that folder instead.",
+    "Usa Bono en un PC a la vez y espera a que termine la sincronización antes de abrirlo en otro. Dos PC en la misma carpeta a la vez pueden dañar el historial. Para guardar copias en la nube con seguridad, mejor exporta una copia de seguridad a esa carpeta."
+  ],
+  "Backup e transferência": ["Backup and transfer", "Copia de seguridad y traspaso"],
+  "Leve suas voltas para outro PC ou guarde uma cópia, no OneDrive por exemplo. Chaves e senhas nunca vão no arquivo.": [
+    "Take your laps to another PC or keep a copy, in OneDrive for example. Keys and passwords never go in the file.",
+    "Lleva tus vueltas a otro PC o guarda una copia, en OneDrive por ejemplo. Las claves y contraseñas nunca van en el archivo."
+  ],
+  "Exportar": ["Export", "Exportar"],
+  "Sessões e voltas": ["Sessions and laps", "Sesiones y vueltas"],
+  "{0} sessões, {1} voltas e {2} pistas": [
+    "{0} sessions, {1} laps and {2} tracks",
+    "{0} sesiones, {1} vueltas y {2} pistas"
+  ],
+  "Seu histórico completo.": ["Your full history.", "Tu historial completo."],
+  "Idioma, engenheiro, telas dos aparelhos e preferências.": [
+    "Language, engineer, device screens and preferences.",
+    "Idioma, ingeniero, pantallas de los dispositivos y preferencias."
+  ],
+  "Gravações brutas": ["Raw recordings", "Grabaciones en bruto"],
+  "Ocupam {0}. Só vale a pena se você quer reprocessar as sessões.": [
+    "They take {0}. Only worth it if you want to reprocess the sessions.",
+    "Ocupan {0}. Solo vale la pena si quieres reprocesar las sesiones."
+  ],
+  "Você não tem gravações brutas guardadas.": [
+    "You have no raw recordings saved.",
+    "No tienes grabaciones en bruto guardadas."
+  ],
+  "Exportar backup (.bono)": ["Export backup (.bono)", "Exportar copia de seguridad (.bono)"],
+  "Exportar só as configurações": ["Export settings only", "Exportar solo la configuración"],
+  "Escolha o que exportar.": ["Choose what to export.", "Elige qué exportar."],
+  "Importar": ["Import", "Importar"],
+  "Escolha um arquivo .bono. Você decide se ele é somado ao que você já tem ou se substitui tudo.": [
+    "Choose a .bono file. You decide whether it is added to what you already have or replaces everything.",
+    "Elige un archivo .bono. Tú decides si se suma a lo que ya tienes o si lo reemplaza todo."
+  ],
+  "Lendo o arquivo…": ["Reading the file…", "Leyendo el archivo…"],
+  "Importar backup…": ["Import backup…", "Importar copia de seguridad…"],
+  "Backup importado": ["Backup imported", "Copia importada"],
+  "{0} sessões e {1} voltas adicionadas": [
+    "{0} sessions and {1} laps added",
+    "{0} sesiones y {1} vueltas añadidas"
+  ],
+  "{0} pistas novas": ["{0} new tracks", "{0} pistas nuevas"],
+  " · {0} já existiam e foram reconhecidas": [
+    " · {0} already existed and were recognised",
+    " · {0} ya existían y se reconocieron"
+  ],
+  "{0} relatórios do coach": ["{0} coach reports", "{0} informes del coach"],
+  "Configurações aplicadas": ["Settings applied", "Configuración aplicada"],
+  "Uma cópia do que existia antes ficou em {0}.": [
+    "A copy of what existed before was kept in {0}.",
+    "Una copia de lo que había antes quedó en {0}."
+  ],
+  "Importar backup": ["Import backup", "Importar copia de seguridad"],
+  "Criado em {0} no Bono {1}": ["Created on {0} with Bono {1}", "Creada el {0} con Bono {1}"],
+  "Importando…": ["Importing…", "Importando…"],
+  "Substituir tudo": ["Replace everything", "Reemplazar todo"],
+  "Adicionar ao meu histórico": ["Add to my history", "Añadir a mi historial"],
+  "Tamanho": ["Size", "Tamaño"],
+  "Como importar": ["How to import", "Cómo importar"],
+  "Adicionar ao que eu já tenho": ["Add to what I already have", "Añadir a lo que ya tengo"],
+  "Recomendado. Mantém seu histórico e soma só o que ainda não está aqui. Pistas iguais são reconhecidas.": [
+    "Recommended. Keeps your history and adds only what is not here yet. Matching tracks are recognised.",
+    "Recomendado. Mantiene tu historial y suma solo lo que aún no está aquí. Las pistas iguales se reconocen."
+  ],
+  "Apaga o histórico atual e fica só com o do arquivo. Antes, uma cópia do que existe hoje é guardada na pasta backups.": [
+    "Erases the current history and keeps only the one in the file. First, a copy of what exists today is saved in the backups folder.",
+    "Borra el historial actual y se queda solo con el del archivo. Antes, se guarda una copia de lo que existe hoy en la carpeta backups."
+  ],
+  "Importar também as configurações": [
+    "Also import the settings",
+    "Importar también la configuración"
+  ],
+  "Troca idioma, engenheiro e telas dos aparelhos pelos do arquivo.": [
+    "Replaces language, engineer and device screens with the ones in the file.",
+    "Cambia idioma, ingeniero y pantallas de los dispositivos por los del archivo."
+  ],
+  "Não foi possível ler a pasta atual.": [
+    "Could not read the current folder.",
+    "No se pudo leer la carpeta actual."
+  ],
+  "Alterar a pasta dos dados": ["Change the data folder", "Cambiar la carpeta de datos"],
+  "Escolha uma pasta no seu PC, por exemplo dentro do OneDrive.": [
+    "Choose a folder on your PC, for example inside OneDrive.",
+    "Elige una carpeta en tu PC, por ejemplo dentro de OneDrive."
+  ],
+  "Aplicando…": ["Applying…", "Aplicando…"],
+  "Mudar e reiniciar": ["Change and restart", "Cambiar y reiniciar"],
+  "Pasta atual": ["Current folder", "Carpeta actual"],
+  "Escolher a nova pasta…": ["Choose the new folder…", "Elegir la nueva carpeta…"],
+  "Voltar para a pasta padrão": [
+    "Back to the default folder",
+    "Volver a la carpeta predeterminada"
+  ],
+  "Nova pasta": ["New folder", "Nueva carpeta"],
+  "Escolher outra": ["Choose another", "Elegir otra"],
+  "Não consigo gravar nessa pasta. Escolha outra.": [
+    "I cannot write to that folder. Choose another.",
+    "No puedo escribir en esa carpeta. Elige otra."
+  ],
+  "O que fazer com os dados": ["What to do with the data", "Qué hacer con los datos"],
+  "Usar os dados que já estão lá": [
+    "Use the data that is already there",
+    "Usar los datos que ya están allí"
+  ],
+  "Essa pasta já tem {0} sessões do Bono. Os dados atuais continuam na pasta antiga.": [
+    "That folder already has {0} Bono sessions. The current data stays in the old folder.",
+    "Esa carpeta ya tiene {0} sesiones de Bono. Los datos actuales siguen en la carpeta antigua."
+  ],
+  "Copiar meus dados para lá": ["Copy my data there", "Copiar mis datos allí"],
+  "Recomendado. A pasta antiga fica como está; você apaga quando quiser.": [
+    "Recommended. The old folder stays as it is; delete it whenever you like.",
+    "Recomendado. La carpeta antigua se queda como está; la borras cuando quieras."
+  ],
+  "Começar do zero nessa pasta": [
+    "Start from scratch in that folder",
+    "Empezar de cero en esa carpeta"
+  ],
+  "Sem histórico. Seus dados atuais continuam na pasta antiga.": [
+    "No history. Your current data stays in the old folder.",
+    "Sin historial. Tus datos actuales siguen en la carpeta antigua."
+  ],
+  "Essa pasta tem outros arquivos. O Bono só cria os dele e não mexe nos seus.": [
+    "That folder has other files. Bono only creates its own and does not touch yours.",
+    "Esa carpeta tiene otros archivos. Bono solo crea los suyos y no toca los tuyos."
+  ],
+  "O Bono usa um modo de gravação mais seguro nessa pasta, mas use-o em um PC por vez e espere a sincronização terminar antes de abrir em outro. Para só guardar cópias, exporte um backup para essa pasta.": [
+    "Bono uses a safer write mode in that folder, but use it on one PC at a time and wait for the sync to finish before opening it on another. To just keep copies, export a backup to that folder.",
+    "Bono usa un modo de escritura más seguro en esa carpeta, pero úsalo en un PC a la vez y espera a que termine la sincronización antes de abrirlo en otro. Para solo guardar copias, exporta una copia de seguridad a esa carpeta."
+  ],
+  "Onde ficam suas sessões. Dá para trocar a pasta, até para o OneDrive.": [
+    "Where your sessions live. You can change the folder, even to OneDrive.",
+    "Dónde están tus sesiones. Puedes cambiar la carpeta, incluso a OneDrive."
+  ],
+  "Exportar backup": ["Export backup", "Exportar copia de seguridad"],
+  "Leva suas voltas e configurações para outro PC ou guarda uma cópia.": [
+    "Takes your laps and settings to another PC or keeps a copy.",
+    "Lleva tus vueltas y configuración a otro PC o guarda una copia."
+  ],
+  "Soma ou substitui seu histórico com um arquivo .bono.": [
+    "Adds to or replaces your history with a .bono file.",
+    "Suma o reemplaza tu historial con un archivo .bono."
+  ],
+  "Essa já é a pasta atual.": [
+    "That is already the current folder.",
+    "Esa ya es la carpeta actual."
+  ],
+  "Essa pasta não tem dados do Bono.": [
+    "That folder has no Bono data.",
+    "Esa carpeta no tiene datos de Bono."
+  ],
+  "Essa pasta já tem dados do Bono. Escolha usar os dados que já estão lá.": [
+    "That folder already has Bono data. Choose to use the data that is already there.",
+    "Esa carpeta ya tiene datos de Bono. Elige usar los datos que ya están allí."
+  ],
+  "Não foi possível copiar os dados: {0}": [
+    "Could not copy the data: {0}",
+    "No se pudieron copiar los datos: {0}"
+  ],
+  "Escolher a pasta dos dados": ["Choose the data folder", "Elegir la carpeta de datos"],
+  "A pasta de dados escolhida não está disponível: {0}": [
+    "The chosen data folder is not available: {0}",
+    "La carpeta de datos elegida no está disponible: {0}"
+  ],
+  "Usar a pasta padrão": ["Use the default folder", "Usar la carpeta predeterminada"],
+  "Sessões adicionadas: {0}": ["Sessions added: {0}", "Sesiones añadidas: {0}"],
+  "Voltas adicionadas: {0}": ["Laps added: {0}", "Vueltas añadidas: {0}"],
+  "Pistas novas: {0}": ["New tracks: {0}", "Pistas nuevas: {0}"],
+  " · reconhecidas como já existentes: {0}": [
+    " · recognised as already existing: {0}",
+    " · reconocidas como ya existentes: {0}"
+  ],
+  "Relatórios do coach: {0}": ["Coach reports: {0}", "Informes del coach: {0}"],
+  "Sessões: {0} · Voltas: {1} · Pistas: {2}": [
+    "Sessions: {0} · Laps: {1} · Tracks: {2}",
+    "Sesiones: {0} · Vueltas: {1} · Pistas: {2}"
+  ]
 }

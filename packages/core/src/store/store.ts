@@ -15,6 +15,7 @@ import { existsSync, mkdirSync, rmSync } from 'node:fs';
 import { rm, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
+
 import { promisify } from 'node:util';
 import { gzip } from 'node:zlib';
 import { RECORDING_EXTENSION } from '@gt7/protocol';
@@ -45,6 +46,7 @@ import {
   readTraceFileSync,
   TRACE_EXTENSION,
 } from '../trace/trace-file.ts';
+import { detectCloudFolder } from '../util/cloud-folder.ts';
 import { DB_FILE, migratePreviousDataDir } from '../util/data-dir.ts';
 import { getSchemaVersion, migrate } from './schema.ts';
 
@@ -137,8 +139,11 @@ export class Gt7Store {
     mkdirSync(this.tracesDir, { recursive: true });
     mkdirSync(this.recordingsDir, { recursive: true });
     this.db = new DatabaseSync(this.dbPath);
+    // Cloud-synced folders (OneDrive, Dropbox...) can lock or upload the WAL files mid-write: there the
+    // rollback journal with full syncing is the safe choice.
+    const synced = detectCloudFolder(this.dataDir) !== null;
     this.db.exec(
-      'PRAGMA busy_timeout = 5000; PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA synchronous = NORMAL;',
+      `PRAGMA busy_timeout = 5000; PRAGMA journal_mode = ${synced ? 'DELETE' : 'WAL'}; PRAGMA foreign_keys = ON; PRAGMA synchronous = ${synced ? 'FULL' : 'NORMAL'};`,
     );
     migrate(this.db);
   }

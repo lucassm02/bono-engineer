@@ -5,11 +5,15 @@
  */
 
 import type {
+  ApiBackupUpload,
   ApiComparison,
   ApiConsistency,
+  ApiDataSummary,
   ApiDiscoveryScanResult,
   ApiErrorBody,
   ApiEvolution,
+  ApiImportMode,
+  ApiImportResult,
   ApiLapAnalysis,
   ApiLapDrivingEvents,
   ApiMcpInfo,
@@ -227,6 +231,29 @@ export const api = {
     request<ReferenceCaptureStatus>('POST', '/api/capture/stop', { save }),
 
   mcpInfo: () => get<ApiMcpInfo>('/api/mcp/info'),
+  dataSummary: () => get<ApiDataSummary>('/api/data/summary'),
+  /** Address that downloads a `.bono` backup (a plain link: the browser streams it to disk). */
+  dataExportUrl: (o: { laps: boolean; settings: boolean; recordings: boolean }) =>
+    `/api/data/export?laps=${o.laps ? 1 : 0}&settings=${o.settings ? 1 : 0}&recordings=${o.recordings ? 1 : 0}`,
+  /** Sends the chosen `.bono` file as it is; the server checks it and says what is inside. */
+  dataImportUpload: async (file: File): Promise<ApiBackupUpload> => {
+    let res: Response;
+    try {
+      res = await fetch('/api/data/import', {
+        method: 'POST',
+        headers: { 'content-type': 'application/octet-stream', accept: 'application/json' },
+        body: file,
+      });
+    } catch {
+      throw new ApiError(OFFLINE_MESSAGE, 0, 'offline');
+    }
+    if (!res.ok) throw await errorFromResponse(res);
+    return (await res.json()) as ApiBackupUpload;
+  },
+  dataImportApply: (id: string, body: { mode: ApiImportMode; settings: boolean }) =>
+    request<ApiImportResult>('POST', `/api/data/import/${encodeURIComponent(id)}/apply`, body),
+  dataImportDiscard: (id: string) =>
+    request<void>('DELETE', `/api/data/import/${encodeURIComponent(id)}`),
   coachConfig: () => get<CoachConfig>('/api/coach/config'),
   putCoachConfig: (p: CoachConfigPatch) => request<CoachConfig>('PUT', '/api/coach/config', p),
   coachReports: (limit = 50) => get<CoachReportSummary[]>(`/api/coach/reports${qs({ limit })}`),

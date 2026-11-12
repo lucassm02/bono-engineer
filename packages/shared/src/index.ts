@@ -11,6 +11,12 @@ export * from './api.ts';
 export * from './brand.ts';
 export * from './cars/index.ts';
 export * from './coach.ts';
+export type {
+  DesktopDataBridge,
+  DesktopDataCurrent,
+  DesktopDataFolderInfo,
+  DesktopDataMode,
+} from './desktop-data.ts';
 export {
   type DesktopDiscordBridge,
   type DesktopDiscordSettings,

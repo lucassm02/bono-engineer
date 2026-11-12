@@ -21,6 +21,7 @@ import { DiscordSettings } from '../DiscordSettings.tsx';
 import { Panel } from '../Panel.tsx';
 import { ErrorBox, Loading } from '../ui.tsx';
 import { Advanced, CfgRow, rowDomId, useSave } from './ConfigRow.tsx';
+import { DataSection } from './DataManager.tsx';
 
 const EFFORT_LABELS: Record<CoachEffort, string> = {
   get low() {
@@ -350,53 +351,6 @@ export function CoachSection() {
           />
         </div>
       )}
-    </Panel>
-  );
-}
-
-export function DataSection({ status }: { status: ApiStatus }) {
-  const info = useFetch('mcpinfo', () => api.mcpInfo());
-  const dir = info.data?.dataDir ?? null;
-  return (
-    <Panel
-      title={uiText('Seus dados')}
-      description={uiText('Suas sessões, voltas e gravações ficam só neste PC.')}
-      id="dados"
-    >
-      <div className="cfg-stack">
-        <div className="ui-field">
-          <span className="ui-label">{uiText('Pasta dos dados')}</span>
-          {info.error && !dir ? (
-            <ErrorBox error={info.error} compact onRetry={info.reload} />
-          ) : !dir ? (
-            <Loading />
-          ) : (
-            <div className="cfg-datapath">
-              <span className="num">{dir}</span>
-              <CopyBtn text={dir} label={uiText('Copiar caminho')} />
-            </div>
-          )}
-        </div>
-        <p className="cfg-hint">
-          {uiText(
-            'Para fazer uma cópia de segurança, feche o app e copie essa pasta inteira. Ela fica fora da pasta do programa, então atualizar ou reinstalar o app não apaga nada.',
-          )}
-        </p>
-        {status.simulator && (
-          <div className="ui-card cfg-note" data-tone="warn" role="note">
-            <span className="ui-badge" data-tone="warn">
-              Demo
-            </span>
-            <span>
-              {uiText(
-                'Você está no modo demonstração: estes dados são de um piloto simulado e ficam numa subpasta separada (',
-              )}
-              <code>demo</code>
-              {uiText('), sem misturar com os reais.')}
-            </span>
-          </div>
-        )}
-      </div>
     </Panel>
   );
 }

@@ -1,0 +1,125 @@
+/* Seus dados e Backup (Configurações → Contas e dados). Só tokens. */
+
+.dm-stack {
+  display: grid;
+  gap: var(--sp-4);
+  min-width: 0;
+}
+
+.dm-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+}
+
+.dm-path {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface-3);
+}
+
+.dm-path-text {
+  min-width: 0;
+  flex: 1 1 240px;
+  font-size: var(--fs-sm);
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.dm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.dm-link {
+  justify-self: start;
+}
+
+.dm-note {
+  display: grid;
+  gap: var(--sp-1);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+}
+
+.dm-note strong {
+  color: var(--text);
+}
+
+/* Escolha entre dois ou três caminhos (importar, trocar de pasta). */
+.dm-choices {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.dm-choice {
+  display: grid;
+  gap: 2px;
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-3);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease);
+}
+
+.dm-choice:hover {
+  border-color: var(--line-strong);
+}
+
+.dm-choice span {
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+
+.dm-choice[data-checked="1"] {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+
+.dm-choice[data-danger="1"][data-checked="1"] {
+  border-color: color-mix(in srgb, var(--loss) 55%, transparent);
+  background: var(--loss-soft);
+}
+
+.dm-radio {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.dm-choice {
+  position: relative;
+}
+
+.dm-choice:has(.dm-radio:focus-visible) {
+  box-shadow: var(--focus-ring);
+}
+
+.dm-result {
+  margin: 0;
+  padding-left: var(--sp-5);
+  display: grid;
+  gap: var(--sp-1);
+}
+
+/* O selo dentro da nota não estica pela largura do cartão. */
+.dm-note > .ui-badge {
+  justify-self: start;
+}

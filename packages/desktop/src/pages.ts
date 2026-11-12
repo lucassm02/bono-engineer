@@ -66,6 +66,8 @@ export interface ErrorPageInput {
   detail?: string;
   /** Where the log is, if any. */
   logFile?: string;
+  /** Offers to go back to the default data folder (the chosen one is not available). */
+  offerDefaultData?: boolean;
 }
 
 export function errorHtml(input: ErrorPageInput, language: Language = 'pt-BR'): string {
@@ -83,7 +85,7 @@ export function errorHtml(input: ErrorPageInput, language: Language = 'pt-BR'): 
   a.btn { display: inline-block; padding: 10px 20px; border-radius: 8px; text-decoration: none;
     font-weight: 600; background: ${BRAND_SIGNAL}; color: ${BRAND_SURFACE}; }
   a.btn.secondary { background: #131c26; color: #eef3f7; border: 1px solid #324658; }
-  a.btn:focus-visible { outline: 3px solid ; outline-offset: 2px; }
+  a.btn:focus-visible { outline: 3px solid ${BRAND_SIGNAL}; outline-offset: 2px; }
   pre { text-align: left; background: #0d141c; border: 1px solid #223140; border-radius: 8px;
     padding: 10px 12px; color: #a9b7c4; font: 12px/1.45 Consolas, monospace; white-space: pre-wrap;
     word-break: break-word; max-height: 140px; overflow: auto; }
@@ -98,6 +100,11 @@ export function errorHtml(input: ErrorPageInput, language: Language = 'pt-BR'): 
   ${log}
   <div class="actions">
     <a class="btn" href="${ACTION_SCHEME}//retry" autofocus>${text('Tentar de novo')}</a>
+    ${
+      input.offerDefaultData
+        ? `<a class="btn secondary" href="${ACTION_SCHEME}//default-data">${text('Usar a pasta padrão')}</a>`
+        : ''
+    }
     <a class="btn secondary" href="${ACTION_SCHEME}//quit">${text('Fechar o app')}</a>
   </div>
 </main></body></html>`;

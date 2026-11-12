@@ -9,6 +9,8 @@ export interface DesktopState {
   window: WindowState | null;
   trayHintShown: boolean;
   language?: Language;
+  /** Data folder chosen by the user; missing = the per-user default. Kept here, not in the data. */
+  dataDir?: string;
 }
 
 export function parseDesktopState(raw: unknown): DesktopState {
@@ -17,6 +19,7 @@ export function parseDesktopState(raw: unknown): DesktopState {
     window: parseWindowState(r.window),
     trayHintShown: r.trayHintShown === true,
     ...(isLanguage(r.language) ? { language: r.language } : {}),
+    ...(typeof r.dataDir === 'string' && r.dataDir.trim() ? { dataDir: r.dataDir } : {}),
   };
 }
 

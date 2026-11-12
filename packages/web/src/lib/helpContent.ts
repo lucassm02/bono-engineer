@@ -382,11 +382,27 @@ const PT: HelpContent = {
       summary: 'O idioma vale para a tela e para a voz do engenheiro.',
       steps: [
         'Para trocar, abra Configurações → Contas e dados → Idioma do app: português, inglês ou espanhol.',
-        'Para fazer uma cópia de segurança, copie a pasta que aparece em Pasta dos dados.',
+        'Para fazer uma cópia de segurança ou levar suas voltas para outro PC, veja “Backup e pasta dos dados”.',
       ],
       note: 'Sessões, voltas e gravações ficam só no seu PC. O Bono não tem servidor nem conta.',
       links: [lnk('Contas e dados', routes.config('contas'))],
-      keywords: 'english español língua backup cópia segurança privacidade',
+      keywords: 'english español língua privacidade',
+    },
+    {
+      id: 'backup-e-pasta',
+      topic: 'settings',
+      title: 'Backup e pasta dos dados',
+      summary: 'Exporte tudo num arquivo .bono, importe em outro PC ou mude onde os dados ficam.',
+      steps: [
+        'Abra Configurações → Contas e dados → Backup e transferência.',
+        'Exportar: escolha o que levar (voltas, configurações, gravações) e clique em Exportar backup (.bono).',
+        'Importar: escolha o arquivo e decida: Adicionar ao que eu já tenho (recomendado) ou Substituir tudo. Ao substituir, uma cópia do que existia fica na pasta backups.',
+        'Mudar a pasta (app para Windows): em Seus dados, clique em Alterar pasta e copie seus dados para lá. A pasta antiga continua intacta.',
+      ],
+      note: 'No OneDrive ou Dropbox, use o Bono em um PC por vez e espere a sincronização terminar. Para guardar cópias na nuvem com segurança, exporte um backup para essa pasta. Chaves e senhas nunca entram no arquivo.',
+      links: [lnk('Backup e transferência', routes.config('backup'))],
+      keywords:
+        'backup exportar importar restaurar onedrive dropbox nuvem pasta mudar local armazenamento bono arquivo',
     },
 
     {
@@ -818,11 +834,28 @@ const EN: HelpContent = {
       summary: 'The language applies to the screen and to the engineer’s voice.',
       steps: [
         'To change it, open Settings → Accounts and data → App language: Portuguese, English or Spanish.',
-        'To back up, copy the folder shown in Data folder.',
+        'To back up or take your laps to another PC, see “Backup and data folder”.',
       ],
       note: 'Sessions, laps and recordings stay on your PC only. Bono has no server and no account.',
       links: [lnk('Accounts and data', routes.config('contas'))],
-      keywords: 'portugues espanol language backup privacy',
+      keywords: 'portugues espanol language privacy',
+    },
+    {
+      id: 'backup-e-pasta',
+      topic: 'settings',
+      title: 'Backup and data folder',
+      summary:
+        'Export everything to a .bono file, import it on another PC, or change where your data lives.',
+      steps: [
+        'Open Settings → Accounts and data → Backup and transfer.',
+        'Export: choose what to take (laps, settings, recordings) and click Export backup (.bono).',
+        'Import: pick the file and decide: Add to what I already have (recommended) or Replace everything. When replacing, a copy of what existed is kept in the backups folder.',
+        'Change the folder (Windows app): under Your data, click Change folder and copy your data there. The old folder stays untouched.',
+      ],
+      note: 'In OneDrive or Dropbox, use Bono on one PC at a time and wait for the sync to finish. To keep copies in the cloud safely, export a backup to that folder. Keys and passwords never go in the file.',
+      links: [lnk('Backup and transfer', routes.config('backup'))],
+      keywords:
+        'backup export import restore onedrive dropbox cloud folder change location storage bono file',
     },
 
     {
@@ -1258,11 +1291,28 @@ const ES: HelpContent = {
       summary: 'El idioma vale para la pantalla y para la voz del ingeniero.',
       steps: [
         'Para cambiarlo, abre Configuración → Cuentas y datos → Idioma de la app: portugués, inglés o español.',
-        'Para hacer una copia de seguridad, copia la carpeta que aparece en Carpeta de datos.',
+        'Para hacer una copia de seguridad o llevar tus vueltas a otro PC, mira “Copia de seguridad y carpeta de datos”.',
       ],
       note: 'Sesiones, vueltas y grabaciones quedan solo en tu PC. Bono no tiene servidor ni cuenta.',
       links: [lnk('Cuentas y datos', routes.config('contas'))],
-      keywords: 'english portugués idioma copia seguridad privacidad',
+      keywords: 'english portugués idioma privacidad',
+    },
+    {
+      id: 'backup-e-pasta',
+      topic: 'settings',
+      title: 'Copia de seguridad y carpeta de datos',
+      summary:
+        'Exporta todo a un archivo .bono, impórtalo en otro PC o cambia dónde viven tus datos.',
+      steps: [
+        'Abre Configuración → Cuentas y datos → Copia y traspaso.',
+        'Exportar: elige qué llevar (vueltas, configuración, grabaciones) y pulsa Exportar copia de seguridad (.bono).',
+        'Importar: elige el archivo y decide: Añadir a lo que ya tengo (recomendado) o Reemplazar todo. Al reemplazar, queda una copia de lo que había en la carpeta backups.',
+        'Cambiar la carpeta (app para Windows): en Tus datos, pulsa Cambiar carpeta y copia tus datos allí. La carpeta antigua queda intacta.',
+      ],
+      note: 'En OneDrive o Dropbox, usa Bono en un PC a la vez y espera a que termine la sincronización. Para guardar copias en la nube con seguridad, exporta una copia a esa carpeta. Las claves y contraseñas nunca van en el archivo.',
+      links: [lnk('Copia y traspaso', routes.config('backup'))],
+      keywords:
+        'copia seguridad exportar importar restaurar onedrive dropbox nube carpeta cambiar ubicación almacenamiento bono archivo',
     },
 
     {

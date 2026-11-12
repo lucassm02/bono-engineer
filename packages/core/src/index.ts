@@ -37,6 +37,19 @@ export {
 } from './analysis-service/driving-events.ts';
 export { LruCache } from './analysis-service/lru.ts';
 export {
+  BACKUP_EXTENSION,
+  type BackupCounts,
+  type BackupInfo,
+  type BackupManifest,
+  type BackupOptions,
+  createBackup,
+  type ImportMode,
+  type ImportOptions,
+  type ImportResult,
+  importBackup,
+  inspectBackup,
+} from './backup/backup.ts';
+export {
   ReferenceCapture,
   type ReferenceCaptureEvents,
   type ReferenceCaptureMeta,
@@ -133,11 +146,15 @@ export {
   UNKNOWN_TRACK_PREFIX,
 } from './track/fingerprint.ts';
 export { type CatalogGuess, catalogGuessAtStart } from './track/start-guess.ts';
+export { type CloudFolder, detectCloudFolder } from './util/cloud-folder.ts';
 export {
+  copyDataFolder,
   DATA_DIR_NAME,
   type DataDirContext,
+  type DataFolderInfo,
   DEMO_SUBDIR,
   defaultDataDir,
+  inspectDataFolder,
   type MigrationResult,
   migrateLegacyData,
   migratePreviousDataDir,

@@ -179,3 +179,58 @@ export interface ApiMcpInfo {
   };
   claudeCode: { stdio: string; http: string };
 }
+
+// ---------------------------------------------------------------------------------------------
+// Data: folder summary, .bono backup export and import (`/api/data/*`)
+// ---------------------------------------------------------------------------------------------
+
+export interface ApiDataSummary {
+  dataDir: string;
+  /** Cloud service syncing the folder (OneDrive, Dropbox...), when detected. */
+  cloudProvider: string | null;
+  sizes: { databaseBytes: number; tracesBytes: number; recordingsBytes: number };
+  counts: { sessions: number; laps: number; tracks: number; recordings: number };
+  simulator: boolean;
+}
+
+/** What is inside a `.bono` backup (its manifest). */
+export interface ApiBackupManifest {
+  format: 'bono-backup';
+  formatVersion: number;
+  createdAt: number;
+  app: { name: string; version: string };
+  schemaVersion: number;
+  includes: { laps: boolean; settings: boolean; recordings: boolean };
+  counts: {
+    sessions: number;
+    laps: number;
+    tracks: number;
+    coachReports: number;
+    recordings: number;
+    settings: number;
+    deviceProfiles: number;
+  };
+}
+
+export interface ApiBackupUpload {
+  uploadId: string;
+  manifest: ApiBackupManifest;
+  sizeBytes: number;
+}
+
+export type ApiImportMode = 'merge' | 'replace';
+
+export interface ApiImportResult {
+  mode: ApiImportMode;
+  sessions: number;
+  laps: number;
+  /** Circuits added that this install did not know. */
+  tracks: number;
+  /** Circuits recognised as ones this install already had. */
+  tracksMatched: number;
+  coachReports: number;
+  recordings: number;
+  settings: number;
+  /** Where the safety copy of the previous data went (replace mode only). */
+  safetyBackup: string | null;
+}
