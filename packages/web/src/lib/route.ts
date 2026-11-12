@@ -8,6 +8,7 @@
  *   #/analise/sessao/:sessionId       session detail (laps)
  *   #/analise/sessao/:sessionId/resumo   session summary (spec 12)
  *   #/analise/comparar?lap=&ref=&extra=a,b   lap comparison
+ *   #/analise/volta/:lapId?ref=&modo=&corner=  replay of one lap (reference ghost, modo=tempo|distancia)
  *   #/analise/pista/:trackId?session= track page (consistency, evolution)
  *   #/captura                         reference capture
  *   #/config                          settings
@@ -24,6 +25,7 @@ export type RouteName =
   | 'session'
   | 'summary'
   | 'compare'
+  | 'replay'
   | 'track'
   | 'capture'
   | 'config'
@@ -91,6 +93,7 @@ export function parseRoute(hash: string): Route {
       return r('summary', { id: c });
     }
     if (b === 'comparar' && segs.length === 2) return r('compare');
+    if (b === 'volta' && c && segs.length === 3) return r('replay', { id: c });
     if (b === 'pista' && c && segs.length === 3) return r('track', { id: c });
     return r('notFound');
   }
@@ -139,6 +142,13 @@ export const routes = {
       lap: q.lap,
       ref: q.ref,
       extra: q.extra?.length ? q.extra.join(',') : undefined,
+      corner: q.corner,
+    }),
+  /** Replay of one lap; `ref` = a lap id or personalBest / bestReference / sessionBest / auto. */
+  replay: (id: string, q: { ref?: string; mode?: 'time' | 'distance'; corner?: string } = {}) =>
+    href(`/analise/volta/${encodeURIComponent(id)}`, {
+      ref: q.ref,
+      modo: q.mode === 'time' ? 'tempo' : undefined,
       corner: q.corner,
     }),
   track: (id: string, q: { session?: string; tab?: string; from?: 'dailies' } = {}) =>

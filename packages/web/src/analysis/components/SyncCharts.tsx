@@ -46,6 +46,10 @@ interface Props {
   highlight?: [number, number] | null;
   /** Ferramentas à direita da legenda (ex.: botão de zoom). */
   toolbar?: ReactNode;
+  /** Only these panels (default: all). Keep the array stable (module constant). */
+  panelKeys?: readonly PanelDef['key'][];
+  /** A click (not a drag) on a chart reports the distance under it (the replay seeks there). */
+  onSeek?: (distanceM: number) => void;
 }
 
 const Y_AXIS = 54;
@@ -70,6 +74,8 @@ export function SyncCharts({
   radioMarkers,
   highlight,
   toolbar,
+  panelKeys,
+  onSeek,
 }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const plotsRef = useRef<uPlot[]>([]);
@@ -86,6 +92,8 @@ export function SyncCharts({
   radioMarkersRef.current = radioMarkers;
   const highlightRef = useRef(highlight ?? null);
   highlightRef.current = highlight ?? null;
+  const onSeekRef = useRef(onSeek);
+  onSeekRef.current = onSeek;
 
   const syncKey = useMemo(() => `cmp-${Math.random().toString(36).slice(2)}`, []);
   const full: [number, number] = useMemo(
@@ -98,17 +106,19 @@ export function SyncCharts({
    * only have data once their channels are loaded).
    */
   const panels = useMemo(() => {
-    return [...COMPARE_PANELS, ...EVENT_PANELS].map((p) => {
-      const ids = p.key === 'delta' ? laps.filter((l) => l.id !== refId) : laps;
-      const data = panelData(
-        traces,
-        p,
-        ids.map((l) => l.id),
-      );
-      const empty = data.slice(1).every((s) => isAllNull(s));
-      return { def: p, laps: ids, data, empty };
-    });
-  }, [traces, laps, refId]);
+    return [...COMPARE_PANELS, ...EVENT_PANELS]
+      .filter((p) => !panelKeys || panelKeys.includes(p.key))
+      .map((p) => {
+        const ids = p.key === 'delta' ? laps.filter((l) => l.id !== refId) : laps;
+        const data = panelData(
+          traces,
+          p,
+          ids.map((l) => l.id),
+        );
+        const empty = data.slice(1).every((s) => isAllNull(s));
+        return { def: p, laps: ids, data, empty };
+      });
+  }, [traces, laps, refId, panelKeys]);
 
   const lapsKey = laps.map((l) => l.id + l.color).join('|');
 
@@ -263,6 +273,23 @@ export function SyncCharts({
           })),
         ],
         hooks: {
+          ready: [
+            (u) => {
+              // pointerup, not click: uPlot swallows the click it uses for its own drag-zoom.
+              let down: [number, number] | null = null;
+              u.over.addEventListener('pointerdown', (e) => {
+                down = e.isPrimary ? [e.clientX, e.clientY] : null;
+              });
+              u.over.addEventListener('pointerup', (e) => {
+                const seek = onSeekRef.current;
+                const from = down;
+                down = null;
+                if (!seek || !from || !e.isPrimary) return;
+                if (Math.hypot(e.clientX - from[0], e.clientY - from[1]) > 4) return;
+                seek(u.posToVal(e.clientX - u.over.getBoundingClientRect().left, 'x'));
+              });
+            },
+          ],
           drawClear: [bandsHook],
           draw: [
             ...(idx === 0 ? [labelsHook] : []),

@@ -21,6 +21,7 @@ import { DailiesPage } from './pages/DailiesPage.tsx';
 import { GuidePage } from './pages/GuidePage.tsx';
 import { HelpPage } from './pages/HelpPage.tsx';
 import { HomePage } from './pages/HomePage.tsx';
+import { LapReplayPage } from './pages/LapReplayPage.tsx';
 import { SessionPage } from './pages/SessionPage.tsx';
 import { SessionSummaryPage } from './pages/SessionSummaryPage.tsx';
 import { SessionsPage } from './pages/SessionsPage.tsx';
@@ -37,6 +38,7 @@ import '../styles/config.css';
 import '../styles/coach.css';
 import '../styles/help.css';
 import '../styles/session-summary.css';
+import '../styles/replay.css';
 
 interface NavItem {
   icon: IconName;
@@ -65,7 +67,7 @@ const LIVE: NavItem = {
 const MAIN_NAV: NavItem[] = [
   {
     icon: 'home',
-    names: ['home', 'sessions', 'session', 'summary', 'track'],
+    names: ['home', 'sessions', 'session', 'summary', 'track', 'replay'],
     href: routes.home(),
     get label() {
       return uiText('Início');
@@ -249,6 +251,8 @@ function page(route: Route): ReactNode {
       return <SessionSummaryPage id={route.params.id!} />;
     case 'compare':
       return <ComparePage route={route} />;
+    case 'replay':
+      return <LapReplayPage key={route.params.id} lapId={route.params.id!} route={route} />;
     case 'track':
       return <TrackPage id={route.params.id!} route={route} />;
     case 'capture':

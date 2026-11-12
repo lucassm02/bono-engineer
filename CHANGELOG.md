@@ -9,10 +9,12 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Added a **lap replay** (`#/analise/volta/:id`), like the Gran Turismo replay: one dot runs the track map while the readout and the synced charts follow the lap clock (speed, gear, rpm, brake, throttle and steering). It has play/pause, 0.25×/0.5×/1×/2×, a time bar, 0.1 s steps (Shift: 1 s) and keyboard shortcuts. Pick your best lap or a top reference and a ghost runs beside it, at the same distance (default) or at the same lap clock, with the live delta; **What went wrong / What went right** lists the driving events and the corners that lose or gain time against it, and tapping one jumps the replay to the spot. It opens from **Replay** on every lap (track page, session page) and from the comparison.
 - Added exact values to the **Best lap by day** chart on the track page: pointing at (or touching) a day shows its time to the thousandth for every line, and a table under the chart lists every day with the best lap, the average of the best three and the difference to the base.
 
 ### Changed
 
+- Changed the **Lap comparison** screen opened from the menu: instead of sending you to Home it now lets you choose, on the same page, the track, your lap (fastest or most recent) and what to compare it with (the automatic reference, your best lap or a top reference), with a Compare button that stays in view and everything already preselected.
 - Made the **Key corner** chart on the track page easier to read: it always shows the zero line (the base), writes each day's value on its point and opens with a sentence on how to read it, the latest day, the change from the previous day and the best day.
 
 ### Fixed

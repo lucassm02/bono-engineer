@@ -121,6 +121,13 @@ export function LapQuickActions({
   const compareHref = isPb
     ? routes.compare({ lap: lap.id, ref: hasTopReference ? 'bestReference' : 'auto' })
     : routes.compare({ lap: lap.id, ref: pbLapId ?? 'personalBest' });
+  // Replay with the same reference the comparison uses (none when this lap is the only one).
+  const replayRef = isPb
+    ? hasTopReference
+      ? 'bestReference'
+      : undefined
+    : (pbLapId ?? 'personalBest');
+  const replayHref = routes.replay(lap.id, { ref: replayRef });
   const compareLabel = isPb
     ? hasTopReference
       ? [uiText('Comparar'), ' com o top']
@@ -132,6 +139,10 @@ export function LapQuickActions({
       <a className="a-btn a-btn-ghost a-btn-sm" href={compareHref}>
         {compareLabel[0]}
         <span className="a-btn-more">{compareLabel[1]}</span>
+      </a>
+      <a className="a-btn a-btn-ghost a-btn-sm" href={replayHref}>
+        <Icon name="play" size={14} />
+        {uiText('Replay')}
       </a>
       <ActionMenu>
         {lap.isReference ? (

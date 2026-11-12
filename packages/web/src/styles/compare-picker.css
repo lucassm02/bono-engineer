@@ -1,0 +1,119 @@
+/* Escolha do que comparar, no começo da Comparação de voltas. */
+
+.cp {
+  max-width: 720px;
+}
+.cp-form {
+  display: grid;
+  gap: var(--sp-5);
+}
+.cp-n {
+  display: inline-grid;
+  place-items: center;
+  width: 1.5em;
+  height: 1.5em;
+  margin-right: var(--sp-1);
+  border-radius: 50%;
+  background: var(--purple-soft);
+  color: var(--purple);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+.cp-set {
+  display: grid;
+  gap: var(--sp-2);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.cp-set > legend {
+  margin-bottom: var(--sp-2);
+  padding: 0;
+  color: var(--text-2);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.cp-order {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.cp-order .ui-chip {
+  min-height: 36px;
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill, 999px);
+  cursor: pointer;
+}
+.cp-order .ui-chip[data-on="1"] {
+  border-color: var(--purple);
+  background: var(--purple-soft);
+}
+.cp-laps {
+  display: grid;
+  gap: var(--sp-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cp-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sp-1) var(--sp-3);
+  min-height: 44px;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+  cursor: pointer;
+}
+.cp-row:hover {
+  border-color: var(--line-strong, var(--line));
+}
+.cp-row[data-on="1"] {
+  border-color: var(--purple);
+  background: var(--purple-soft);
+}
+.cp-row input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.cp-row:has(input:focus-visible) {
+  outline: 2px solid var(--focus, var(--purple));
+  outline-offset: 2px;
+}
+.cp-time {
+  font-weight: 700;
+}
+.cp-time[data-best="1"] {
+  color: var(--purple);
+}
+.cp-meta {
+  font-size: var(--fs-sm);
+}
+.cp-what {
+  font-weight: 600;
+}
+.cp-more {
+  justify-self: start;
+}
+.cp-actions {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: var(--sp-2);
+  margin: 0 calc(var(--sp-5) * -1) calc(var(--sp-4) * -1);
+  padding: var(--sp-3) var(--sp-5);
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 var(--r-md) var(--r-md);
+  background: var(--surface-2);
+}

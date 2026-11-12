@@ -765,6 +765,24 @@
   "Continuar": ["Continue", "Continuar"],
   "Contra {0}": ["Against {0}", "Frente a {0}"],
   "Contra a referência top": ["Against the top reference", "Contra la referencia top"],
+  "A sua melhor volta": ["Your best lap", "Tu mejor vuelta"],
+  "Automática: a melhor referência do top": [
+    "Automatic: the best top reference",
+    "Automática: la mejor referencia top"
+  ],
+  "Automática: a sua melhor volta": ["Automatic: your best lap", "Automática: tu mejor vuelta"],
+  "Escolha o que comparar": ["Choose what to compare", "Elige qué comparar"],
+  "Mais rápidas": ["Fastest", "Más rápidas"],
+  "Mostrar mais voltas": ["Show more laps", "Mostrar más vueltas"],
+  "Mostrar menos": ["Show fewer", "Mostrar menos"],
+  "Mais recentes": ["Most recent", "Más recientes"],
+  "Nenhuma pista ainda. Dirija uma volta no jogo para poder comparar.": [
+    "No tracks yet. Drive a lap in the game to be able to compare.",
+    "Aún no hay pistas. Conduce una vuelta en el juego para poder comparar."
+  ],
+  "Ordenar as voltas": ["Sort the laps", "Ordenar las vueltas"],
+  "Referência do top": ["Top reference", "Referencia top"],
+  "Sua volta": ["Your lap", "Tu vuelta"],
   "Contra o dia anterior": ["Against the previous day", "Contra el día anterior"],
   "Contra o melhor pessoal": ["Against your personal best", "Contra tu mejor marca"],
   "Melhor dia": ["Best day", "Mejor día"],
@@ -4451,5 +4469,135 @@
   "Ritmo estável nas últimas {0} voltas limpas (estimativa).": [
     "Steady pace over the last {0} clean laps (estimate).",
     "Ritmo estable en las últimas {0} vueltas limpias (estimación)."
-  ]
+  ],
+  "Replay da volta": ["Lap replay", "Repetición de la vuelta"],
+  "Carregando o replay…": ["Loading the replay…", "Cargando la repetición…"],
+  "Carregando a telemetria da volta…": [
+    "Loading the lap telemetry…",
+    "Cargando la telemetría de la vuelta…"
+  ],
+  "Esta volta não tem o tempo de cada amostra": [
+    "This lap has no time for each sample",
+    "Esta vuelta no tiene el tiempo de cada muestra"
+  ],
+  "Sem o relógio da volta não dá para reproduzir. A comparação por distância continua disponível.": [
+    "Without the lap clock there is nothing to play. The comparison by distance is still available.",
+    "Sin el reloj de la vuelta no se puede reproducir. La comparación por distancia sigue disponible."
+  ],
+  "Comparar volta": ["Compare lap", "Comparar vuelta"],
+  "Comparar com": ["Compare with", "Comparar con"],
+  "Escolha uma volta de referência para ver o fantasma dela correndo junto e o delta ao vivo.": [
+    "Pick a reference lap to see its ghost running alongside and the live delta.",
+    "Elige una vuelta de referencia para ver su fantasma corriendo a tu lado y el delta en vivo."
+  ],
+  "Sem comparação": ["No comparison", "Sin comparación"],
+  "Fantasma": ["Ghost", "Fantasma"],
+  "Mesma distância": ["Same distance", "Misma distancia"],
+  "Mesmo tempo": ["Same time", "Mismo tiempo"],
+  "A referência fica no mesmo ponto da pista: compara o que cada um fez ali.": [
+    "The reference sits at the same point of the track: it compares what each lap did there.",
+    "La referencia queda en el mismo punto de la pista: compara lo que hizo cada vuelta allí."
+  ],
+  "A referência corre no mesmo relógio: mostra quem está à frente na pista.": [
+    "The reference runs on the same clock: it shows who is ahead on the track.",
+    "La referencia corre con el mismo reloj: muestra quién va por delante en la pista."
+  ],
+  "O replay segue sem referência.": [
+    "The replay continues without a reference.",
+    "La repetición sigue sin referencia."
+  ],
+  "Mapa e controles do replay": ["Replay map and controls", "Mapa y controles de la repetición"],
+  "Você · {0}": ["You · {0}", "Tú · {0}"],
+  "Ref · {0}": ["Ref · {0}", "Ref · {0}"],
+  "Ir para uma curva": ["Go to a corner", "Ir a una curva"],
+  "O que errou": ["What went wrong", "Qué salió mal"],
+  "Escapadas e curvas onde esta volta perdeu tempo. Toque para ir ao ponto.": [
+    "Slides and corners where this lap lost time. Tap to go to the spot.",
+    "Derrapes y curvas donde esta vuelta perdió tiempo. Toca para ir al punto."
+  ],
+  "Nada de errado encontrado nesta volta.": [
+    "Nothing wrong found on this lap.",
+    "No se encontró nada malo en esta vuelta."
+  ],
+  "Carregando a análise da volta…": [
+    "Loading the lap analysis…",
+    "Cargando el análisis de la vuelta…"
+  ],
+  "O que acertou": ["What went right", "Qué salió bien"],
+  "Curvas em que esta volta ganhou tempo sobre a referência.": [
+    "Corners where this lap gained time on the reference.",
+    "Curvas donde esta vuelta ganó tiempo sobre la referencia."
+  ],
+  "Nenhuma curva ganhou tempo sobre a referência.": [
+    "No corner gained time on the reference.",
+    "Ninguna curva ganó tiempo sobre la referencia."
+  ],
+  "Escolha uma referência para ver onde você ganhou tempo.": [
+    "Pick a reference to see where you gained time.",
+    "Elige una referencia para ver dónde ganaste tiempo."
+  ],
+  "Toque ou clique num gráfico para levar o replay até aquele ponto.": [
+    "Tap or click a chart to take the replay to that point.",
+    "Toca o haz clic en un gráfico para llevar la repetición a ese punto."
+  ],
+  "Pausar": ["Pause", "Pausar"],
+  "Rever a volta": ["Watch the lap again", "Ver la vuelta otra vez"],
+  "Tocar": ["Play", "Reproducir"],
+  "Rever": ["Replay", "Repetir"],
+  "Voltar 0,1 s (Shift: 1 s)": ["Back 0.1 s (Shift: 1 s)", "Retroceder 0,1 s (Shift: 1 s)"],
+  "Avançar 0,1 s (Shift: 1 s)": ["Forward 0.1 s (Shift: 1 s)", "Avanzar 0,1 s (Shift: 1 s)"],
+  "Velocidade do replay": ["Replay speed", "Velocidad de la repetición"],
+  "Posição na volta": ["Position in the lap", "Posición en la vuelta"],
+  "{0} de {1}, {2} m": ["{0} of {1}, {2} m", "{0} de {1}, {2} m"],
+  "Teclado: Espaço toca/pausa · ← → passo de 0,1 s (Shift: 1 s) · [ ] velocidade · G alterna distância/tempo": [
+    "Keyboard: Space plays/pauses · ← → step 0.1 s (Shift: 1 s) · [ ] speed · G switches distance/time",
+    "Teclado: Espacio reproduce/pausa · ← → paso de 0,1 s (Shift: 1 s) · [ ] velocidad · G alterna distancia/tiempo"
+  ],
+  "Leitura no instante do replay": [
+    "Readout at the replay instant",
+    "Lectura en el instante de la repetición"
+  ],
+  "Delta contra a referência": ["Delta against the reference", "Delta contra la referencia"],
+  "mais lento neste ponto da volta": [
+    "slower at this point of the lap",
+    "más lento en este punto de la vuelta"
+  ],
+  "mais rápido neste ponto da volta": [
+    "faster at this point of the lap",
+    "más rápido en este punto de la vuelta"
+  ],
+  "igual à referência": ["same as the reference", "igual que la referencia"],
+  "{0} m à frente da referência": [
+    "{0} m ahead of the reference",
+    "{0} m por delante de la referencia"
+  ],
+  "{0} m atrás da referência": ["{0} m behind the reference", "{0} m por detrás de la referencia"],
+  "Rotação": ["Revs", "Revoluciones"],
+  "Distância": ["Distance", "Distancia"],
+  "Em roxo, a referência no mesmo ponto ({0}).": [
+    "In purple, the reference at the same point ({0}).",
+    "En morado, la referencia en el mismo punto ({0})."
+  ],
+  "mesmo tempo": ["same time", "mismo tiempo"],
+  "mesma distância": ["same distance", "misma distancia"],
+  "Errou": ["Missed", "Falló"],
+  "Acertou": ["Nailed", "Acertó"],
+  "Confira": ["Check", "Revisa"],
+  "Ir para este ponto": ["Go to this point", "Ir a este punto"],
+  "Mapa da pista com o carro do replay. Use a barra de tempo ou os botões de curva para mover.": [
+    "Track map with the replay car. Use the time bar or the corner buttons to move it.",
+    "Mapa de la pista con el coche de la repetición. Usa la barra de tiempo o los botones de curva para moverlo."
+  ],
+  "Perdeu {0} em {1}": ["Lost {0} in {1}", "Perdió {0} en {1}"],
+  "Sem causa clara. V-mín {0} km/h · {1} km/h na referência.": [
+    "No clear cause. Min speed {0} km/h · {1} km/h on the reference.",
+    "Sin causa clara. V-mín {0} km/h · {1} km/h en la referencia."
+  ],
+  "Ganhou {0} em {1}": ["Gained {0} in {1}", "Ganó {0} en {1}"],
+  "V-mín {0} km/h (ref. {1}) · saída {2} km/h (ref. {3}).": [
+    "Min speed {0} km/h (ref. {1}) · exit {2} km/h (ref. {3}).",
+    "V-mín {0} km/h (ref. {1}) · salida {2} km/h (ref. {3})."
+  ],
+  "Problema na volta": ["Problem on the lap", "Problema en la vuelta"],
+  "Ver replay da volta": ["Watch the lap replay", "Ver la repetición de la vuelta"]
 }

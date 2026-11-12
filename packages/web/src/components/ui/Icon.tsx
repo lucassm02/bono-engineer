@@ -36,6 +36,7 @@ export type IconName =
   | 'star'
   | 'minus'
   | 'play'
+  | 'pause'
   | 'stop'
   | 'volume'
   | 'volume-off'
@@ -89,6 +90,7 @@ const PATHS: Record<IconName, string[]> = {
   star: ['M12 4l2.4 5 5.6.7-4.1 3.8 1.1 5.5-5-2.7-5 2.7 1.1-5.5L4 9.7 9.6 9z'],
   minus: ['M5 12h14'],
   play: ['M8 5l11 7-11 7z'],
+  pause: ['M8 5v14', 'M16 5v14'],
   stop: ['M7 7h10v10H7z'],
   volume: ['M4 10v4h4l5 4V6L8 10z', 'M16.5 9a4 4 0 0 1 0 6', 'M19 7a7 7 0 0 1 0 10'],
   'volume-off': ['M4 10v4h4l5 4V6L8 10z', 'M17 9l4 6M21 9l-4 6'],

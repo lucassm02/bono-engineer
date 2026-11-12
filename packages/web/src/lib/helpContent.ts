@@ -480,6 +480,23 @@ const PT: HelpContent = {
       keywords: 'perda curva causa provável mapa cor velocidade freio acelerador linha diferença',
     },
     {
+      id: 'replay-da-volta',
+      topic: 'tracks',
+      title: 'Replay de uma volta',
+      summary:
+        'Reveja uma volta em detalhe: o carro anda no mapa e você vê freio, acelerador e volante a cada instante.',
+      steps: [
+        'Em Início, abra a pista e toque em Replay numa volta (ou em Ver replay da volta na comparação).',
+        'Toque em Tocar. Arraste a barra de tempo, use ← → para andar 0,1 s e escolha 0,25×, 0,5×, 1× ou 2×.',
+        'Em Comparar com, escolha sua melhor volta ou uma referência do top: surge um fantasma roxo e o delta ao vivo.',
+        'Em O que errou e O que acertou, toque num item para ir ao ponto da volta.',
+      ],
+      note: 'Mesma distância mostra o que cada volta fez no mesmo ponto; Mesmo tempo mostra quem está à frente na pista. Espaço toca e pausa, G troca o modo.',
+      links: [lnk('Início', routes.home())],
+      keywords:
+        'replay volta reproduzir fantasma timeline barra tempo freio acelerador volante passo',
+    },
+    {
       id: 'treinar-uma-curva',
       topic: 'tracks',
       title: 'Treinar uma curva',
@@ -1033,6 +1050,22 @@ const EN: HelpContent = {
       note: 'Corners under 20 ms are left out. The listed losses, the other corners and the straights add up to the lap delta. A likely cause is a hypothesis: check it on the charts.',
       links: [lnk('Compare laps', routes.compare({}))],
       keywords: 'loss corner cause likely map colour speed brake throttle line difference',
+    },
+    {
+      id: 'replay-da-volta',
+      topic: 'tracks',
+      title: 'Replaying one lap',
+      summary:
+        'Watch a lap in detail: the car runs the map and you see brake, throttle and steering at every instant.',
+      steps: [
+        'In Home, open the track and tap Replay on a lap (or Watch the lap replay in the comparison).',
+        'Tap Play. Drag the time bar, use ← → to move 0.1 s and pick 0.25×, 0.5×, 1× or 2×.',
+        'In Compare with, pick your best lap or a top reference: a purple ghost and the live delta appear.',
+        'In What went wrong and What went right, tap an item to jump to that spot of the lap.',
+      ],
+      note: 'Same distance shows what each lap did at the same point; Same time shows who is ahead on the track. Space plays and pauses, G switches the mode.',
+      links: [lnk('Home', routes.home())],
+      keywords: 'replay lap play ghost timeline scrub brake throttle steering step',
     },
     {
       id: 'treinar-uma-curva',
@@ -1595,6 +1628,23 @@ const ES: HelpContent = {
       links: [lnk('Comparar vueltas', routes.compare({}))],
       keywords:
         'pérdida curva causa probable mapa color velocidad freno acelerador línea diferencia',
+    },
+    {
+      id: 'replay-da-volta',
+      topic: 'tracks',
+      title: 'Repetición de una vuelta',
+      summary:
+        'Revisa una vuelta al detalle: el coche recorre el mapa y ves freno, acelerador y volante en cada instante.',
+      steps: [
+        'En Inicio, abre la pista y toca Repetición en una vuelta (o Ver la repetición de la vuelta en la comparación).',
+        'Toca Reproducir. Arrastra la barra de tiempo, usa ← → para avanzar 0,1 s y elige 0,25×, 0,5×, 1× o 2×.',
+        'En Comparar con, elige tu mejor vuelta o una referencia del top: aparece un fantasma morado y el delta en vivo.',
+        'En Qué salió mal y Qué salió bien, toca un elemento para ir a ese punto de la vuelta.',
+      ],
+      note: 'Misma distancia muestra lo que hizo cada vuelta en el mismo punto; Mismo tiempo muestra quién va por delante en la pista. Espacio reproduce y pausa, G cambia el modo.',
+      links: [lnk('Inicio', routes.home())],
+      keywords:
+        'repetición vuelta reproducir fantasma línea de tiempo barra freno acelerador volante paso',
     },
     {
       id: 'treinar-uma-curva',

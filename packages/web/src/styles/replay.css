@@ -1,0 +1,466 @@
+/*
+ * Replay de uma volta (LapReplayPage, ReplayMap, ReplayPanels). Só tokens: ciano = a volta,
+ * roxo = a referência (fantasma), verde/vermelho = código de corrida (acelerador/freio, ganho/perda).
+ * Movimento só no que o usuário aciona; `prefers-reduced-motion` desliga as transições.
+ */
+
+.rp-page {
+  display: grid;
+  gap: var(--sp-4);
+  min-width: 0;
+}
+.rp-page > * {
+  min-width: 0;
+}
+.rp-page [data-tone="gain"] {
+  --tone: var(--gain);
+}
+.rp-page [data-tone="loss"] {
+  --tone: var(--loss);
+}
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Referência e fantasma                                                                           */
+/* ---------------------------------------------------------------------------------------------- */
+
+.rp-compare-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--sp-4);
+  align-items: start;
+}
+.rp-mode {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.rp-mode-seg {
+  width: 100%;
+}
+.rp-mode-seg > button {
+  flex: 1 1 0;
+  min-height: var(--tap);
+}
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Palco: mapa + controles à esquerda, leitura à direita                                           */
+/* ---------------------------------------------------------------------------------------------- */
+
+.rp-stage {
+  scroll-margin-top: var(--sp-4);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 400px);
+  gap: var(--sp-4);
+  align-items: start;
+}
+.rp-mapbox,
+.rp-readbox {
+  padding: var(--sp-3);
+  min-width: 0;
+}
+.rp-map {
+  height: clamp(300px, 52vh, 520px);
+}
+
+/* Transporte ------------------------------------------------------------------------------------ */
+
+.rp-transport {
+  display: grid;
+  gap: var(--sp-3);
+  margin-top: var(--sp-3);
+}
+.rp-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  align-items: center;
+}
+.rp-play {
+  min-width: 118px;
+  min-height: var(--tap);
+  gap: var(--sp-2);
+}
+.rp-step {
+  min-width: var(--tap);
+  min-height: var(--tap);
+  padding-inline: var(--sp-2);
+}
+.rp-restart {
+  min-height: var(--tap);
+}
+.rp-speeds {
+  margin: 0;
+  margin-left: auto;
+  min-width: 0;
+}
+.rp-speeds > button {
+  min-height: var(--tap);
+  min-width: 52px;
+  font-variant-numeric: tabular-nums;
+}
+.rp-scrub-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--sp-3);
+  align-items: center;
+}
+.rp-time {
+  min-width: 7ch;
+  color: var(--text);
+  font-size: var(--fs-md);
+}
+.rp-time-end {
+  color: var(--text-3);
+  text-align: right;
+}
+.rp-scrub-wrap {
+  position: relative;
+  min-width: 0;
+  height: var(--tap);
+  display: grid;
+  align-items: center;
+}
+.rp-scrub {
+  width: 100%;
+  height: var(--tap);
+  margin: 0;
+  background: transparent;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.rp-scrub:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--r-sm);
+}
+.rp-ticks {
+  position: absolute;
+  inset: 0 8px;
+  pointer-events: none;
+}
+.rp-tick {
+  position: absolute;
+  top: 4px;
+  width: 3px;
+  height: 8px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--text-3);
+}
+.rp-tick[data-tone="bad"] {
+  background: var(--loss);
+}
+.rp-tick[data-tone="good"] {
+  background: var(--gain);
+}
+.rp-tick[data-tone="info"] {
+  background: var(--warn);
+}
+.rp-keys {
+  margin: 0;
+}
+
+/* Leitura --------------------------------------------------------------------------------------- */
+
+.rp-readout {
+  display: grid;
+  gap: var(--sp-4);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.rp-readout-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-4);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.rp-k {
+  color: var(--text-3);
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+  letter-spacing: var(--track-caps);
+}
+.rp-delta {
+  display: grid;
+  gap: 2px;
+  padding: var(--sp-3);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--tone, var(--line-strong));
+  border-radius: var(--r-sm);
+  background: var(--surface-3);
+}
+.rp-delta-v {
+  color: var(--tone, var(--text));
+  font-family: var(--font);
+  font-size: var(--fs-2xl);
+  line-height: 1.1;
+}
+.rp-delta-sub {
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
+.rp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: var(--sp-3);
+  margin: 0;
+}
+.rp-cell {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  min-width: 0;
+}
+.rp-cell dd {
+  margin: 0;
+}
+.rp-v {
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--fs-xl);
+  line-height: 1.1;
+}
+.rp-v small {
+  color: var(--text-3);
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+}
+.rp-g {
+  color: var(--chart-2);
+  font-size: var(--fs-sm);
+}
+
+.rp-pedals {
+  display: grid;
+  gap: var(--sp-3);
+}
+.rp-pedal {
+  display: grid;
+  grid-template-columns: 92px 56px minmax(0, 1fr) 48px;
+  gap: var(--sp-2);
+  align-items: center;
+}
+.rp-pv {
+  color: var(--text);
+  font-size: var(--fs-md);
+  text-align: right;
+}
+.rp-pedal .rp-g {
+  text-align: right;
+}
+.rp-bar {
+  position: relative;
+  display: block;
+  height: 12px;
+  overflow: hidden;
+  border-radius: var(--r-pill);
+  background: var(--surface-4);
+}
+.rp-bar > i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: var(--r-pill);
+  background: var(--text-3);
+  transition: width var(--dur-fast) linear;
+}
+.rp-bar.rp-bar-steer > i {
+  background: var(--accent);
+  border-radius: 0;
+  transition: none;
+}
+.rp-bar[data-tone="brake"] > i {
+  background: var(--loss);
+}
+.rp-bar[data-tone="throttle"] > i {
+  background: var(--gain);
+}
+.rp-bar-steer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--line-strong);
+}
+/* A referência no mesmo ponto: um traço roxo sobre a barra. */
+.rp-bar > b {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  margin-left: -1px;
+  background: var(--chart-2);
+}
+.rp-g-note {
+  margin: 0;
+}
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Curvas e achados                                                                                */
+/* ---------------------------------------------------------------------------------------------- */
+
+.rp-corners {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+.rp-corners-label {
+  flex: none;
+  color: var(--text-3);
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+  letter-spacing: var(--track-caps);
+}
+.rp-corners ul {
+  display: flex;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0 0 var(--sp-1);
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.rp-corners .ui-chip {
+  min-height: var(--tap);
+  min-width: var(--tap);
+  justify-content: center;
+}
+
+.rp-findings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-4);
+  align-items: start;
+}
+.rp-findings {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rp-finding {
+  display: grid;
+  gap: var(--sp-1);
+  width: 100%;
+  min-height: var(--tap);
+  padding: var(--sp-3);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--tone, var(--line-strong));
+  border-radius: var(--r-sm);
+  background: var(--surface-3);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease);
+}
+.rp-finding[data-tone="bad"] {
+  --tone: var(--loss);
+}
+.rp-finding[data-tone="good"] {
+  --tone: var(--gain);
+}
+.rp-finding[data-tone="info"] {
+  --tone: var(--warn);
+}
+.rp-finding:hover {
+  background: var(--surface-4);
+}
+.rp-finding:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+.rp-finding[aria-current="true"] {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+.rp-finding-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  align-items: center;
+}
+.rp-finding-detail {
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
+.rp-finding-at {
+  color: var(--text-3);
+  font-size: var(--fs-xs);
+}
+.rp-empty {
+  margin: 0;
+}
+
+.rp-charts {
+  display: grid;
+  gap: var(--sp-2);
+  min-width: 0;
+  scroll-margin-top: var(--sp-4);
+}
+
+/* ---------------------------------------------------------------------------------------------- */
+/* Responsivo                                                                                      */
+/* ---------------------------------------------------------------------------------------------- */
+
+@media (max-width: 1100px) {
+  .rp-stage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 760px) {
+  .rp-compare-grid,
+  .rp-findings-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  /* Under the fixed phone header. */
+  .rp-stage {
+    scroll-margin-top: 120px;
+  }
+  .rp-map {
+    height: 300px;
+  }
+  .rp-speeds {
+    margin-left: 0;
+    width: 100%;
+  }
+  .rp-speeds > button {
+    flex: 1 1 0;
+  }
+  .rp-play {
+    flex: 1 1 auto;
+  }
+  .rp-restart {
+    display: none;
+  }
+  .rp-scrub-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .rp-scrub-wrap {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .rp-pedal {
+    grid-template-columns: 80px 48px minmax(0, 1fr) 42px;
+  }
+  .rp-keys {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rp-bar > i,
+  .rp-finding {
+    transition: none;
+  }
+}

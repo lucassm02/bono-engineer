@@ -35,6 +35,7 @@ import {
   type MapLine,
   type OverlayMarker,
 } from '../components/CompareMap.tsx';
+import { ComparePicker } from '../components/ComparePicker.tsx';
 import { CornerLossPanel } from '../components/CornerLossPanel.tsx';
 import { CornerTable } from '../components/CornerTable.tsx';
 import { DrivingEventsPanel } from '../components/DrivingEventsPanel.tsx';
@@ -204,17 +205,7 @@ export function ComparePage({ route }: { route: Route }) {
           title={uiText('Comparação de voltas')}
           back={{ href: routes.home(), label: uiText('Suas pistas') }}
         />
-        <div className="ui-empty">
-          <strong>{uiText('Nenhuma volta escolhida')}</strong>
-          <p>
-            {uiText(
-              'Escolha uma volta para comparar com a sua melhor ou com a de um piloto do top.',
-            )}
-          </p>
-          <a className="ui-btn" href={routes.home()}>
-            {uiText('Escolher uma pista')}
-          </a>
-        </div>
+        <ComparePicker />
       </>
     );
   }
@@ -565,6 +556,13 @@ export function CompareView({
                 rel="noopener"
               >
                 {uiText('Gerar gráfico (PNG)')}
+              </a>
+              <a
+                className="ui-btn"
+                data-variant="secondary"
+                href={routes.replay(lap.id, { ref: refLap.id })}
+              >
+                {uiText('Ver replay da volta')}
               </a>
               <a
                 className="ui-btn"
