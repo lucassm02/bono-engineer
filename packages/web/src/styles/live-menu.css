@@ -27,9 +27,6 @@
 .live-controls > .lock-btn[data-locked="1"] {
   background: var(--accent);
 }
-.bn-phone-link {
-  align-self: flex-start;
-}
 
 /* ---------------------------------------------------------------------------------------------- */
 /* Peças compartilhadas dos diálogos (gaveta, seletor, editor, conexão, assistente)                */
@@ -250,7 +247,7 @@
   position: sticky;
   top: calc(-1 * var(--sp-4));
   z-index: 2;
-  margin: calc(-1 * var(--sp-4)) calc(-1 * var(--sp-5)) var(--sp-4);
+  margin: var(--sp-2) calc(-1 * var(--sp-5)) var(--sp-4);
   padding: var(--sp-1) var(--sp-4) 0;
   background: var(--surface-2);
 }

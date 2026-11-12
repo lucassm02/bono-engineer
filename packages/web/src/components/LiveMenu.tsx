@@ -424,7 +424,7 @@ export function LiveMenuSheet() {
     >
       <LiveContextBar variant="menu" />
       <a
-        className="ui-btn bn-phone-link"
+        className="ui-btn"
         data-variant="secondary"
         href={routes.config('acesso-remoto')}
         onClick={closeMenu}

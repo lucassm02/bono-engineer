@@ -127,6 +127,9 @@
 /* Telas de status (sem servidor, sem console, no menu) e faixa de pausa                        */
 /* ------------------------------------------------------------------------------------------- */
 
+.app:has(> .status-screen) > .carousel {
+  visibility: hidden;
+}
 .status-screen {
   position: absolute;
   inset: 0;
