@@ -5,7 +5,20 @@ All notable changes to Bono Engineer are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.5.0] - 2026-11-12
+
+<!-- release-notes-since: 0.1.0 -->
+
+### Added
+
+- Added a goal per track (**My goal** on the track page): type a lap time or take the suggestion (the ideal lap, or 0.5% under your best). Live, a small line shows the difference to the goal pace; after each valid lap the engineer says how far you are ("Distância para a meta") or "Boa volta." when you reach it. Goals reached go to a history and travel in the `.bono` backup.
+- Added a **Sectors** tab on the track page: best time of each sector and the lap that made it, the average of the best five, what your best lap leaves behind, and the ideal lap (sum of the best sectors), with a button to use it as the goal.
+- Added a **session summary** (`#/analise/sessao/:id/resumo`): best lap against your record, pace (average of the best five and median), consistency and trend, comparison with the last session, the best one or the goal, where you gained and lost per corner, and up to three rule-made tips. It opens from the "Session saved" notice, a card on Home or the session page, and can be copied as text.
+- Added **Where you lose time** to the lap comparison: the three corners that cost the most with the probable cause and the number behind it, closing with the straights so the sum matches the lap delta. The map can now colour your lap by gain and loss, speed, brake, throttle or line difference (with text markers for the larger differences).
+- Added **corner drills**: pick a corner and the engineer talks only about it, rating every pass against your best one (stretch time, speeds, braking point). It works on any lap, keeps the last ten passes, shows a summary when you stop and stores the passes with the session. Start it on the Corner drill screen or from "Drill this corner" in a comparison.
+- Added a **pit planner** to the fuel screen (last lap to pit, fuel to add, number of stops) and an **estimate of tyre pace** on the tyres screen, read from the lap times because the game does not send wear. Both are labelled as estimates.
+- Added a "five laps of fuel" call from the engineer (before the existing two, one and less-than-one-lap calls) when the race length is unknown. It comes with new voice clips, so the voice packs were regenerated for every voice.
+- Added help articles for all of the above, in Portuguese, English and Spanish.
 
 ## [0.4.0] - 2026-11-12
 
