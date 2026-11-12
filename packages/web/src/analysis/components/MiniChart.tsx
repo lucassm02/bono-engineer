@@ -20,13 +20,26 @@ interface Props {
   yLabel: (v: number) => string;
   /** Draw a horizontal line at this y (e.g. 0 = reference). */
   zeroLine?: number | null;
+  /** Keep the zero line inside the plot even when every value is on one side of it. */
+  includeZero?: boolean;
+  /** Write the value of the first series next to each of its points. */
+  valueLabels?: boolean;
 }
 
 const GRID = THEME.line;
 const AXIS = THEME.text3;
 const FONT = `12px ${THEME.font}`;
 
-export function MiniChart({ xs, series, height = 200, xLabel, yLabel, zeroLine = null }: Props) {
+export function MiniChart({
+  xs,
+  series,
+  height = 200,
+  xLabel,
+  yLabel,
+  zeroLine = null,
+  includeZero = false,
+  valueLabels = false,
+}: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const fmt = useRef({ xLabel, yLabel });
   fmt.current = { xLabel, yLabel };
@@ -40,7 +53,21 @@ export function MiniChart({ xs, series, height = 200, xLabel, yLabel, zeroLine =
       height,
       legend: { show: true, live: false },
       cursor: { drag: { x: false, y: false }, points: { size: 7 } },
-      scales: { x: { time: false, range: (_u, min, max) => [min - 0.5, max + 0.5] } },
+      scales: {
+        x: { time: false, range: (_u, min, max) => [min - 0.5, max + 0.5] },
+        ...(includeZero
+          ? {
+              y: {
+                range: (_u: uPlot, min: number, max: number): [number, number] => {
+                  const lo = Math.min(min, 0);
+                  const hi = Math.max(max, 0);
+                  const pad = (hi - lo || 1) * 0.15;
+                  return [lo < 0 ? lo - pad : 0, hi > 0 ? hi + pad : 0];
+                },
+              },
+            }
+          : {}),
+      },
       axes: [
         {
           stroke: AXIS,
@@ -119,6 +146,24 @@ export function MiniChart({ xs, series, height = 200, xLabel, yLabel, zeroLine =
         ],
         draw: [
           (u) => {
+            const first = series[0];
+            if (!valueLabels || !first) return;
+            const ctx = u.ctx;
+            ctx.save();
+            ctx.font = `600 ${Math.round(11 * uPlot.pxRatio)}px ${THEME.font}`;
+            ctx.fillStyle = first.color;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            first.values.forEach((v, i) => {
+              const x = xs[i];
+              if (v === null || x === undefined) return;
+              const px = u.valToPos(x, 'x', true);
+              const py = u.valToPos(v, 'y', true);
+              ctx.fillText(fmt.current.yLabel(v), px, py - 8 * uPlot.pxRatio);
+            });
+            ctx.restore();
+          },
+          (u) => {
             if (zeroLine === null) return;
             const y = u.valToPos(zeroLine, 'y', true);
             if (y < u.bbox.top || y > u.bbox.top + u.bbox.height) return;
@@ -145,7 +190,7 @@ export function MiniChart({ xs, series, height = 200, xLabel, yLabel, zeroLine =
       ro.disconnect();
       plot.destroy();
     };
-  }, [xs, series, height, zeroLine]);
+  }, [xs, series, height, zeroLine, includeZero, valueLabels]);
 
   return <div className="a-minichart" ref={ref} />;
 }

@@ -765,7 +765,22 @@
   "Continuar": ["Continue", "Continuar"],
   "Contra {0}": ["Against {0}", "Frente a {0}"],
   "Contra a referência top": ["Against the top reference", "Contra la referencia top"],
+  "Contra o dia anterior": ["Against the previous day", "Contra el día anterior"],
   "Contra o melhor pessoal": ["Against your personal best", "Contra tu mejor marca"],
+  "Melhor dia": ["Best day", "Mejor día"],
+  "Último dia": ["Latest day", "Último día"],
+  "Tempo perdido nesta curva na melhor volta de cada dia, contra a referência top. Zero é igual à referência; quanto mais baixo, melhor.": [
+    "Time lost in this corner on each day's best lap, against the top reference. Zero means the same as the reference; the lower, the better.",
+    "Tiempo perdido en esta curva en la mejor vuelta de cada día, frente a la referencia top. Cero es igual a la referencia; cuanto más bajo, mejor."
+  ],
+  "Tempo perdido nesta curva na melhor volta de cada dia, contra o seu melhor pessoal. Zero é igual ao seu melhor; quanto mais baixo, melhor.": [
+    "Time lost in this corner on each day's best lap, against your personal best. Zero means the same as your best; the lower, the better.",
+    "Tiempo perdido en esta curva en la mejor vuelta de cada día, frente a tu mejor marca. Cero es igual a tu mejor; cuanto más bajo, mejor."
+  ],
+  "Diferença nesta curva na melhor volta de cada dia, contra a base. Zero é igual à base.": [
+    "Difference in this corner on each day's best lap, against the base. Zero means the same as the base.",
+    "Diferencia en esta curva en la mejor vuelta de cada día, frente a la base. Cero es igual a la base."
+  ],
   "Dia": ["Day", "Día"],
   "Controle remoto: a tela {0} está desligada aqui.": [
     "Remote control: {0} is disabled on this device.",

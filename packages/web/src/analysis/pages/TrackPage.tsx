@@ -393,6 +393,16 @@ function EvolutionSection({ evo, corners }: { evo: EvolutionReport; corners: Map
   if (evo.days.length === 0)
     return <p className="dim">{uiText('Ainda não há voltas suas suficientes nesta pista.')}</p>;
 
+  // Reading aid for the key-corner chart: where the latest day stands, how it moved and the best day.
+  const cornerVals = (cornerSeries[0]?.values ?? []).filter((v): v is number => v !== null);
+  const cornerLast = cornerVals.at(-1) ?? null;
+  const cornerPrev = cornerVals.length > 1 ? cornerVals.at(-2)! : null;
+  const cornerBest = cornerVals.length > 0 ? Math.min(...cornerVals) : null;
+  const lowerIsBetter = metric === 'timeLostMs';
+  const cornerMove = cornerLast !== null && cornerPrev !== null ? cornerLast - cornerPrev : null;
+  const fmtCorner = (v: number) => `${signed(v, def.digits)} ${def.unit}`;
+  const baseIsRef = evo.baseline?.kind === 'reference';
+
   return (
     <>
       <p className="dim a-small">
@@ -481,12 +491,58 @@ function EvolutionSection({ evo, corners }: { evo: EvolutionReport; corners: Map
               ))}
             </select>
           </div>
+          <p className="dim a-small a-evo-note">
+            {lowerIsBetter
+              ? baseIsRef
+                ? uiText(
+                    'Tempo perdido nesta curva na melhor volta de cada dia, contra a referência top. Zero é igual à referência; quanto mais baixo, melhor.',
+                  )
+                : uiText(
+                    'Tempo perdido nesta curva na melhor volta de cada dia, contra o seu melhor pessoal. Zero é igual ao seu melhor; quanto mais baixo, melhor.',
+                  )
+              : uiText(
+                  'Diferença nesta curva na melhor volta de cada dia, contra a base. Zero é igual à base.',
+                )}
+          </p>
+          {cornerLast !== null && (
+            <div className="a-stats a-evo-stats">
+              <div className="a-stat" data-emph="1">
+                <span className="a-stat-k">{uiText('Último dia')}</span>
+                <span className="a-stat-v num">{fmtCorner(cornerLast)}</span>
+              </div>
+              {cornerMove !== null && (
+                <div className="a-stat">
+                  <span className="a-stat-k">{uiText('Contra o dia anterior')}</span>
+                  <span
+                    className="a-stat-v num"
+                    data-tone={
+                      !lowerIsBetter || cornerMove === 0
+                        ? undefined
+                        : cornerMove < 0
+                          ? 'gain'
+                          : 'loss'
+                    }
+                  >
+                    {fmtCorner(cornerMove)}
+                  </span>
+                </div>
+              )}
+              {lowerIsBetter && cornerBest !== null && (
+                <div className="a-stat">
+                  <span className="a-stat-k">{uiText('Melhor dia')}</span>
+                  <span className="a-stat-v num">{fmtCorner(cornerBest)}</span>
+                </div>
+              )}
+            </div>
+          )}
           <MiniChart
             xs={xs}
             series={cornerSeries}
             xLabel={dayLabel}
-            yLabel={(v) => `${signed(v, def.digits)} ${def.unit}`}
+            yLabel={fmtCorner}
             zeroLine={0}
+            includeZero
+            valueLabels
           />
         </div>
       </div>

@@ -191,6 +191,13 @@
 .a-evo-values {
   margin-top: var(--sp-3);
 }
+.a-evo-note {
+  margin: var(--sp-2) 0;
+}
+.a-evo-stats {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 110px), 1fr));
+  margin-bottom: var(--sp-2);
+}
 .a-evo-values th,
 .a-evo-values td {
   white-space: nowrap;
