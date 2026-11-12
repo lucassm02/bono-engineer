@@ -1080,6 +1080,15 @@
   "faltam regras": ["rules missing", "faltan reglas"],
   "fecha": ["closes", "cierra"],
   "Fechar": ["Close", "Cerrar"],
+  "Fechar QR Code": ["Close QR code", "Cerrar código QR"],
+  "Escaneie na mesma rede Wi-Fi.": [
+    "Scan on the same Wi-Fi network.",
+    "Escanea en la misma red Wi-Fi."
+  ],
+  "Instruções em voz e na tela. O ajuste fica salvo neste aparelho.": [
+    "Spoken and on-screen instructions. This setting is saved on this device.",
+    "Instrucciones por voz y en pantalla. Este ajuste se guarda en este dispositivo."
+  ],
   "Fechar aviso": ["Dismiss notice", "Cerrar aviso"],
   "Fechar o app": ["Close app", "Cerrar el app"],
   "Ferramentas usadas": ["Tools used", "Herramientas usadas"],
@@ -2688,6 +2697,8 @@
     "Vuelta sin la referencia del entrenamiento. Comprueba la referencia antes de continuar."
   ],
   "Voltar": ["Back", "Atrás"],
+  "Voltar ao Início": ["Back to Home", "Volver a Inicio"],
+  "Voltar às corridas diárias": ["Back to Daily Races", "Volver a las carreras diarias"],
   "Voltar ao automático": ["Return to automatic", "Volver a automático"],
   "Voltar à tela ao vivo": ["Back to Live", "Volver a En directo"],
   "voltas": ["laps", "vueltas"],

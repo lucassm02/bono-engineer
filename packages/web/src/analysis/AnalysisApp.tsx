@@ -269,6 +269,7 @@ function NavLink({ item, route, className }: { item: NavItem; route: Route; clas
     <a
       href={item.href}
       className={className}
+      aria-label={item.label}
       aria-current={item.names.includes(route.name) ? 'page' : undefined}
       data-live={item.icon === 'live' ? '1' : undefined}
       data-tour={item.tour}
@@ -327,6 +328,10 @@ export default function AnalysisApp({ route }: { route: Route }) {
             <NavLink key={n.label} item={n} route={route} />
           ))}
           <NavLink item={HELP} route={route} className="a-nav-end a-nav-help" />
+          <a className="a-nav-phone" href={routes.config('acesso-remoto')}>
+            <Icon name="remote" size={22} />
+            <span>{uiText('Abrir no celular')}</span>
+          </a>
           <NavLink item={SETTINGS} route={route} />
         </nav>
         <div className="a-side-foot">

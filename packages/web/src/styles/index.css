@@ -107,6 +107,8 @@ button {
 
 .app {
   --live-controls-bottom: calc(var(--safe-b) + var(--sp-1));
+  --live-control-size: var(--tap);
+  --live-control-gap: var(--sp-2);
   position: fixed;
   inset: 0;
   overflow: hidden;
@@ -140,6 +142,7 @@ button {
   scroll-snap-align: start;
   scroll-snap-stop: always;
   container-type: size;
+  container-name: live-slide;
   overflow: hidden;
 }
 
@@ -340,21 +343,7 @@ button {
 
 /* Cadeado: toque trava; travado, só segurar destrava (anel de progresso no ::after). */
 .ui-icon-btn.lock-btn {
-  position: absolute;
-  right: var(--safe-r);
-  bottom: var(--live-controls-bottom);
-  width: 40px;
-  height: 40px;
-  margin-inline: -4px;
-  border-radius: var(--r-pill);
-  background: color-mix(in srgb, var(--surface-2) 88%, transparent);
-  backdrop-filter: blur(6px);
-  z-index: 16;
-}
-.lock-btn::before {
-  content: "";
-  position: absolute;
-  inset: -2px;
+  position: relative;
 }
 .ui-icon-btn.lock-btn[data-locked="1"] {
   background: var(--accent);
@@ -424,18 +413,24 @@ button {
   pointer-events: none;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
   .app {
-    --live-portrait-footer-space: 72px;
+    --live-portrait-footer-space: 88px;
   }
   .view {
     padding-bottom: calc(var(--live-controls-bottom) + var(--live-portrait-footer-space));
   }
   .dots {
     left: var(--safe-l);
-    right: calc(var(--safe-r) + 88px);
+    right: calc(var(--safe-r) + 3 * (var(--live-control-size) + var(--live-control-gap)));
     width: fit-content;
-    max-width: calc(100% - var(--safe-l) - var(--safe-r) - 88px);
+    max-width: calc(
+      100% -
+      var(--safe-l) -
+      var(--safe-r) -
+      3 *
+      (var(--live-control-size) + var(--live-control-gap))
+    );
     margin-inline: auto;
     transform: none;
   }
@@ -444,7 +439,7 @@ button {
     flex: 0 1 24px;
   }
   .badges {
-    bottom: calc(var(--safe-b) + 36px);
+    bottom: calc(var(--live-controls-bottom) + var(--live-control-size) + var(--sp-2));
     right: var(--safe-r);
     align-items: center;
   }
@@ -783,10 +778,10 @@ button {
   font-size: clamp(15px, min(3.2cqw, 6.2cqh), 34px);
 }
 
-@container (orientation: portrait) {
+@container live-slide (orientation: portrait) {
   .corrida {
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto auto auto minmax(0, 1fr) auto auto;
+    grid-template-rows: auto auto auto auto minmax(36px, 1fr) auto auto;
     grid-template-areas:
       "lights lights"
       "meta meta"
@@ -807,12 +802,12 @@ button {
     min-height: 0;
   }
   .gear-value {
-    font-size: min(58cqw, 54cqh);
+    font-size: max(18px, min(58cqw, 54cqh));
   }
   .speed-value {
-    font-size: min(34cqw, 42cqh);
+    font-size: max(18px, min(34cqw, 42cqh));
   }
-  @container (max-height: 96px) {
+  @container (max-height: 38px) {
     .corrida-gear .readout-label,
     .corrida-speed .readout-label {
       display: none;
@@ -826,20 +821,34 @@ button {
     font-size: min(8cqw, 4.8cqh);
   }
   .corrida-sectors {
-    grid-template-columns: 1fr;
-    font-size: min(6.4cqw, 3.6cqh);
-    gap: var(--sp-2);
+    font-size: min(5cqw, 3cqh);
+    gap: var(--sp-1);
+  }
+  .corrida-sectors .sector {
+    flex-wrap: wrap;
+    gap: 0 var(--sp-1);
+    padding-inline: var(--sp-1);
+  }
+  .corrida-sectors .sector-delta {
+    margin-left: 0;
   }
   .app:has(.engineer-hud) .corrida-delta-value {
     font-size: min(17cqw, 9cqh);
   }
-  .app:has(.engineer-hud) .corrida-sectors {
-    grid-template-columns: repeat(
-        3,
-        minmax(0, 1fr)
-      ); /* uma linha: o cartão do engenheiro não esconde S2/S3 */
-    font-size: min(5cqw, 3cqh);
-    gap: var(--sp-1);
+  @container live-slide (max-height: 650px) {
+    .corrida .corrida-delta-value {
+      font-size: min(15cqw, 8cqh);
+    }
+    .corrida-times {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--sp-1);
+    }
+    .corrida .time-cell {
+      padding: var(--sp-1);
+    }
+    .corrida .time-cell .num {
+      font-size: clamp(12px, 4.5cqw, 18px);
+    }
   }
 }
 

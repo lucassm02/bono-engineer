@@ -662,17 +662,19 @@
   gap: var(--sp-3);
 }
 .cfg-status-row .cx-status {
-  flex: 1 1 280px;
-  margin: 0;
+  flex: 1 1 220px;
+  min-width: 0;
+  padding: 0;
 }
-.cfg-status-main {
+.ui-card.cfg-status-main {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
 }
 .cfg-status-main > .ui-btn {
-  flex: none;
+  max-width: 100%;
 }
 .cfg-facts-line {
   display: flex;

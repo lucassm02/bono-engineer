@@ -1,7 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { TYRE_TEMP_SCALE } from '../config.ts';
+import * as clips from '../lib/engineerClips.ts';
 import {
   migrateRadioControls,
+  prepareSavedEngineerAudio,
+  setEngineerEnabled,
   setEngineerMuted,
   setRadioControls,
   useEngineer,
@@ -44,5 +47,26 @@ describe('configuração do rádio', () => {
     setEngineerMuted(false, false);
     expect(radioEngine.config).toMatchObject({ mode: 'race', speechLevel: 'detailed' });
     expect(useEngineer.getState().controls.volume).toBe(1);
+  });
+
+  it('prepares a saved enabled radio on interaction without playing a preview', async () => {
+    vi.stubGlobal('AudioContext', class {});
+    const prepare = vi.spyOn(clips, 'prepareRadioPack').mockResolvedValue(undefined);
+    const play = vi.spyOn(clips, 'playRadioUtterance');
+    try {
+      setEngineerEnabled(true, false);
+      expect(prepare).not.toHaveBeenCalled();
+      prepareSavedEngineerAudio();
+      expect(useEngineer.getState().voiceLoading).toBe(true);
+      await vi.waitFor(() => expect(useEngineer.getState().voiceLoading).toBe(false));
+      expect(prepare).toHaveBeenCalledOnce();
+      expect(play).not.toHaveBeenCalled();
+      expect(useEngineer.getState().voiceError).toBe(false);
+    } finally {
+      setEngineerEnabled(false);
+      prepare.mockRestore();
+      play.mockRestore();
+      vi.unstubAllGlobals();
+    }
   });
 });

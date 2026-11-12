@@ -5,6 +5,7 @@ import {
   playRadioUtterance,
   prepareRadioPack,
   type RadioPack,
+  radioAudioRunning,
   radioPack,
   radioPackStatus,
   radioUtteranceMs,
@@ -16,7 +17,7 @@ import { RADIO_HELLO, RADIO_PREVIEW_KEY, type RadioUtterance } from '../lib/radi
 import { defaultRadioVoice, migrateRadioVoice, radioVoice } from '../lib/radioVoices.ts';
 import { loadJson, saveJson } from '../lib/storage.ts';
 import { offerHint } from './tourHints.ts';
-import { addNotice } from './uiStore.ts';
+import { addNotice, useUi } from './uiStore.ts';
 
 const KEY = 'gt7.engineer.muted';
 const HUD_KEY = 'gt7.engineer.hudVisible';
@@ -97,6 +98,7 @@ export const useEngineer = create(() => ({
 }));
 
 let previewRequest = 0;
+let preparedVoice: string | null = null;
 
 /**
  * Exact playback time (ms) of an utterance with the pack that would play it now, or null when
@@ -194,18 +196,45 @@ export function stopEngineerPreview(): void {
 export function testEngineerVoice(sample = true): void {
   stopEngineerVoice();
   stopEngineerPreview();
-  const request = previewRequest;
+  prepareEngineerVoice(sample ? RADIO_PREVIEW_KEY : RADIO_HELLO);
+}
+
+/** A saved On switch can prepare the voice silently at the next browser interaction. */
+export function prepareSavedEngineerAudio(): void {
+  const { enabled, muted, voiceLoading, voiceUri } = useEngineer.getState();
+  const { profile, serverStatus } = useUi.getState();
+  const outputDevice = serverStatus?.engineerAudioDeviceId;
+  if (
+    !enabled ||
+    muted ||
+    voiceLoading ||
+    (outputDevice && outputDevice !== profile.deviceId) ||
+    typeof AudioContext === 'undefined' ||
+    (preparedVoice === voiceUri && radioAudioRunning())
+  )
+    return;
+  prepareEngineerVoice(null);
+}
+
+function prepareEngineerVoice(utterance: RadioUtterance | null): void {
+  const request = ++previewRequest;
+  const { voiceUri } = useEngineer.getState();
   useEngineer.setState({ voiceLoading: true, voiceError: false });
-  void prepareVoice(useEngineer.getState().voiceUri).then((pack) => {
+  void prepareVoice(voiceUri).then((pack) => {
     if (request !== previewRequest) return;
     if (!pack) {
       useEngineer.setState({ voiceLoading: false, voiceError: true });
       return;
     }
-    const started = playEngineerVoice(sample ? RADIO_PREVIEW_KEY : RADIO_HELLO, true, () =>
-      useEngineer.setState({ previewPlaying: false }),
-    );
-    useEngineer.setState({ voiceLoading: false, previewPlaying: started });
+    preparedVoice = voiceUri;
+    const started =
+      utterance !== null &&
+      playEngineerVoice(utterance, true, () => useEngineer.setState({ previewPlaying: false }));
+    useEngineer.setState({
+      voiceLoading: false,
+      previewPlaying: started,
+      voiceFallback: pack.voiceId !== voiceUri,
+    });
   });
 }
 

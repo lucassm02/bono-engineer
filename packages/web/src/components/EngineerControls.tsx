@@ -121,9 +121,7 @@ export function EngineerControls() {
       <section className="ui-card bn-card" data-tone={enabled ? 'accent' : undefined}>
         <ToggleRow
           title={uiText('Engenheiro ao vivo')}
-          description={uiText(
-            'Instruções em voz e na tela. Quando tudo corre bem, o engenheiro fica em silêncio.',
-          )}
+          description={uiText('Instruções em voz e na tela. O ajuste fica salvo neste aparelho.')}
           checked={enabled}
           onChange={(next) => setEngineerEnabled(next, audioHere)}
         />

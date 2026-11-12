@@ -78,6 +78,7 @@ export function DailiesPage() {
   return (
     <>
       <PageHead
+        back={{ href: routes.home(), label: uiText('Voltar ao Início') }}
         eyebrow={uiText('GT7 · Modo Esportivo')}
         title={uiText('Corridas diárias')}
         sub={uiText(
@@ -256,7 +257,7 @@ function DailyCard({
               </span>
             )}
             {mine && (
-              <a className="dl-link" href={routes.track(mine.id)}>
+              <a className="dl-link" href={routes.track(mine.id, { from: 'dailies' })}>
                 {uiText('Ver a pista')}
               </a>
             )}

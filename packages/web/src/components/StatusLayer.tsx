@@ -35,6 +35,7 @@ export function StatusLayer() {
   const serverStatus = useUi((s) => s.serverStatus);
   const conn = useConsoleConnection();
   const link = describeLink(conn);
+  const found = conn?.state === 'found';
   const kind = statusKind({ source, wsStatus, wsEverOpened, wsAttempt, liveState });
   const secs = useCountdown(kind === 'noServer' ? wsRetryAt : null);
 
@@ -121,17 +122,31 @@ export function StatusLayer() {
         )}
         {kind === 'noConsole' && (
           <>
-            <h1>{conn ? link.title : uiText('Servidor ok, console não conectado')}</h1>
-            {conn && link.detail && <p>{link.detail}</p>}
-            <ul>
-              <li>{uiText('PS5 ligado e na mesma rede (Wi-Fi) que este PC.')}</li>
-              <li>{uiText('Gran Turismo 7 aberto numa pista (no menu o PS5 não envia dados).')}</li>
-              <li>
-                {`${uiText('Porta UDP')} `}
-                {GT7_CLIENT_PORT}
-                {` ${uiText('liberada no Firewall do Windows (rede privada).')}`}
-              </li>
-            </ul>
+            <h1>
+              {conn
+                ? found
+                  ? link.short
+                  : link.title
+                : uiText('Servidor ok, console não conectado')}
+            </h1>
+            {found ? (
+              <p>{uiText('Abra o Gran Turismo 7 no PS5 e entre numa pista.')}</p>
+            ) : (
+              <>
+                {conn && link.detail && <p>{link.detail}</p>}
+                <ul>
+                  <li>{uiText('PS5 ligado e na mesma rede (Wi-Fi) que este PC.')}</li>
+                  <li>
+                    {uiText('Gran Turismo 7 aberto numa pista (no menu o PS5 não envia dados).')}
+                  </li>
+                  <li>
+                    {`${uiText('Porta UDP')} `}
+                    {GT7_CLIENT_PORT}
+                    {` ${uiText('liberada no Firewall do Windows (rede privada).')}`}
+                  </li>
+                </ul>
+              </>
+            )}
             <div className="status-actions" data-no-gesture>
               <button
                 type="button"

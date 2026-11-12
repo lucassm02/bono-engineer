@@ -130,13 +130,15 @@
 .status-screen {
   position: absolute;
   inset: 0;
+  bottom: calc(var(--live-controls-bottom) + var(--live-portrait-footer-space, 48px));
   z-index: 10;
   display: flex;
   max-width: 100%;
-  padding: calc(var(--safe-t) + var(--sp-3)) calc(var(--safe-r) + var(--sp-3))
-    calc(var(--safe-b) + var(--sp-5)) calc(var(--safe-l) + var(--sp-3));
+  padding: calc(var(--safe-t) + var(--sp-3)) calc(var(--safe-r) + var(--sp-3)) var(--sp-3)
+    calc(var(--safe-l) + var(--sp-3));
   background: var(--surface-0);
   overflow: auto;
+  touch-action: pan-y;
 }
 .status-card {
   display: grid;

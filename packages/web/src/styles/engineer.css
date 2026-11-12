@@ -72,17 +72,16 @@
   white-space: nowrap;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
   .engineer-hud {
-    bottom: calc(var(--safe-b) + 72px);
+    bottom: calc(var(--safe-b) + 88px);
   }
   .app:has(.engineer-hud) {
-    /* cartão (≈120 px) + 72 px de controles: a grade termina acima dele, sem esconder tempos */
-    --live-portrait-footer-space: 212px;
+    --live-portrait-footer-space: 220px;
   }
 }
 
-@media (min-width: 481px) and (min-height: 480px) {
+@media (min-width: 601px) and (min-height: 480px) {
   .app:has(.engineer-hud) .view {
     padding-bottom: calc(var(--safe-b) + 176px);
   }

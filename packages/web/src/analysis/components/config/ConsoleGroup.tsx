@@ -28,7 +28,7 @@ const DOT_TONE: Record<LinkTone, string> = {
   bad: 'loss',
 };
 
-/** Estado do PS5 em uma linha só, com a ação que resolve. */
+/** Estado do PS5 e a ação de busca no mesmo cartão. */
 function ConsoleStatusRow() {
   const conn = useConsoleConnection();
   const mock = useUi((s) => s.source === 'mock');
@@ -44,12 +44,16 @@ function ConsoleStatusRow() {
   };
   return (
     <div className="cfg-status-row" id={rowDomId('ps5')}>
-      <div className="cfg-status-main">
-        <div className="ui-card cx-status" data-tone={DOT_TONE[view.tone]} role="status">
+      <div className="ui-card cfg-status-main" data-tone={DOT_TONE[view.tone]}>
+        <div className="cx-status" role="status">
           <LinkDot tone={view.tone} busy={view.busy} />
           <div>
-            <strong>{view.title}</strong>
-            {view.detail && <p>{view.detail}</p>}
+            <strong>{conn?.state === 'found' ? view.short : view.title}</strong>
+            {conn?.state === 'found' ? (
+              <p>{uiText('Abra o Gran Turismo 7 no PS5 e entre numa pista.')}</p>
+            ) : (
+              view.detail && <p>{view.detail}</p>
+            )}
           </div>
         </div>
         <button

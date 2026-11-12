@@ -11,6 +11,7 @@ import { GT7_INTEGRATION } from '../../lib/integrations.ts';
 import { routes } from '../../lib/route.ts';
 import { loadJson, saveJson } from '../../lib/storage.ts';
 import { openSetupAssistant } from '../../state/setup.ts';
+import { useUi } from '../../state/uiStore.ts';
 import { api } from '../api.ts';
 import { CarName } from '../components/CarName.tsx';
 import { CarFilterChips, CarFilterField, FilterChip } from '../components/CarPicker.tsx';
@@ -40,6 +41,36 @@ import {
 import { formatAgo } from '../lib/labels.ts';
 import { useCarFilter } from '../lib/useCarFilter.ts';
 import { useFetch } from '../useFetch.ts';
+
+const PHONE_QR_DISMISSED_KEY = 'gt7.home.phoneQrDismissed';
+
+function PhoneQrCard() {
+  const [dismissed, setDismissed] = useState(
+    () => loadJson<boolean>(PHONE_QR_DISMISSED_KEY) === true,
+  );
+  const lanAddress = useUi((s) => s.serverStatus?.lanUrls[0]);
+  const { data } = useFetch(dismissed ? null : (lanAddress ?? null), api.lan);
+  if (dismissed || !lanAddress || !data?.qrSvgDataUrl) return null;
+
+  return (
+    <aside className="a-phone-card ui-card" aria-label={uiText('Abrir no celular')}>
+      <button
+        className="ui-icon-btn a-phone-dismiss"
+        type="button"
+        aria-label={uiText('Fechar QR Code')}
+        onClick={() => {
+          setDismissed(true);
+          saveJson(PHONE_QR_DISMISSED_KEY, true);
+        }}
+      >
+        <Icon name="close" size={16} />
+      </button>
+      <a href={routes.config('acesso-remoto')}>{uiText('Abrir no celular')}</a>
+      <img src={data.qrSvgDataUrl} alt={uiText('QR Code para abrir o ao vivo em outro aparelho')} />
+      <p>{uiText('Escaneie na mesma rede Wi-Fi.')}</p>
+    </aside>
+  );
+}
 
 const DISMISSED_KEY = 'gt7.nameDismissed';
 const HIDE_DEMO_KEY = 'gt7.hideDemo';
@@ -336,6 +367,7 @@ export function HomePage() {
             <strong>{isDemo ? uiText('Demonstração') : GT7_INTEGRATION.name}</strong>
           </a>
         </div>
+        <PhoneQrCard />
         <svg className="a-hero-signal" viewBox="0 0 440 236" aria-hidden="true">
           <path
             className="a-hero-grid"

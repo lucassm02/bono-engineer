@@ -60,7 +60,7 @@ export function EngineerHudButton() {
   return (
     <button
       type="button"
-      className="engineer-hud-btn"
+      className="ui-icon-btn engineer-hud-btn"
       data-no-gesture
       aria-label={uiText('Cartão do engenheiro')}
       aria-pressed={visible}

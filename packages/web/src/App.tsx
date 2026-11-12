@@ -102,9 +102,11 @@ export function App() {
       <Dots />
       <LiveContextBar />
       <LiveEngineer />
-      <EngineerHudButton />
-      <MenuButton />
-      <LockButton />
+      <div className="live-controls" data-no-gesture>
+        <EngineerHudButton />
+        <MenuButton />
+        <LockButton />
+      </div>
       <LapPopup />
       <Notices />
       <LiveMenuSheet />

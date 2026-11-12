@@ -490,6 +490,11 @@ export function CapturePage() {
   return (
     <div className="cap-page">
       <PageHead
+        back={
+          dailyId === null
+            ? { href: routes.home(), label: uiText('Voltar ao Início') }
+            : { href: routes.dailies(), label: uiText('Voltar às corridas diárias') }
+        }
         title={uiText('Gravar volta de replay')}
         sub={uiText(
           'Assista ao replay de um piloto do topo no jogo e grave a volta dele como referência para o delta ao vivo, a comparação e o coach.',

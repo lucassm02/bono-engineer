@@ -14,6 +14,7 @@ export function DailiesStrip() {
   if (!data?.enabled || data.races.length === 0) return null;
   return (
     <Panel
+      className="dl-home"
       title={uiText('Corridas diárias · Semana {0}', data.week?.week ?? '')}
       description={uiText('As corridas desta semana no GT7.')}
       actions={

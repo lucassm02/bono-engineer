@@ -189,7 +189,7 @@ export function EngineerSettingsPanel({ openMore }: { openMore?: boolean }) {
           <CfgToggle
             id="engineer-on"
             title={uiText('Ligar o engenheiro')}
-            description={uiText('Instruções em voz e na tela. Em silêncio quando tudo corre bem.')}
+            description={uiText('Instruções em voz e na tela. O ajuste fica salvo neste aparelho.')}
             checked={enabled}
             onChange={() => setEngineerEnabled(!enabled, audioHere)}
           />

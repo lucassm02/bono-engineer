@@ -24,6 +24,51 @@
   z-index: 1;
   max-width: min(100%, 60ch);
 }
+.ui-card.a-phone-card {
+  display: none;
+}
+@media (min-width: 901px) and (pointer: fine) {
+  .a-hero:has(.a-phone-card) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: var(--sp-5);
+  }
+  .ui-card.a-phone-card {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    justify-items: start;
+    gap: var(--sp-2);
+    padding: var(--sp-3);
+    box-shadow: var(--shadow-2);
+  }
+  .a-phone-card > a {
+    padding-right: var(--sp-6);
+    font-weight: 650;
+    font-size: var(--fs-sm);
+  }
+  .a-phone-card img {
+    justify-self: center;
+    width: 112px;
+    height: 112px;
+    padding: 8px;
+    border-radius: var(--r-sm);
+    background: white;
+  }
+  .a-phone-card p {
+    margin: 0;
+    color: var(--text-2);
+    font-size: var(--fs-xs);
+  }
+  .ui-icon-btn.a-phone-dismiss {
+    position: absolute;
+    top: var(--sp-1);
+    right: var(--sp-1);
+    width: 28px;
+    height: 28px;
+  }
+}
 .a-hero h1 {
   margin: var(--sp-2) 0 0;
   font-size: clamp(34px, 5vw, 56px);

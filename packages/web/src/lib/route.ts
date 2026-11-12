@@ -134,8 +134,12 @@ export const routes = {
       extra: q.extra?.length ? q.extra.join(',') : undefined,
       corner: q.corner,
     }),
-  track: (id: string, q: { session?: string; tab?: string } = {}) =>
-    href(`/analise/pista/${encodeURIComponent(id)}`, { session: q.session, tab: q.tab }),
+  track: (id: string, q: { session?: string; tab?: string; from?: 'dailies' } = {}) =>
+    href(`/analise/pista/${encodeURIComponent(id)}`, {
+      session: q.session,
+      tab: q.tab,
+      from: q.from,
+    }),
   capture: (q: { daily?: number | string } = {}) => href('/captura', { daily: q.daily }),
   /** Daily Races of the week (DG EDGE). */
   dailies: () => href('/diarias'),

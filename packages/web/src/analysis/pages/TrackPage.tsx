@@ -756,15 +756,16 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
   }, [track]);
 
   const corners: MapCorner[] = data?.corners ?? NO_MAP;
+  const fromDailies = route.query.from === 'dailies';
+  const back = fromDailies
+    ? { href: routes.dailies(), label: uiText('Voltar às corridas diárias') }
+    : { href: routes.home(), label: uiText('Suas pistas') };
 
   if (ta.error && !track) {
     if (trackOnly.error || !trackOnly.loading) {
       return (
         <>
-          <PageHead
-            title={uiText('Pista')}
-            back={{ href: routes.home(), label: uiText('Suas pistas') }}
-          />
+          <PageHead title={uiText('Pista')} back={back} />
           <ErrorBox error={trackOnly.error ?? ta.error} onRetry={ta.reload} />
         </>
       );
@@ -796,12 +797,16 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
       null,
     ) ?? null;
   const tabHref = (t: TabId) =>
-    routes.track(id, { tab: t === 'melhores' ? undefined : t, session: route.query.session });
+    routes.track(id, {
+      tab: t === 'melhores' ? undefined : t,
+      session: route.query.session,
+      from: fromDailies ? 'dailies' : undefined,
+    });
 
   return (
     <>
       <PageHead
-        back={{ href: routes.home(), label: uiText('Suas pistas') }}
+        back={back}
         title={
           <EditableTrackName
             trackId={id}

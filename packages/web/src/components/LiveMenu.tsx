@@ -5,10 +5,10 @@
  * Teclado: M abre/fecha, ? abre direto na Ajuda; Esc, fundo e foco vêm do componente Modal.
  */
 
-import { type KeyboardEvent, useEffect, useId, useMemo, useState } from 'react';
+import { type KeyboardEvent, useEffect, useId, useState } from 'react';
 import { t as uiText } from '../lib/i18n.ts';
 import { navigate, routes } from '../lib/route.ts';
-import { bumpUsage, isNewcomer, loadMenuTab, type MenuTabId, saveMenuTab } from '../lib/usage.ts';
+import { bumpUsage, loadMenuTab, type MenuTabId, saveMenuTab } from '../lib/usage.ts';
 import {
   closeMenu,
   dispatchProfile,
@@ -99,16 +99,6 @@ const SETUP: readonly Entry[] = [
     },
     href: routes.config(),
   },
-  {
-    icon: 'remote',
-    get label() {
-      return uiText('Abrir em outro aparelho');
-    },
-    get hint() {
-      return uiText('QR Code e endereço para abrir o ao vivo em outro aparelho');
-    },
-    href: routes.config('acesso-remoto'),
-  },
 ];
 
 type TabId = MenuTabId;
@@ -142,12 +132,10 @@ const TABS: readonly { id: TabId; label: string }[] = [
 /** Botão flutuante, à esquerda do cadeado. */
 export function MenuButton() {
   const open = useUi((s) => s.menuOpen);
-  // na primeira semana o botão diz o que é (e a tecla); depois só o ícone
-  const newcomer = useMemo(() => isNewcomer(), []);
   return (
     <button
       type="button"
-      className="live-menu-btn"
+      className="ui-icon-btn live-menu-btn"
       data-no-gesture
       data-tour="menu"
       aria-label={uiText('Menu: histórico, comparação, gravar volta e ajustes')}
@@ -158,11 +146,6 @@ export function MenuButton() {
       onClick={() => useUi.setState({ menuOpen: !open, overlayVisible: false })}
     >
       <Icon name="menu" />
-      {newcomer && (
-        <span className="live-btn-label" aria-hidden="true">
-          {uiText('Menu')}
-        </span>
-      )}
     </button>
   );
 }
@@ -440,6 +423,15 @@ export function LiveMenuSheet() {
       }
     >
       <LiveContextBar variant="menu" />
+      <a
+        className="ui-btn bn-phone-link"
+        data-variant="secondary"
+        href={routes.config('acesso-remoto')}
+        onClick={closeMenu}
+      >
+        <Icon name="remote" size={18} />
+        {uiText('Abrir no celular')}
+      </a>
       <div
         className="ui-tabs bn-tabs"
         role="tablist"

@@ -85,6 +85,10 @@ export function radioPackStatus(pack: RadioPack): RadioPackStatus {
   return failed.has(pack.file) ? 'failed' : 'idle';
 }
 
+export function radioAudioRunning(): boolean {
+  return context?.state === 'running';
+}
+
 /** Start or resume audio from the user gesture, then decode the pack once. */
 export async function prepareRadioPack(pack: RadioPack): Promise<void> {
   context ??= new AudioContext({ latencyHint: 'interactive' });

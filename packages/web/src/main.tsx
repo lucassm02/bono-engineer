@@ -17,6 +17,7 @@ import { loadString } from './lib/storage.ts';
 import { startSwUpdateWatch } from './lib/swUpdate.ts';
 import { setupKeepAwake } from './lib/wakeLock.ts';
 import { startConnection } from './net/connection.ts';
+import { prepareSavedEngineerAudio } from './state/engineer.ts';
 import { useLiveContext } from './state/liveContext.ts';
 import { useSetupInvite } from './state/setup.ts';
 import { requestTour, useTour } from './state/tour.ts';
@@ -220,6 +221,10 @@ function useUrlTour(ready: boolean): void {
 function Root() {
   const route = useHashRoute();
   const deciding = useBootGate();
+  useEffect(() => {
+    document.addEventListener('click', prepareSavedEngineerAudio);
+    return () => document.removeEventListener('click', prepareSavedEngineerAudio);
+  }, []);
   useOnboardingGate();
   useUrlTour(!deciding);
   const onboarding = useUi((s) => s.onboarding === 'active');

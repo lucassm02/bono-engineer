@@ -1276,7 +1276,7 @@ textarea.a-input {
     margin-top: 0;
   }
   /* A ajuda não cabe na barra de 7 itens: no celular ela é o botão "?" do cabeçalho. */
-  .a-app .a-side .a-nav a.a-nav-help {
+  .a-app .a-side .a-nav :is(.a-nav-help, .a-nav-phone) {
     display: none;
   }
   .a-mtop .a-help-btn {
@@ -1293,8 +1293,11 @@ textarea.a-input {
   .a-nav-short {
     display: block;
     max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     line-height: 1.1;
-    letter-spacing: -0.02em; /* 7 itens em 375 px: "Comparar" não encosta em "Captura" */
+    letter-spacing: -0.02em;
   }
   .a-main {
     grid-column: auto;
