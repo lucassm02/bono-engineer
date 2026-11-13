@@ -26,6 +26,7 @@ import {
   tyresWarmUpRule,
 } from './rules.ts';
 import type { RadioEngineConfig } from './settings.ts';
+import { taskRule } from './task-rule.ts';
 import {
   RADIO_PRIORITIES,
   type RadioCandidate,
@@ -49,6 +50,7 @@ export const RADIO_RULES: readonly AnyRadioRule[] = [
   lapResultRule,
   goalRule,
   drillRule,
+  taskRule,
   lapSummaryRule,
   consistencyRule,
 ];
@@ -77,7 +79,12 @@ export function phaseBlock(
 ): string | null {
   if (priority === 'critical') return null;
   if (phase === 'unknown') return 'fase desconhecida';
-  if (config.mode === 'qualifying' && phase === 'timedLap' && !candidate.postLine)
+  if (
+    config.mode === 'qualifying' &&
+    phase === 'timedLap' &&
+    !candidate.postLine &&
+    !candidate.approved
+  )
     return 'volta rápida';
   return null;
 }

@@ -8,6 +8,7 @@
 
 import type { CornerDirection } from './analysis.ts';
 import type { DeltaReferenceKind, Id } from './domain.ts';
+import type { LiveTask } from './tasks.ts';
 import type {
   DecodedFlags,
   IngestorStats,
@@ -404,6 +405,8 @@ export interface LiveFrame {
   goal?: LiveGoal;
   /** The corner drill in progress; omitted otherwise. (core, additive) */
   drill?: LiveDrill;
+  /** The active engineer tasks of this track and car (spec 20); omitted while there are none. (core, additive) */
+  tasks?: LiveTask[];
   /** UDP link quality. */
   link: Pick<IngestorStats, 'rateHz' | 'lossPct' | 'lost' | 'received' | 'lastPacketAt'>;
 }

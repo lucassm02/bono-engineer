@@ -63,6 +63,8 @@ export interface RadioCandidate {
   postLine?: boolean;
   /** Never spoken: delivered to the panel only (e.g. tyre values without a trusted range). */
   panelOnly?: boolean;
+  /** The driver approved this instruction: also said on the timed lap of Classificação. */
+  approved?: boolean;
   /** Overrides the rule's priority class for this candidate. */
   priority?: RadioPriority;
   /** Overrides the rule's level: 'detailed' = only with Detalhado. */

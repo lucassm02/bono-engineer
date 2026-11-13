@@ -10,6 +10,10 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 
 - **Track recognised on the pre-race screen.** Before a race or a time trial the game plays a lap with your car in the background. Bono now reads the path of that car and names the circuit within about 150 m of it moving, before you drive a metre, with no lap of yours on that track needed (checked on a real PS5: Trial Mountain, Suzuka and Road Atlanta). The live bar shows "Pista: …"; layouts that share their first metres (Suzuka Full and East) show the circuit first and the layout once the car has run one loop. It is a "probable" label only: nothing is saved from it.
+- **Engineer tasks.** An AI agent (through MCP) or the in-app AI Coach can now *propose* instructions for the radio engineer, such as "At turn seven, entry. Brake twenty meters later.", and you approve them in the app: **Home → Agent proposals** and the new **Tasks** tab on each track (listen, approve, edit, pause or delete; you can also create your own). Nothing is said before you approve. The engineer says each approved task at its place on the lap, finishing right at the point, at most twice per lap (1–4 in **Settings → Engineer → More options**), never on the out lap and never inside a corner.
+- Sentences are composed only from a dictionary of recorded phrases (about 217 pieces per voice, in Portuguese, English and Spanish): the MCP and the server refuse anything the dictionary cannot say and list what is valid, and the requests it could not say are kept so the dictionary can grow.
+- New MCP tools: `get_task_dictionary`, `propose_engineer_task` (with `dry_run`), `list_engineer_tasks`, `update_engineer_task` and `withdraw_engineer_task`. They need no token: tasks only add speech and text, and an agent can never activate, pause or delete an approved task.
+- **Tasks voice:** the audio of the tasks is downloaded from GitHub only after you allow it, only for the voice in use (about 14 MB), and is checked by size and SHA-256 before it is played.
 
 ## [0.7.1] - 2026-11-13
 

@@ -17,6 +17,7 @@ import { eventsRoutes } from './events.ts';
 import { mcpInfoRoutes } from './mcp-info.ts';
 import { sessionRoutes } from './sessions.ts';
 import { statusRoutes } from './status.ts';
+import { taskRoutes } from './tasks.ts';
 import { trackRoutes } from './tracks.ts';
 
 export type { RouteContext } from './context.ts';
@@ -30,6 +31,7 @@ export const ROUTE_MODULES: RouteModule[] = [
   trackRoutes,
   deviceRoutes,
   drillRoutes,
+  taskRoutes,
   captureRoutes,
   analysisRoutes,
   coachRoutes,

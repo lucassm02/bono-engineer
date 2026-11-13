@@ -29,6 +29,7 @@ import { GoalCard } from '../components/GoalCard.tsx';
 import { LapQuickActions } from '../components/LapActions.tsx';
 import { MiniChart, type MiniSeries } from '../components/MiniChart.tsx';
 import { SectorsTab } from '../components/SectorsTab.tsx';
+import { TasksTab } from '../components/TasksTab.tsx';
 import { TrackFicha } from '../components/TrackFicha.tsx';
 import { EditableTrackName, NewTrackPrompt } from '../components/TrackNaming.tsx';
 import {
@@ -603,6 +604,12 @@ const TABS = [
       return uiText('Curvas');
     },
   },
+  {
+    id: 'tarefas',
+    get label() {
+      return uiText('Tarefas');
+    },
+  },
 ] as const;
 type TabId = (typeof TABS)[number]['id'];
 
@@ -1103,6 +1110,8 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
       )}
 
       {tab === 'setores' && <SectorsTab trackId={id} cars={cars} />}
+
+      {tab === 'tarefas' && <TasksTab trackId={id} cars={cars} />}
 
       {tab === 'referencias' && (
         <Card title={uiText('Referências do top mundial')}>

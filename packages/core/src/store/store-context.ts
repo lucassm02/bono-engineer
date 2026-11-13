@@ -6,6 +6,7 @@ import type {
   Id,
   Lap,
   LapTrace,
+  LiveTask,
   Session,
   Track,
   TrackCenterline,
@@ -13,6 +14,7 @@ import type {
 } from '@gt7/shared';
 import type { IdentifyTrackInput, LiveEngineContext, TrackRecords } from '../live/context.ts';
 import type { StoredLap } from '../live/delta-reference.ts';
+import { TaskService } from '../tasks/task-service.ts';
 import {
   type IdentifyResult,
   identifyOrCreateTrack,
@@ -71,6 +73,10 @@ export class StoreEngineContext implements LiveEngineContext {
 
   getTrackRecords(trackId: Id, carCode: number, sectorCount: number): TrackRecords {
     return this.store.getTrackRecords(trackId, carCode, sectorCount);
+  }
+
+  getLiveTasks(track: Track, carCode: number | null): LiveTask[] {
+    return new TaskService(this.store).liveTasks(track, carCode);
   }
 
   getActiveGoal(trackId: Id, carCode: number): Goal | null {

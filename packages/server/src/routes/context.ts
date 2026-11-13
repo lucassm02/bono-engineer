@@ -8,6 +8,7 @@ import type { DailyRacesService } from '../events/daily-service.ts';
 import type { FirewallChecker } from '../firewall.ts';
 import type { WsHub } from '../hub.ts';
 import type { LanResolver } from '../lan.ts';
+import type { TaskVoiceService } from '../task-voice/service.ts';
 
 export interface RouteContext {
   runtime: Gt7Runtime;
@@ -24,6 +25,8 @@ export interface RouteContext {
   dailies: DailyRacesService;
   /** In-app AI coach (Debrief com IA). */
   coach: CoachService;
+  /** Downloaded voice of the engineer tasks (spec 20). */
+  taskVoice: TaskVoiceService;
   /** Bundled MCP stdio server of the desktop app; null/missing = the repo's stdio.ts. */
   mcpStdioScript?: string | null;
 }

@@ -17,6 +17,7 @@ import { type HubOptions, type HubSocket, WsHub } from './hub.ts';
 import { INSTANCE_HEADER } from './identity.ts';
 import { type InterfacesFn, LanResolver } from './lan.ts';
 import { type RouteContext, type RouteModule, registerApi } from './routes/index.ts';
+import { type TaskVoiceOptions, TaskVoiceService } from './task-voice/service.ts';
 import { registerWeb } from './web.ts';
 
 export const SERVER_VERSION = appPackage.version;
@@ -54,6 +55,8 @@ export interface CreateAppOptions {
   mcpStdioScript?: string | null;
   /** In-app AI coach options (tests inject a fake Claude client factory). */
   coach?: CoachServiceOptions;
+  /** Engineer-task voice download (tests inject a small manifest and a local URL). */
+  taskVoice?: TaskVoiceOptions;
 }
 
 export interface Gt7Server {
@@ -63,6 +66,7 @@ export interface Gt7Server {
   lan: LanResolver;
   firewall: FirewallChecker;
   coach: CoachService;
+  taskVoice: TaskVoiceService;
   /** Stops accepting connections, closes sockets, the runtime (UDP) and the store. */
   close(): Promise<void>;
 }
@@ -90,6 +94,7 @@ export async function createApp(opts: CreateAppOptions = {}): Promise<Gt7Server>
   hub = new WsHub(runtime, { ...opts.hub, serverVersion, firewall: () => firewall.status });
   const wsHub = hub;
   const coach = new CoachService(runtime, opts.coach);
+  const taskVoice = new TaskVoiceService(runtime.store, opts.taskVoice);
   const dailies = new DailyRacesService({
     dataDir: runtime.store.dataDir,
     appVersion: serverVersion,
@@ -131,6 +136,7 @@ export async function createApp(opts: CreateAppOptions = {}): Promise<Gt7Server>
       serverVersion,
       simulator: !!opts.simulator,
       coach,
+      taskVoice,
       dailies,
       mcpStdioScript: opts.mcpStdioScript ?? null,
     };
@@ -164,5 +170,5 @@ export async function createApp(opts: CreateAppOptions = {}): Promise<Gt7Server>
     return closing;
   };
 
-  return { app, runtime, hub: wsHub, lan, firewall, coach, close };
+  return { app, runtime, hub: wsHub, lan, firewall, coach, taskVoice, close };
 }

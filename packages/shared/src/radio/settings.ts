@@ -36,7 +36,16 @@ export interface RadioPreferences {
    * repeat), else the best lap of the block.
    */
   consistencyTargetMs: number | null;
+  /** Engineer tasks the driver approved (spec 20): the engineer says them at their place on the lap. */
+  tasksEnabled: boolean;
+  /** Modes where the tasks are said (Corrida is off by default). */
+  taskModes: RadioMode[];
+  /** At most this many tasks per lap (1–4). */
+  taskMaxPerLap: number;
 }
+
+/** Tasks per lap the driver may choose. */
+export const TASK_MAX_PER_LAP_RANGE = [1, 4] as const;
 
 export const DEFAULT_RADIO_PREFERENCES: Readonly<RadioPreferences> = {
   mode: 'training',
@@ -46,6 +55,9 @@ export const DEFAULT_RADIO_PREFERENCES: Readonly<RadioPreferences> = {
   summary: 'onDemand',
   praise: false,
   consistencyTargetMs: null,
+  tasksEnabled: true,
+  taskModes: ['training', 'qualifying'],
+  taskMaxPerLap: 2,
 };
 
 /** Target lap times accepted for Consistência (ms). */
@@ -76,6 +88,17 @@ export function normalizeRadioPreferences(saved: unknown): RadioPreferences {
       s.consistencyTargetMs <= CONSISTENCY_TARGET_RANGE_MS[1]
         ? Math.round(s.consistencyTargetMs)
         : null,
+    tasksEnabled: s.tasksEnabled !== false,
+    taskModes: Array.isArray(s.taskModes)
+      ? RADIO_MODES.filter((m) => (s.taskModes as unknown[]).includes(m))
+      : [...d.taskModes],
+    taskMaxPerLap:
+      typeof s.taskMaxPerLap === 'number' && Number.isFinite(s.taskMaxPerLap)
+        ? Math.min(
+            TASK_MAX_PER_LAP_RANGE[1],
+            Math.max(TASK_MAX_PER_LAP_RANGE[0], Math.round(s.taskMaxPerLap)),
+          )
+        : d.taskMaxPerLap,
   };
 }
 
@@ -107,6 +130,8 @@ export interface RadioEngineConfig {
    * the tyre values go to the panel only and nothing about tyre temperature is spoken.
    */
   tyreScaleValidated: boolean;
+  /** The engineer tasks (spec 20): switch, modes and the limit per lap. */
+  tasks: { enabled: boolean; modes: readonly RadioMode[]; maxPerLap: number };
 }
 
 /** Default goal tolerance (ms): three tenths. */
@@ -135,5 +160,10 @@ export function radioEngineConfig(
     anticipationMs: extra.anticipationMs ?? 0,
     tyreScale: extra.tyreScale ?? DEFAULT_TYRE_SCALE,
     tyreScaleValidated: extra.tyreScaleValidated ?? true,
+    tasks: extra.tasks ?? {
+      enabled: prefs.tasksEnabled,
+      modes: prefs.taskModes,
+      maxPerLap: prefs.taskMaxPerLap,
+    },
   };
 }

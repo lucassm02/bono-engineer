@@ -224,6 +224,12 @@ export interface ShowViewMessage {
   from: string;
 }
 
+/** Engineer tasks changed (a proposal arrived, was approved or removed): the count of open proposals. */
+export interface TasksChangedMessage {
+  type: 'tasksChanged';
+  proposals: number;
+}
+
 /** A session that had laps was closed and saved (the UI shows a short toast). */
 export interface SessionSavedMessage {
   type: 'sessionSaved';
@@ -267,6 +273,7 @@ export type ServerMessage =
   | LapCompletedMessage
   | SessionChangedMessage
   | SessionSavedMessage
+  | TasksChangedMessage
   | StatusMessage
   | DeviceProfileMessage
   | ShowViewMessage

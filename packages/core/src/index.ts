@@ -114,6 +114,13 @@ export {
   TRACES_DIR,
 } from './store/store.ts';
 export { StoreEngineContext } from './store/store-context.ts';
+export {
+  type ProposeInput,
+  type ProposeResult,
+  TaskError,
+  type TaskErrorCode,
+  TaskService,
+} from './tasks/task-service.ts';
 export { LAP_SAMPLE_CHANNELS, TraceBuilder, traceColumn, traceSample } from './trace/channels.ts';
 export {
   decodeTrace,

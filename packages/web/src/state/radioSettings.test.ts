@@ -23,6 +23,9 @@ describe('configuração do rádio', () => {
       summary: 'onDemand',
       praise: false,
       consistencyTargetMs: null,
+      tasksEnabled: true,
+      taskModes: ['training', 'qualifying'],
+      taskMaxPerLap: 2,
     });
     expect(migrateRadioControls(null)).toMatchObject({
       volume: 1,

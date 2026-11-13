@@ -48,6 +48,28 @@ Os tipos de requisição/resposta ficam em `@gt7/shared` (`ws.ts`, `api.ts`, `co
 | POST | `/api/events/dailies/refresh` | Atualização manual (recusada por 10 minutos depois de qualquer tentativa) |
 | PUT | `/api/events/dailies/enabled` | `{ enabled: boolean }`: responde à pergunta única e liga ou desliga a busca |
 
+### Tarefas do engenheiro (`/api/tasks`)
+
+Instruções que o engenheiro de rádio fala num ponto da volta. Um agente (MCP) ou o Coach IA só **propõe**;
+o piloto aprova pelo app. A frase é montada só com o dicionário (`@gt7/shared` `radio/tasks.ts`).
+
+| Método | Rota | Resposta |
+|---|---|---|
+| GET | `/api/tasks?trackId=&status=` | `ApiTaskList`: as tarefas e quantas propostas esperam o piloto |
+| POST | `/api/tasks` | Tarefa do próprio piloto (`ApiTaskCreate`): já nasce ativa. 400 `invalidTask` quando a frase não existe no dicionário (a mensagem lista o que vale) |
+| POST | `/api/tasks/preview` | `ApiTaskPreview`: a frase nos três idiomas e as peças, sem criar nada |
+| PATCH | `/api/tasks/:id` | `{ status?, where?, say?, carCode?, note? }`: aprovar (`active`), pausar, concluir, editar |
+| POST | `/api/tasks/:id/spoken` | O rádio falou a tarefa (conta a vez) |
+| DELETE | `/api/tasks/:id` | Apaga |
+| GET / DELETE | `/api/tasks/misses` | Pedidos que o dicionário não soube falar (para decidir o que falta) / limpar |
+| GET | `/api/tasks/dictionary` | O vocabulário (`TaskDictionaryView`) |
+| GET / PUT / DELETE | `/api/tasks/voice?voice=alex` | Voz das tarefas: estado do download (`ApiTaskVoice`), liga o download (`{ enabled, voice }`, opt-in) e remove. O áudio vem do GitHub Release `vozes-tarefas-v<versão>` (ou `GT7_TASK_VOICE_URL`), só da voz em uso, e é conferido por tamanho e SHA-256 contra o manifesto do app |
+| POST | `/api/tasks/voice/download` | Baixa (ou continua) a voz; recusado enquanto o piloto não ligou o download |
+| GET | `/api/tasks/voice/file/:file` | O áudio baixado (WAV) |
+
+O WebSocket avisa `tasksChanged` (`proposals`: propostas abertas) e o quadro ao vivo traz `tasks` (as ativas da pista
+e do carro, com as peças e as distâncias onde cada frase deve terminar).
+
 ### Sessões, voltas, pistas, dispositivos, captura
 
 | Método | Rota | Resposta |

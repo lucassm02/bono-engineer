@@ -12,6 +12,7 @@ import type {
   LiveEngineerFrame,
   LiveFrame,
 } from '../live.ts';
+import type { LiveTask } from '../tasks.ts';
 import type { Wheels } from '../telemetry.ts';
 import { RadioEngine, type RadioEngineOptions } from './engine.ts';
 import type { RadioUtterance } from './phrases.ts';
@@ -82,6 +83,8 @@ export class RadioSim {
     atM: number;
     make: (lap: number) => Partial<LiveCornerPass> | null;
   }[] = [];
+  /** Engineer tasks carried by the frames (spec 20). */
+  tasks: LiveTask[] = [];
   /** Corner drill carried by the frames (spec 18). */
   drill: LiveDrill | null = null;
   /** Engineer status when there are no marks. */
@@ -266,6 +269,7 @@ export class RadioSim {
       engineer,
       ...(this.passes.length ? { cornerPasses: this.passes.slice(-2) } : {}),
       ...(this.drill ? { drill: this.drill } : {}),
+      ...(this.tasks.length ? { tasks: this.tasks } : {}),
       link: { rateHz: 60, lossPct: 0, lost: 0, received: this.seq, lastPacketAt: this.t },
     };
   }

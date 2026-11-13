@@ -380,6 +380,30 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
     keywords: 'elogio acerto',
   },
   {
+    id: 'tasks',
+    group: 'engenheiro',
+    advanced: true,
+    get title() {
+      return uiText('Tarefas do engenheiro');
+    },
+    get description() {
+      return uiText('Instruções que você aprovou, ditas no ponto da volta.');
+    },
+    keywords: 'mcp agente ia instrução propostas rádio',
+  },
+  {
+    id: 'task-voice',
+    group: 'engenheiro',
+    advanced: true,
+    get title() {
+      return uiText('Voz das tarefas');
+    },
+    get description() {
+      return uiText('Baixa o áudio das tarefas, só da voz em uso.');
+    },
+    keywords: 'download baixar github áudio',
+  },
+  {
     id: 'delta-ref',
     group: 'engenheiro',
     advanced: true,

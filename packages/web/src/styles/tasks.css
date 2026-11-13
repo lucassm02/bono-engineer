@@ -1,0 +1,120 @@
+/* Tarefas do engenheiro (spec 20): lista, editor e cartão de propostas da Início. */
+
+.tk-tab {
+  display: grid;
+  gap: var(--sp-5);
+}
+.tk-list {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tk-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3) var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+}
+.tk-row[data-status="proposed"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.tk-row[data-status="dismissed"],
+.tk-row[data-status="paused"] {
+  opacity: 0.75;
+}
+.tk-main {
+  display: grid;
+  gap: var(--sp-1);
+  flex: 1 1 260px;
+  min-width: 0;
+}
+.tk-track {
+  color: var(--text-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.tk-text {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.tk-why {
+  margin: 0;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  overflow-wrap: anywhere;
+}
+.tk-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-1) var(--sp-3);
+  color: var(--text-3);
+  font-size: var(--fs-xs);
+}
+.tk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.tk-editor {
+  display: grid;
+  gap: var(--sp-4);
+}
+.tk-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: var(--sp-3);
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+.tk-group > legend {
+  padding: 0 var(--sp-2);
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.tk-preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+.tk-preview strong {
+  flex: 1 1 240px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.tk-voice {
+  display: grid;
+  gap: var(--sp-2);
+}
+.tk-bar {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--surface-3);
+}
+.tk-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}

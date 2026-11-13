@@ -71,6 +71,13 @@ export function coachStarters(): CoachStarter[] {
       question: uiText('Qual é o meu melhor tempo em cada pista, e com qual carro?'),
     },
     {
+      id: 'tasks',
+      title: uiText('Tarefas para o engenheiro'),
+      question: uiText(
+        'Proponha tarefas para o engenheiro falar na pista, uma por curva onde mais perco tempo. Eu aprovo no app.',
+      ),
+    },
+    {
       id: 'debrief',
       title: uiText('Debrief da última sessão'),
       question: uiText(

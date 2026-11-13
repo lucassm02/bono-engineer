@@ -11,3 +11,6 @@ packages/desktop/release/
 
 # Planejamento local (specs e ideias futuras): nao vai para o repositorio
 /docs/local/
+
+# Engineer-task voice packs (spec 20): uploaded to a GitHub Release, never committed
+release-voices/

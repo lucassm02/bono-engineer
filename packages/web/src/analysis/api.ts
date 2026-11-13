@@ -26,6 +26,11 @@ import type {
   ApiSettings,
   ApiSettingsPatch,
   ApiStatus,
+  ApiTaskCreate,
+  ApiTaskList,
+  ApiTaskPatch,
+  ApiTaskPreview,
+  ApiTaskVoice,
   ApiTraces,
   ApiTrackAnalysis,
   ApiTrackGoal,
@@ -38,6 +43,8 @@ import type {
   CoachVerifyResult,
   DeviceInfo,
   EngineerRadioLog,
+  EngineerTask,
+  EngineerTaskStatus,
   FirewallStatus,
   Goal,
   LanInfo,
@@ -47,6 +54,8 @@ import type {
   SessionDetail,
   SessionSummary,
   StartCaptureRequest,
+  TaskDictionaryView,
+  TaskMiss,
   Track,
   TrackRecognition,
   ViewId,
@@ -296,6 +305,25 @@ export const api = {
   coachReport: (id: string) => get<CoachReport>(`/api/coach/reports/${enc(id)}`),
   deleteCoachReport: (id: string) =>
     request<{ ok: true }>('DELETE', `/api/coach/reports/${enc(id)}`),
+  // ---- engineer tasks (spec 20) ----
+  tasks: (q: { trackId?: string; status?: EngineerTaskStatus } = {}) =>
+    get<ApiTaskList>(`/api/tasks${qs(q)}`),
+  taskDictionary: () => get<TaskDictionaryView>('/api/tasks/dictionary'),
+  taskPreview: (body: ApiTaskCreate) => request<ApiTaskPreview>('POST', '/api/tasks/preview', body),
+  createTask: (body: ApiTaskCreate) => request<EngineerTask>('POST', '/api/tasks', body),
+  patchTask: (id: string, body: ApiTaskPatch) =>
+    request<EngineerTask>('PATCH', `/api/tasks/${enc(id)}`, body),
+  deleteTask: (id: string) => request<{ ok: true }>('DELETE', `/api/tasks/${enc(id)}`),
+  taskSpoken: (id: string) => request<{ ok: true }>('POST', `/api/tasks/${enc(id)}/spoken`),
+  taskMisses: () => get<TaskMiss[]>('/api/tasks/misses'),
+  clearTaskMisses: () => request<{ ok: true }>('DELETE', '/api/tasks/misses'),
+  taskVoice: (voice: string) => get<ApiTaskVoice>(`/api/tasks/voice${qs({ voice })}`),
+  setTaskVoiceEnabled: (enabled: boolean, voice: string) =>
+    request<ApiTaskVoice>('PUT', '/api/tasks/voice', { enabled, voice }),
+  downloadTaskVoice: (voice: string) =>
+    request<ApiTaskVoice>('POST', '/api/tasks/voice/download', { voice }),
+  deleteTaskVoice: (voice: string) =>
+    request<ApiTaskVoice>('DELETE', `/api/tasks/voice${qs({ voice })}`),
 };
 
 /** Download / image URLs (opened by the browser, not fetched). */

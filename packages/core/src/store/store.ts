@@ -30,6 +30,8 @@ import type {
   DeviceProfile,
   EngineerRadioCall,
   EngineerRadioLog,
+  EngineerTask,
+  EngineerTaskStatus,
   Goal,
   Id,
   Lap,
@@ -39,6 +41,7 @@ import type {
   ReferenceMeta,
   SectorGate,
   Session,
+  TaskMiss,
   Track,
   TrackCenterline,
 } from '@gt7/shared';
@@ -672,6 +675,210 @@ export class Gt7Store {
         )
         .all(trackId, cornerId, limit) as Row[]
     ).map((r) => this.#drill(r));
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // Engineer tasks (spec 20)
+  // ---------------------------------------------------------------------------------------------
+
+  #task(r: Row): EngineerTask {
+    return {
+      id: String(r.id),
+      trackId: String(r.track_id),
+      carCode: numOrNull(r.car_code),
+      where: json<EngineerTask['where']>(r.where_json, { corner: 1 }),
+      say: json<EngineerTask['say']>(r.say_json, { action: '' }),
+      ids: json<string[]>(r.ids_json, []),
+      dictionaryVersion: num(r.dictionary_version),
+      spoken: json<EngineerTask['spoken']>(r.spoken_json, { 'pt-BR': '', en: '', es: '' }),
+      note: strOrNull(r.note),
+      why: strOrNull(r.why),
+      source: (['agent', 'coach', 'driver'] as const).includes(r.source as 'agent')
+        ? (r.source as EngineerTask['source'])
+        : 'driver',
+      agent: strOrNull(r.agent),
+      status: String(r.status) as EngineerTaskStatus,
+      createdAt: num(r.created_at),
+      updatedAt: num(r.updated_at),
+      approvedAt: numOrNull(r.approved_at),
+      spokenCount: num(r.spoken_count),
+      lastSpokenAt: numOrNull(r.last_spoken_at),
+    };
+  }
+
+  /** Stores a new task (its sentence is already composed). */
+  createTask(t: EngineerTask): EngineerTask {
+    this.db
+      .prepare(
+        `INSERT INTO engineer_tasks (id, track_id, car_code, where_json, say_json, ids_json,
+          dictionary_version, spoken_json, note, why, source, agent, status, created_at, updated_at,
+          approved_at, spoken_count, last_spoken_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        t.id,
+        t.trackId,
+        t.carCode,
+        JSON.stringify(t.where),
+        JSON.stringify(t.say),
+        JSON.stringify(t.ids),
+        t.dictionaryVersion,
+        JSON.stringify(t.spoken),
+        t.note,
+        t.why,
+        t.source,
+        t.agent,
+        t.status,
+        t.createdAt,
+        t.updatedAt,
+        t.approvedAt,
+        t.spokenCount,
+        t.lastSpokenAt,
+      );
+    return t;
+  }
+
+  getTask(id: Id): EngineerTask | null {
+    const r = this.db.prepare('SELECT * FROM engineer_tasks WHERE id = ?').get(id) as
+      | Row
+      | undefined;
+    return r ? this.#task(r) : null;
+  }
+
+  /** Tasks, newest first; filters are optional. */
+  listTasks(
+    opts: {
+      trackId?: Id;
+      status?: EngineerTaskStatus | readonly EngineerTaskStatus[];
+      limit?: number;
+    } = {},
+  ): EngineerTask[] {
+    const where: string[] = [];
+    const params: (string | number)[] = [];
+    if (opts.trackId) {
+      where.push('track_id = ?');
+      params.push(opts.trackId);
+    }
+    if (opts.status) {
+      const list = Array.isArray(opts.status) ? opts.status : [opts.status];
+      where.push(`status IN (${list.map(() => '?').join(',')})`);
+      params.push(...(list as string[]));
+    }
+    params.push(opts.limit ?? 1000);
+    return (
+      this.db
+        .prepare(
+          `SELECT * FROM engineer_tasks ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
+           ORDER BY created_at DESC LIMIT ?`,
+        )
+        .all(...params) as Row[]
+    ).map((r) => this.#task(r));
+  }
+
+  /** The tasks the engineer speaks on this track and car: active, for the car or for any car. */
+  getActiveTasks(trackId: Id, carCode: number | null): EngineerTask[] {
+    return this.listTasks({ trackId, status: 'active' })
+      .filter((t) => t.carCode === null || t.carCode === carCode)
+      .sort((a, b) => a.createdAt - b.createdAt);
+  }
+
+  countTasks(opts: { trackId?: Id; status?: EngineerTaskStatus } = {}): number {
+    const where: string[] = [];
+    const params: string[] = [];
+    if (opts.trackId) {
+      where.push('track_id = ?');
+      params.push(opts.trackId);
+    }
+    if (opts.status) {
+      where.push('status = ?');
+      params.push(opts.status);
+    }
+    const r = this.db
+      .prepare(
+        `SELECT COUNT(*) AS n FROM engineer_tasks ${where.length ? `WHERE ${where.join(' AND ')}` : ''}`,
+      )
+      .get(...params) as Row;
+    return num(r.n);
+  }
+
+  /** Replaces the editable parts of a task (status, car, place, sentence, note). */
+  updateTask(
+    id: Id,
+    patch: Partial<Omit<EngineerTask, 'id' | 'trackId' | 'createdAt'>>,
+    now = Date.now(),
+  ): EngineerTask | null {
+    const cur = this.getTask(id);
+    if (!cur) return null;
+    const next: EngineerTask = { ...cur, ...patch, updatedAt: now };
+    this.db
+      .prepare(
+        `UPDATE engineer_tasks SET car_code = ?, where_json = ?, say_json = ?, ids_json = ?,
+          dictionary_version = ?, spoken_json = ?, note = ?, why = ?, status = ?, updated_at = ?,
+          approved_at = ?, spoken_count = ?, last_spoken_at = ? WHERE id = ?`,
+      )
+      .run(
+        next.carCode,
+        JSON.stringify(next.where),
+        JSON.stringify(next.say),
+        JSON.stringify(next.ids),
+        next.dictionaryVersion,
+        JSON.stringify(next.spoken),
+        next.note,
+        next.why,
+        next.status,
+        next.updatedAt,
+        next.approvedAt,
+        next.spokenCount,
+        next.lastSpokenAt,
+        id,
+      );
+    return next;
+  }
+
+  /** One more time the engineer said the task. */
+  markTaskSpoken(id: Id, at = Date.now()): void {
+    this.db
+      .prepare(
+        'UPDATE engineer_tasks SET spoken_count = spoken_count + 1, last_spoken_at = ? WHERE id = ?',
+      )
+      .run(at, id);
+  }
+
+  deleteTask(id: Id): boolean {
+    return Number(this.db.prepare('DELETE FROM engineer_tasks WHERE id = ?').run(id).changes) > 0;
+  }
+
+  /** Counts a request the dictionary could not say (same group and text add up). */
+  recordTaskMiss(group: string, text: string, now = Date.now()): void {
+    const g = group.slice(0, 40);
+    const t = text.slice(0, 300);
+    this.db
+      .prepare(
+        `INSERT INTO engineer_task_misses (id, grp, text, count, first_at, last_at)
+         VALUES (?, ?, ?, 1, ?, ?)
+         ON CONFLICT(grp, text) DO UPDATE SET count = count + 1, last_at = excluded.last_at`,
+      )
+      .run(newId(), g, t, now, now);
+  }
+
+  /** Requests without a phrase, most asked first. */
+  listTaskMisses(limit = 100): TaskMiss[] {
+    return (
+      this.db
+        .prepare('SELECT * FROM engineer_task_misses ORDER BY count DESC, last_at DESC LIMIT ?')
+        .all(limit) as Row[]
+    ).map((r) => ({
+      id: String(r.id),
+      group: String(r.grp),
+      text: String(r.text),
+      count: num(r.count),
+      firstAt: num(r.first_at),
+      lastAt: num(r.last_at),
+    }));
+  }
+
+  clearTaskMisses(): void {
+    this.db.exec('DELETE FROM engineer_task_misses');
   }
 
   // ---------------------------------------------------------------------------------------------

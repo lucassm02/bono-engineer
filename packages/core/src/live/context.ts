@@ -11,6 +11,7 @@ import type {
   Id,
   Lap,
   LapTrace,
+  LiveTask,
   Session,
   Track,
   TrackCenterline,
@@ -70,6 +71,8 @@ export interface LiveEngineContext {
   getActiveGoal?(trackId: Id, carCode: number): Goal | null;
   /** Marks a goal as reached by a lap (once). Returns whether it changed. */
   markGoalAchieved?(goalId: Id, lapId: Id, at: number): boolean;
+  /** The active engineer tasks of the track and car, ready for the frame (spec 20); optional. */
+  getLiveTasks?(track: Track, carCode: number | null): LiveTask[];
   /** Stores a finished corner drill (spec 18); optional, absent = drills are not kept. */
   saveDrill?(drill: CornerDrill): void;
 }
@@ -308,6 +311,10 @@ export class EphemeralContext implements LiveEngineContext {
 
   markGoalAchieved(): boolean {
     return false;
+  }
+
+  getLiveTasks(track: Track, carCode: number | null): LiveTask[] {
+    return this.#base.getLiveTasks?.(track, carCode) ?? [];
   }
 
   /** Drills of an unsaved session are not kept. */

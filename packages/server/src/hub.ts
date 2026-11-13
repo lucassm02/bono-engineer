@@ -296,6 +296,7 @@ export class WsHub {
     on('sessionSaved', (saved: SessionSavedInfo) =>
       this.#broadcast({ type: 'sessionSaved', ...saved }),
     );
+    on('tasksChanged', (proposals: number) => this.#broadcast({ type: 'tasksChanged', proposals }));
     on('trackMismatch', (info: TrackMismatchInfo) => {
       this.#broadcast({ type: 'trackMismatch', info });
       this.scheduleStatus();

@@ -2,7 +2,7 @@
  * Bridge between the in-app coach and the GT7 MCP tools: an MCP client connected in-process
  * (InMemoryTransport) to `createGt7McpServer`, so the coach and external MCP clients share ONE
  * source of truth for tools (names, schemas, outputs, limits). Only read-only tools are exposed
- * to the model (rename_* stay with the user).
+ * to the model (rename_* stay with the user), plus `propose_engineer_task`: the driver approves it.
  */
 
 import type Anthropic from '@anthropic-ai/sdk';
@@ -31,6 +31,9 @@ interface McpContentItem {
 
 const IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/gif', 'image/webp']);
 
+/** The only tools that write: the coach may PROPOSE a task (the driver approves in the app). */
+export const COACH_WRITE_TOOLS: ReadonlySet<string> = new Set(['propose_engineer_task']);
+
 export class McpToolBridge {
   readonly #runtime: Gt7Runtime;
   #client: Promise<Client> | null = null;
@@ -43,7 +46,13 @@ export class McpToolBridge {
   #connect(): Promise<Client> {
     this.#client ??= (async () => {
       const rt = this.#runtime;
-      const server = createGt7McpServer({ store: rt.store, analysis: rt.analysis, runtime: rt });
+      const server = createGt7McpServer({
+        store: rt.store,
+        analysis: rt.analysis,
+        runtime: rt,
+        tasks: rt.tasks,
+        taskSource: 'coach',
+      });
       const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
       await server.connect(serverTransport);
       const client = new Client({ name: 'gt7-coach', version: '0.1.0' });
@@ -62,7 +71,7 @@ export class McpToolBridge {
       const client = await this.#connect();
       const { tools } = await client.listTools();
       return tools
-        .filter((t) => t.annotations?.readOnlyHint !== false)
+        .filter((t) => t.annotations?.readOnlyHint !== false || COACH_WRITE_TOOLS.has(t.name))
         .map(
           (t): BetaTool => ({
             name: t.name,

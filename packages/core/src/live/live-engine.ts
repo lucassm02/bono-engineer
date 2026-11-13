@@ -58,6 +58,7 @@ import {
   type LiveGForce,
   type LiveGoal,
   type LiveLearning,
+  type LiveTask,
   type LiveTrackContext,
   type LiveTrackInfo,
   type NextCornerHint,
@@ -76,8 +77,8 @@ import {
 } from '@gt7/shared';
 import { TraceBuilder } from '../trace/channels.ts';
 import { centerlinePolyline, lapPolyline, UNKNOWN_TRACK_PREFIX } from '../track/fingerprint.ts';
-import { type CatalogGuess, catalogGuessAtStart } from '../track/start-guess.ts';
 import { ReplayPathTracker } from '../track/replay-path.ts';
+import { type CatalogGuess, catalogGuessAtStart } from '../track/start-guess.ts';
 import { newId } from '../util/ids.ts';
 import { clamp, emaAlpha } from '../util/math.ts';
 import { alignToLine, cumulativeDistance, type Polyline } from '../util/polyline.ts';
@@ -434,6 +435,8 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   } | null = null;
   /** Goal of the current track+car, read from the context (spec 13). */
   #goalCache: { key: string; goal: Goal | null } | null = null;
+  /** Active engineer tasks of the track and car (spec 20), read again when they change. */
+  #tasksCache: { key: string; tasks: LiveTask[] } | null = null;
   /** The goal reached by the latest lap, kept for the celebration window. */
   #goalReached: {
     goalId: Id;
@@ -454,14 +457,14 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   #userLocked = false;
   /** Guess from the start line against the shipped catalogue; never stored (spec 05). */
   #catalogGuess: CatalogGuess | null = null;
-  /** Track learned from this session's recognition lap, until the next lap closes. */
-  #learning: { trackId: Id } | null = null;
-  /** The last timed lap on an unknown track did not count. */
   /**
    * Circuit named from the path of the car that runs in the background of the pre-race screen
    * (state 'replay'); never stored.
    */
   #replayPath = new ReplayPathTracker();
+  /** Track learned from this session's recognition lap, until the next lap closes. */
+  #learning: { trackId: Id } | null = null;
+  /** The last timed lap on an unknown track did not count. */
   #invalidLap: LearningInvalidReason | null = null;
   /** Tracks whose corner detection finished (even with no corner found). */
   #cornersSettled = new Set<Id>();
@@ -550,9 +553,6 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   get trackContext(): LiveTrackContext {
     const hint = this.trackHint;
     const t = this.#track;
-    if (t) {
-      return {
-        trackId: t.id,
     // the pre-race screen is playing a lap: its path names the circuit before any lap is driven,
     // and it wins over a track left over from an earlier session that it disagrees with
     const pg = this.#replayKind !== 'none' && !this.#replayMode ? this.#replayPath.guess : null;
@@ -566,6 +566,9 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
         hint,
       };
     }
+    if (t) {
+      return {
+        trackId: t.id,
         name: t.name,
         layout: t.layout ?? null,
         confidence: this.#trackConfidence,
@@ -832,11 +835,27 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     const t = this.#ctx.getTrack(this.#track.id);
     if (!t) return;
     this.#track = t;
+    this.#tasksCache = null;
     this.#hintCache.clear();
     // a plan built before the corners existed has no cues: build it again now they do
     if (this.#engineerPlan && this.#engineerPlan.marks.length === 0) this.#engineerPlan = null;
     this.#refreshRecords();
     this.emit('trackChanged', this.trackInfo);
+  }
+
+  /** Forgets the cached engineer tasks so the next frame reads them again. */
+  refreshTasks(): void {
+    this.#tasksCache = null;
+  }
+
+  #liveTasks(): LiveTask[] {
+    const track = this.#track;
+    if (!track) return [];
+    const key = `${track.id}|${this.#carCode()}`;
+    if (this.#tasksCache?.key !== key) {
+      this.#tasksCache = { key, tasks: this.#ctx.getLiveTasks?.(track, this.#carCode()) ?? [] };
+    }
+    return this.#tasksCache.tasks;
   }
 
   /** Forgets the cached goal so the next frame reads it again (after the driver edits it). */
@@ -1102,6 +1121,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   /** Forgets the active track (not on a known one any more); no-op without one. */
   #clearActiveTrack(): void {
     this.#trackBasis = 'none';
+    this.#tasksCache = null;
     if (this.#track) {
       this.#track = null;
       this.#trackConfidence = 'unknown';
@@ -1157,6 +1177,10 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       (p.position.x !== 0 || p.position.y !== 0 || p.position.z !== 0);
     const replay = this.#classifyReplay(p, carData, dPk, receivedAtMs);
     this.#replayKind = replay.kind;
+    if (replay.kind === 'none') this.#replayPath.reset();
+    else if (replay.kind === 'playing' && !this.#replayMode) {
+      this.#replayPath.add(p.position.x, p.position.z, p.carCode);
+    }
     this.#onTrackNow = onTrack;
     this.#pausedNow = paused;
     this.#state = !onTrack
@@ -1176,10 +1200,6 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       receivedAtMs - this.#inactiveSince > idleEnd
     ) {
       this.endSession('offTrack', this.#lastActiveAt ?? this.#inactiveSince);
-    }
-    if (replay.kind === 'none') this.#replayPath.reset();
-    else if (replay.kind === 'playing' && !this.#replayMode) {
-      this.#replayPath.add(p.position.x, p.position.z, p.carCode);
     }
     // a frozen stream is not a real pause: the driver left the track, so close the session sooner
     if (
@@ -2075,6 +2095,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     const same = this.#track?.id === track.id;
     this.#trackConfidence = confidence;
     this.#trackBasis = basis;
+    this.#tasksCache = null;
     if (same) {
       this.#track = track;
       this.emit('trackChanged', this.trackInfo);
@@ -2322,6 +2343,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     const slip = wheelSlipRatios(p);
     const goal = this.#goalFrame(now);
     const goalPart = goal ? { goal } : {};
+    const liveTasks = this.#liveTasks();
     return {
       seq: ++this.#seq,
       sessionId: this.#session?.id ?? null,
@@ -2390,6 +2412,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       engineer: this.#engineerFrame(p, state),
       ...(this.#passes.length ? { cornerPasses: this.#passes } : {}),
       ...goalPart,
+      ...(liveTasks.length ? { tasks: liveTasks } : {}),
       ...(this.#drill ? { drill: this.#drill.tracker.frame() } : {}),
       link: this.#link ?? {
         rateHz: 0,

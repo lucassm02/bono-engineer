@@ -293,6 +293,21 @@ export const COACH_TOOL_LABELS: Record<string, string> = {
   get list_corner_drills() {
     return uiText('Lendo os treinos de curva');
   },
+  get get_task_dictionary() {
+    return uiText('Lendo o dicionário do engenheiro');
+  },
+  get propose_engineer_task() {
+    return uiText('Propondo uma tarefa');
+  },
+  get list_engineer_tasks() {
+    return uiText('Lendo as tarefas');
+  },
+  get update_engineer_task() {
+    return uiText('Ajustando a proposta');
+  },
+  get withdraw_engineer_task() {
+    return uiText('Retirando a proposta');
+  },
   get get_weekly_summary() {
     return uiText('Resumindo a semana');
   },

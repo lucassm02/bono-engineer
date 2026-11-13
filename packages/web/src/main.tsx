@@ -20,6 +20,7 @@ import { startConnection } from './net/connection.ts';
 import { prepareSavedEngineerAudio } from './state/engineer.ts';
 import { useLiveContext } from './state/liveContext.ts';
 import { useSetupInvite } from './state/setup.ts';
+import { startTasks } from './state/tasks.ts';
 import { requestTour, useTour } from './state/tour.ts';
 import { useHint } from './state/tourHints.ts';
 import { addNotice, useUi } from './state/uiStore.ts';
@@ -55,6 +56,7 @@ void window.bonoDesktop
   })
   .catch(() => {});
 startConnection();
+startTasks();
 startSwUpdateWatch();
 setupKeepAwake((mode) => {
   useUi.setState({ keepAwake: mode });

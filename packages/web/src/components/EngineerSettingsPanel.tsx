@@ -39,6 +39,7 @@ import { useUi } from '../state/uiStore.ts';
 import { AskTrackSetting } from './AskTrackSetting.tsx';
 import { setRadioAudioDevice } from './DiscordOutput.tsx';
 import { EngineerReference } from './EngineerReference.tsx';
+import { EngineerTasksSettings } from './EngineerTasksSettings.tsx';
 import { RadioVoicePreview, RadioVoiceStatus } from './RadioVoice.tsx';
 
 const pickOption = <T extends string>(values: readonly T[], value: string, fallback: T): T =>
@@ -476,6 +477,7 @@ export function EngineerSettingsPanel({ openMore }: { openMore?: boolean }) {
               onChange={() => setRadioControls({ praise: !controls.praise })}
             />
           )}
+          <EngineerTasksSettings />
         </div>
 
         <div className="cfg-delta" id="cfg-row-delta-ref">

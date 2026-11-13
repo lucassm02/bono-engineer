@@ -7,6 +7,7 @@ import {
   type RadioStepEnv,
 } from '@gt7/shared';
 import { useCallback, useEffect, useState } from 'react';
+import { api } from '../analysis/api.ts';
 import { getLanguage, t as uiText } from '../lib/i18n.ts';
 import { RADIO_MODE_LABELS } from '../lib/radioLabels.ts';
 import { type RadioUtterance, utteranceKeys } from '../lib/radioPhrases.ts';
@@ -145,10 +146,15 @@ function EngineerHud() {
     if (out.stop) stopEngineerVoice();
     const language = getLanguage();
     const panel = out.panel;
+    const taskText =
+      panel?.ruleId === 'tasks'
+        ? f.tasks?.find((task) => task.text === panel.label)?.texts?.[language]
+        : undefined;
     setNote(
-      panel?.utterance?.length && language !== 'pt-BR'
-        ? localizedRadioUtterance(panel.utterance, language)
-        : (panel?.label ?? null),
+      taskText ??
+        (panel?.utterance?.length && language !== 'pt-BR'
+          ? localizedRadioUtterance(panel.utterance, language)
+          : (panel?.label ?? null)),
     );
 
     const statusView = engineerStatusView({
@@ -186,6 +192,10 @@ function EngineerHud() {
       if (speech.cueId) journal(f, speech.cueId, speech.utterance, deviceId);
     });
     if (!started) radioEngine.playbackFailed();
+    else if (speech.decision.ruleId === 'tasks') {
+      const id = speech.decision.evidence?.taskId;
+      if (typeof id === 'string') void api.taskSpoken(id).catch(() => {});
+    }
   });
 
   useEffect(() => {

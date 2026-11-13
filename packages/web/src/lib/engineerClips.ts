@@ -3,6 +3,7 @@
  * radio-manifest.json. Playback uses Web Audio only; there is no device/browser synthesis.
  */
 
+import { TASK_VOICE_MANIFEST } from '@gt7/shared';
 import manifest from './radio-manifest.json';
 import { type RadioUtterance, utteranceKeys } from './radioPhrases.ts';
 import { defaultRadioVoice, radioVoice } from './radioVoices.ts';
@@ -13,6 +14,8 @@ export interface RadioPack {
   sampleRate: number;
   /** key → [start, length] in samples */
   clips: Readonly<Record<string, readonly number[]>>;
+  /** Where the file comes from; absent = the bundled `/radio/<file>`. */
+  url?: string;
 }
 
 export type RadioPackStatus = 'idle' | 'loading' | 'ready' | 'failed';
@@ -27,6 +30,39 @@ export function radioPack(voiceId: string): RadioPack | null {
   return entry
     ? { voiceId, file: entry.file, sampleRate: manifest.sampleRate, clips: entry.clips }
     : null;
+}
+
+/** Task packs the server has downloaded (checked there against the manifest), by voice ID. */
+const taskPacks = new Map<string, RadioPack>();
+
+/** Where the server serves a downloaded task pack. */
+export const taskVoiceUrl = (file: string) => `/api/tasks/voice/file/${file}`;
+
+/**
+ * The engineer-task pack of a voice (spec 20): the pieces of the approved task sentences. Known
+ * only after the server reports the download as ready (`setTaskPack`).
+ */
+export function taskPack(voiceId: string): RadioPack | null {
+  return taskPacks.get(voiceId) ?? null;
+}
+
+/** Registers (or, with null, forgets) the downloaded task pack of a voice. */
+export function setTaskPack(voiceId: string, file: string | null): RadioPack | null {
+  const voice = radioVoice(voiceId);
+  const entry = voice && file ? TASK_VOICE_MANIFEST.voices[voice.pack] : undefined;
+  if (!entry || entry.file !== file) {
+    taskPacks.delete(voiceId);
+    return null;
+  }
+  const pack: RadioPack = {
+    voiceId,
+    file: entry.file,
+    sampleRate: TASK_VOICE_MANIFEST.sampleRate,
+    clips: entry.clips,
+    url: taskVoiceUrl(entry.file),
+  };
+  taskPacks.set(voiceId, pack);
+  return pack;
 }
 
 /** Exact duration (ms) of one clip, or undefined when the pack does not have it. */
@@ -66,8 +102,9 @@ export function pickRadioPack(
 ): RadioPack | null {
   const fallback = defaultRadioVoice(radioVoice(voiceId)?.language ?? 'pt-BR');
   for (const id of new Set([voiceId, fallback.id])) {
-    const pack = radioPack(id);
-    if (pack && usable(pack) && hasRadioUtterance(pack, utterance)) return pack;
+    for (const pack of [radioPack(id), taskPack(id)]) {
+      if (pack && usable(pack) && hasRadioUtterance(pack, utterance)) return pack;
+    }
   }
   return null;
 }
@@ -97,7 +134,7 @@ export async function prepareRadioPack(pack: RadioPack): Promise<void> {
   let loading = buffers.get(pack.file);
   if (!loading && !decoded.has(pack.file)) {
     failed.delete(pack.file);
-    loading = fetch(`/radio/${pack.file}`)
+    loading = fetch(pack.url ?? `/radio/${pack.file}`)
       .then((response) => {
         if (!response.ok) throw new Error('Pacote de rádio indisponível');
         return response.arrayBuffer();

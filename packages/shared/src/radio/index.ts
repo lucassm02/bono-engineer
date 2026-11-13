@@ -14,5 +14,8 @@ export * from './goal.ts';
 export * from './registry.ts';
 export * from './rules.ts';
 export * from './settings.ts';
+export * from './task-voice-manifest.ts';
+export * from './task-voice-types.ts';
+export * from './tasks.ts';
 export * from './types.ts';
 export * from './tyres.ts';

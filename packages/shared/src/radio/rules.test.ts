@@ -26,6 +26,9 @@ describe('preferências do rádio', () => {
       summary: 'onDemand',
       praise: false,
       consistencyTargetMs: null,
+      tasksEnabled: true,
+      taskModes: ['training', 'qualifying'],
+      taskMaxPerLap: 2,
     });
   });
 
@@ -52,6 +55,9 @@ describe('preferências do rádio', () => {
       summary: 'lap',
       praise: true,
       consistencyTargetMs: 95_000,
+      tasksEnabled: true,
+      taskModes: ['training', 'qualifying'],
+      taskMaxPerLap: 2,
     });
     expect(normalizeRadioPreferences({ consistencyTargetMs: 5 }).consistencyTargetMs).toBeNull();
     expect(normalizeRadioPreferences({ mode: 'drift', summary: 'always', praise: 'yes' })).toEqual(

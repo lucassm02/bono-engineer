@@ -13,14 +13,18 @@ import {
   findCorner,
   type Gt7Runtime,
   type Gt7Store,
+  TaskError,
+  TaskService,
 } from '@gt7/core';
 import {
   type CornerMetrics,
   drillSummary,
+  type EngineerTask,
   type Lap,
   PRODUCT_NAME,
   PRODUCT_SLUG,
   suggestionText,
+  type TaskWhere,
   TRACE_CHANNELS,
   weeklyToText,
 } from '@gt7/shared';
@@ -52,6 +56,10 @@ export interface McpDeps {
   analysis?: AnalysisService;
   /** Live runtime (only in the app process / HTTP transport): enables get_live_state. */
   runtime?: Gt7Runtime | null;
+  /** Engineer tasks (default: the runtime's, else one over `store`). */
+  tasks?: TaskService;
+  /** Who the proposals are credited to: an external agent (default) or the in-app coach. */
+  taskSource?: 'agent' | 'coach';
 }
 
 const INSTRUCTIONS = `Servidor de telemetria do ${PRODUCT_NAME}. Integração disponível: Gran Turismo 7.
@@ -60,6 +68,8 @@ get_corner_detail / render_comparison_chart nas curvas que mais custam; depois \
 get_knowledge(car_code, diagnostics = os plan[].code) para a base de pilotagem da classe do carro.
 Visões prontas: get_weekly_summary (a semana), get_session_summary (uma sessão), get_goal (meta da pista), \
 get_sectors (setores e volta ideal) e list_corner_drills (treinos de uma curva).
+Tarefas para o engenheiro de rádio: get_task_dictionary (o vocabulário), propose_engineer_task (propõe; o piloto aprova no app \
+e só então o engenheiro fala no ponto da pista), list_engineer_tasks, update_engineer_task e withdraw_engineer_task.
 Convenções: distâncias em metros ao longo da volta; delta e tempo perdido positivos = você mais lento; \
 pares [você, referência]. Referências capturadas de replay têm precisão de alguns metros.
 Use só os números retornados; diga quando um dado não existe.`;
@@ -154,6 +164,8 @@ function compactMetrics(m: CornerMetrics) {
 export function createGt7McpServer(deps: McpDeps): McpServer {
   const { store } = deps;
   const runtime = deps.runtime ?? null;
+  const tasks = deps.tasks ?? runtime?.tasks ?? new TaskService(store);
+  const taskSource = deps.taskSource ?? 'agent';
   const analysis = deps.analysis ?? runtime?.analysis ?? new AnalysisService({ store });
   const server = new McpServer(
     { name: MCP_SERVER_NAME, version: MCP_SERVER_VERSION },
@@ -1096,6 +1108,271 @@ export function createGt7McpServer(deps: McpDeps): McpServer {
             note: 'vsPrevious negativo = mais rápido que o recorde anterior',
           }),
         );
+      }),
+  );
+
+  // ------------------------------------------------------------------------------------------
+  // Engineer tasks (spec 20): the agent proposes, the driver approves in the app.
+  // ------------------------------------------------------------------------------------------
+  const WRITE = { readOnlyHint: false, destructiveHint: false, openWorldHint: false } as const;
+  const whereSchema = z
+    .object({
+      corner: z.number().int().min(1).max(20).optional().describe('Curva (1-20): T7 = 7.'),
+      phase: z.enum(['entry', 'apex', 'exit']).optional().describe('Só com corner.'),
+      between: z
+        .tuple([z.number().int().min(1).max(20), z.number().int().min(1).max(20)])
+        .optional()
+        .describe('Reta entre duas curvas: [de, até].'),
+      before: z.number().int().min(1).max(20).optional().describe('Antes da curva n.'),
+      after: z.number().int().min(1).max(20).optional().describe('Depois da curva n.'),
+      sector: z.number().int().min(1).max(6).optional(),
+      straight: z
+        .enum(['start', 'finish'])
+        .optional()
+        .describe('Reta dos boxes ou linha de chegada.'),
+      global: z
+        .enum(['slowCorners', 'fastCorners', 'hardBraking', 'allCorners', 'allStraights'])
+        .optional(),
+      atM: z
+        .number()
+        .min(0)
+        .max(30000)
+        .optional()
+        .describe('Posição na volta, em metros (vira curva/fase ou "entre duas curvas").'),
+    })
+    .describe(
+      'Onde a tarefa vale: informe UMA forma (corner [+phase], between, before, after, sector, straight, global ou atM).',
+    );
+  const saySchema = z
+    .object({
+      action: z
+        .string()
+        .describe(
+          'brake | throttle | steer | enter | gearDown | gearUp | gearHold | ou o id de uma frase pronta (veja get_task_dictionary).',
+        ),
+      comparator: z.string().optional(),
+      amount: z.string().optional(),
+      gear: z.number().int().min(1).max(8).optional(),
+      purpose: z.string().optional(),
+      focus: z.enum(['focus', 'attention', 'reminder', 'none']).optional(),
+    })
+    .describe('O que o engenheiro deve dizer, montado só com o dicionário.');
+
+  const toWhere = (w: z.infer<typeof whereSchema>): TaskWhere | null => {
+    const kinds = (
+      ['corner', 'between', 'before', 'after', 'sector', 'straight', 'global', 'atM'] as const
+    ).filter((k) => w[k] !== undefined);
+    if (kinds.length !== 1) return null;
+    if (w.corner !== undefined) return { corner: w.corner, ...(w.phase ? { phase: w.phase } : {}) };
+    if (w.between) return { between: w.between };
+    if (w.before !== undefined) return { before: w.before };
+    if (w.after !== undefined) return { after: w.after };
+    if (w.sector !== undefined) return { sector: w.sector };
+    if (w.straight) return { straight: w.straight };
+    if (w.global) return { global: w.global };
+    return { atM: w.atM! };
+  };
+  const taskError = (e: unknown): CallToolResult => {
+    if (e instanceof TaskError) {
+      return {
+        isError: true,
+        content: [
+          {
+            type: 'text',
+            text: jsonText({
+              error: e.message,
+              ...(e.valid ? { valid: e.valid } : {}),
+              hint: 'Veja get_task_dictionary: o engenheiro só fala frases montadas com o dicionário.',
+            }),
+          },
+        ],
+      };
+    }
+    return errorResult(e);
+  };
+  const taskView = (t: EngineerTask) => ({
+    id: t.id,
+    track: trackName(t.trackId),
+    trackId: t.trackId,
+    car: t.carCode ?? 'qualquer',
+    status: t.status,
+    where: t.where,
+    say: t.say,
+    spoken: t.spoken['pt-BR'],
+    why: t.why,
+    note: t.note,
+    source: t.source,
+    agent: t.agent,
+    spokenCount: t.spokenCount,
+    createdAt: dateTime(t.createdAt),
+  });
+
+  server.registerTool(
+    'get_task_dictionary',
+    {
+      title: 'Dicionário das tarefas do engenheiro',
+      description:
+        'O vocabulário que o engenheiro de rádio consegue falar: onde (curva, fase, entre curvas, setor...), ação ' +
+        '(verbos com comparativo e quantidade, marchas e frases prontas), porquê e prefixo, com exemplos. Chame ' +
+        'antes de propor uma tarefa: o servidor monta a frase só com estas peças e recusa o resto.',
+      inputSchema: {},
+      annotations: RO,
+    },
+    async () => safe(() => ok(jsonText(tasks.dictionary(), 40_000))),
+  );
+
+  server.registerTool(
+    'propose_engineer_task',
+    {
+      title: 'Propor uma tarefa ao engenheiro',
+      description:
+        'Propõe UMA instrução de pilotagem para o engenheiro de rádio falar num ponto da pista (ex.: "Na T7, entrada. ' +
+        'Freie vinte metros mais tarde."). É só uma PROPOSTA: o piloto aprova no app e só depois o engenheiro fala. ' +
+        'O servidor compõe a frase com o dicionário (get_task_dictionary) e devolve o texto; se algo não existir, ' +
+        'recusa e lista o que é válido. Ancore em dados reais (curvas e distâncias de get_corner_detail / get_trace), ' +
+        'uma instrução por curva, e explique o motivo em "why". Use dry_run para só conferir a frase.',
+      inputSchema: {
+        track_id: z.string(),
+        car_code: z
+          .number()
+          .int()
+          .optional()
+          .describe('Padrão: vale para qualquer carro; informe para ser só deste carro.'),
+        where: whereSchema,
+        say: saySchema,
+        why: z
+          .string()
+          .max(280)
+          .optional()
+          .describe('Por que (com o número que sustenta): aparece na tela de aprovação.'),
+        note: z
+          .string()
+          .max(140)
+          .optional()
+          .describe('Texto livre que só aparece no painel (nunca é falado).'),
+        agent: z.string().max(60).optional().describe('Seu nome (ex.: "claude-code", "chatgpt").'),
+        dry_run: z.boolean().default(false).describe('Só compõe e valida, sem criar nada.'),
+      },
+      annotations: WRITE,
+    },
+    async ({ track_id, car_code, where, say, why, note, agent, dry_run }) =>
+      safe(() => {
+        const w = toWhere(where);
+        if (!w) {
+          return taskError(
+            new TaskError(
+              'invalid',
+              'Informe UMA forma de "where" (corner, between, before, after, sector, straight, global ou atM).',
+            ),
+          );
+        }
+        try {
+          const r = tasks.propose({
+            trackId: track_id,
+            carCode: car_code ?? null,
+            where: w,
+            say,
+            ...(why ? { why } : {}),
+            ...(note ? { note } : {}),
+            source: taskSource,
+            ...(agent ? { agent } : {}),
+            dryRun: dry_run,
+          });
+          return ok(
+            jsonText({
+              ok: true,
+              dryRun: dry_run,
+              ...(r.task ? { taskId: r.task.id, status: 'proposed' } : {}),
+              spoken: r.composition.text,
+              estimatedSeconds: r.composition.estimatedMs / 1000,
+              where: r.composition.where,
+              note: dry_run
+                ? 'Nada foi criado.'
+                : 'Proposta criada. O engenheiro só fala depois que o piloto aprovar no app.',
+            }),
+          );
+        } catch (e) {
+          return taskError(e);
+        }
+      }),
+  );
+
+  server.registerTool(
+    'list_engineer_tasks',
+    {
+      title: 'Tarefas do engenheiro',
+      description:
+        'Lista as tarefas do engenheiro (propostas, ativas, pausadas, concluídas) de uma pista ou de todas, com a frase, ' +
+        'o motivo e quantas vezes foi falada. Use para não repetir uma tarefa que já existe.',
+      inputSchema: {
+        track_id: z.string().optional(),
+        status: z.enum(['proposed', 'active', 'paused', 'done', 'dismissed', 'stale']).optional(),
+      },
+      annotations: RO,
+    },
+    async ({ track_id, status }) =>
+      safe(() =>
+        ok(
+          jsonText({
+            tasks: tasks
+              .list({ ...(track_id ? { trackId: track_id } : {}), ...(status ? { status } : {}) })
+              .slice(0, 100)
+              .map(taskView),
+          }),
+        ),
+      ),
+  );
+
+  server.registerTool(
+    'update_engineer_task',
+    {
+      title: 'Editar uma proposta',
+      description:
+        'Edita uma proposta que o piloto ainda não decidiu (lugar, frase, motivo ou nota). Tarefas já aprovadas só o piloto muda.',
+      inputSchema: {
+        task_id: z.string(),
+        where: whereSchema.optional(),
+        say: saySchema.optional(),
+        why: z.string().max(280).optional(),
+        note: z.string().max(140).optional(),
+      },
+      annotations: WRITE,
+    },
+    async ({ task_id, where, say, why, note }) =>
+      safe(() => {
+        try {
+          const w = where ? toWhere(where) : undefined;
+          if (where && !w) throw new TaskError('invalid', 'Informe UMA forma de "where".');
+          const t = tasks.agentUpdate(task_id, {
+            ...(w ? { where: w } : {}),
+            ...(say ? { say } : {}),
+            ...(why !== undefined ? { why } : {}),
+            ...(note !== undefined ? { note } : {}),
+          });
+          return ok(jsonText({ ok: true, task: taskView(t) }));
+        } catch (e) {
+          return taskError(e);
+        }
+      }),
+  );
+
+  server.registerTool(
+    'withdraw_engineer_task',
+    {
+      title: 'Retirar uma proposta',
+      description:
+        'Retira uma proposta que o piloto ainda não decidiu. Não apaga tarefas aprovadas.',
+      inputSchema: { task_id: z.string() },
+      annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false },
+    },
+    async ({ task_id }) =>
+      safe(() => {
+        try {
+          tasks.withdraw(task_id);
+          return ok(jsonText({ ok: true }));
+        } catch (e) {
+          return taskError(e);
+        }
       }),
   );
 

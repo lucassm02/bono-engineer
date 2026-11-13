@@ -436,6 +436,21 @@ const PT: HelpContent = {
       keywords: 'meta objetivo alvo tempo sugerir volta ideal bater',
     },
     {
+      id: 'tarefas-do-engenheiro',
+      topic: 'engineer',
+      title: 'Tarefas do engenheiro',
+      summary:
+        'Instruções curtas que o engenheiro fala num ponto da volta, como “Na T7, entrada. Freie vinte metros mais tarde.”',
+      steps: [
+        'Um agente de IA (pelo MCP) ou o Coach IA propõe a tarefa. Ela aparece em Propostas do agente, na Início.',
+        'Toque em Ouvir para escutar a frase e em Aprovar para ativar. Nada é falado antes disso.',
+        'Na pista, aba Tarefas, você também cria, edita, pausa ou apaga.',
+      ],
+      note: 'A frase é montada só com um dicionário de falas gravadas. Em Configurações → Engenheiro → Mais opções você baixa a voz das tarefas (só da voz em uso), escolhe os modos e o máximo por volta. Não fala na volta de saída.',
+      links: [lnk('Configurações', routes.config('engenheiro'))],
+      keywords: 'tarefas instrução agente mcp propostas aprovar rádio frase dicionário voz baixar',
+    },
+    {
       id: 'setores-e-volta-ideal',
       topic: 'tracks',
       title: 'Setores e volta ideal',
@@ -1054,6 +1069,22 @@ const EN: HelpContent = {
       note: 'When you reach it, the engineer says “Good lap.” and the goal moves to Goals reached. A goal slower than your best lap asks for confirmation. It is per track (and per car, if you pick one). It is included in the .bono backup.',
       links: [lnk('Home', routes.home())],
       keywords: 'goal target time suggest ideal lap reach',
+    },
+    {
+      id: 'tarefas-do-engenheiro',
+      topic: 'engineer',
+      title: 'Engineer tasks',
+      summary:
+        'Short instructions the engineer says at a point of the lap, like “At turn seven, entry. Brake twenty meters later.”',
+      steps: [
+        'An AI agent (through MCP) or the AI Coach proposes the task. It shows up in Agent proposals on Home.',
+        'Tap Listen to hear the sentence and Approve to turn it on. Nothing is said before that.',
+        'On the track, Tasks tab, you can also create, edit, pause or delete them.',
+      ],
+      note: 'The sentence is built only from a dictionary of recorded phrases. In Settings → Engineer → More options you download the tasks voice (only the voice in use), pick the modes and the maximum per lap. It stays quiet on the out lap.',
+      links: [lnk('Settings', routes.config('engenheiro'))],
+      keywords:
+        'tasks instruction agent mcp proposals approve radio sentence dictionary voice download',
     },
     {
       id: 'setores-e-volta-ideal',
@@ -1679,6 +1710,22 @@ const ES: HelpContent = {
       note: 'Al lograrla, el ingeniero dice «Buena vuelta.» y la meta pasa a Metas logradas. Una meta más lenta que tu mejor vuelta pide confirmación. Es por pista (y por coche, si eliges uno). Entra en la copia .bono.',
       links: [lnk('Inicio', routes.home())],
       keywords: 'meta objetivo tiempo sugerir vuelta ideal lograr',
+    },
+    {
+      id: 'tarefas-do-engenheiro',
+      topic: 'engineer',
+      title: 'Tareas del ingeniero',
+      summary:
+        'Instrucciones cortas que el ingeniero dice en un punto de la vuelta, como “En la curva siete, entrada. Frena veinte metros más tarde.”',
+      steps: [
+        'Un agente de IA (por MCP) o el Coach IA propone la tarea. Aparece en Propuestas del agente, en Inicio.',
+        'Toca Escuchar para oír la frase y Aprobar para activarla. No se dice nada antes.',
+        'En la pista, pestaña Tareas, también puedes crear, editar, pausar o borrar.',
+      ],
+      note: 'La frase se arma solo con un diccionario de frases grabadas. En Configuración → Ingeniero → Más opciones descargas la voz de las tareas (solo la voz en uso), eliges los modos y el máximo por vuelta. No habla en la vuelta de salida.',
+      links: [lnk('Configuración', routes.config('engenheiro'))],
+      keywords:
+        'tareas instrucción agente mcp propuestas aprobar radio frase diccionario voz descargar',
     },
     {
       id: 'setores-e-volta-ideal',

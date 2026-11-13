@@ -150,6 +150,40 @@ export const MIGRATIONS: readonly string[] = [
   CREATE INDEX IF NOT EXISTS corner_drills_session ON corner_drills(session_id);
   CREATE INDEX IF NOT EXISTS corner_drills_track ON corner_drills(track_id, corner_id);
   `,
+  // v8 — engineer tasks (spec 20): what an agent proposed and the driver approved, said on the
+  // radio at a point of the lap; and the requests the dictionary could not say
+  `
+  CREATE TABLE IF NOT EXISTS engineer_tasks (
+    id TEXT PRIMARY KEY,
+    track_id TEXT NOT NULL,
+    car_code INTEGER,
+    where_json TEXT NOT NULL,
+    say_json TEXT NOT NULL,
+    ids_json TEXT NOT NULL,
+    dictionary_version INTEGER NOT NULL,
+    spoken_json TEXT NOT NULL,
+    note TEXT,
+    why TEXT,
+    source TEXT NOT NULL,
+    agent TEXT,
+    status TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    approved_at INTEGER,
+    spoken_count INTEGER NOT NULL DEFAULT 0,
+    last_spoken_at INTEGER
+  );
+  CREATE INDEX IF NOT EXISTS engineer_tasks_track ON engineer_tasks(track_id, status);
+  CREATE TABLE IF NOT EXISTS engineer_task_misses (
+    id TEXT PRIMARY KEY,
+    grp TEXT NOT NULL,
+    text TEXT NOT NULL,
+    count INTEGER NOT NULL DEFAULT 1,
+    first_at INTEGER NOT NULL,
+    last_at INTEGER NOT NULL,
+    UNIQUE (grp, text)
+  );
+  `,
 ];
 
 export const SCHEMA_VERSION = MIGRATIONS.length;

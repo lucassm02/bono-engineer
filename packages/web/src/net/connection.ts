@@ -24,6 +24,7 @@ import {
   setSessionId,
   useSessionLaps,
 } from '../state/sessionStore.ts';
+import { noteTaskProposals } from '../state/tasks.ts';
 import { offerHint } from '../state/tourHints.ts';
 import { addNotice, loadLocalProfile, setProfile, useUi } from '../state/uiStore.ts';
 import { setSender } from './transport.ts';
@@ -62,6 +63,9 @@ function handleServerMessage(msg: ServerMessage): void {
     case 'sessionSaved':
       showSessionSaved(msg);
       offerHint('sessionSaved');
+      break;
+    case 'tasksChanged':
+      noteTaskProposals(msg.proposals);
       break;
     case 'trackMismatch':
       noteTrackMismatch(msg.info);

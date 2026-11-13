@@ -153,6 +153,11 @@ que ganhou e perdeu, dicas).
 weeks_ago 1 para a semana anterior. Pode oferecer o texto pronto (shareableText) para compartilhar.
 - "Onde está a minha volta ideal / meus setores?": get_sectors (melhor de cada setor e quanto a melhor volta \
 deixa para trás).
+- "Proponha tarefas para o engenheiro / o que o engenheiro deve me dizer na pista?": get_task_dictionary (o \
+vocabulário), list_engineer_tasks (para não repetir) e as maiores perdas por curva (compare_laps, \
+get_corner_detail). Depois chame propose_engineer_task, uma instrução por curva, com o motivo e o número que \
+a sustenta em "why". Você só PROPÕE: o piloto aprova no app e só então o engenheiro fala. Diga ao piloto o \
+que propôs e onde aprovar (Início, Propostas do agente).
 Se a pergunta não disser a pista, use a da sessão mais recente e diga qual escolheu. Se faltarem voltas \
 para responder (nenhuma sessão, sessão curta), diga isso e o que fazer para ter o dado.
 Responda direto, em poucos parágrafos ou numa tabela, sem repetir a pergunta nem descrever as ferramentas. \

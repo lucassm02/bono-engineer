@@ -137,8 +137,19 @@ três sessões no GT7 e resuma minha melhor volta”. [Documentação do Codex s
 | `get_evolution` | Histórico por dia: melhor volta, gap para o top, tendências por curva |
 | `render_comparison_chart` | **Imagem PNG**: velocidade/acelerador/freio/marcha/volante/delta + mapa colorido pelo delta; `corner` dá zoom com os dois traçados e pontos de frenagem |
 | `get_knowledge` | **Base de pilotagem (pt-BR)** por classe de carro (Gr.1, Gr.2, Gr.3, Gr.4, Gr.B, N, X) e por diagnóstico: significado, causa provável, ação, exercício e variação por classe, além de princípios gerais, mapa de afinação, glossário e fontes. Use depois de `compare_laps`, com `car_code` e `diagnostics` = os `plan[].code`. Sem argumentos: resumo do carro da sessão mais recente. `topic` (`indice`, `gr4`, `brakeEarlier`, `afinacao`, `glossario`, `fonte`…) devolve a página inteira; `max_chars` limita o resumo (padrão 6000) |
+| `get_goal` | Meta de tempo da pista: meta, melhor volta, quanto falta e a meta sugerida |
+| `get_session_summary` | Resumo de uma sessão: melhor volta contra o recorde, ritmo, curvas que ganhou e perdeu |
+| `get_sectors` | Melhor tempo de cada setor, a volta ideal e quanto a melhor volta deixa para trás |
+| `list_corner_drills` | Treinos de uma curva (passagens, melhor, evolução) |
+| `get_weekly_summary` | Resumo da semana (sessões, voltas, recordes, metas batidas, uma linha por pista) |
+| `get_task_dictionary` | **Tarefas do engenheiro:** o vocabulário que o engenheiro sabe falar (onde, ação, porquê), com exemplos |
+| `propose_engineer_task` | Propõe UMA instrução para o engenheiro falar num ponto da volta. O servidor monta a frase só com o dicionário (e recusa o resto, listando o que vale). É só uma **proposta**: o piloto aprova no app e só então o engenheiro fala. `dry_run` só confere a frase |
+| `list_engineer_tasks` / `update_engineer_task` / `withdraw_engineer_task` | Lista as tarefas; edita ou retira uma proposta que o piloto ainda não decidiu (tarefas aprovadas só o piloto muda) |
 | `get_live_state` | Estado ao vivo (só via HTTP) |
 | `rename_corner` / `rename_track` | Dá nome a curvas/pistas (mantido em nova detecção) |
+
+As tarefas não exigem token: só acrescentam fala e texto na tela do engenheiro, e nada é falado antes
+da aprovação do piloto no app (Início → Propostas do agente).
 
 Recursos: `gt7://tracks` e `gt7://tracks/{trackId}`; **base de pilotagem:** `gt7://knowledge` (índice) e
 `gt7://knowledge/{topic}` (ex.: `gt7://knowledge/classe/gr4`, `gt7://knowledge/diagnostico/brakeEarlier`,

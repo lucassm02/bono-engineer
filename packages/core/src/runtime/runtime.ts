@@ -66,6 +66,7 @@ import {
 } from '../live/live-engine.ts';
 import { Gt7Store } from '../store/store.ts';
 import { StoreEngineContext } from '../store/store-context.ts';
+import { TaskService } from '../tasks/task-service.ts';
 
 export const CORE_VERSION = '0.1.0';
 
@@ -175,6 +176,8 @@ export interface Gt7RuntimeEvents {
   sessionChanged: [Session | null];
   status: [ServerStatus];
   sessionSaved: [SessionSavedInfo];
+  /** Engineer tasks changed; the argument is the number of open proposals. */
+  tasksChanged: [number];
   /** The track the driver chose did not match the first lap; the session was moved (spec 06). */
   trackMismatch: [TrackMismatchInfo];
   notice: [RuntimeNotice];
@@ -198,6 +201,8 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
   readonly capture: ReferenceCapture;
   /** Analysis facade over the runtime store (corners, comparisons, AI summaries). */
   readonly analysis: AnalysisService;
+  /** Engineer tasks (spec 20): shared by the REST routes, the MCP tools and the live frame. */
+  readonly tasks: TaskService;
   readonly options: Gt7RuntimeOptions;
   readonly #ownsStore: boolean;
   #ingestor: Gt7Ingestor | null = null;
@@ -267,6 +272,10 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
     );
 
     this.analysis = opts.analysis ?? new AnalysisService({ store: s });
+    this.tasks = new TaskService(s, () => {
+      this.engine.refreshTasks();
+      this.emit('tasksChanged', this.tasks.proposalsCount());
+    });
     this.engine = new LiveEngine({
       ...opts.engine,
       context: new StoreEngineContext(s),
@@ -757,6 +766,9 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
   /** Re-reads the active track after edits (rename, corners, sector gates). */
   refreshTrack(): void {
     this.engine.refreshTrack();
+    const id = this.engine.trackInfo?.id;
+    const track = id ? this.store.getTrack(id) : null;
+    if (track) this.tasks.reconcileTrack(track);
   }
 
   /** The goal of a track was set, changed or removed: the live frames read it again. */

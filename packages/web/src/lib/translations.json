@@ -4920,5 +4920,173 @@
     "This week's Daily Race {0} ({1}): the {2} medal is {3}, {4} s from your best lap.",
     "Carrera diaria {0} de esta semana ({1}): la medalla de {2} es {3}, a {4} s de tu mejor vuelta."
   ],
-  "Usar a medalha como meta": ["Use the medal as the goal", "Usar la medalla como meta"]
+  "Usar a medalha como meta": ["Use the medal as the goal", "Usar la medalla como meta"],
+  "Curvas lentas": ["Slow corners", "Curvas lentas"],
+  "Curvas rápidas": ["Fast corners", "Curvas rápidas"],
+  "Frenagens fortes": ["Hard braking zones", "Frenadas fuertes"],
+  "Todas as curvas": ["All corners", "Todas las curvas"],
+  "Todas as retas": ["All straights", "Todas las rectas"],
+  "Marchas": ["Gears", "Marchas"],
+  "Estabilidade": ["Stability", "Estabilidad"],
+  "Pneus e combustível": ["Tyres and fuel", "Neumáticos y combustible"],
+  "Não foi possível montar a frase.": [
+    "Could not build the sentence.",
+    "No se pudo armar la frase."
+  ],
+  "Tarefa atualizada.": ["Task updated.", "Tarea actualizada."],
+  "Tarefa criada.": ["Task created.", "Tarea creada."],
+  "Não foi possível salvar a tarefa.": ["Could not save the task.", "No se pudo guardar la tarea."],
+  "Numa curva": ["At a corner", "En una curva"],
+  "Entre duas curvas": ["Between two corners", "Entre dos curvas"],
+  "Antes de uma curva": ["Before a corner", "Antes de una curva"],
+  "Depois de uma curva": ["After a corner", "Después de una curva"],
+  "Num setor": ["In a sector", "En un sector"],
+  "Reta dos boxes ou chegada": ["Pit or finish straight", "Recta de boxes o de meta"],
+  "Em várias curvas": ["At several corners", "En varias curvas"],
+  "Editar tarefa": ["Edit task", "Editar tarea"],
+  "Nova tarefa": ["New task", "Nueva tarea"],
+  "Criar tarefa": ["Create task", "Crear tarea"],
+  "Onde": ["Where", "Dónde"],
+  "Lugar": ["Place", "Lugar"],
+  "De": ["From", "De"],
+  "Momento": ["Moment", "Momento"],
+  "Ápice": ["Apex", "Vértice"],
+  "Setor {0}": ["Sector {0}", "Sector {0}"],
+  "Reta dos boxes": ["Pit straight", "Recta de boxes"],
+  "Linha de chegada": ["Finish line", "Línea de meta"],
+  "Quais": ["Which", "Cuáles"],
+  "O que o engenheiro diz": ["What the engineer says", "Qué dice el ingeniero"],
+  "Freio, acelerador ou volante": ["Brake, throttle or steering", "Freno, acelerador o volante"],
+  "Frase pronta": ["Ready phrase", "Frase lista"],
+  "Ação": ["Action", "Acción"],
+  "Como": ["How", "Cómo"],
+  "Quanto": ["How much", "Cuánto"],
+  "Sem quantidade": ["No amount", "Sin cantidad"],
+  "Frase": ["Phrase", "Frase"],
+  "Por quê (opcional)": ["Why (optional)", "Por qué (opcional)"],
+  "Sem motivo": ["No reason", "Sin motivo"],
+  "Começa com": ["Starts with", "Empieza con"],
+  "Nada": ["Nothing", "Nada"],
+  "Vale para": ["Applies to", "Vale para"],
+  "Montando a frase…": ["Building the sentence…", "Armando la frase…"],
+  "Cerca de {0} s de fala": ["About {0} s of speech", "Unos {0} s de voz"],
+  "Criada por você": ["Created by you", "Creada por ti"],
+  "Agente: {0}": ["Agent: {0}", "Agente: {0}"],
+  "Agente externo": ["External agent", "Agente externo"],
+  "Não foi possível concluir.": ["Could not finish.", "No se pudo completar."],
+  "Ativa": ["Active", "Activa"],
+  "Pausada": ["Paused", "Pausada"],
+  "Concluída": ["Done", "Completada"],
+  "Precisa de revisão": ["Needs review", "Necesita revisión"],
+  "Descartada": ["Dismissed", "Descartada"],
+  "Proposta": ["Proposal", "Propuesta"],
+  "Motivo: {0}": ["Reason: {0}", "Motivo: {0}"],
+  "Falada {0}×": ["Said {0}×", "Dicha {0}×"],
+  "Aprovar": ["Approve", "Aprobar"],
+  "Retomar": ["Resume", "Reanudar"],
+  "Revisar": ["Review", "Revisar"],
+  "Descartar": ["Dismiss", "Descartar"],
+  "Apagar a tarefa?": ["Delete the task?", "¿Borrar la tarea?"],
+  "Tarefas do engenheiro": ["Engineer tasks", "Tareas del ingeniero"],
+  "Instruções que o engenheiro fala por rádio num ponto da volta. Um agente de IA (ou o Coach IA do app) só propõe: nada é falado até você aprovar.": [
+    "Instructions the engineer says over the radio at a point of the lap. An AI agent (or the in-app AI Coach) only proposes: nothing is said until you approve.",
+    "Instrucciones que el ingeniero dice por radio en un punto de la vuelta. Un agente de IA (o el Coach IA de la app) solo propone: nada se dice hasta que apruebes."
+  ],
+  "Propostas": ["Proposals", "Propuestas"],
+  "Propostas esperando você ({0})": [
+    "Proposals waiting for you ({0})",
+    "Propuestas esperándote ({0})"
+  ],
+  "Suas tarefas": ["Your tasks", "Tus tareas"],
+  "Nenhuma tarefa ainda. Crie uma ou peça a um agente de IA pelo MCP.": [
+    "No tasks yet. Create one or ask an AI agent through MCP.",
+    "Aún no hay tareas. Crea una o pídesela a un agente de IA por MCP."
+  ],
+  "Propostas do agente ({0})": ["Agent proposals ({0})", "Propuestas del agente ({0})"],
+  "Um agente de IA sugeriu instruções para o engenheiro falar na pista. Nada é falado até você aprovar.": [
+    "An AI agent suggested instructions for the engineer to say on track. Nothing is said until you approve.",
+    "Un agente de IA sugirió instrucciones para que el ingeniero las diga en pista. No se dice nada hasta que apruebes."
+  ],
+  "Abrir na pista": ["Open on the track", "Abrir en la pista"],
+  "E mais {0}. Abra a pista para ver todas.": [
+    "And {0} more. Open the track to see all of them.",
+    "Y {0} más. Abre la pista para verlas todas."
+  ],
+  "Esta voz ainda não tem tarefas faladas.": [
+    "This voice has no spoken tasks yet.",
+    "Esta voz aún no tiene tareas habladas."
+  ],
+  "Pronta": ["Ready", "Lista"],
+  "Desligar o download": ["Turn the download off", "Desactivar la descarga"],
+  "Baixando… {0}%": ["Downloading… {0}%", "Descargando… {0}%"],
+  "Não foi possível baixar.": ["Could not download.", "No se pudo descargar."],
+  "Baixar voz das tarefas ({0})": [
+    "Download the tasks voice ({0})",
+    "Descargar la voz de las tareas ({0})"
+  ],
+  "Baixar voz das tarefas": ["Download the tasks voice", "Descargar la voz de las tareas"],
+  "O engenheiro fala, no ponto da volta, as instruções que você aprovou. Em silêncio sem elas.": [
+    "The engineer says the instructions you approved at their point of the lap. Silent without them.",
+    "El ingeniero dice, en su punto de la vuelta, las instrucciones que aprobaste. En silencio sin ellas."
+  ],
+  "Falar tarefas em": ["Say tasks in", "Decir tareas en"],
+  "Os modos em que as tarefas são faladas. Na corrida fica desligado.": [
+    "The modes where tasks are said. Off in Race.",
+    "Los modos donde se dicen las tareas. En carrera está desactivado."
+  ],
+  "Tarefas por volta": ["Tasks per lap", "Tareas por vuelta"],
+  "Voz das tarefas": ["Tasks voice", "Voz de las tareas"],
+  "O áudio das tarefas vem do GitHub, só da voz em uso, e fica neste computador.": [
+    "The tasks audio comes from GitHub, only for the voice in use, and stays on this computer.",
+    "El audio de las tareas viene de GitHub, solo de la voz en uso, y queda en este computador."
+  ],
+  "Pedidos sem frase ({0})": ["Requests without a phrase ({0})", "Pedidos sin frase ({0})"],
+  "O que um agente tentou pedir e o dicionário não sabe falar: ajuda a decidir o que falta.": [
+    "What an agent tried to ask for that the dictionary cannot say: helps decide what is missing.",
+    "Lo que un agente intentó pedir y el diccionario no sabe decir: ayuda a decidir qué falta."
+  ],
+  "Limpar lista": ["Clear list", "Limpiar lista"],
+  "O agente propôs uma tarefa para o engenheiro. Aprove em Tarefas.": [
+    "The agent proposed a task for the engineer. Approve it in Tasks.",
+    "El agente propuso una tarea para el ingeniero. Apruébala en Tareas."
+  ],
+  "O agente propôs {0} tarefas para o engenheiro. Aprove em Tarefas.": [
+    "The agent proposed {0} tasks for the engineer. Approve them in Tasks.",
+    "El agente propuso {0} tareas para el ingeniero. Apruébalas en Tareas."
+  ],
+  "Para ouvir, baixe a voz das tarefas em Configurações → Engenheiro → Tarefas.": [
+    "To listen, download the tasks voice in Settings → Engineer → Tasks.",
+    "Para escuchar, descarga la voz de las tareas en Configuración → Ingeniero → Tareas."
+  ],
+  "Não foi possível carregar o áudio das tarefas.": [
+    "Could not load the tasks audio.",
+    "No se pudo cargar el audio de las tareas."
+  ],
+  "Instruções que você aprovou, ditas no ponto da volta.": [
+    "Instructions you approved, said at their point of the lap.",
+    "Instrucciones que aprobaste, dichas en su punto de la vuelta."
+  ],
+  "Baixa o áudio das tarefas, só da voz em uso.": [
+    "Downloads the tasks audio, only for the voice in use.",
+    "Descarga el audio de las tareas, solo de la voz en uso."
+  ],
+  "Lendo o dicionário do engenheiro": [
+    "Reading the engineer dictionary",
+    "Leyendo el diccionario del ingeniero"
+  ],
+  "Propondo uma tarefa": ["Proposing a task", "Proponiendo una tarea"],
+  "Lendo as tarefas": ["Reading the tasks", "Leyendo las tareas"],
+  "Ajustando a proposta": ["Adjusting the proposal", "Ajustando la propuesta"],
+  "Retirando a proposta": ["Withdrawing the proposal", "Retirando la propuesta"],
+  "Tarefas para o engenheiro": ["Tasks for the engineer", "Tareas para el ingeniero"],
+  "Proponha tarefas para o engenheiro falar na pista, uma por curva onde mais perco tempo. Eu aprovo no app.": [
+    "Propose tasks for the engineer to say on track, one for each corner where I lose the most time. I approve them in the app.",
+    "Propón tareas para que el ingeniero las diga en pista, una por cada curva donde más tiempo pierdo. Yo las apruebo en la app."
+  ],
+  "Tarefas": ["Tasks", "Tareas"],
+  "Nota na tela (não é falada)": ["Note on screen (not spoken)", "Nota en pantalla (no se dice)"],
+  "As que passarem do limite ficam só na tela.": [
+    "Tasks over the limit stay on screen only.",
+    "Las que pasen del límite quedan solo en pantalla."
+  ]
 }

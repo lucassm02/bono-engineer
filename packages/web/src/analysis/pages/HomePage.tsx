@@ -18,6 +18,7 @@ import { CarFilterChips, CarFilterField, FilterChip } from '../components/CarPic
 import { PendingSetupCard } from '../components/config/HealthSummary.tsx';
 import { DailiesAsk } from '../components/DailiesAsk.tsx';
 import { DailiesStrip } from '../components/DailiesStrip.tsx';
+import { ProposalsCard } from '../components/ProposalsCard.tsx';
 import { RecentSessionCard } from '../components/RecentSessionCard.tsx';
 import { NewTrackPrompt } from '../components/TrackNaming.tsx';
 import { TrackThumb } from '../components/TrackThumb.tsx';
@@ -373,6 +374,8 @@ export function HomePage() {
       <PendingSetupCard onOpenAssistant={openSetupAssistant} />
 
       <RecentSessionCard />
+
+      <ProposalsCard />
 
       <WeekCard />
 
