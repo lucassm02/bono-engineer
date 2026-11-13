@@ -61,7 +61,7 @@ Capturas do aplicativo em português do Brasil, com telemetria de demonstração
 3. Siga o assistente de primeira execução, abra o GT7 e entre em uma pista. No Bono, abra **Ao vivo**. Se a busca automática não encontrar o console, informe o IP em **Configurações → Console → Usar outro IP** (nas opções avançadas).
 4. No celular ou tablet, escaneie o QR code na Início ou em **Configurações → Ao vivo e aparelhos → Abrir no celular ou tablet**, ou abra a URL de rede que aparece ali. Use o painel na horizontal.
 
-O instalador é distribuído sem assinatura de código, então o SmartScreen pode exibir um aviso. A partir da versão 0.8.0, abra **Configurações → Sobre** para verificar novas versões e ler as notas. Se você usa a versão 0.7.1 ou anterior, rode o instalador da 0.8.0 uma vez. As sessões ficam na pasta de dados do usuário.
+O instalador é distribuído sem assinatura de código, então o SmartScreen pode exibir um aviso. A partir da versão 0.8.0, abra **Configurações → Sobre** para verificar novas versões e ler as notas. Se você usa a versão 0.7.1 ou anterior, rode o instalador mais recente uma vez. As sessões ficam na pasta de dados do usuário.
 
 ### Usar o painel
 
@@ -133,7 +133,7 @@ O workflow [Windows build and release](../.github/workflows/windows.yml) roda em
 
 O GitHub Pages compila e publica o [site do Bono](https://lucassm02.github.io/bono-engineer/) quando os arquivos do site ou da versão mudam em `main`. Os pacotes opcionais de voz das tarefas ficam em uma pré-release separada, `task-voices-v<dictionaryVersion>`. Gere os arquivos com `npm run radio:voices -- --tasks` e publique os WAV que correspondem aos nomes, tamanhos e hashes do manifesto incluído no app.
 
-Para lançar uma versão, atualize `version` no `package.json` da raiz e no de `packages/desktop`, sincronize o lockfile com `npm install --package-lock-only` e adicione uma entrada datada abaixo de **Unreleased** no [CHANGELOG.md](../CHANGELOG.md). Atualize os links de versão no fim do changelog. Uma entrada pode levar `<!-- release-notes-since: x.y.z -->` para a descrição da release listar também todas as versões anteriores desde a `x.y.z`. O workflow verifica se as versões e a entrada mais recente conferem.
+Para lançar uma versão, atualize `version` no `package.json` da raiz e no de `packages/desktop`, sincronize o lockfile com `npm install --package-lock-only` e adicione uma entrada datada abaixo de **Unreleased** no [CHANGELOG.md](../CHANGELOG.md). Atualize os links de versão no fim do changelog. A descrição da release inclui todo o histórico do changelog por padrão. Use `<!-- release-notes-since: x.y.z -->` para começar o histórico em uma versão anterior específica. O workflow verifica se as versões e a entrada mais recente conferem.
 
 ## Mais documentação
 

@@ -7,9 +7,12 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-11-13
+
 ### Changed
 
-- When approving an engineer task, download the selected voice and follow its progress in the same dialog. You can also approve the task without audio.
+- When approving an engineer task from Home or the track page, choose **Download and approve** to download the selected voice and approve the task once the audio is ready. Follow the progress and retry from the same dialog, or choose **Approve without audio**.
+- On phones, the approval dialog gives each action a full-width button on its own line.
 
 ## [0.8.0] - 2026-11-13
 
@@ -234,7 +237,8 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Added replay reference capture, distance-aligned lap comparisons, synchronized telemetry charts, consistency and progress analysis, and data exports.
 - Added the driving guide, an Anthropic-powered AI debrief, and MCP tools for telemetry, laps, sessions, tracks, comparisons, and PNG charts.
 
-[Unreleased]: https://github.com/lucassm02/bono-engineer/compare/v0.8.0...main
+[Unreleased]: https://github.com/lucassm02/bono-engineer/compare/v0.8.1...main
+[0.8.1]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.8.1
 [0.8.0]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.8.0
 [0.7.1]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.7.1
 [0.4.0]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.4.0

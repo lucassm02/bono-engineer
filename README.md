@@ -65,7 +65,7 @@ These screenshots show the Brazilian Portuguese interface with demo telemetry. I
 3. Follow the first-run assistant, then open GT7 and enter a track. In Bono, open **Live**. If discovery does not find the console, open **Settings → Console → Use another IP** (under advanced options) and enter the console IP.
 4. On a phone or tablet, scan the QR code on Home or in **Settings → Live and devices → Open on a phone or tablet**, or open the LAN address shown there. Use landscape mode for the live dashboard.
 
-The installer is unsigned, so Windows SmartScreen may show a warning. From 0.8.0 onward, use **Settings → About** to check for updates and read the release notes. If you use 0.7.1 or earlier, run the 0.8.0 installer once. Session data is stored separately from the application.
+The installer is unsigned, so Windows SmartScreen may show a warning. From 0.8.0 onward, use **Settings → About** to check for updates and read the release notes. If you use 0.7.1 or earlier, run the latest installer once. Session data is stored separately from the application.
 
 ### Run from source
 
@@ -105,7 +105,7 @@ The Windows installer checks for releases after launch and under **Settings → 
 
 GitHub Pages builds and deploys the [public site](https://lucassm02.github.io/bono-engineer/) when site or version files change on `main`. The optional engineer-task voice packs are published separately as a prerelease named `task-voices-v<dictionaryVersion>`. Generate them with `npm run radio:voices -- --tasks` and publish the WAV files whose names, sizes and hashes match the bundled manifest.
 
-For a new release, update `version` in the root and desktop `package.json` files, refresh `package-lock.json` with `npm install --package-lock-only`, and add a dated entry below **Unreleased** in [CHANGELOG.md](CHANGELOG.md). Update the version links at the bottom of the changelog. An entry can carry `<!-- release-notes-since: x.y.z -->` so the release description also lists every earlier version since `x.y.z`. The workflow verifies that the package versions and newest entry agree.
+For a new release, update `version` in the root and desktop `package.json` files, refresh `package-lock.json` with `npm install --package-lock-only`, and add a dated entry below **Unreleased** in [CHANGELOG.md](CHANGELOG.md). Update the version links at the bottom of the changelog. The release description includes the full changelog history by default. Use `<!-- release-notes-since: x.y.z -->` to start the history at a specific earlier version. The workflow verifies that the package versions and newest entry agree.
 
 ## More documentation
 

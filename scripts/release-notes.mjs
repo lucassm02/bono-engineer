@@ -62,15 +62,20 @@ const sinceVersion = sinceDirective.exec(
   entry.find((line) => sinceDirective.test(line)) ?? '',
 )?.[1];
 let description = notes;
-if (sinceVersion) {
-  description = `## New in ${version}\n\n${notes}\n\n## Earlier versions\n\n${historySince(sinceVersion)}`;
-} else if (baseVersion) {
+if (baseVersion && !sinceVersion) {
   const base = lines.findIndex(
     (line, index) => index > start && line.startsWith(`## [${baseVersion}] - `),
   );
   const baseNotes = base === -1 ? '' : entryNotes(entryLines(base));
   if (!baseNotes) throw new Error(`Missing release notes for base version ${baseVersion}.`);
   description = `${baseNotes}\n\n## New in ${version}\n\n${notes}`;
+} else {
+  // Keep the full history in the latest release even when earlier releases are removed.
+  const oldestVersion = lines.findLast((line) => VERSION_HEADING.test(line))?.match(VERSION_HEADING)?.[1];
+  const firstVersion = sinceVersion ?? oldestVersion;
+  if (firstVersion && firstVersion !== version) {
+    description = `## New in ${version}\n\n${notes}\n\n## Earlier versions\n\n${historySince(firstVersion)}`;
+  }
 }
 writeFileSync(outputPath, `${description}\n`);
 const jsonPath = process.argv[3];
