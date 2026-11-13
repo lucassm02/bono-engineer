@@ -5,6 +5,12 @@ All notable changes to Bono Engineer are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Track recognised on the pre-race screen.** Before a race or a time trial the game plays a lap with your car in the background. Bono now reads the path of that car and names the circuit within about 150 m of it moving, before you drive a metre, with no lap of yours on that track needed (checked on a real PS5: Trial Mountain, Suzuka and Road Atlanta). The live bar shows "Pista: …"; layouts that share their first metres (Suzuka Full and East) show the circuit first and the layout once the car has run one loop. It is a "probable" label only: nothing is saved from it.
+
 ## [0.7.1] - 2026-11-13
 
 <!-- release-notes-since: 0.1.0 -->

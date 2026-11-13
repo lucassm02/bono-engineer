@@ -23,6 +23,8 @@ export type TrackBasis =
   | 'start'
   /** The start line matches a layout of the shipped catalogue (never persisted). */
   | 'catalog'
+  /** The car that runs in the background of the pre-race screen drew a known path (never persisted). */
+  | 'path'
   /** A closed lap's geometry matched (or created) the track. */
   | 'lap';
 

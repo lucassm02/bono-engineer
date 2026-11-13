@@ -110,6 +110,25 @@ describe('quando perguntar (spec 06)', () => {
   });
 });
 
+describe('barTrackView: pista reconhecida pelo carro de fundo da pré-corrida', () => {
+  it('mostra o circuito e o layout, sem pulsar, antes de qualquer volta', () => {
+    const v = barTrackView({
+      ctx: ctx({
+        name: 'Suzuka Circuit',
+        layout: 'East Course',
+        confidence: 'probable',
+        basis: 'path',
+      }),
+      sessionOpen: false,
+      hasSavedTracks: false,
+    });
+    expect(v.kind).toBe('probable');
+    expect(v.label).toContain('Suzuka Circuit · East Course');
+    expect(v.pulse).toBe(false);
+    expect(v.action).toBeNull();
+  });
+});
+
 describe('barTrackView: a pista na faixa', () => {
   it('sem sessão e com pistas salvas: "Escolher pista" (toque abre a folha)', () => {
     const v = barTrackView({ ctx: EMPTY_TRACK_CONTEXT, sessionOpen: false, hasSavedTracks: true });

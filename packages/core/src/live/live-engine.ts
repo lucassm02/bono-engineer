@@ -77,6 +77,7 @@ import {
 import { TraceBuilder } from '../trace/channels.ts';
 import { centerlinePolyline, lapPolyline, UNKNOWN_TRACK_PREFIX } from '../track/fingerprint.ts';
 import { type CatalogGuess, catalogGuessAtStart } from '../track/start-guess.ts';
+import { ReplayPathTracker } from '../track/replay-path.ts';
 import { newId } from '../util/ids.ts';
 import { clamp, emaAlpha } from '../util/math.ts';
 import { alignToLine, cumulativeDistance, type Polyline } from '../util/polyline.ts';
@@ -456,6 +457,11 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   /** Track learned from this session's recognition lap, until the next lap closes. */
   #learning: { trackId: Id } | null = null;
   /** The last timed lap on an unknown track did not count. */
+  /**
+   * Circuit named from the path of the car that runs in the background of the pre-race screen
+   * (state 'replay'); never stored.
+   */
+  #replayPath = new ReplayPathTracker();
   #invalidLap: LearningInvalidReason | null = null;
   /** Tracks whose corner detection finished (even with no corner found). */
   #cornersSettled = new Set<Id>();
@@ -547,6 +553,19 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     if (t) {
       return {
         trackId: t.id,
+    // the pre-race screen is playing a lap: its path names the circuit before any lap is driven,
+    // and it wins over a track left over from an earlier session that it disagrees with
+    const pg = this.#replayKind !== 'none' && !this.#replayMode ? this.#replayPath.guess : null;
+    if (pg?.venue && t?.name !== pg.venue) {
+      return {
+        ...EMPTY_TRACK_CONTEXT,
+        name: pg.venue,
+        layout: pg.layoutLabel,
+        confidence: 'probable',
+        basis: 'path',
+        hint,
+      };
+    }
         name: t.name,
         layout: t.layout ?? null,
         confidence: this.#trackConfidence,
@@ -1157,6 +1176,10 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       receivedAtMs - this.#inactiveSince > idleEnd
     ) {
       this.endSession('offTrack', this.#lastActiveAt ?? this.#inactiveSince);
+    }
+    if (replay.kind === 'none') this.#replayPath.reset();
+    else if (replay.kind === 'playing' && !this.#replayMode) {
+      this.#replayPath.add(p.position.x, p.position.z, p.carCode);
     }
     // a frozen stream is not a real pause: the driver left the track, so close the session sooner
     if (

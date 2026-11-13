@@ -164,6 +164,20 @@ export function barTrackView(input: {
       title: uiText('Provavelmente {0}. Confirmo quando você fechar a volta.', line),
     };
   }
+  if (ctx.basis === 'path') {
+    return {
+      kind: 'probable',
+      label: uiText('Pista: {0}', line),
+      note: null,
+      tone: null,
+      pulse: false,
+      action: input.hasSavedTracks ? 'picker' : null,
+      title: uiText(
+        'Reconheci pelo carro que roda ao fundo na tela de pré-corrida: {0}. Confirmo quando você fechar a volta.',
+        line,
+      ),
+    };
+  }
   if (ctx.trackId && ctx.confidence === 'confirmed' && ctx.needsName) {
     return {
       kind: 'new',

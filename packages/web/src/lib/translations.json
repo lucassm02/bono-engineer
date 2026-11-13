@@ -2794,6 +2794,10 @@
     "Probably {0}. I will confirm when you close the lap.",
     "Probablemente {0}. Lo confirmo cuando cierres la vuelta."
   ],
+  "Reconheci pelo carro que roda ao fundo na tela de pré-corrida: {0}. Confirmo quando você fechar a volta.": [
+    "I recognized it from the car running in the background of the pre-race screen: {0}. I will confirm when you close the lap.",
+    "Lo reconocí por el coche que rueda al fondo en la pantalla previa a la carrera: {0}. Lo confirmo cuando cierres la vuelta."
+  ],
   "Pista nova": ["New track", "Pista nueva"],
   "Dar nome": ["Name it", "Ponerle nombre"],
   "Aprendi o traçado desta pista. Toque para dar o nome.": [
