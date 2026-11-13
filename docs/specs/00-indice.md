@@ -16,6 +16,7 @@ independente o bastante para virar um PR; as dependências estão na tabela.
 | 09 | [Stints (box confirmado pelo piloto)](09-stints.md) | Dividir a sessão em stints: o carro parado pergunta "está no box?"; ao sair, novo stint | — | M · **futura** |
 | 10 | [Setup entre stints](10-setup-entre-stints.md) | Ficha de setup + comparação de stints; depois sugestões, uma mudança por vez | 09 | G · **futura** |
 | 11 | [Corridas diárias do GT7 (DG EDGE)](11-corridas-diarias.md) | Corridas da semana, medalhas, 1º lugar como referência | — | M · **implementada** |
+| 12 | [Atualizações e notas de versão no app](12-atualizacoes-do-app.md) | Verificação, aviso, download e instalação no Windows, com notas antes e depois | — | M · **planejada** |
 
 P = ≤ 2 dias · M = 3–5 dias · G = 1–2 semanas (estimativa de uma pessoa).
 
