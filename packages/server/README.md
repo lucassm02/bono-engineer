@@ -63,7 +63,7 @@ o piloto aprova pelo app. A frase é montada só com o dicionário (`@gt7/shared
 | DELETE | `/api/tasks/:id` | Apaga |
 | GET / DELETE | `/api/tasks/misses` | Pedidos que o dicionário não soube falar (para decidir o que falta) / limpar |
 | GET | `/api/tasks/dictionary` | O vocabulário (`TaskDictionaryView`) |
-| GET / PUT / DELETE | `/api/tasks/voice?voice=alex` | Voz das tarefas: estado do download (`ApiTaskVoice`), liga o download (`{ enabled, voice }`, opt-in) e remove. O áudio vem do GitHub Release `vozes-tarefas-v<versão>` (ou `GT7_TASK_VOICE_URL`), só da voz em uso, e é conferido por tamanho e SHA-256 contra o manifesto do app |
+| GET / PUT / DELETE | `/api/tasks/voice?voice=alex` | Voz das tarefas: estado do download (`ApiTaskVoice`), liga o download (`{ enabled, voice }`, opt-in) e remove. O áudio vem do GitHub Release `task-voices-v<dictionaryVersion>` (ou `GT7_TASK_VOICE_URL`), só da voz em uso, e é conferido por tamanho e SHA-256 contra o manifesto do app |
 | POST | `/api/tasks/voice/download` | Baixa (ou continua) a voz; recusado enquanto o piloto não ligou o download |
 | GET | `/api/tasks/voice/file/:file` | O áudio baixado (WAV) |
 

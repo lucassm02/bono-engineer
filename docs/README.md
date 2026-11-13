@@ -1,6 +1,6 @@
 # Bono Engineer
 
-[English](../README.md) · [Baixar para Windows](https://github.com/lucassm02/bono-engineer/releases/latest) · [Histórico de versões](../CHANGELOG.md)
+[English](../README.md) · [Site](https://lucassm02.github.io/bono-engineer/) · [Baixar para Windows](https://github.com/lucassm02/bono-engineer/releases/latest) · [Histórico de versões](../CHANGELOG.md)
 
 O Bono Engineer é um engenheiro de pista para simuladores. A integração disponível hoje é com **Gran Turismo 7 no PlayStation**. Rode o Bono no computador para ver a telemetria em tempo real, ouvir o engenheiro e comparar suas voltas depois de pilotar. Um celular ou tablet na mesma rede pode servir de painel adicional.
 
@@ -22,6 +22,7 @@ Capturas do aplicativo em português do Brasil, com telemetria de demonstração
 
 - Encontra o PlayStation na rede local ou se conecta ao IP informado. Seleciona automaticamente um formato compatível do GT7 (A, B, `~` ou C) e mostra o estado da conexão e da gravação.
 - Exibe velocidade, marcha, rotações e luzes de troca, comandos do piloto, temperaturas dos pneus, combustível e autonomia estimada quando disponíveis, forças G, mapa e tempos de volta e setores. O delta pode usar a melhor pessoal, a melhor da sessão ou uma referência capturada.
+- Usa o trajeto do carro ao fundo da tela pré-corrida do GT7 para mostrar um circuito provável no painel ao vivo, antes da primeira volta. Traçados com o mesmo trecho inicial podem exigir uma volta completa do carro na prévia para serem distinguidos.
 - Inclui 11 telas: Corrida, Delta grande, Pneus, Inputs, Motor e câmbio, Mapa, Tempos, Combustível, Forças G, Treino de curva e Personalizada, com uma grade de widgets.
 - Guarda a tela inicial, a ordem e a configuração do painel por aparelho. Use gestos ou teclado, configure o cartão de fim de volta, trave os controles ou escolha pelo PC qual tela aparece em outro dispositivo.
 - Compartilha o painel por endereço de rede ou QR code. Use tela cheia no navegador compatível ou no aplicativo Windows, ou adicione o painel à tela inicial do celular ou tablet.
@@ -38,6 +39,7 @@ Capturas do aplicativo em português do Brasil, com telemetria de demonstração
 - **Classificação** alerta sobre pneus frios na volta de preparação, fica em silêncio durante a volta rápida e informa o resultado depois da linha. **Corrida** prioriza alertas de pneus e combustível quando a telemetria permite. Ambos os modos funcionam sem volta de referência.
 - Escolha o nível de fala Essencial, Detalhado ou Mudo. Configure o resumo de volta, o reforço positivo e a antecipação das chamadas. O botão de rádio ao lado do menu e do cadeado mostra ou oculta o cartão do rádio, mantendo a saída de áudio ativa.
 - Escolha entre três vozes neurais por idioma (Voz 1, 2 e 3). O mesmo catálogo de chamadas está disponível no áudio local e no Discord. O rádio segue regras de telemetria e pode registrar as decisões para análise e reprodução.
+- Crie **tarefas do engenheiro** na aba **Tarefas** da pista ou revise as sugestões do Coach IA ou de um agente MCP em **Início → Propostas do agente**. Aprove as propostas que quer ouvir no ponto escolhido da volta. Para ouvir as tarefas, autorize o download da voz em uso.
 - Envie as chamadas do rádio para um **canal de voz do Discord** e ouça no headset do PS5. Um assistente monta o convite e lista os canais de voz: você só cola o token do seu próprio bot (sem ID de usuário). O app Windows usa o armazenamento seguro do sistema para criptografar o token. O teste com dez bipes mede o atraso até o headset, e o Bono usa o atraso e a velocidade recente para adiantar as chamadas. Veja o [guia de configuração do Discord](radio-discord.md).
 
 ### Sessões, referências e análise
@@ -59,7 +61,7 @@ Capturas do aplicativo em português do Brasil, com telemetria de demonstração
 3. Siga o assistente de primeira execução, abra o GT7 e entre em uma pista. No Bono, abra **Ao vivo**. Se a busca automática não encontrar o console, informe o IP em **Configurações → Console → Usar outro IP** (nas opções avançadas).
 4. No celular ou tablet, escaneie o QR code na Início ou em **Configurações → Ao vivo e aparelhos → Abrir no celular ou tablet**, ou abra a URL de rede que aparece ali. Use o painel na horizontal.
 
-O instalador é distribuído sem assinatura de código, então o SmartScreen pode exibir um aviso. Para atualizar, rode o instalador mais recente. As sessões ficam na pasta de dados do usuário.
+O instalador é distribuído sem assinatura de código, então o SmartScreen pode exibir um aviso. A partir da versão 0.8.0, abra **Configurações → Sobre** para verificar novas versões e ler as notas. Se você usa a versão 0.7.1 ou anterior, rode o instalador da 0.8.0 uma vez. As sessões ficam na pasta de dados do usuário.
 
 ### Usar o painel
 
@@ -129,6 +131,8 @@ O aplicativo instalado no Windows verifica novas versões ao abrir e em **Config
 
 O workflow [Windows build and release](../.github/workflows/windows.yml) roda em pull requests e pushes para `main` e também pode ser disparado manualmente. Ele instala as dependências do lockfile, checa os tipos, roda os testes e disponibiliza os executáveis Windows x64, o manifesto de atualização e as notas da versão como artefato. Em `main`, o primeiro build aprovado de cada versão é publicado no [GitHub Releases](https://github.com/lucassm02/bono-engineer/releases), com tag `v<versão>` e a entrada correspondente do changelog como descrição.
 
+O GitHub Pages compila e publica o [site do Bono](https://lucassm02.github.io/bono-engineer/) quando os arquivos do site ou da versão mudam em `main`. Os pacotes opcionais de voz das tarefas ficam em uma pré-release separada, `task-voices-v<dictionaryVersion>`. Gere os arquivos com `npm run radio:voices -- --tasks` e publique os WAV que correspondem aos nomes, tamanhos e hashes do manifesto incluído no app.
+
 Para lançar uma versão, atualize `version` no `package.json` da raiz e no de `packages/desktop`, sincronize o lockfile com `npm install --package-lock-only` e adicione uma entrada datada abaixo de **Unreleased** no [CHANGELOG.md](../CHANGELOG.md). Atualize os links de versão no fim do changelog. Uma entrada pode levar `<!-- release-notes-since: x.y.z -->` para a descrição da release listar também todas as versões anteriores desde a `x.y.z`. O workflow verifica se as versões e a entrada mais recente conferem.
 
 ## Mais documentação
@@ -137,6 +141,7 @@ Para lançar uma versão, atualize `version` no `package.json` da raiz e no de `
 - [Guia de pilotagem e interpretação da telemetria](driving-guide.md)
 - [Roteiro de teste da telemetria no PS5](first-ps5-test.md)
 - [API REST e WebSocket](../packages/server/README.md) · [Ferramentas MCP](../packages/mcp/README.md) · [Protocolo do GT7](../packages/protocol/README.md)
+- [Especificação das atualizações e notas de versão](specs/12-app-updates.md)
 - [Sistema visual do Bono Engineer](design-system.md)
 
 ## Licença

@@ -16,11 +16,18 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Sentences are composed only from a dictionary of recorded phrases (about 217 pieces per voice, in Portuguese, English and Spanish): the MCP and the server refuse anything the dictionary cannot say and list what is valid, and the requests it could not say are kept so the dictionary can grow.
 - New MCP tools: `get_task_dictionary`, `propose_engineer_task` (with `dry_run`), `list_engineer_tasks`, `update_engineer_task` and `withdraw_engineer_task`. They need no token: tasks only add speech and text, and an agent can never activate, pause or delete an approved task.
 - **Tasks voice:** the audio of the tasks is downloaded from GitHub only after you allow it, only for the voice in use (about 14 MB), and is checked by size and SHA-256 before it is played.
-- Windows checks for Bono releases on startup and in Settings → About. The installed edition can download and install a new release from inside Bono. Release notes are available before installation and after restart.
+- **In-app updates on Windows.** Bono checks for releases after launch and in **Settings → About**. Read the release notes, download the update and choose **Restart and install**. The notes are also available after restart. The portable edition can save the new executable from the same screen. Users on 0.7.1 or earlier need to install 0.8.0 once to get the updater.
 
 ### Changed
 
 - Standardised technical identifiers and app and site URLs in English. Existing dashboard profiles and bookmarks are accepted.
+
+### Fixed
+
+- Kept release notes and their close button accessible in short windows, reflowed the update controls, and aligned the diagnostic counters.
+- Reflowed the track map and corner editor on phones. The active track tab stays in view when opening a link or resizing the window.
+- Kept the bottom navigation labels readable and the custom dashboard preview scrollable with dense grids.
+- Moved the AI Coach reply form below the conversation on narrow screens and made the history tour scroll to an offscreen track card.
 
 ## [0.7.1] - 2026-11-13
 

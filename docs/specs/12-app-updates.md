@@ -1,6 +1,6 @@
 # Atualizações e notas de versão no Bono Engineer
 
-**Status:** implementado na versão candidata 0.8.0 · **Escopo:** aplicativo Windows x64.
+**Status:** implementado a partir da versão 0.8.0 · **Escopo:** aplicativo Windows x64.
 
 O fluxo instalado valida o SHA-512 do manifesto e o SHA-256 do asset oficial do GitHub antes de executar o instalador. O CI aceita credenciais opcionais de Authenticode. Sem elas, a identidade do pacote depende do repositório público e do transporte HTTPS.
 

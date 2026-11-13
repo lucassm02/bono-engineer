@@ -60,7 +60,7 @@ export class TaskVoiceService {
     this.#baseUrl = (
       opts.baseUrl ??
       process.env.GT7_TASK_VOICE_URL ??
-      `${TASK_VOICE_RELEASE_BASE}/vozes-tarefas-v${this.#manifest.dictionaryVersion}`
+      `${TASK_VOICE_RELEASE_BASE}/task-voices-v${this.#manifest.dictionaryVersion}`
     ).replace(/\/+$/, '');
     this.#fetch = opts.fetch ?? fetch;
     this.#dir = join(store.dataDir, 'task-voices');

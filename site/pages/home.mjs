@@ -21,6 +21,11 @@ export const FAQ = [
     a: 'O instalador ainda não tem assinatura digital, então o SmartScreen não reconhece o autor e mostra um aviso. Baixe só pela página de versões do projeto no GitHub, clique em "Mais informações" e depois em "Executar assim mesmo".',
   },
   {
+    q: 'Como atualizo o Bono?',
+    a: 'A partir da versão 0.8.0, abra Configurações → Sobre no app para Windows. Você pode verificar se há uma versão nova, ler o que mudou, baixar e reiniciar para instalar. Se usa uma versão anterior à 0.8.0, instale a versão atual uma vez.',
+    link: { id: 'install', label: 'Veja como atualizar.' },
+  },
+  {
     q: 'Dá para ouvir o engenheiro no headset do PS5?',
     a: 'Dá, pelo Discord. O Bono envia as chamadas para um canal de voz e você ouve no headset do PS5. A configuração leva poucos minutos.',
     link: { id: 'discord', label: 'Veja o passo a passo do rádio no Discord.' },
@@ -95,8 +100,14 @@ ${motionSection(ctx, 'pt-BR')}
         <div class="read gain">−0,033<small>delta ao vivo, em segundos</small></div>
       </li>
       <li class="row">
+        <div><h3>Reconhecimento de pista antes da largada</h3><p>Quando o GT7 mostra seu carro andando no fundo da tela pré-corrida, o Bono usa esse trajeto para identificar o circuito. O nome aparece como provável no painel ao vivo, antes da sua primeira volta.</p></div>
+      </li>
+      <li class="row">
         <div><h3>Rádio do engenheiro</h3><p>Chamadas curtas antes da curva, como “freada leve em 100 metros”, em português, inglês ou espanhol. Toca no PC ou, pelo Discord, no headset do PS5.</p></div>
         <div class="read acc">100 m<small>de aviso antes da freada</small></div>
+      </li>
+      <li class="row">
+        <div><h3>Tarefas do engenheiro</h3><p>Crie um lembrete de pilotagem na aba <strong>Tarefas</strong> da pista ou aprove uma proposta do Coach IA ou do seu agente MCP. O rádio fala no trecho escolhido, como “na entrada da curva sete, freie vinte metros mais tarde”. Autorize o download da voz em uso para ouvir as tarefas.</p></div>
       </li>
       <li class="row">
         <div><h3>Comparar voltas</h3><p>Sobreponha velocidade, freio e acelerador alinhados por distância e veja em qual curva cada décimo foi embora. O painel “Onde você perde tempo” lista as três curvas que mais custam, com o motivo provável, e o mapa pinta a volta por ganho e perda, velocidade ou freio.</p></div>
@@ -202,7 +213,8 @@ ${motionSection(ctx, 'pt-BR')}
       <div>
         <p class="ver">Versão <span class="num">${v}</span> para Windows 64 bits</p>
         <h2 id="h-download">Baixe o Bono e abra o GT7</h2>
-        <p class="lead">O instalador está na página de versões do GitHub. Se preferir não instalar, há uma versão portátil.</p>
+        <p class="lead">O instalador está na página de versões do GitHub, junto com a edição portátil.</p>
+        <p>Já usa o Bono 0.8.0 ou superior? Em <strong>Configurações → Sobre</strong>, verifique novas versões e leia as notas antes de atualizar.</p>
         <div class="cta-row">
           <a class="btn" href="${SITE.releases}" rel="noopener">${ICON_DOWNLOAD}Baixar o Bono ${v}</a>
           <a class="btn btn-ghost" href="${ctx.rel('install')}">Ver como instalar</a>

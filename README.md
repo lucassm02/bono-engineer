@@ -1,6 +1,6 @@
 # Bono Engineer
 
-[Português (Brasil)](docs/README.md) · [Download for Windows](https://github.com/lucassm02/bono-engineer/releases/latest) · [Changelog](CHANGELOG.md)
+[Português (Brasil)](docs/README.md) · [Website](https://lucassm02.github.io/bono-engineer/en/) · [Download for Windows](https://github.com/lucassm02/bono-engineer/releases/latest) · [Changelog](CHANGELOG.md)
 
 Bono Engineer is a race engineer for sim racing. Its current integration is **Gran Turismo 7 on PlayStation**. Run Bono on a computer to see live telemetry, hear coaching over the radio, and compare your laps after the session. A phone or tablet on the same network can act as a second dashboard.
 
@@ -24,6 +24,7 @@ These screenshots show the Brazilian Portuguese interface with demo telemetry. I
 
 - Finds the PlayStation on the local network or connects to an IP you enter. It automatically selects a compatible GT7 packet format (A, B, `~`, or C) and reports connection and recording status.
 - Shows speed, gear, revs and shift lights, driver inputs, tyre temperatures, fuel and estimated range when available, G forces, a track map, and lap and sector timing. The live delta can use your personal best, session best, or a captured reference.
+- Uses the moving car on the GT7 pre-race screen to show a probable circuit in Live before your first lap. Layouts that share their opening stretch may need the full preview loop to distinguish them.
 - Offers 11 views: Race, Large Delta, Tyres, Inputs, Engine and Gearbox, Map, Times, Fuel, G Forces, Corner Training, and a customizable widget grid.
 - Saves dashboard layout, start view, and screen order per device. Use keyboard or touch gestures, toggle the lap-finish card, lock the controls, or select an active screen for another device from the PC.
 - Shares the dashboard via a LAN address or QR code. Use fullscreen on a supported browser or the native Windows app, or add the web dashboard to a phone or tablet home screen.
@@ -40,6 +41,7 @@ These screenshots show the Brazilian Portuguese interface with demo telemetry. I
 - **Qualifying** warns about cold tyres on the out-lap, stays quiet on the flying lap, and announces the result after the line. **Race** prioritizes tyre and fuel alerts when the telemetry supports them. Both modes can run without a reference lap.
 - Choose Essential, Detailed, or Muted speech. Configure lap summaries, optional positive feedback, and the lead time for coaching. The radio button beside the live menu and lock shows or hides the radio card while leaving the audio output active.
 - Choose from three built-in neural voices in each language (Voice 1, 2 and 3). The same call catalogue is available for local playback and Discord. Live coaching decisions come from telemetry rules and can be logged for replay and debugging.
+- Create **Engineer tasks** in a track’s **Tasks** tab, or review proposals from AI Coach or an MCP agent in **Home → Agent proposals**. Approve the proposals you want the radio to speak at the chosen point on the lap. Allow a one-time download for the selected voice.
 - Send the radio calls to a **Discord voice channel** and hear them through your PS5 headset. A setup wizard creates the invite link and lists the voice channels; you only paste the token of your own bot (no user ID needed). The Windows app stores the token using Windows encryption. A ten-beep test measures the end-to-end delay, and Bono uses that delay and recent speed to schedule calls earlier. See the [Discord setup guide in Portuguese](docs/radio-discord.md).
 
 ### Sessions, references, and analysis
@@ -51,7 +53,7 @@ These screenshots show the Brazilian Portuguese interface with demo telemetry. I
 - Export lap data as CSV or JSON, comparison charts as PNG, and raw recordings when enabled.
 - Follow the **Daily Races** of the week (the three Sport Mode races) with their rules, medal times, top 100 and top 1000, and the time of 1st place, next to your own best lap on the same track. It is **off until you say yes** to a one-time question on Home; then Bono reads the public pages of [DG EDGE](https://www.dg-edge.com/events/dailies) from your PC, at most once an hour, honouring `robots.txt`, and links back to the source. No player names are stored. "Use as reference" opens the replay capture with the ranking time filled in.
 - Choose where your data lives (for example a OneDrive or Dropbox folder, with a safer write mode there) and move it between PCs with **.bono backups**: export sessions, laps and settings (never keys or passwords), and import them to add to or replace your history.
-- Browse the built-in driving guide or use **AI Coach** for a saved post-session debrief based on your telemetry and charts. The coach uses your Anthropic API key. Live telemetry and the race radio work without it.
+- Browse the built-in driving guide or ask **AI Coach** about your laps and saved debriefs. Use your own Anthropic or OpenAI API key inside Bono, or connect an agent such as Claude Code or Codex via MCP.
 - Connect external tools to the REST API, WebSocket feed, or MCP. The local MCP server exposes telemetry, lap comparisons, charts, and history over HTTP, with a stdio option for desktop clients.
 
 ## Get started
@@ -63,7 +65,7 @@ These screenshots show the Brazilian Portuguese interface with demo telemetry. I
 3. Follow the first-run assistant, then open GT7 and enter a track. In Bono, open **Live**. If discovery does not find the console, open **Settings → Console → Use another IP** (under advanced options) and enter the console IP.
 4. On a phone or tablet, scan the QR code on Home or in **Settings → Live and devices → Open on a phone or tablet**, or open the LAN address shown there. Use landscape mode for the live dashboard.
 
-The installer is unsigned, so Windows SmartScreen may show a warning. For an update, run the newer installer. Session data is stored separately from the application.
+The installer is unsigned, so Windows SmartScreen may show a warning. From 0.8.0 onward, use **Settings → About** to check for updates and read the release notes. If you use 0.7.1 or earlier, run the 0.8.0 installer once. Session data is stored separately from the application.
 
 ### Run from source
 
@@ -101,6 +103,8 @@ The Windows installer checks for releases after launch and under **Settings → 
 
 [Windows build and release](.github/workflows/windows.yml) runs on pull requests to `main`, pushes to `main`, and manual runs. It installs locked dependencies, checks types, runs the tests, and saves both Windows x64 executables, update metadata and release notes as a workflow artifact. On `main`, it publishes the first successful build for each version to [GitHub Releases](https://github.com/lucassm02/bono-engineer/releases), using the tag `v<version>` and the matching changelog entry as the release description.
 
+GitHub Pages builds and deploys the [public site](https://lucassm02.github.io/bono-engineer/) when site or version files change on `main`. The optional engineer-task voice packs are published separately as a prerelease named `task-voices-v<dictionaryVersion>`. Generate them with `npm run radio:voices -- --tasks` and publish the WAV files whose names, sizes and hashes match the bundled manifest.
+
 For a new release, update `version` in the root and desktop `package.json` files, refresh `package-lock.json` with `npm install --package-lock-only`, and add a dated entry below **Unreleased** in [CHANGELOG.md](CHANGELOG.md). Update the version links at the bottom of the changelog. An entry can carry `<!-- release-notes-since: x.y.z -->` so the release description also lists every earlier version since `x.y.z`. The workflow verifies that the package versions and newest entry agree.
 
 ## More documentation
@@ -109,6 +113,7 @@ For a new release, update `version` in the root and desktop `package.json` files
 - [Driving guide and telemetry interpretation](docs/driving-guide.md)
 - [PS5 telemetry test checklist](docs/first-ps5-test.md)
 - [REST API and WebSocket](packages/server/README.md) · [MCP tools](packages/mcp/README.md) · [GT7 protocol](packages/protocol/README.md)
+- [Desktop update and release notes specification](docs/specs/12-app-updates.md)
 - [Bono Engineer design system](docs/design-system.md)
 
 ## License

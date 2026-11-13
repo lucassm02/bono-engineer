@@ -194,6 +194,8 @@ export function render(ctx) {
     </ul>
     <p>Sem referência, a tela compara com a sua passagem anterior. <strong>Fixar esta curva</strong> prende a tela numa curva só. O áudio, desligado por padrão, diz no máximo uma frase por passagem. Como não há tempo de ler no meio da curva, olhe a tela nas retas e depois da curva, ou ligue o áudio.</p>
     <p>Para treinar uma curva só, comece pelo botão <strong>Treinar esta curva</strong> do painel “Onde você perde tempo” na comparação, ou escolha a curva na própria tela. O engenheiro passa a falar apenas dela, a cada passagem, comparando com a sua melhor (tempo do trecho, velocidades e ponto de freada). Ele guarda as dez últimas passagens e mostra um resumo ao parar.</p>
+    <h3>Tarefas do engenheiro</h3>
+    <p>Depois de escolher o ajuste que quer testar, abra a aba <strong>Tarefas</strong> da pista e crie um lembrete para a entrada, o ápice ou a saída da curva. Você também pode pedir uma proposta ao Coach IA ou a um agente conectado pelo MCP. Revise a frase em <strong>Início → Propostas do agente</strong> e aprove as que quer ouvir no rádio.</p>
     <h3>Meta por pista</h3>
     <p>Na página da pista, em <strong>Minha meta</strong>, digite um tempo ou aceite a sugestão (a volta ideal, ou 0,5% abaixo da sua melhor). Ao vivo, o delta grande mostra a diferença para o ritmo da meta e, depois de cada volta válida, o engenheiro diz quanto falta. Escolha uma meta que você consiga alcançar nesta sessão: uma meta distante demais só repete a mesma má notícia.</p>
     <h3>Comparação, depois da sessão</h3>
@@ -214,7 +216,7 @@ export function render(ctx) {
     <h2 id="h-routine">Rotina de treino sugerida</h2>
     <div class="note"><strong>Uma mudança por stint</strong><p>Um stint são 8 a 10 voltas seguidas na mesma pista e no mesmo carro. Mudar duas coisas ao mesmo tempo impede de saber o que funcionou.</p></div>
     <ol class="steps">
-      <li><h3>Preparação, uma vez por pista e carro</h3><p>Capture uma referência do top ou use a sua melhor volta. Faça 5 voltas de aquecimento para o Bono reconhecer a pista e detectar as curvas. Dê nome às três curvas mais importantes e anote o marco de frenagem de cada uma.</p></li>
+      <li><h3>Preparação, uma vez por pista e carro</h3><p>Capture uma referência do top ou use a sua melhor volta. O Bono pode sugerir o circuito pela tela pré-corrida. Faça voltas de aquecimento para confirmar o traçado e detectar as curvas. Dê nome às três curvas mais importantes e anote o marco de frenagem de cada uma.</p></li>
       <li><h3>Stint 1, diagnóstico</h3><p>Pilote natural por 8 a 10 voltas. No fim, abra a comparação e o Debrief. Escolha uma curva, a mais cara em “O que treinar”, e uma métrica, como o ponto de frenagem da T1.</p></li>
       <li><h3>Stint 2, uma mudança</h3><p>Deixe a tela Treino de curva com <strong>Fixar esta curva</strong> nessa curva, ou o delta grande. Mude só aquela métrica, por exemplo frear 5 m mais tarde a cada volta. Anote como o carro reagiu.</p></li>
       <li><h3>Revisão, 5 minutos</h3><p>Compare a melhor volta do stint com a referência. A métrica melhorou? O tempo da curva caiu? Se o custo caiu e a consistência não piorou, fixe o novo padrão com uma nota de marco. Se piorou, volte atrás.</p></li>

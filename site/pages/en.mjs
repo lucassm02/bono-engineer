@@ -16,6 +16,10 @@ export const FAQ_EN = [
     a: 'The installer is not code-signed yet, so SmartScreen does not recognize the publisher. Download it only from the project releases page on GitHub, click "More info", then "Run anyway".',
   },
   {
+    q: 'How do I update Bono?',
+    a: 'Starting with version 0.8.0, open Settings → About in the Windows app. You can check for a new version, read what changed, download it and restart to install. If you use an earlier version, install the current version once.',
+  },
+  {
     q: 'Can I hear the engineer on my PS5 headset?',
     a: 'Yes, through Discord. Bono sends the radio calls to a voice channel you create, and you hear them on the PS5 headset. The setup guide is in Portuguese for now.',
   },
@@ -80,8 +84,14 @@ ${motionSection(ctx, 'en')}
         <div class="read gain">−0.033<small>live delta, in seconds</small></div>
       </li>
       <li class="row">
+        <div><h3>Track recognition before the race</h3><p>When GT7 shows your car moving in the background on the pre-race screen, Bono uses that path to identify the circuit. The Live dashboard shows a probable match before your first lap.</p></div>
+      </li>
+      <li class="row">
         <div><h3>Race radio</h3><p>Short calls before the corner, like “light braking in 100 metres”. It plays on the PC or, through Discord, on your PS5 headset.</p></div>
         <div class="read acc">100 m<small>warning before the brake point</small></div>
+      </li>
+      <li class="row">
+        <div><h3>Engineer tasks</h3><p>Create a driving reminder in the track’s <strong>Tasks</strong> tab or approve a suggestion from AI Coach or your MCP agent. The radio speaks at the chosen point, such as “At turn seven, entry. Brake twenty meters later.” Allow the download for your selected voice to hear the tasks.</p></div>
       </li>
       <li class="row">
         <div><h3>Lap comparison</h3><p>Overlay speed, brake and throttle aligned by distance and see which corner took each tenth away. “Where you lose time” lists the three costliest corners with the probable cause, and the map colours the lap by gain and loss, speed or brake.</p></div>
@@ -171,7 +181,8 @@ ${motionSection(ctx, 'en')}
       <div>
         <p class="ver">Version <span class="num">${v}</span> for Windows 64-bit</p>
         <h2 id="h-dl">Download Bono and open GT7</h2>
-        <p class="lead">The installer is on the GitHub releases page. A portable version is available if you prefer not to install.</p>
+        <p class="lead">The installer and portable edition are on the GitHub releases page.</p>
+        <p>Already on Bono 0.8.0 or later? Open <strong>Settings → About</strong> to check for updates and read the release notes before you update.</p>
         <div class="cta-row"><a class="btn" href="${SITE.releases}" rel="noopener">${ICON_DOWNLOAD}Download Bono ${v}</a></div>
       </div>
       <div>

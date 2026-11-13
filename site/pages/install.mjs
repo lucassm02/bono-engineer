@@ -52,8 +52,10 @@ New-NetFirewallRule -DisplayName 'Bono Engineer (acesso remoto)' -Direction Inbo
     </li>
   </ol>
 
-  <h2>Atualizar o Bono</h2>
-  <p>Feche o Bono pela bandeja do Windows e rode o instalador da versão nova. Suas sessões e voltas ficam numa pasta separada do aplicativo e continuam lá.</p>
+  <h2 id="updates">Atualizar o Bono</h2>
+  <p>A partir da versão 0.8.0, o aplicativo para Windows verifica novas versões ao abrir. Em <strong>Configurações → Sobre → Atualizações</strong>, você pode verificar novamente e abrir <strong>Ver o que mudou</strong>.</p>
+  <p>Na edição instalada, clique em <strong>Baixar atualização</strong> e, quando estiver pronta, use <strong>Reiniciar e instalar</strong>. O Bono preserva suas sessões e voltas e mostra as notas da versão após o reinício. Na edição portátil, use <strong>Baixar versão portátil</strong>, feche o Bono e abra o novo executável.</p>
+  <p>Se você usa a versão 0.7.1 ou anterior, feche o Bono pela bandeja do Windows e execute o <a href="${SITE.releases}" rel="noopener">instalador atual</a> uma vez para receber as próximas atualizações no aplicativo.</p>
 
   <h2>Não aparece nada? O que conferir</h2>
   <div class="tablewrap">

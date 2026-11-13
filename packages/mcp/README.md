@@ -149,7 +149,9 @@ três sessões no GT7 e resuma minha melhor volta”. [Documentação do Codex s
 | `rename_corner` / `rename_track` | Dá nome a curvas/pistas (mantido em nova detecção) |
 
 As tarefas não exigem token: só acrescentam fala e texto na tela do engenheiro, e nada é falado antes
-da aprovação do piloto no app (Início → Propostas do agente).
+da aprovação do piloto no app (**Início → Propostas do agente** ou aba **Tarefas** da pista).
+O piloto também precisa autorizar o download do áudio para a voz em uso. Use `get_task_dictionary`
+e depois `propose_engineer_task` com `dry_run: true` para conferir a frase antes de propor.
 
 Recursos: `gt7://tracks` e `gt7://tracks/{trackId}`; **base de pilotagem:** `gt7://knowledge` (índice) e
 `gt7://knowledge/{topic}` (ex.: `gt7://knowledge/class/gr4`, `gt7://knowledge/diagnostics/brakeEarlier`,
