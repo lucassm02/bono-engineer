@@ -555,8 +555,8 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     const t = this.#track;
     // the pre-race screen is playing a lap: its path names the circuit before any lap is driven,
     // and it wins over a track left over from an earlier session that it disagrees with
-    const pg = this.#replayKind !== 'none' && !this.#replayMode ? this.#replayPath.guess : null;
-    if (pg?.venue && t?.name !== pg.venue) {
+    const pg = this.state === 'replay' && !this.#replayMode ? this.#replayPath.guess : null;
+    if (pg?.venue && (t?.name !== pg.venue || (pg.layoutLabel && t.layout !== pg.layoutLabel))) {
       return {
         ...EMPTY_TRACK_CONTEXT,
         name: pg.venue,
@@ -733,6 +733,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   setIngestorState(s: IngestorState): void {
     const before = this.#composeState();
     this.#ingestorState = s;
+    if (this.state !== 'replay' && before === 'replay') this.#replayPath.reset();
     this.#emitStateIfChanged(before);
   }
 

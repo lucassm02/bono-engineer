@@ -33,7 +33,7 @@ export function ProposalsCard() {
             className="ui-btn"
             data-variant="secondary"
             data-size="sm"
-            href={routes.track(trackIds[0]!, { tab: 'tarefas' })}
+            href={routes.track(trackIds[0]!, { tab: 'tasks' })}
           >
             {uiText('Abrir na pista')}
           </a>

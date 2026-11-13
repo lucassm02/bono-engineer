@@ -119,7 +119,7 @@ describe('diagnostics coverage', () => {
       expect(d.fix.length).toBeGreaterThan(15);
       expect(d.drill.length).toBeGreaterThan(10);
       expect(d.src.length).toBeGreaterThan(0);
-      if (d.area !== 'dados') {
+      if (d.area !== 'data') {
         for (const g of DRIVING_GROUPS) {
           expect(d.byGroup[g], `${code} sem variação para Gr.${g}`).toBeTruthy();
         }
@@ -159,9 +159,9 @@ describe('sources', () => {
     for (const e of SETUP_MAP) for (const p of e.adjustments) add(p.src);
     const known = new Set(KNOWLEDGE_SOURCES.map((s) => s.id));
     for (const id of used) expect(known.has(id), `fonte desconhecida: ${id}`).toBe(true);
-    // Statements marked "fonte" always cite at least one source.
+    // Statements marked "sources" always cite at least one source.
     for (const t of GENERAL_TOPICS)
-      for (const p of t.points) if (p.basis === 'fonte') expect(p.src?.length).toBeGreaterThan(0);
+      for (const p of t.points) if (p.basis === 'sources') expect(p.src?.length).toBeGreaterThan(0);
   });
 
   it('marks the weakly supported classes honestly', () => {
@@ -193,18 +193,20 @@ describe('index, topics and search', () => {
       expect(md, t.id).toBeTruthy();
       expect(md!.length).toBeGreaterThan(80);
     }
-    expect(idx.filter((t) => t.kind === 'classe')).toHaveLength(7);
-    expect(idx.filter((t) => t.kind === 'diagnostico')).toHaveLength(ALL_DIAGNOSTIC_CODES.length);
+    expect(idx.filter((t) => t.kind === 'class')).toHaveLength(7);
+    expect(idx.filter((t) => t.kind === 'diagnostics')).toHaveLength(ALL_DIAGNOSTIC_CODES.length);
   });
 
   it('resolves loose topic names and trims per-class variations', () => {
-    expect(resolveTopicId('Gr.4')).toBe('classe/gr4');
-    expect(resolveTopicId('brakeEarlier')).toBe('diagnostico/brakeEarlier');
-    expect(resolveTopicId('trail-braking')).toBe('geral/trail-braking');
+    expect(resolveTopicId('Gr.4')).toBe('class/gr4');
+    expect(resolveTopicId('classe/gr4')).toBe('class/gr4');
+    expect(resolveTopicId('geral/como-treinar')).toBe('general/how-to-practise');
+    expect(resolveTopicId('brakeEarlier')).toBe('diagnostics/brakeEarlier');
+    expect(resolveTopicId('trail-braking')).toBe('general/trail-braking');
     expect(resolveTopicId('inexistente')).toBeNull();
     expect(knowledgeTopic('inexistente')).toBeNull();
-    const all = knowledgeTopic('diagnostico/brakeEarlier')!;
-    const g4 = knowledgeTopic('diagnostico/brakeEarlier', { group: '4' })!;
+    const all = knowledgeTopic('diagnostics/brakeEarlier')!;
+    const g4 = knowledgeTopic('diagnostics/brakeEarlier', { group: '4' })!;
     expect(all).toContain('Gr.1:');
     expect(g4).toContain('Gr.4:');
     expect(g4).not.toContain('Gr.1:');

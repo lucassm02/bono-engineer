@@ -1,5 +1,5 @@
 /**
- * Driving events (docs/spec-engenheiro-de-radio.md, "Eventos de pilotagem"): deterministic rules
+ * Driving events (docs/radio-engineer-spec.md, "Eventos de pilotagem"): deterministic rules
  * over the recorded samples of a prepared lap that flag understeer ("saída de frente"), oversteer
  * ("saída de traseira"), front lock ("travamento dianteiro") and exit traction loss ("perda de
  * tração na saída"), each with corner, distance/time range, evidence, confidence and ONE action.

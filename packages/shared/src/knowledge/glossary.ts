@@ -11,49 +11,49 @@ export const GLOSSARY: readonly GlossaryTerm[] = [
       'Manter um resto de freio depois de começar a virar, aliviando até perto do ápice. Mantém peso na frente e ajuda o carro a girar.',
   },
   {
-    id: 'apice',
+    id: 'apex',
     term: 'Ápice',
     en: 'apex',
     definition:
       'O ponto da curva mais próximo da borda interna (a zebra). No app, o ponto de menor velocidade (V-mín) é usado como ápice nas curvas curtas.',
   },
   {
-    id: 'apice-tardio',
+    id: 'late-apex',
     term: 'Ápice tardio',
     en: 'late apex',
     definition:
       'Ápice mais adiante na curva: perde-se um pouco na entrada, mas se acelera mais cedo na saída. Ótimo antes de retas.',
   },
   {
-    id: 'apice-cedo',
+    id: 'early-apex',
     term: 'Ápice cedo',
     en: 'early apex',
     definition:
       'Ápice antes do ponto ideal: o carro chega ao ápice cedo e abre na saída, perdendo velocidade.',
   },
   {
-    id: 'subesterco',
+    id: 'understeer',
     term: 'Subesterço',
     en: 'understeer',
     definition:
       'A dianteira perde aderência e o carro faz uma trajetória mais aberta que a pedida no volante. Mais volante raramente ajuda: reduza freio/velocidade.',
   },
   {
-    id: 'sobresterco',
+    id: 'oversteer',
     term: 'Sobresterço',
     en: 'oversteer',
     definition:
       'A traseira perde aderência e o carro gira mais do que o volante pede. Comum ao soltar o freio de repente ou ao acelerar demais.',
   },
   {
-    id: 'rotacao',
+    id: 'rotation',
     term: 'Rotação',
     en: 'rotation',
     definition:
       'A capacidade do carro de apontar para o ápice. Pouca rotação = subesterço; excesso = sobresterço.',
   },
   {
-    id: 'ponto-de-frenagem',
+    id: 'braking-point',
     term: 'Ponto de frenagem',
     en: 'braking point',
     definition:
@@ -67,13 +67,13 @@ export const GLOSSARY: readonly GlossaryTerm[] = [
       'A menor velocidade da curva. Quanto mais alta, mais velocidade se carrega, desde que a saída não piore.',
   },
   {
-    id: 'retomada',
+    id: 'corner-exit',
     term: 'Retomada do acelerador',
     en: 'throttle pickup',
     definition: 'O ponto em que o acelerador volta depois do ápice (throttlePickupM no app).',
   },
   {
-    id: 'roda-livre',
+    id: 'coasting',
     term: 'Roda livre',
     en: 'coasting',
     definition: 'Tempo sem freio nem acelerador. É perda de tempo e de apoio.',
@@ -105,7 +105,7 @@ export const GLOSSARY: readonly GlossaryTerm[] = [
     definition: 'Ajuda a manter o carro estável, freando rodas e cortando potência em derrapagens.',
   },
   {
-    id: 'balanco-de-freio',
+    id: 'brake-balance',
     term: 'Balanço de freio',
     en: 'brake balance / bias',
     definition:
@@ -153,7 +153,7 @@ export const GLOSSARY: readonly GlossaryTerm[] = [
     definition: 'Número que resume o desempenho do carro; as classes N100 a N1000 se baseiam nele.',
   },
   {
-    id: 'referencia-replay',
+    id: 'replay-reference',
     term: 'Referência de replay',
     en: 'replay reference',
     definition:
@@ -166,28 +166,28 @@ export const GLOSSARY: readonly GlossaryTerm[] = [
     definition: 'Diferença de tempo contra a referência ao longo da volta: positivo = mais lento.',
   },
   {
-    id: 'zebra',
+    id: 'kerb',
     term: 'Zebra',
     en: 'kerb',
     definition:
       'Faixa listrada na borda da pista; ponto de referência para o ápice e para o limite da pista.',
   },
   {
-    id: 'patinagem',
+    id: 'wheelspin',
     term: 'Patinagem',
     en: 'wheelspin / slip',
     definition:
       'Roda girando mais do que a velocidade do carro; no app, rearSlipPeak e tempo com TCS ativo.',
   },
   {
-    id: 'g-lateral',
+    id: 'lateral-g',
     term: 'Força G lateral',
     en: 'lateral G',
     definition:
       'Aceleração lateral sentida na curva; um indicador de quanta aderência está sendo usada.',
   },
   {
-    id: 'grampo',
+    id: 'hairpin',
     term: 'Grampo',
     en: 'hairpin',
     definition: 'Curva muito fechada (cerca de 180°), com baixa velocidade.',

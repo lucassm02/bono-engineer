@@ -19,14 +19,14 @@ try {
   ]);
   const lapId = seed.sessions[0]!.lapIds[0]!;
   const full = await buildComparisonChart(rt.analysis, { lapId, reference: 'bestReference' });
-  writeFileSync(join(outDir, 'exemplo-grafico.png'), full.png);
+  writeFileSync(join(outDir, 'chart-example.png'), full.png);
   const worst = full.comparison.comparison.topLosses[0]!.corner.id;
   const zoom = await buildComparisonChart(rt.analysis, {
     lapId,
     reference: 'bestReference',
     cornerId: worst,
   });
-  writeFileSync(join(outDir, 'exemplo-grafico-curva.png'), zoom.png);
+  writeFileSync(join(outDir, 'corner-chart-example.png'), zoom.png);
   console.log(`ok: ${full.png.length} B + ${zoom.png.length} B (${worst}) em ${outDir}`);
 } finally {
   await rt.close();

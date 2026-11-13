@@ -1,5 +1,5 @@
 /**
- * #/inicio — the home of the app: the history already organised by track, with no folders and no
+ * #/home — the home of the app: the history already organised by track, with no folders and no
  * setup. One card per track, most recent activity first.
  */
 
@@ -52,7 +52,7 @@ function PhoneQrCard() {
 
   return (
     <aside className="a-phone-card ui-card" aria-label={uiText('Abrir no celular')}>
-      <a href={routes.config('acesso-remoto')}>{uiText('Abrir no celular')}</a>
+      <a href={routes.config('remote-access')}>{uiText('Abrir no celular')}</a>
       <img src={data.qrSvgDataUrl} alt={uiText('QR Code para abrir o ao vivo em outro aparelho')} />
       <p>{uiText('Escaneie na mesma rede Wi-Fi.')}</p>
     </aside>
@@ -236,7 +236,9 @@ function EmptyHome({ hiddenDemo, onShowDemo }: { hiddenDemo: boolean; onShowDemo
       )}
       {!hiddenDemo && (
         <p className="dim">
-          <a href={routes.config('conexao')}>{uiText('Configurar a integração de telemetria')}</a>
+          <a href={routes.config('connection')}>
+            {uiText('Configurar a integração de telemetria')}
+          </a>
         </p>
       )}
       <div className="a-actions a-actions-center">
@@ -348,7 +350,7 @@ export function HomePage() {
               </div>
             </dl>
           )}
-          <a className="a-hero-source" href={routes.config('conexao')}>
+          <a className="a-hero-source" href={routes.config('connection')}>
             <span className="ui-dot" data-tone={isDemo ? 'warn' : 'accent'} />
             <span>{isDemo ? uiText('Fonte das voltas') : uiText('Integração disponível')}</span>
             <strong>{isDemo ? uiText('Demonstração') : GT7_INTEGRATION.name}</strong>

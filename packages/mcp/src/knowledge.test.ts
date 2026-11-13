@@ -91,9 +91,9 @@ describe('get_knowledge (MCP)', () => {
     const page = text(await call('get_knowledge', { topic: 'gr4' }));
     expect(page).toContain('Gr.4');
     expect(page).toContain('Erros comuns');
-    const diag = text(await call('get_knowledge', { topic: 'diagnostico/softBraking' }));
+    const diag = text(await call('get_knowledge', { topic: 'diagnostics/softBraking' }));
     expect(diag).toContain('softBraking');
-    expect(text(await call('get_knowledge', { topic: 'indice' }))).toContain('classe/gr1');
+    expect(text(await call('get_knowledge', { topic: 'indice' }))).toContain('class/gr1');
     const bad = await call('get_knowledge', { topic: 'nao-existe' });
     expect(bad.isError).toBe(true);
     expect(text(bad)).toContain('nao-existe');
@@ -103,12 +103,12 @@ describe('get_knowledge (MCP)', () => {
     const list = await client.listResources();
     expect(list.resources.map((r) => r.uri)).toContain('gt7://knowledge');
     const idx = await client.readResource({ uri: 'gt7://knowledge' });
-    expect((idx.contents[0] as { text: string }).text).toContain('diagnostico/brakeEarlier');
+    expect((idx.contents[0] as { text: string }).text).toContain('diagnostics/brakeEarlier');
     const tpl = await client.listResourceTemplates();
     expect(tpl.resourceTemplates.map((t) => t.uriTemplate)).toContain('gt7://knowledge/{+topic}');
-    const page = await client.readResource({ uri: 'gt7://knowledge/diagnostico/brakeEarlier' });
+    const page = await client.readResource({ uri: 'gt7://knowledge/diagnostics/brakeEarlier' });
     expect((page.contents[0] as { text: string }).text).toContain('Freia mais cedo');
-    const cls = await client.readResource({ uri: 'gt7://knowledge/classe/gr3' });
+    const cls = await client.readResource({ uri: 'gt7://knowledge/class/gr3' });
     expect((cls.contents[0] as { text: string }).text).toContain('Gr.3');
   });
 
@@ -129,7 +129,7 @@ describe('prompts use the knowledge base', () => {
     expect(debrief).toContain('BASE DE CONHECIMENTO DE PILOTAGEM');
     expect(debrief).toContain('Classe Gr.4');
     const plan = trainingPlanTask(rt.store, {});
-    expect(plan).toContain('geral/como-treinar');
+    expect(plan).toContain('general/how-to-practise');
     expect(plan).toContain('Classe Gr.4');
 
     const f = await client.getPrompt({ name: 'foco_curva', arguments: { curva: 'T1' } });

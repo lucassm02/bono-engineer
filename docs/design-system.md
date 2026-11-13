@@ -41,7 +41,7 @@ quem mexer em tela, modal ou CSS segue o que está aqui.
 
 ## 4. Mapa da interface
 
-### 4.1 Painel ao vivo (`#/painel`, tela cheia, tablet em paisagem)
+### 4.1 Painel ao vivo (`#/live`, tela cheia, tablet em paisagem)
 
 | Peça | Arquivos | CSS |
 | --- | --- | --- |
@@ -55,7 +55,7 @@ quem mexer em tela, modal ou CSS segue o que está aqui.
 | **Conexão com o PS5** (chip, painel, assistente inicial) | `ConsoleLink.tsx`, `Onboarding.tsx` | `connection.css` |
 | Captura automática, replay, sessão salva, atualização | `CaptureStatus.tsx`, `ReplayNotice.tsx`, `UpdateNotice.tsx` | `capture-status.css`, `update-notice.css` |
 
-### 4.2 Área de análise (`#/inicio`, `#/analise/*`, `#/captura`, `#/config`, `#/coach`, `#/guia`)
+### 4.2 Área de análise (`#/home`, `#/analysis/*`, `#/capture`, `#/config`, `#/coach`, `#/guide`)
 
 | Peça | Arquivos | CSS |
 | --- | --- | --- |

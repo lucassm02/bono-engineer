@@ -1,5 +1,5 @@
 /**
- * Pure helpers of the reference-capture page (#/captura, Onda 10a): ranking-time parsing with
+ * Pure helpers of the reference-capture page (#/capture, Onda 10a): ranking-time parsing with
  * friendly messages, car names from the catalogue, the car <select> data, driver suggestions,
  * the live "what the app detected" header, progress/guidance of an armed capture, the list of
  * captured references grouped by track. No DOM, no React: everything is unit-tested.

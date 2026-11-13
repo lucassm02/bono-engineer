@@ -32,7 +32,7 @@ export const SITE = {
 };
 
 /**
- * `path` é o caminho publicado ('' = raiz, 'como-instalar/' = pasta com index.html).
+ * `path` é o caminho publicado ('' = raiz, 'install/' = pasta com index.html).
  * `og.lines` quebra o título da imagem de compartilhamento; `og.shot` é a captura usada nela.
  */
 export const PAGES = [
@@ -44,19 +44,19 @@ export const PAGES = [
     title: 'Bono Engineer · Telemetria e engenheiro de pista para GT7',
     description:
       'Telemetria do Gran Turismo 7 no PC, com engenheiro de pista no rádio e comparação de voltas. Grátis para Windows, sem conta e com dados só no seu PC.',
-    og: { lines: ['Seu engenheiro', 'de pista no', 'Gran Turismo 7'], shot: 'ao-vivo' },
+    og: { lines: ['Seu engenheiro', 'de pista no', 'Gran Turismo 7'], shot: 'live-dashboard' },
     ogAlt: 'Tela ao vivo do Bono Engineer com delta, marcha e velocidade',
     alternates: { 'pt-BR': 'home', en: 'en' },
   },
   {
-    id: 'instalar',
-    path: 'como-instalar/',
+    id: 'install',
+    path: 'install/',
     lang: 'pt-BR',
     nav: 'Como instalar',
     title: 'Como instalar a telemetria do GT7 no PS5 · Bono Engineer',
     description:
       'Instale o Bono Engineer no Windows, libere o firewall e conecte o PS5. Passo a passo, aviso do SmartScreen e o que fazer se nada aparecer.',
-    og: { lines: ['Como instalar a', 'telemetria do', 'GT7 no PS5'], shot: 'inicio-por-pista' },
+    og: { lines: ['Como instalar a', 'telemetria do', 'GT7 no PS5'], shot: 'track-history' },
     ogAlt: 'Tela Início por pista do Bono Engineer',
     crumb: 'Como instalar',
   },
@@ -68,13 +68,13 @@ export const PAGES = [
     title: 'Rádio no Discord para GT7 no PS5 · Bono Engineer',
     description:
       'Ouça o engenheiro de pista do Bono no headset do PS5 pelo Discord. Crie o bot, cole o token, convide e escolha o canal de voz. Passo a passo em pt-BR.',
-    og: { lines: ['Engenheiro de', 'pista no headset', 'do PS5'], shot: 'menu-engenheiro' },
+    og: { lines: ['Engenheiro de', 'pista no headset', 'do PS5'], shot: 'engineer-menu' },
     ogAlt: 'Menu do engenheiro do Bono com o rádio e a fala pelo Discord',
     crumb: 'Rádio no Discord',
   },
   {
-    id: 'guia',
-    path: 'guia-de-pilotagem/',
+    id: 'guide',
+    path: 'driving-guide/',
     lang: 'pt-BR',
     nav: 'Guia de pilotagem',
     title: 'Como melhorar a volta no GT7 · Guia de pilotagem do Bono',
@@ -82,7 +82,7 @@ export const PAGES = [
       'Frenagem, ápice, saída e consistência: o que cada número do Bono quer dizer na pista e como treinar uma coisa de cada vez para baixar o tempo de volta.',
     og: {
       lines: ['Como melhorar', 'a volta no GT7', 'Guia de pilotagem'],
-      shot: 'comparar-voltas',
+      shot: 'lap-comparison',
     },
     ogAlt: 'Comparação de duas voltas com velocidade, freio e acelerador sobrepostos',
     crumb: 'Guia de pilotagem',
@@ -95,7 +95,7 @@ export const PAGES = [
     title: 'Bono Engineer · GT7 telemetry and race engineer for PS5',
     description:
       'Free Windows app for Gran Turismo 7 on PlayStation: live telemetry, a race engineer on the radio, lap comparison and Discord voice. Data stays on your PC.',
-    og: { lines: ['Your race', 'engineer for', 'Gran Turismo 7'], shot: 'ao-vivo' },
+    og: { lines: ['Your race', 'engineer for', 'Gran Turismo 7'], shot: 'live-dashboard' },
     ogAlt: 'Bono Engineer Live screen showing delta, gear and speed',
     alternates: { 'pt-BR': 'home', en: 'en' },
   },
@@ -109,7 +109,7 @@ export const NOT_FOUND = {
   title: 'Página não encontrada · Bono Engineer',
   description:
     'Esse endereço não existe no site do Bono Engineer. Volte ao início ou abra um dos guias.',
-  og: { lines: ['Página não', 'encontrada'], shot: 'ao-vivo' },
+  og: { lines: ['Página não', 'encontrada'], shot: 'live-dashboard' },
   ogAlt: 'Tela ao vivo do Bono Engineer',
   noindex: true,
 };

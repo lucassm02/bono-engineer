@@ -5,6 +5,7 @@
 
 import { type ApiStatus, PRODUCT_NAME } from '@gt7/shared';
 import { useState } from 'react';
+import { DesktopUpdateControls } from '../../../components/DesktopUpdate.tsx';
 import { t as uiText } from '../../../lib/i18n.ts';
 import { routes } from '../../../lib/route.ts';
 import { applySwUpdate, useSwUpdate } from '../../../lib/swUpdate.ts';
@@ -50,7 +51,7 @@ function Diagnostics() {
 export function AboutGroup({ status }: { status: ApiStatus }) {
   const updateReady = useSwUpdate((s) => s.available);
   return (
-    <Panel id="sobre" title={uiText('Sobre')}>
+    <Panel id="about" title={uiText('Sobre')}>
       <div className="cfg-list">
         <CfgRow
           title={PRODUCT_NAME}
@@ -62,24 +63,26 @@ export function AboutGroup({ status }: { status: ApiStatus }) {
         >
           <span className="ui-badge">v{status.serverVersion}</span>
         </CfgRow>
-        <CfgRow
-          title={uiText('Atualizações')}
-          description={
-            updateReady
-              ? uiText('Há uma versão nova pronta. Atualizar recarrega a tela.')
-              : uiText('O Bono procura sozinho e avisa quando houver uma versão nova.')
-          }
-        >
-          {updateReady ? (
-            <button type="button" className="ui-btn" onClick={applySwUpdate}>
-              {uiText('Atualizar agora')}
-            </button>
-          ) : (
-            <span className="ui-badge" data-tone="gain">
-              {uiText('Em dia')}
-            </span>
-          )}
-        </CfgRow>
+        {window.bonoUpdates ? (
+          <CfgRow title={uiText('Atualizações')} wide>
+            <DesktopUpdateControls />
+          </CfgRow>
+        ) : (
+          <CfgRow
+            title={uiText('Atualizações')}
+            description={
+              updateReady
+                ? uiText('Há uma versão nova pronta. Atualizar recarrega a tela.')
+                : uiText('O Bono procura sozinho e avisa quando houver uma versão nova.')
+            }
+          >
+            {updateReady ? (
+              <button type="button" className="ui-btn" onClick={applySwUpdate}>
+                {uiText('Atualizar agora')}
+              </button>
+            ) : null}
+          </CfgRow>
+        )}
         <CfgRow
           title={uiText('Central de ajuda')}
           description={uiText('Passo a passo para configurar o Bono, problemas comuns e atalhos.')}

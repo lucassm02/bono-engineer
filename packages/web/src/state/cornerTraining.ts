@@ -63,7 +63,7 @@ export function announceCornerPass(pass: CornerPass, a: PassAssessment): void {
   const { audio, pinnedCornerId } = useCornerTraining.getState();
   if (!audio || !a.phrase) return;
   if (useEngineer.getState().enabled) return;
-  if (useUi.getState().currentView !== 'treinoCurva') return;
+  if (useUi.getState().currentView !== 'cornerDrill') return;
   if (pinnedCornerId && pass.cornerId !== pinnedCornerId) return;
   const now = Date.now();
   if (pass.seq === lastSpokenSeq || now - lastSpokenAt < MIN_GAP_MS) return;

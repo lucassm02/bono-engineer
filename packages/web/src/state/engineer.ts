@@ -55,7 +55,7 @@ const initialControls = migrateRadioControls(savedControls);
 if (savedControls && JSON.stringify(savedControls) !== JSON.stringify(initialControls))
   saveJson(RADIO_KEY, initialControls);
 /** Playback rate of the neural clips per pace (pitch follows the rate). */
-export const ENGINEER_PACES = { calma: 0.94, normal: 1, rapida: 1.08 } as const;
+export const ENGINEER_PACES = { calm: 0.94, normal: 1, fast: 1.08 } as const;
 export type EngineerPace = keyof typeof ENGINEER_PACES;
 
 /** Saved `gt7.engineer.voice` → current voice ID and pace (see migrateRadioVoice). */
@@ -64,7 +64,9 @@ export function migrateVoicePrefs(saved: unknown): { voiceUri: string; pace: Eng
     voiceUri?: unknown;
     pace?: unknown;
   };
-  const pace = prefs.pace === 'calma' || prefs.pace === 'rapida' ? prefs.pace : 'normal';
+  // `calma` and `rapida` are the ids saved before they were renamed to English
+  const named = prefs.pace === 'calma' ? 'calm' : prefs.pace === 'rapida' ? 'fast' : prefs.pace;
+  const pace: EngineerPace = named === 'calm' || named === 'fast' ? named : 'normal';
   return { voiceUri: migrateRadioVoice(prefs.voiceUri), pace };
 }
 

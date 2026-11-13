@@ -187,7 +187,7 @@ const SHORTCUTS: readonly { keys: readonly string[]; text: () => string }[] = [
   { keys: ['Esc'], text: () => uiText('fecha menu, seletor ou tour') },
 ];
 
-/** Ajuda: o tour, a central de ajuda (`#/ajuda`), o assistente inicial e os atalhos de teclado. */
+/** Ajuda: o tour, a central de ajuda (`#/help`), o assistente inicial e os atalhos de teclado. */
 function HelpTab() {
   return (
     <div className="bn-stack">
@@ -426,7 +426,7 @@ export function LiveMenuSheet() {
       <a
         className="ui-btn"
         data-variant="secondary"
-        href={routes.config('acesso-remoto')}
+        href={routes.config('remote-access')}
         onClick={closeMenu}
       >
         <Icon name="remote" size={18} />

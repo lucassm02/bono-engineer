@@ -41,20 +41,20 @@ const byId = (items: ReturnType<typeof buildHealth>, id: string) => items.find((
 describe('resolveConfigTarget (âncoras antigas → grupo novo)', () => {
   it('mapeia cada âncora antiga para o grupo certo', () => {
     const cases: Record<string, [string, string | undefined]> = {
-      idioma: ['contas', 'idioma'],
-      conexao: ['console', 'conexao'],
-      captura: ['console', 'captura'],
-      'acesso-remoto': ['painel', 'acesso-remoto'],
-      lan: ['painel', 'acesso-remoto'],
-      celular: ['painel', 'acesso-remoto'],
-      dispositivos: ['painel', 'dispositivos'],
-      aparelhos: ['painel', 'dispositivos'],
-      discord: ['contas', 'discord'],
-      coach: ['contas', 'coach'],
-      dados: ['contas', 'dados'],
-      mcp: ['contas', 'mcp'],
-      ia: ['contas', 'mcp'],
-      sobre: ['sobre', undefined],
+      idioma: ['accounts', 'language'],
+      conexao: ['console', 'connection'],
+      captura: ['console', 'capture'],
+      'remote-access': ['display', 'remote-access'],
+      lan: ['display', 'remote-access'],
+      celular: ['display', 'remote-access'],
+      dispositivos: ['display', 'devices'],
+      aparelhos: ['display', 'devices'],
+      discord: ['accounts', 'discord'],
+      coach: ['accounts', 'coach'],
+      dados: ['accounts', 'data'],
+      mcp: ['accounts', 'mcp'],
+      ia: ['accounts', 'mcp'],
+      sobre: ['about', undefined],
       console: ['console', undefined],
     };
     for (const [old, [group, anchor]] of Object.entries(cases)) {
@@ -66,10 +66,10 @@ describe('resolveConfigTarget (âncoras antigas → grupo novo)', () => {
 
   it('aceita os ids dos grupos novos e cai no Início quando não conhece', () => {
     for (const id of CONFIG_GROUP_IDS) expect(resolveConfigTarget(id)).toEqual({ group: id });
-    expect(resolveConfigTarget(undefined).group).toBe('inicio');
-    expect(resolveConfigTarget('').group).toBe('inicio');
-    expect(resolveConfigTarget('nao-existe').group).toBe('inicio');
-    expect(resolveConfigTarget(' MCP ').group).toBe('contas');
+    expect(resolveConfigTarget(undefined).group).toBe('overview');
+    expect(resolveConfigTarget('').group).toBe('overview');
+    expect(resolveConfigTarget('nao-existe').group).toBe('overview');
+    expect(resolveConfigTarget(' MCP ').group).toBe('accounts');
   });
 });
 
@@ -83,7 +83,7 @@ describe('busca', () => {
   it('“delta” encontra uma única linha (referência do delta em um só lugar)', () => {
     const hits = searchConfig('delta', CONFIG_ENTRIES, { desktop: true });
     expect(hits).toHaveLength(1);
-    expect(hits[0]?.group).toBe('engenheiro');
+    expect(hits[0]?.group).toBe('engineer');
   });
 
   it('ignora acentos e exige todas as palavras', () => {
@@ -180,7 +180,7 @@ describe('HealthSummary por estado', () => {
       byId(buildHealth({ ...base, discord: x }), 'discord');
     expect(d({ configured: false, enabled: false, error: false })).toMatchObject({
       tone: 'off',
-      action: { kind: 'goto', target: { group: 'contas', anchor: 'discord' } },
+      action: { kind: 'goto', target: { group: 'accounts', anchor: 'discord' } },
     });
     expect(d({ configured: true, enabled: true, error: false }).tone).toBe('ok');
     expect(d({ configured: true, enabled: false, error: false }).tone).toBe('off');
@@ -202,11 +202,11 @@ describe('HealthSummary por estado', () => {
     );
     expect(byId(buildHealth(base), 'devices')).toMatchObject({
       tone: 'off',
-      action: { target: { group: 'painel', anchor: 'acesso-remoto' } },
+      action: { target: { group: 'display', anchor: 'remote-access' } },
     });
     expect(byId(buildHealth({ ...base, firewall: 'missing' }), 'devices')).toMatchObject({
       tone: 'warn',
-      action: { label: 'Corrigir', target: { group: 'painel', anchor: 'firewall' } },
+      action: { label: 'Corrigir', target: { group: 'display', anchor: 'firewall' } },
     });
     // com aparelho online o firewall não importa
     expect(
@@ -225,11 +225,11 @@ describe('HealthSummary por estado', () => {
 describe('presets de telas', () => {
   it('cada preset é reconhecido pela própria lista de telas', () => {
     for (const p of SCREEN_PRESETS) expect(matchScreenPreset(p.views)).toBe(p.id);
-    expect(matchScreenPreset(['mapa'])).toBeNull();
+    expect(matchScreenPreset(['map'])).toBeNull();
   });
 
   it('a ordem importa e todos começam por Corrida', () => {
-    expect(matchScreenPreset(['deltaGrande', 'corrida'])).toBeNull();
-    for (const p of SCREEN_PRESETS) expect(p.views[0]).toBe('corrida');
+    expect(matchScreenPreset(['bigDelta', 'race'])).toBeNull();
+    for (const p of SCREEN_PRESETS) expect(p.views[0]).toBe('race');
   });
 });

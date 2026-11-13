@@ -7,7 +7,6 @@ import { Component, type ReactNode, useEffect } from 'react';
 import { CaptureStatus, SessionSavedToast } from '../components/CaptureStatus.tsx';
 import { ConsoleChip, ConsolePanelHost } from '../components/ConsoleLink.tsx';
 import { ProductBrand } from '../components/ProductBrand.tsx';
-import { UpdateNotice } from '../components/UpdateNotice.tsx';
 import { Icon, type IconName } from '../components/ui/Icon.tsx';
 import { t as uiText } from '../lib/i18n.ts';
 import type { Route } from '../lib/route.ts';
@@ -339,7 +338,7 @@ export default function AnalysisApp({ route }: { route: Route }) {
             <NavLink key={n.label} item={n} route={route} />
           ))}
           <NavLink item={HELP} route={route} className="a-nav-end a-nav-help" />
-          <a className="a-nav-phone" href={routes.config('acesso-remoto')}>
+          <a className="a-nav-phone" href={routes.config('remote-access')}>
             <Icon name="remote" size={22} />
             <span>{uiText('Abrir no celular')}</span>
           </a>
@@ -372,7 +371,6 @@ export default function AnalysisApp({ route }: { route: Route }) {
       <Toasts />
       <SessionSavedToast />
       <ConsolePanelHost />
-      <UpdateNotice />
     </div>
   );
 }

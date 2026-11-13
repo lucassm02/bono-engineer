@@ -160,16 +160,16 @@ button {
 
 /* Cartões das telas: uma superfície só, um assunto por cartão. */
 :is(
-  .corrida-delta,
-  .corrida-gear,
-  .corrida-speed,
+  .race-delta,
+  .race-gear,
+  .race-speed,
   .time-cell,
   .stat,
   .tyre-card,
-  .mapa-delta,
-  .mapa-corner,
-  .tempos-stat,
-  .tempos-table-wrap,
+  .map-delta,
+  .map-corner,
+  .times-stat,
+  .times-table-wrap,
   .motor-rpm,
   .motor-gear,
   .inputs-pedals,
@@ -177,7 +177,7 @@ button {
   .inputs-chart,
   .fuel-main,
   .widget-cell,
-  .forcas-peaks-wrap
+  .gforces-peaks-wrap
 ) {
   min-width: 0;
   background: var(--surface-2);
@@ -666,10 +666,10 @@ button {
     "times times times"
     "sectors sectors sectors";
 }
-.corrida-lights {
+.race-lights {
   grid-area: lights;
 }
-.corrida-meta {
+.race-meta {
   grid-area: meta;
   display: flex;
   align-items: center;
@@ -682,20 +682,20 @@ button {
   font-weight: 650;
 }
 
-.corrida-delta,
-.mapa-delta {
+.race-delta,
+.map-delta {
   border-color: color-mix(in srgb, var(--tone) 38%, var(--line-soft));
   background: color-mix(in srgb, var(--tone) 9%, var(--surface-2));
   transition:
     background var(--dur) linear,
     border-color var(--dur) linear;
 }
-.corrida-delta[data-tone="neutral"],
-.mapa-delta[data-tone="neutral"] {
+.race-delta[data-tone="neutral"],
+.map-delta[data-tone="neutral"] {
   border-color: var(--line-soft);
   background: var(--surface-2);
 }
-.corrida-delta {
+.race-delta {
   grid-area: delta;
   display: flex;
   flex-direction: column;
@@ -703,7 +703,7 @@ button {
   gap: var(--sp-1);
   padding: var(--pad-y) var(--pad-x);
 }
-.corrida-delta-value {
+.race-delta-value {
   font-size: min(13.2cqw, 25cqh);
   font-weight: 700;
   line-height: 0.95;
@@ -715,8 +715,8 @@ button {
   vertical-align: 0.9em;
   margin-left: 0.15em;
 }
-.corrida-gear,
-.corrida-speed {
+.race-gear,
+.race-speed {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -724,7 +724,7 @@ button {
   gap: var(--sp-1);
   padding: var(--pad-y) var(--pad-x);
 }
-.corrida-gear {
+.race-gear {
   grid-area: gear;
   border-color: var(--accent-line);
   background: linear-gradient(180deg, var(--accent-soft), transparent 75%), var(--surface-2);
@@ -735,7 +735,7 @@ button {
   line-height: 0.9;
   color: var(--accent);
 }
-.corrida-speed {
+.race-speed {
   grid-area: speed;
 }
 .speed-value {
@@ -743,10 +743,10 @@ button {
   font-weight: 650;
   line-height: 0.95;
 }
-.corrida-bar {
+.race-bar {
   grid-area: bar;
 }
-.corrida-times {
+.race-times {
   grid-area: times;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -770,7 +770,7 @@ button {
 .time-cell-key .num {
   color: var(--accent);
 }
-.corrida-sectors {
+.race-sectors {
   grid-area: sectors;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -791,13 +791,13 @@ button {
       "times times"
       "sectors sectors";
   }
-  .corrida-delta-value {
+  .race-delta-value {
     font-size: min(22cqw, 12cqh);
   }
   /* Em pé, com o cartão do engenheiro aberto a linha de marcha/velocidade fica baixa: o número
      passa a medir o próprio cartão (container size) e nunca vaza para a barra de delta. */
-  .corrida-gear,
-  .corrida-speed {
+  .race-gear,
+  .race-speed {
     container-type: size;
     min-height: 0;
   }
@@ -808,38 +808,38 @@ button {
     font-size: max(18px, min(34cqw, 42cqh));
   }
   @container (max-height: 38px) {
-    .corrida-gear .readout-label,
-    .corrida-speed .readout-label {
+    .race-gear .readout-label,
+    .race-speed .readout-label {
       display: none;
     }
   }
-  .corrida-times {
+  .race-times {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     row-gap: var(--sp-2);
   }
   .time-cell .num {
     font-size: min(8cqw, 4.8cqh);
   }
-  .corrida-sectors {
+  .race-sectors {
     font-size: min(5cqw, 3cqh);
     gap: var(--sp-1);
   }
-  .corrida-sectors .sector {
+  .race-sectors .sector {
     flex-wrap: wrap;
     gap: 0 var(--sp-1);
     padding-inline: var(--sp-1);
   }
-  .corrida-sectors .sector-delta {
+  .race-sectors .sector-delta {
     margin-left: 0;
   }
-  .app:has(.engineer-hud) .corrida-delta-value {
+  .app:has(.engineer-hud) .race-delta-value {
     font-size: min(17cqw, 9cqh);
   }
   @container live-slide (max-height: 650px) {
-    .corrida .corrida-delta-value {
+    .corrida .race-delta-value {
       font-size: min(15cqw, 8cqh);
     }
-    .corrida-times {
+    .race-times {
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: var(--sp-1);
     }
@@ -943,7 +943,7 @@ button {
 .tyre-card-3 {
   grid-area: rr;
 }
-.pneus-car {
+.tyres-car {
   grid-area: car;
   display: grid;
   place-items: center;

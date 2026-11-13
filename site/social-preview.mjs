@@ -16,9 +16,9 @@ const FONT =
   "Bahnschrift, 'DIN Alternate', 'Arial Narrow', 'DejaVu Sans Condensed', Arial, sans-serif";
 
 export function socialSvg() {
-  // English capture (npm run site:shots -- --lang en --only ao-vivo --out docs/social); falls back to the site's.
-  const english = join(SITE_DIR, '..', 'docs', 'social', 'ao-vivo.png');
-  const shot = existsSync(english) ? english : join(SITE_DIR, 'assets', 'shots', 'ao-vivo.png');
+  // English capture (npm run site:shots -- --lang en --only live-dashboard --out docs/social); falls back to the site's.
+  const english = join(SITE_DIR, '..', 'docs', 'social', 'live-dashboard.png');
+  const shot = existsSync(english) ? english : join(SITE_DIR, 'assets', 'shots', 'live-dashboard.png');
   const { w, h } = pngSize(shot);
   const data = readFileSync(shot).toString('base64');
   // Dashboard bleeds off the right and bottom edges, inside a card with a border.

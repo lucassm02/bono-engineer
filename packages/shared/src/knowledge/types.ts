@@ -10,18 +10,18 @@ import type { CarGroup } from '../cars/catalog.ts';
 
 /**
  * How solid a statement is:
- * - `regra-geral`: universal driving/vehicle-dynamics principle, not validated in GT7 by this app;
- * - `depende-do-carro`: true for some cars/drivetrains only, check the car before applying;
+ * - `general-rule`: universal driving/vehicle-dynamics principle, not validated in GT7 by this app;
+ * - `car-dependent`: true for some cars/drivetrains only, check the car before applying;
  * - `fonte`: summarised from a cited source (see `src`);
- * - `baixa-evidencia`: our best synthesis with little or no external support (N-classes, Gr.2…).
+ * - `limited-evidence`: our best synthesis with little or no external support (N-classes, Gr.2…).
  */
-export type Basis = 'regra-geral' | 'depende-do-carro' | 'fonte' | 'baixa-evidencia';
+export type Basis = 'general-rule' | 'car-dependent' | 'sources' | 'limited-evidence';
 
 export const BASIS_LABELS: Record<Basis, string> = {
-  'regra-geral': 'regra geral',
-  'depende-do-carro': 'depende do carro',
-  fonte: 'segundo fonte',
-  'baixa-evidencia': 'pouca evidência',
+  'general-rule': 'regra geral',
+  'car-dependent': 'depende do carro',
+  sources: 'segundo fonte',
+  'limited-evidence': 'pouca evidência',
 };
 
 /** One statement of the base. */
@@ -86,7 +86,13 @@ export interface CarClassKnowledge {
   src: readonly string[];
 }
 
-export type DiagnosticArea = 'frenagem' | 'meio' | 'saida' | 'linha' | 'tecnica' | 'dados';
+export type DiagnosticArea =
+  | 'braking'
+  | 'mid-corner'
+  | 'exit'
+  | 'racing-line'
+  | 'technique'
+  | 'data';
 
 export interface DiagnosticKnowledge {
   code: string;
@@ -112,7 +118,7 @@ export interface SetupEntry {
   /** What the driver feels / the telemetry shows. */
   symptom: string;
   /** Where in the corner. */
-  phase: 'entrada' | 'meio' | 'saida' | 'frenagem' | 'reta' | 'geral';
+  phase: 'entry' | 'mid-corner' | 'exit' | 'braking' | 'straight' | 'general';
   /** App diagnostics that point to this symptom. */
   diagnostics: readonly string[];
   likelyCause: string;
@@ -130,10 +136,10 @@ export interface GlossaryTerm {
   definition: string;
 }
 
-export type TopicKind = 'geral' | 'classe' | 'diagnostico' | 'afinacao' | 'glossario' | 'fonte';
+export type TopicKind = 'general' | 'class' | 'diagnostics' | 'setup' | 'glossary' | 'sources';
 
 export interface TopicRef {
-  /** Unique id used by `get_knowledge(topic)`: `geral/<id>`, `classe/<grupo>`, `diagnostico/<code>`… */
+  /** Unique id used by `get_knowledge(topic)`: `general/<id>`, `class/<grupo>`, `diagnostics/<code>`… */
   id: string;
   kind: TopicKind;
   title: string;

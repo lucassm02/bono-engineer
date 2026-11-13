@@ -1,6 +1,6 @@
 /**
  * Sources of the driving knowledge base. All were consulted on 2026-11-09 (see
- * docs/pesquisa/frenagem-referencias-e-conhecimento.md and docs/pesquisa/carros-bop-e-setups.md);
+ * docs/research/braking-and-driving-knowledge.md and docs/research/cars-bop-and-setups.md);
  * statements are summaries in our own words, never copied text.
  */
 

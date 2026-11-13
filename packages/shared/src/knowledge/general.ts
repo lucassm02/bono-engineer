@@ -10,19 +10,19 @@ import type { GeneralTopic, KnowledgeCornerKind, Tip } from './types.ts';
 
 const rg = (text: string, ...src: string[]): Tip => ({
   text,
-  basis: 'regra-geral',
+  basis: 'general-rule',
   ...(src.length ? { src } : {}),
 });
 const dc = (text: string, ...src: string[]): Tip => ({
   text,
-  basis: 'depende-do-carro',
+  basis: 'car-dependent',
   ...(src.length ? { src } : {}),
 });
-const fo = (text: string, ...src: string[]): Tip => ({ text, basis: 'fonte', src });
+const fo = (text: string, ...src: string[]): Tip => ({ text, basis: 'sources', src });
 
 export const GENERAL_TOPICS: readonly GeneralTopic[] = [
   {
-    id: 'ponto-de-frenagem',
+    id: 'braking-point',
     title: 'Ponto de frenagem',
     summary:
       'Onde o pé sai do acelerador e vai ao freio. O ganho está em chegar ao ápice com a velocidade certa, não em frear o mais tarde possível.',
@@ -55,7 +55,7 @@ export const GENERAL_TOPICS: readonly GeneralTopic[] = [
     ],
   },
   {
-    id: 'pressao-de-freio',
+    id: 'brake-pressure',
     title: 'Pressão e modulação do freio',
     summary:
       'Pise firme e cedo, alivie progressivamente. A pressão certa muda com a velocidade, a aerodinâmica e as assistências.',
@@ -112,7 +112,7 @@ export const GENERAL_TOPICS: readonly GeneralTopic[] = [
     ],
   },
   {
-    id: 'rotacao',
+    id: 'rotation',
     title: 'Rotação do carro (entrada e ápice)',
     summary:
       'Fazer o carro apontar para o ápice sem perder aderência dianteira nem soltar a traseira.',
@@ -137,7 +137,7 @@ export const GENERAL_TOPICS: readonly GeneralTopic[] = [
     ],
   },
   {
-    id: 'saida-e-aceleracao',
+    id: 'exit-and-throttle',
     title: 'Saída e retomada do acelerador',
     summary:
       'A saída vale tempo em toda a reta seguinte. Acelere assim que o carro estiver apontado, de forma progressiva.',
@@ -165,7 +165,7 @@ export const GENERAL_TOPICS: readonly GeneralTopic[] = [
     ],
   },
   {
-    id: 'linha',
+    id: 'racing-line',
     title: 'Linha e uso da pista',
     summary:
       'Entrar aberto, passar o ápice rente à zebra e abrir a saída até a borda: use a largura toda.',
@@ -189,7 +189,7 @@ export const GENERAL_TOPICS: readonly GeneralTopic[] = [
     ],
   },
   {
-    id: 'pneus',
+    id: 'tyres',
     title: 'Pneus',
     summary: 'Aderência cai com desgaste e superaquecimento; ao virar cedo o pneu da frente sofre.',
     points: [
@@ -212,7 +212,7 @@ export const GENERAL_TOPICS: readonly GeneralTopic[] = [
     ],
   },
   {
-    id: 'consistencia',
+    id: 'consistency',
     title: 'Consistência',
     summary:
       'Separe erro de técnica (sempre igual) de erro de consistência (varia entre voltas); cada um se treina de um jeito.',
@@ -236,7 +236,7 @@ export const GENERAL_TOPICS: readonly GeneralTopic[] = [
     ],
   },
   {
-    id: 'assistencias',
+    id: 'assists',
     title: 'Assistências (ABS, TCS, ASM) e balanço de freio',
     summary:
       'As assistências mudam o que é possível fazer no pedal. Mexa uma por vez e meça no app.',
@@ -264,7 +264,7 @@ export const GENERAL_TOPICS: readonly GeneralTopic[] = [
     ],
   },
   {
-    id: 'layout-tracao',
+    id: 'drivetrain',
     title: 'Layout e tração (FF, FR, MR, 4WD)',
     summary:
       'O catálogo do app só diz o grupo do carro, não a tração. Pergunte ao piloto ou observe o comportamento antes de ajustar o conselho.',
@@ -289,7 +289,7 @@ export const GENERAL_TOPICS: readonly GeneralTopic[] = [
     ],
   },
   {
-    id: 'como-treinar',
+    id: 'how-to-practise',
     title: 'Como treinar (exercícios mensuráveis)',
     summary: 'Um foco por sessão, cinco voltas, meta numérica que o app consegue conferir.',
     points: [
@@ -380,6 +380,6 @@ export const COACH_RULES: readonly string[] = [
   'Diga quando a recomendação é "regra geral" e quando "depende do carro"; não afirme o que a base marca como pouca evidência.',
   'NUNCA invente pontos de frenagem absolutos (distâncias, placas, marcas de pista): o app só conhece os medidos nas voltas do piloto e nas referências capturadas.',
   'Proponha UMA ação principal por curva e um exercício de 5 voltas com critério medível.',
-  'Se o carro da referência for de outra classe/carro, avise que frenagem, V-mín e marcha não são comparáveis 1:1.',
+  'Se o carro da referência for de outra class/carro, avise que frenagem, V-mín e marcha não são comparáveis 1:1.',
   'Mudanças de afinação: só como hipótese, uma por vez, em passos pequenos, e depois de a técnica estar estável.',
 ];

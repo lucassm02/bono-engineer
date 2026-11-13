@@ -34,6 +34,9 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - name: Build Windows installer and portable app
+        env:
+          WIN_CSC_LINK: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && secrets.WIN_CSC_LINK || '' }}
+          WIN_CSC_KEY_PASSWORD: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && secrets.WIN_CSC_KEY_PASSWORD || '' }}
         run: npm run desktop:dist -- --publish never
       - name: Stage Windows binaries
         shell: pwsh
@@ -44,6 +47,11 @@ jobs:
           $destination = "$env:RUNNER_TEMP/bono-release"
           Copy-Item -LiteralPath "packages/desktop/release/Bono-Engineer-Setup-${env:VERSION}.exe" -Destination $destination
           Copy-Item -LiteralPath "packages/desktop/release/Bono-Engineer-${env:VERSION}-portable.exe" -Destination $destination
+          Copy-Item -LiteralPath "packages/desktop/release/Bono-Engineer-Setup-${env:VERSION}.exe.blockmap" -Destination $destination
+          Copy-Item -LiteralPath "packages/desktop/release/latest.yml" -Destination $destination
+          Copy-Item -LiteralPath "packages/desktop/dist/release-notes.json" -Destination $destination
+          node scripts/check-update-artifacts.mjs $destination "packages/desktop/release/win-unpacked/resources/app-update.yml" $env:VERSION
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/upload-artifact@v7
         with:
           name: bono-engineer-windows-${{ steps.release.outputs.version }}
@@ -56,7 +64,7 @@ jobs:
     needs: windows
     runs-on: ubuntu-latest
     concurrency:
-      group: windows-release-${{ needs.windows.outputs.tag }}
+      group: windows-release
       cancel-in-progress: false
     permissions:
       contents: write
@@ -72,22 +80,35 @@ jobs:
           VERSION: ${{ needs.windows.outputs.version }}
           TAG: ${{ needs.windows.outputs.tag }}
         run: |
-          draft="$(gh release view "$TAG" --json isDraft --jq '.isDraft' 2>/dev/null || true)"
+          set -euo pipefail
+          existing="$(gh release list --limit 100 --json tagName,isDraft,isPrerelease)"
+          draft="$(jq -r --arg tag "$TAG" '.[] | select(.tagName == $tag) | .isDraft' <<< "$existing")"
           if [[ "$draft" == false ]]; then
             echo "$TAG is already published."
             exit 0
           fi
-          if [[ "$draft" == true ]]; then
-            echo "::error::A draft release already exists for $TAG."
+          newest="$(jq -r '.[] | select(.isDraft == false and .isPrerelease == false) | .tagName' <<< "$existing" | sed -nE '/^v[0-9]+\.[0-9]+\.[0-9]+$/p' | sort -V | tail -n 1)"
+          if [[ -n "$newest" && "$(printf '%s\n' "$newest" "$TAG" | sort -V | tail -n 1)" != "$TAG" ]]; then
+            echo "::error::A newer stable version ($newest) is already published."
             exit 1
           fi
           if existing_commit="$(gh api "repos/$GH_REPO/commits/$TAG" --jq '.sha' 2>/dev/null)" && [[ "$existing_commit" != "$GITHUB_SHA" ]]; then
             echo "::error::Tag $TAG already points to another commit."
             exit 1
           fi
-          gh release create "$TAG" \
-            --target "$GITHUB_SHA" \
-            --title "Bono Engineer $VERSION" \
-            --notes-file release/release-notes.md \
+          if [[ "$draft" == true ]]; then
+            target="$(gh release view "$TAG" --json targetCommitish --jq '.targetCommitish')"
+            if [[ "$target" != "$GITHUB_SHA" ]]; then
+              echo "::error::Draft $TAG targets another commit."
+              exit 1
+            fi
+          else
+            gh release create "$TAG" --draft --target "$GITHUB_SHA" \
+              --title "Bono Engineer $VERSION" --notes-file release/release-notes.md
+          fi
+          gh release upload "$TAG" --clobber \
             "release/Bono-Engineer-Setup-$VERSION.exe" \
-            "release/Bono-Engineer-$VERSION-portable.exe"
+            "release/Bono-Engineer-Setup-$VERSION.exe.blockmap" \
+            "release/Bono-Engineer-$VERSION-portable.exe" \
+            "release/latest.yml" "release/release-notes.json"
+          gh release edit "$TAG" --draft=false --latest

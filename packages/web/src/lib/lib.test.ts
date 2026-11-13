@@ -171,22 +171,22 @@ describe('profile reducer', () => {
 
   it('toggles views and keeps at least one', () => {
     let p = base();
-    p = reduceProfile(p, { type: 'toggleView', view: 'mapa' }, 10);
-    expect(p.views.at(-1)).toBe('mapa');
+    p = reduceProfile(p, { type: 'toggleView', view: 'map' }, 10);
+    expect(p.views.at(-1)).toBe('map');
     expect(p.updatedAt).toBe(10);
-    p = reduceProfile(p, { type: 'toggleView', view: 'corrida' }, 11);
-    expect(p.views).not.toContain('corrida');
+    p = reduceProfile(p, { type: 'toggleView', view: 'race' }, 11);
+    expect(p.views).not.toContain('race');
     expect(p.startView).toBe(p.views[0]); // start view moved off the disabled one
-    let single: DeviceProfile = { ...base(), views: ['pneus'], startView: 'pneus' };
-    single = reduceProfile(single, { type: 'toggleView', view: 'pneus' }, 12);
-    expect(single.views).toEqual(['pneus']);
+    let single: DeviceProfile = { ...base(), views: ['tyres'], startView: 'tyres' };
+    single = reduceProfile(single, { type: 'toggleView', view: 'tyres' }, 12);
+    expect(single.views).toEqual(['tyres']);
   });
 
   it('moves views up and down within bounds', () => {
     let p = base();
-    p = reduceProfile(p, { type: 'moveView', view: 'pneus', by: -1 }, 1);
-    expect(p.views.slice(0, 3)).toEqual(['corrida', 'pneus', 'deltaGrande']);
-    const same = reduceProfile(p, { type: 'moveView', view: 'corrida', by: -1 }, 2);
+    p = reduceProfile(p, { type: 'moveView', view: 'tyres', by: -1 }, 1);
+    expect(p.views.slice(0, 3)).toEqual(['race', 'tyres', 'bigDelta']);
+    const same = reduceProfile(p, { type: 'moveView', view: 'race', by: -1 }, 2);
     expect(same).toBe(p);
     const last = p.views.at(-1)!;
     expect(reduceProfile(p, { type: 'moveView', view: last, by: 1 }, 3)).toBe(p);
@@ -194,8 +194,8 @@ describe('profile reducer', () => {
 
   it('start view must be enabled', () => {
     const p = base();
-    expect(reduceProfile(p, { type: 'setStartView', view: 'mapa' }, 1)).toBe(p);
-    expect(reduceProfile(p, { type: 'setStartView', view: 'motor' }, 1).startView).toBe('motor');
+    expect(reduceProfile(p, { type: 'setStartView', view: 'map' }, 1)).toBe(p);
+    expect(reduceProfile(p, { type: 'setStartView', view: 'engine' }, 1).startView).toBe('engine');
   });
 
   it('toggles and disabled list', () => {
@@ -203,12 +203,12 @@ describe('profile reducer', () => {
     expect(p.popupsEnabled).toBe(false);
     expect(reduceProfile(p, { type: 'setLocked', locked: true }, 6).locked).toBe(true);
     expect(disabledViews(base())).toEqual([
-      'mapa',
-      'tempos',
-      'combustivel',
-      'forcasG',
-      'treinoCurva',
-      'personalizada',
+      'map',
+      'times',
+      'fuel',
+      'gForces',
+      'cornerDrill',
+      'custom',
     ]);
   });
 
@@ -220,7 +220,7 @@ describe('profile reducer', () => {
   });
 
   it('reconcile: newest wins', () => {
-    const local = { ...base(), updatedAt: 50, startView: 'motor' as const };
+    const local = { ...base(), updatedAt: 50, startView: 'engine' as const };
     const remote = { ...base(), updatedAt: 20 };
     expect(reconcileProfiles(local, remote)).toEqual({ profile: local, pushToServer: true });
     expect(reconcileProfiles(null, remote).pushToServer).toBe(false);

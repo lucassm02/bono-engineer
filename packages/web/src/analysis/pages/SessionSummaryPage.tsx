@@ -1,5 +1,5 @@
 /**
- * #/analise/sessao/:id/resumo — the session in one screen (spec 12): best lap against the driver's
+ * #/analysis/session/:id/summary — the session in one screen (spec 12): best lap against the driver's
  * record, pace, consistency, comparison with the last/best session or the goal, where corners were
  * gained and lost, and up to three rule-made suggestions for next time.
  */

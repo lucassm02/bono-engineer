@@ -93,7 +93,7 @@ describe('WsHub', () => {
   it('requires hello, validates messages and tracks devices/views', async () => {
     const s = new FakeSocket();
     hub.attach(s);
-    s.receive({ type: 'currentView', view: 'pneus' });
+    s.receive({ type: 'currentView', view: 'tyres' });
     expect(JSON.parse(s.sent.at(-1)!)).toMatchObject({ type: 'notice', code: 'helloRequired' });
     s.receive({ type: 'hello', protocolVersion: WS_PROTOCOL_VERSION, deviceId: '../etc' });
     expect(JSON.parse(s.sent.at(-1)!)).toMatchObject({ code: 'badDeviceId' });
@@ -102,9 +102,9 @@ describe('WsHub', () => {
     expect(s.sent.some((m) => m.includes('protocolMismatch'))).toBe(true);
     s.receive({ type: 'currentView', view: 'naoExiste' });
     expect(JSON.parse(s.sent.at(-1)!)).toMatchObject({ code: 'badMessage' });
-    s.receive({ type: 'currentView', view: 'pneus' });
+    s.receive({ type: 'currentView', view: 'tyres' });
     expect(hub.devices()).toEqual([
-      expect.objectContaining({ deviceId: 'phone-1', name: 'Celular', currentView: 'pneus' }),
+      expect.objectContaining({ deviceId: 'phone-1', name: 'Celular', currentView: 'tyres' }),
     ]);
     s.receive({ type: 'setPacketFormat', format: 'Z' });
     expect(JSON.parse(s.sent.at(-1)!)).toMatchObject({ code: 'badMessage' });

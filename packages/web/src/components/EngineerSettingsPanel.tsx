@@ -48,7 +48,7 @@ const pickOption = <T extends string>(values: readonly T[], value: string, fallb
 const SPEECH_LEVELS = ['essential', 'detailed', 'mute'] as const;
 const PACES: readonly { id: EngineerPace; label: string }[] = [
   {
-    id: 'calma',
+    id: 'calm',
     get label() {
       return uiText('Calmo');
     },
@@ -60,7 +60,7 @@ const PACES: readonly { id: EngineerPace; label: string }[] = [
     },
   },
   {
-    id: 'rapida',
+    id: 'fast',
     get label() {
       return uiText('Rápido');
     },
@@ -185,7 +185,7 @@ export function EngineerSettingsPanel({ openMore }: { openMore?: boolean }) {
 
   return (
     <div className="cfg-stack">
-      <section className="ui-card" id="engenheiro-basico" aria-label={uiText('Engenheiro')}>
+      <section className="ui-card" id="engineer-basic" aria-label={uiText('Engenheiro')}>
         <div className="cfg-list">
           <CfgToggle
             id="engineer-on"
@@ -397,7 +397,7 @@ export function EngineerSettingsPanel({ openMore }: { openMore?: boolean }) {
         </div>
       </section>
 
-      <Advanced id="engenheiro-mais" summary={uiText('Mais opções')} forceOpen={openMore}>
+      <Advanced id="engineer-more" summary={uiText('Mais opções')} forceOpen={openMore}>
         <div className="cfg-list">
           <CfgRow
             id="speech-level"

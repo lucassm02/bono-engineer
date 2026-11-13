@@ -53,6 +53,7 @@ import {
   serverUrl,
 } from './paths.ts';
 import { type DesktopState, readDesktopState, writeDesktopState } from './state-file.ts';
+import { DesktopUpdates } from './updates.ts';
 import { fitWindowState, MIN_SIZE, type WindowState } from './window-state.ts';
 
 const BG = BRAND_SURFACE;
@@ -92,6 +93,9 @@ let serverPort = 0;
 let serverHost = '127.0.0.1';
 let phoneUrl: string | null = null;
 let quitting = false;
+let updateQuit = false;
+let changingData = false;
+let updates: DesktopUpdates | null = null;
 let booting = false;
 let state: DesktopState = readDesktopState(STATE_FILE);
 const uiText = (message: string, ...values: unknown[]) =>
@@ -151,6 +155,7 @@ function dataFolderInfo(dir: string): DesktopDataFolderInfo {
  * The old folder is never deleted.
  */
 async function applyDataFolder(input: unknown): Promise<void> {
+  if (quitting || changingData) throw new Error('Bono is busy.');
   const r = (typeof input === 'object' && input !== null ? input : {}) as Record<string, unknown>;
   const mode = r.mode;
   if (mode !== 'copy' && mode !== 'use' && mode !== 'empty') throw new Error('Modo inválido.');
@@ -172,13 +177,16 @@ async function applyDataFolder(input: unknown): Promise<void> {
     );
   }
 
-  await stopServer();
+  changingData = true;
   try {
+    await stopServer();
     if (mode === 'copy') copyDataFolder(current, target);
   } catch (e) {
     log(`falha ao copiar os dados para ${target}: ${(e as Error).stack ?? e}`);
     void boot(); // back to the folder that was in use; nothing was changed
     throw new Error(uiText('Não foi possível copiar os dados: {0}', (e as Error).message));
+  } finally {
+    changingData = false;
   }
   const { dataDir: _previous, ...rest } = state;
   state = dir === null ? rest : { ...rest, dataDir: target };
@@ -189,6 +197,23 @@ async function applyDataFolder(input: unknown): Promise<void> {
 }
 
 function registerDesktopHandlers(): void {
+  if (updates) {
+    const service = updates;
+    const actions = {
+      get: () => service.status,
+      check: () => service.check(),
+      download: () => service.download(),
+      install: () => service.install(),
+      dismiss: () => service.dismiss(),
+      'mark-notes-read': () => service.markNotesRead(),
+    };
+    for (const [name, action] of Object.entries(actions)) {
+      ipcMain.handle(`bono:updates:${name}`, (event) => {
+        checkLocalSender(event);
+        return action();
+      });
+    }
+  }
   ipcMain.handle('bono:data:current', (event) => {
     checkLocalSender(event);
     const defaultDir = resolve(defaultDataDir());
@@ -480,13 +505,14 @@ async function refreshPhoneUrl(): Promise<void> {
   }
 }
 
-async function stopServer(): Promise<void> {
+async function stopServer(waitForClose = false): Promise<void> {
   discord.stop();
   const r = running;
   running = null;
   serverUrlNow = null;
   serverPort = 0;
   if (!r) return;
+  if (waitForClose) return r.stop();
   await Promise.race([r.stop(), new Promise((resolve) => setTimeout(resolve, 6000))]);
 }
 
@@ -545,8 +571,7 @@ async function boot(): Promise<void> {
     );
     await refreshPhoneUrl();
 
-    // The dashboard registers a service worker for the phone/PWA; inside the app it would only
-    // risk serving an older build after an update, so it is cleared on every start.
+    // Clear legacy PWA registrations from the Electron profile before loading the packaged UI.
     await session.defaultSession
       .clearStorageData({ storages: ['serviceworkers', 'cachestorage'] })
       .catch(() => {});
@@ -654,6 +679,73 @@ function createTray(): void {
 // Lifecycle
 // ---------------------------------------------------------------------------------------------
 
+function createDesktopUpdates(): DesktopUpdates {
+  const mode =
+    !app.isPackaged || process.platform !== 'win32'
+      ? 'development'
+      : process.env.PORTABLE_EXECUTABLE_FILE
+        ? 'portable'
+        : 'installed';
+  return new DesktopUpdates({
+    mode,
+    version: app.getVersion(),
+    notesFile: assetPath('release-notes.json'),
+    previousVersion: state.updates?.lastVersion,
+    dismissedVersion: state.updates?.dismissedVersion,
+    seenVersion: state.updates?.seenVersion,
+    publish(status) {
+      if (win && !win.isDestroyed() && inServerPage(win.webContents.getURL())) {
+        win.webContents.send('bono:updates:status', status);
+      }
+    },
+    save(key, version) {
+      if (state.updates?.[key] === version) return;
+      state = { ...state, updates: { ...state.updates, [key]: version } };
+      writeDesktopState(STATE_FILE, state);
+    },
+    async chooseDestination(name) {
+      const options = {
+        defaultPath: join(app.getPath('downloads'), name),
+        filters: [{ name: 'Bono Engineer', extensions: ['exe'] }],
+      };
+      const result = win
+        ? await dialog.showSaveDialog(win, options)
+        : await dialog.showSaveDialog(options);
+      if (result.canceled || !result.filePath) return undefined;
+      const current = process.env.PORTABLE_EXECUTABLE_FILE;
+      if (current && resolve(current).toLowerCase() === resolve(result.filePath).toLowerCase()) {
+        throw new Error('The running portable executable cannot be replaced.');
+      }
+      return result.filePath;
+    },
+    async prepareInstall() {
+      const runtime = running?.server?.runtime;
+      if (
+        quitting ||
+        booting ||
+        changingData ||
+        !runtime ||
+        runtime.capture.active ||
+        runtime.engine.state === 'onTrack' ||
+        runtime.engine.state === 'paused'
+      )
+        return false;
+      quitting = true;
+      saveWindowState();
+      await stopServer(true);
+      updateQuit = true;
+      return true;
+    },
+    installFailed() {
+      if (!quitting) return;
+      quitting = false;
+      updateQuit = false;
+      void boot();
+    },
+    log,
+  });
+}
+
 async function quitApp(): Promise<void> {
   if (quitting) return;
   quitting = true;
@@ -690,6 +782,7 @@ if (!app.requestSingleInstanceLock()) {
   app.on('window-all-closed', () => {});
   app.on('activate', () => showWindow());
   app.on('before-quit', (event) => {
+    if (updateQuit) return;
     event.preventDefault();
     void quitApp();
   });
@@ -697,9 +790,11 @@ if (!app.requestSingleInstanceLock()) {
   void app.whenReady().then(async () => {
     Menu.setApplicationMenu(null);
     lockdownSession();
+    updates = createDesktopUpdates();
     registerDesktopHandlers();
     createTray();
     log(`iniciado (Electron ${process.versions.electron}, Node ${process.versions.node})`);
     await boot();
+    updates.start();
   });
 }

@@ -4,7 +4,7 @@ GT7 "Simulator Interface" over UDP: Salsa20 decrypt/encrypt, packet parse/encode
 the `Gt7Ingestor` (socket + heartbeat + loss stats), `.gt7rec` session recordings and a fake console
 (synthetic driver or recorded session) for developing without a PlayStation.
 
-Protocol reference: [ESTUDO-TELEMETRIA-GT7.md](../../ESTUDO-TELEMETRIA-GT7.md).
+Protocol reference: [GT7-TELEMETRY-STUDY.md](../../GT7-TELEMETRY-STUDY.md).
 
 ## CLIs (run from the repo root)
 

@@ -12,6 +12,7 @@
 
 import { cpSync, existsSync, mkdirSync, rmSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
 import { buildWeb, webNeedsBuild } from '../../server/src/startup.ts';
@@ -53,6 +54,15 @@ export async function buildDesktop(): Promise<void> {
   rmSync(dist, { recursive: true, force: true });
   mkdirSync(dist, { recursive: true });
   cpSync(join(REPO, 'LICENSE'), join(dist, 'LICENSE'));
+  execFileSync(
+    process.execPath,
+    [
+      join(REPO, 'scripts', 'release-notes.mjs'),
+      join(dist, 'release-notes.md'),
+      join(dist, 'release-notes.json'),
+    ],
+    { env: { ...process.env, GITHUB_OUTPUT: '' }, stdio: 'inherit' },
+  );
 
   console.log('[desktop] gerando ícones…');
   const buildDir = join(DESKTOP_DIR, 'build');
@@ -78,7 +88,7 @@ export async function buildDesktop(): Promise<void> {
       format: 'cjs',
       // electron is provided by the runtime; @resvg is a native addon, shipped unpacked and
       // reached only through the lazy stand-in below.
-      external: ['electron', 'discord.js', '@discordjs/voice'],
+      external: ['electron', 'discord.js', '@discordjs/voice', 'electron-updater'],
       alias: { '@resvg/resvg-js': join(DESKTOP_DIR, 'src', 'resvg-lazy.ts') },
       ...(out === 'preload.cjs'
         ? {}

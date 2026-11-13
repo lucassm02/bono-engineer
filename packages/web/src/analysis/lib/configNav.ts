@@ -15,90 +15,102 @@ import { type EngineerAudioTarget, engineerStateText, recordingStateText } from 
 import { t as uiText } from '../../lib/i18n.ts';
 
 // ---------------------------------------------------------------------------------------------
-// Grupos e rota
+// Groups and route
 // ---------------------------------------------------------------------------------------------
 
-export type ConfigGroupId = 'inicio' | 'console' | 'engenheiro' | 'painel' | 'contas' | 'sobre';
+export type ConfigGroupId = 'overview' | 'console' | 'engineer' | 'display' | 'accounts' | 'about';
 
 export const CONFIG_GROUP_IDS: readonly ConfigGroupId[] = [
-  'inicio',
+  'overview',
   'console',
-  'engenheiro',
-  'painel',
-  'contas',
-  'sobre',
+  'engineer',
+  'display',
+  'accounts',
+  'about',
 ];
 
-export const DEFAULT_CONFIG_GROUP: ConfigGroupId = 'inicio';
+export const DEFAULT_CONFIG_GROUP: ConfigGroupId = 'overview';
 
-/** Âncoras de seção dentro dos grupos (ids dos cartões; os mesmos das abas antigas). */
+/** Section anchors inside the groups (the ids of the cards). */
 export type ConfigAnchor =
-  | 'conexao'
-  | 'captura'
-  | 'acesso-remoto'
-  | 'dispositivos'
+  | 'connection'
+  | 'capture'
+  | 'remote-access'
+  | 'devices'
   | 'firewall'
-  | 'telas'
+  | 'screens'
   | 'discord'
   | 'coach'
-  | 'dados'
+  | 'data'
   | 'backup'
-  | 'diarias'
+  | 'dailies'
   | 'mcp'
-  | 'idioma'
-  | 'sobre';
+  | 'language'
+  | 'about';
 
 export interface ConfigTarget {
   group: ConfigGroupId;
-  /** Cartão a rolar até (e, no caso do MCP, abrir). */
+  /** Card to scroll to (and, for MCP, to open). */
   anchor?: ConfigAnchor;
 }
 
 /**
- * Âncoras de antes da reorganização (links do README, do menu ao vivo, de outras páginas) → grupo
- * novo. Os ids dos próprios grupos também valem em `#/config?s=<grupo>`.
+ * Anchors and aliases → group (and card). `#/config?s=<value>` takes a group id, a card anchor, a
+ * nickname, or one of the Portuguese ids that links, the README and old bookmarks still use.
  */
 const LEGACY: Record<string, ConfigTarget> = {
-  // abas antigas
-  idioma: { group: 'contas', anchor: 'idioma' },
-  conexao: { group: 'console', anchor: 'conexao' },
-  captura: { group: 'console', anchor: 'captura' },
-  'acesso-remoto': { group: 'painel', anchor: 'acesso-remoto' },
-  dispositivos: { group: 'painel', anchor: 'dispositivos' },
-  discord: { group: 'contas', anchor: 'discord' },
-  coach: { group: 'contas', anchor: 'coach' },
-  dados: { group: 'contas', anchor: 'dados' },
-  backup: { group: 'contas', anchor: 'backup' },
-  diarias: { group: 'contas', anchor: 'diarias' },
-  mcp: { group: 'contas', anchor: 'mcp' },
-  sobre: { group: 'sobre', anchor: 'sobre' },
-  // apelidos que já existiam
-  lan: { group: 'painel', anchor: 'acesso-remoto' },
-  celular: { group: 'painel', anchor: 'acesso-remoto' },
-  // nomes usados nas conversas e nas specs
-  remoto: { group: 'painel', anchor: 'acesso-remoto' },
-  aparelhos: { group: 'painel', anchor: 'dispositivos' },
-  firewall: { group: 'painel', anchor: 'firewall' },
-  telas: { group: 'painel', anchor: 'telas' },
-  ia: { group: 'contas', anchor: 'mcp' },
-  radio: { group: 'engenheiro' },
-  voz: { group: 'engenheiro' },
-  engineer: { group: 'engenheiro' },
-  painel: { group: 'painel' },
-  contas: { group: 'contas' },
+  // card anchors
+  connection: { group: 'console', anchor: 'connection' },
+  capture: { group: 'console', anchor: 'capture' },
+  'remote-access': { group: 'display', anchor: 'remote-access' },
+  devices: { group: 'display', anchor: 'devices' },
+  firewall: { group: 'display', anchor: 'firewall' },
+  screens: { group: 'display', anchor: 'screens' },
+  discord: { group: 'accounts', anchor: 'discord' },
+  coach: { group: 'accounts', anchor: 'coach' },
+  data: { group: 'accounts', anchor: 'data' },
+  backup: { group: 'accounts', anchor: 'backup' },
+  dailies: { group: 'accounts', anchor: 'dailies' },
+  mcp: { group: 'accounts', anchor: 'mcp' },
+  language: { group: 'accounts', anchor: 'language' },
+  // nicknames
+  lan: { group: 'display', anchor: 'remote-access' },
+  phone: { group: 'display', anchor: 'remote-access' },
+  remote: { group: 'display', anchor: 'remote-access' },
+  ai: { group: 'accounts', anchor: 'mcp' },
+  radio: { group: 'engineer' },
+  voice: { group: 'engineer' },
+  // Portuguese ids used before the ids were renamed to English
+  inicio: { group: 'overview' },
+  engenheiro: { group: 'engineer' },
+  painel: { group: 'display' },
+  contas: { group: 'accounts' },
+  sobre: { group: 'about' },
+  idioma: { group: 'accounts', anchor: 'language' },
+  conexao: { group: 'console', anchor: 'connection' },
+  captura: { group: 'console', anchor: 'capture' },
+  dispositivos: { group: 'display', anchor: 'devices' },
+  dados: { group: 'accounts', anchor: 'data' },
+  diarias: { group: 'accounts', anchor: 'dailies' },
+  celular: { group: 'display', anchor: 'remote-access' },
+  remoto: { group: 'display', anchor: 'remote-access' },
+  aparelhos: { group: 'display', anchor: 'devices' },
+  telas: { group: 'display', anchor: 'screens' },
+  ia: { group: 'accounts', anchor: 'mcp' },
+  voz: { group: 'engineer' },
 };
 
 function isGroup(id: string): id is ConfigGroupId {
   return (CONFIG_GROUP_IDS as readonly string[]).includes(id);
 }
 
-/** `#/config?s=<valor>` → grupo (e cartão) a abrir. Valor ausente ou desconhecido = Início. */
+/** `#/config?s=<value>` → group (and card) to open. Missing or unknown value = the overview. */
 export function resolveConfigTarget(s: string | null | undefined): ConfigTarget {
   const key = (s ?? '').trim().toLowerCase();
   if (!key) return { group: DEFAULT_CONFIG_GROUP };
-  // "console" é grupo novo e âncora antiga ao mesmo tempo: os dois levam ao grupo Console.
+  // Canonical group IDs take precedence over aliases.
   if (isGroup(key)) return { group: key };
-  return LEGACY[key] ?? { group: DEFAULT_CONFIG_GROUP };
+  return Object.hasOwn(LEGACY, key) ? LEGACY[key]! : { group: DEFAULT_CONFIG_GROUP };
 }
 
 export interface ConfigGroupInfo {
@@ -111,7 +123,7 @@ export interface ConfigGroupInfo {
 
 export const CONFIG_GROUPS: readonly ConfigGroupInfo[] = [
   {
-    id: 'inicio',
+    id: 'overview',
     get label() {
       return uiText('Início');
     },
@@ -129,7 +141,7 @@ export const CONFIG_GROUPS: readonly ConfigGroupInfo[] = [
     },
   },
   {
-    id: 'engenheiro',
+    id: 'engineer',
     get label() {
       return uiText('Engenheiro');
     },
@@ -138,7 +150,7 @@ export const CONFIG_GROUPS: readonly ConfigGroupInfo[] = [
     },
   },
   {
-    id: 'painel',
+    id: 'display',
     get label() {
       return uiText('Ao vivo e aparelhos');
     },
@@ -147,7 +159,7 @@ export const CONFIG_GROUPS: readonly ConfigGroupInfo[] = [
     },
   },
   {
-    id: 'contas',
+    id: 'accounts',
     get label() {
       return uiText('Contas e dados');
     },
@@ -156,7 +168,7 @@ export const CONFIG_GROUPS: readonly ConfigGroupInfo[] = [
     },
   },
   {
-    id: 'sobre',
+    id: 'about',
     get label() {
       return uiText('Sobre');
     },
@@ -192,7 +204,7 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   {
     id: 'ps5',
     group: 'console',
-    anchor: 'conexao',
+    anchor: 'connection',
     get title() {
       return uiText('PS5');
     },
@@ -204,7 +216,7 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   {
     id: 'auto-record',
     group: 'console',
-    anchor: 'captura',
+    anchor: 'capture',
     get title() {
       return uiText('Gravar sessões automaticamente');
     },
@@ -216,7 +228,7 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   {
     id: 'manual-ip',
     group: 'console',
-    anchor: 'conexao',
+    anchor: 'connection',
     advanced: true,
     get title() {
       return uiText('Usar outro IP');
@@ -229,7 +241,7 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   {
     id: 'packet-format',
     group: 'console',
-    anchor: 'conexao',
+    anchor: 'connection',
     advanced: true,
     get title() {
       return uiText('Formato do pacote');
@@ -242,7 +254,7 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   {
     id: 'raw-record',
     group: 'console',
-    anchor: 'conexao',
+    anchor: 'connection',
     advanced: true,
     get title() {
       return uiText('Gravar pacotes brutos');
@@ -254,7 +266,7 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'engineer-on',
-    group: 'engenheiro',
+    group: 'engineer',
     get title() {
       return uiText('Ligar o engenheiro');
     },
@@ -265,7 +277,7 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'voice',
-    group: 'engenheiro',
+    group: 'engineer',
     get title() {
       return uiText('Voz');
     },
@@ -276,7 +288,7 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'mode',
-    group: 'engenheiro',
+    group: 'engineer',
     get title() {
       return uiText('Modo do engenheiro');
     },
@@ -287,7 +299,7 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'volume',
-    group: 'engenheiro',
+    group: 'engineer',
     get title() {
       return uiText('Volume');
     },
@@ -298,7 +310,7 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'audio-device',
-    group: 'engenheiro',
+    group: 'engineer',
     get title() {
       return uiText('Onde ele fala');
     },
@@ -309,7 +321,7 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'ask-track',
-    group: 'engenheiro',
+    group: 'engineer',
     get title() {
       return uiText('Perguntar a pista ao começar');
     },
@@ -322,7 +334,7 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'speech-level',
-    group: 'engenheiro',
+    group: 'engineer',
     advanced: true,
     get title() {
       return uiText('Nível de fala');
@@ -334,7 +346,7 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'pace',
-    group: 'engenheiro',
+    group: 'engineer',
     advanced: true,
     get title() {
       return uiText('Ritmo da fala');
@@ -346,7 +358,7 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'anticipation',
-    group: 'engenheiro',
+    group: 'engineer',
     advanced: true,
     get title() {
       return uiText('Antecipação');
@@ -358,7 +370,7 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'summary',
-    group: 'engenheiro',
+    group: 'engineer',
     advanced: true,
     get title() {
       return uiText('Resumo do treino');
@@ -369,7 +381,7 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'praise',
-    group: 'engenheiro',
+    group: 'engineer',
     advanced: true,
     get title() {
       return uiText('Reforço positivo');
@@ -381,7 +393,7 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'tasks',
-    group: 'engenheiro',
+    group: 'engineer',
     advanced: true,
     get title() {
       return uiText('Tarefas do engenheiro');
@@ -393,7 +405,7 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'task-voice',
-    group: 'engenheiro',
+    group: 'engineer',
     advanced: true,
     get title() {
       return uiText('Voz das tarefas');
@@ -405,7 +417,7 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'delta-ref',
-    group: 'engenheiro',
+    group: 'engineer',
     advanced: true,
     get title() {
       return uiText('Volta de referência');
@@ -417,8 +429,8 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'screens',
-    group: 'painel',
-    anchor: 'telas',
+    group: 'display',
+    anchor: 'screens',
     get title() {
       return uiText('Telas de cada aparelho');
     },
@@ -429,8 +441,8 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'lap-popup',
-    group: 'painel',
-    anchor: 'telas',
+    group: 'display',
+    anchor: 'screens',
     get title() {
       return uiText('Cartão ao fechar a volta');
     },
@@ -441,8 +453,8 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'lock',
-    group: 'painel',
-    anchor: 'telas',
+    group: 'display',
+    anchor: 'screens',
     get title() {
       return uiText('Travar gestos');
     },
@@ -453,8 +465,8 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'open-phone',
-    group: 'painel',
-    anchor: 'acesso-remoto',
+    group: 'display',
+    anchor: 'remote-access',
     get title() {
       return uiText('Abrir no celular ou tablet');
     },
@@ -465,7 +477,7 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'firewall',
-    group: 'painel',
+    group: 'display',
     anchor: 'firewall',
     get title() {
       return uiText('Acesso pela rede (Windows)');
@@ -477,8 +489,8 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'devices',
-    group: 'painel',
-    anchor: 'dispositivos',
+    group: 'display',
+    anchor: 'devices',
     get title() {
       return uiText('Aparelhos conectados');
     },
@@ -489,7 +501,7 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'discord',
-    group: 'contas',
+    group: 'accounts',
     anchor: 'discord',
     desktopOnly: true,
     get title() {
@@ -502,7 +514,7 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'coach',
-    group: 'contas',
+    group: 'accounts',
     anchor: 'coach',
     get title() {
       return uiText('Coach IA');
@@ -514,8 +526,8 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'data-folder',
-    group: 'contas',
-    anchor: 'dados',
+    group: 'accounts',
+    anchor: 'data',
     get title() {
       return uiText('Pasta dos dados');
     },
@@ -526,8 +538,8 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'dailies',
-    group: 'contas',
-    anchor: 'diarias',
+    group: 'accounts',
+    anchor: 'dailies',
     get title() {
       return uiText('Corridas diárias');
     },
@@ -538,7 +550,7 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'data-export',
-    group: 'contas',
+    group: 'accounts',
     anchor: 'backup',
     get title() {
       return uiText('Exportar backup');
@@ -550,7 +562,7 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'data-import',
-    group: 'contas',
+    group: 'accounts',
     anchor: 'backup',
     get title() {
       return uiText('Importar backup');
@@ -562,8 +574,8 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'language',
-    group: 'contas',
-    anchor: 'idioma',
+    group: 'accounts',
+    anchor: 'language',
     get title() {
       return uiText('Idioma do app');
     },
@@ -574,7 +586,7 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'mcp',
-    group: 'contas',
+    group: 'accounts',
     anchor: 'mcp',
     advanced: true,
     get title() {
@@ -587,8 +599,8 @@ export const CONFIG_ENTRIES: readonly ConfigEntry[] = [
   },
   {
     id: 'setup-again',
-    group: 'sobre',
-    anchor: 'sobre',
+    group: 'about',
+    anchor: 'about',
     get title() {
       return uiText('Refazer o assistente');
     },
@@ -654,25 +666,25 @@ export interface PendingStep {
 const STEP_INFO: Record<SetupStepId, () => Omit<PendingStep, 'id'>> = {
   welcome: () => ({
     title: uiText('Escolher a voz do engenheiro'),
-    group: 'engenheiro',
+    group: 'engineer',
   }),
   console: () => ({
     title: uiText('Conectar o PS5'),
     group: 'console',
-    anchor: 'conexao',
+    anchor: 'connection',
   }),
   mode: () => ({
     title: uiText('Escolher como treinar'),
-    group: 'engenheiro',
+    group: 'engineer',
   }),
   engineer: () => ({
     title: uiText('Ligar o engenheiro'),
-    group: 'engenheiro',
+    group: 'engineer',
   }),
   panel: () => ({
     title: uiText('Escolher as telas do ao vivo'),
-    group: 'painel',
-    anchor: 'telas',
+    group: 'display',
+    anchor: 'screens',
   }),
 };
 
@@ -798,7 +810,7 @@ export function buildHealth(i: HealthInput): HealthItem[] {
   // Discord (só no app para Windows)
   if (i.discord) {
     const d = i.discord;
-    const target: ConfigTarget = { group: 'contas', anchor: 'discord' };
+    const target: ConfigTarget = { group: 'accounts', anchor: 'discord' };
     if (!d.configured) {
       items.push({
         id: 'discord',
@@ -831,7 +843,7 @@ export function buildHealth(i: HealthInput): HealthItem[] {
   }
 
   // Aparelhos
-  const remote: ConfigTarget = { group: 'painel', anchor: 'acesso-remoto' };
+  const remote: ConfigTarget = { group: 'display', anchor: 'remote-access' };
   if (i.devicesOnline > 0) {
     items.push({
       id: 'devices',
@@ -841,7 +853,7 @@ export function buildHealth(i: HealthInput): HealthItem[] {
           ? uiText('1 aparelho online')
           : uiText('{0} aparelhos online', String(i.devicesOnline)),
       detail: uiText('Cada um mostra as telas que você escolheu para ele.'),
-      action: { kind: 'goto', label: uiText('Ver aparelhos'), target: { group: 'painel' } },
+      action: { kind: 'goto', label: uiText('Ver aparelhos'), target: { group: 'display' } },
     });
   } else if (i.firewall === 'missing') {
     items.push({
@@ -852,7 +864,7 @@ export function buildHealth(i: HealthInput): HealthItem[] {
       action: {
         kind: 'goto',
         label: uiText('Corrigir'),
-        target: { group: 'painel', anchor: 'firewall' },
+        target: { group: 'display', anchor: 'firewall' },
       },
     });
   } else {
@@ -916,7 +928,7 @@ export const SCREEN_PRESETS: readonly ScreenPreset[] = [
     get description() {
       return uiText('Só o essencial para olhar de relance.');
     },
-    views: ['corrida', 'deltaGrande'],
+    views: ['race', 'bigDelta'],
   },
   {
     id: 'full',
@@ -926,7 +938,7 @@ export const SCREEN_PRESETS: readonly ScreenPreset[] = [
     get description() {
       return uiText('Inclui pneus, inputs e motor.');
     },
-    views: ['corrida', 'deltaGrande', 'pneus', 'inputs', 'motor'],
+    views: ['race', 'bigDelta', 'tyres', 'inputs', 'engine'],
   },
   {
     id: 'endurance',
@@ -936,7 +948,7 @@ export const SCREEN_PRESETS: readonly ScreenPreset[] = [
     get description() {
       return uiText('Combustível, tempos e pneus para provas longas.');
     },
-    views: ['corrida', 'combustivel', 'tempos', 'pneus'],
+    views: ['race', 'fuel', 'times', 'tyres'],
   },
 ];
 

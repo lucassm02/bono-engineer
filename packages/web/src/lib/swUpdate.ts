@@ -59,6 +59,7 @@ export function startSwUpdateWatch(): void {
   started = true;
   const sw = navigator.serviceWorker;
   watchServiceWorkerUpdates(sw, () => useSwUpdate.setState({ available: true, dismissed: false }));
+  if (import.meta.env.PROD) void sw.register('/sw.js').catch(() => {});
   const check = () => {
     sw.getRegistration()
       .then((r) => r?.update())

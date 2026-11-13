@@ -1,6 +1,6 @@
 {
   "name": "@gt7/desktop",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "private": true,
   "type": "module",
   "license": "PolyForm-Noncommercial-1.0.0",
@@ -14,6 +14,7 @@
     "@discordjs/voice": "^0.19.2",
     "@resvg/resvg-js": "^2.6.2",
     "discord.js": "^14.26.4",
+    "electron-updater": "6.8.12",
     "opusscript": "^0.0.8"
   },
   "devDependencies": {

@@ -36,15 +36,15 @@ export function registerKnowledge(server: McpServer, deps: { store: Gt7Store }):
         'diagnóstico do app: significado, causa provável, ação, exercício e variação por classe, mais ' +
         'princípios gerais, afinação (sintoma → ajuste), glossário e fontes. Chame DEPOIS de compare_laps ' +
         'com car_code e diagnostics = os códigos de plan[].code. Sem argumentos devolve o resumo do ' +
-        'carro da sessão mais recente. topic="indice" lista os tópicos; topic="gr4", "brakeEarlier", ' +
-        '"afinacao", "glossario", "fonte" devolve a página completa. A base NÃO tem pontos de frenagem ' +
+        'carro da sessão mais recente. topic="index" lista os tópicos; topic="gr4", "brakeEarlier", ' +
+        '"setup", "glossary", "sources" devolve a página completa. A base NÃO tem pontos de frenagem ' +
         'por pista: só princípios; cada afirmação diz se é regra geral ou depende do carro.',
       inputSchema: {
         topic: z
           .string()
           .optional()
           .describe(
-            'Página completa: "indice", "geral/trail-braking", "classe/gr4" (ou "gr4"), "diagnostico/brakeEarlier" (ou o código), "afinacao", "glossario", "fonte".',
+            'Página completa: "index", "general/trail-braking", "class/gr4" (ou "gr4"), "diagnostics/brakeEarlier" (ou o código), "setup", "glossary", "sources".',
           ),
         car_code: z
           .number()
@@ -87,7 +87,7 @@ export function registerKnowledge(server: McpServer, deps: { store: Gt7Store }):
           const md = knowledgeTopic(topic, { group: car_group ?? null });
           if (md) return text(md);
           return text(
-            `Tópico "${topic}" não existe. Use topic="indice" para ver os disponíveis.\n\n${knowledgeIndexMarkdown()}`,
+            `Tópico "${topic}" não existe. Use topic="index" para ver os disponíveis.\n\n${knowledgeIndexMarkdown()}`,
             true,
           );
         }
@@ -101,7 +101,7 @@ export function registerKnowledge(server: McpServer, deps: { store: Gt7Store }):
           const s = latestDrivingSession(store);
           if (s) {
             carCode = s.carCode;
-            note = `\n\n_Carro da sessão mais recente (${s.id}). Passe car_code/diagnostics para ser específico, ou topic="indice" para ver os tópicos._`;
+            note = `\n\n_Carro da sessão mais recente (${s.id}). Passe car_code/diagnostics para ser específico, ou topic="index" para ver os tópicos._`;
           }
         }
         const brief = knowledgeBrief({
@@ -147,7 +147,7 @@ export function registerKnowledge(server: McpServer, deps: { store: Gt7Store }):
     {
       title: 'Tópico de pilotagem',
       description:
-        'Página de um tópico: geral/<id>, classe/gr1…grx, diagnostico/<código>, afinacao, glossario, fonte.',
+        'Página de um tópico: general/<id>, class/gr1…grx, diagnostics/<code>, setup, glossary, sources.',
       mimeType: 'text/markdown',
     },
     async (uri, vars) => {

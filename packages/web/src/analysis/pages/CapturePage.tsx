@@ -1,5 +1,5 @@
 /**
- * #/captura — one-click reference capture from a Time Trial ranking replay (Onda 10a).
+ * #/capture — one-click reference capture from a Time Trial ranking replay (Onda 10a).
  *
  * The app detects the replay, the car (from `carCode`) and the track (from the position) by
  * itself, so the only things left to type are optional: the ranking time (validates the lap)
@@ -286,7 +286,7 @@ export function CapturePage() {
   const refs = useFetch('capture:refs', () => api.references());
   const reloadRefs = refs.reload;
 
-  // "Usar como referência" on a Daily Race (#/captura?daily=<id>): fills in the first place of the
+  // "Usar como referência" on a Daily Race (#/capture?daily=<id>): fills in the first place of the
   // ranking (driver and time) and, when the pilot already has that track saved, selects it.
   const dailyId = useMemo(() => {
     const n = Number(parseRoute(location.hash).query.daily);

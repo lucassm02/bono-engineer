@@ -13,7 +13,7 @@ export function LanguageSettings() {
   const language = useLanguage();
   useEffect(() => stopEngineerPreview, []);
   return (
-    <Panel id="idioma" title={t('Idioma')}>
+    <Panel id="language" title={t('Idioma')}>
       <div className="cfg-stack">
         <div className="cfg-two">
           <label className="ui-field">

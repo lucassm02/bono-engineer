@@ -1,4 +1,92 @@
 {
+  "A verificação ainda não foi concluída.": [
+    "The update check has not finished yet.",
+    "La comprobación de actualizaciones aún no ha terminado."
+  ],
+  "Verificando atualizações…": [
+    "Checking for updates…",
+    "Buscando actualizaciones…"
+  ],
+  "Você está na versão mais recente.": [
+    "You’re on the latest version.",
+    "Tienes la versión más reciente."
+  ],
+  "Versão {0} disponível.": [
+    "Version {0} is available.",
+    "La versión {0} está disponible."
+  ],
+  "Baixando atualização… {0}%": [
+    "Downloading update… {0}%",
+    "Descargando la actualización… {0}%"
+  ],
+  "Atualização pronta para instalar.": [
+    "Update ready to install.",
+    "Actualización lista para instalar."
+  ],
+  "Arquivo salvo. Feche o Bono e abra a nova versão portátil.": [
+    "File saved. Close Bono and open the new portable version.",
+    "Archivo guardado. Cierra Bono y abre la nueva versión portátil."
+  ],
+  "Preparando para reiniciar e instalar…": [
+    "Preparing to restart and install…",
+    "Preparando el reinicio y la instalación…"
+  ],
+  "Não foi possível verificar atualizações.": [
+    "Could not check for updates.",
+    "No se pudo buscar actualizaciones."
+  ],
+  "Não foi possível baixar a atualização.": [
+    "Could not download the update.",
+    "No se pudo descargar la actualización."
+  ],
+  "Não foi possível iniciar a instalação.": [
+    "Could not start installation.",
+    "No se pudo iniciar la instalación."
+  ],
+  "Aguarde o fim da pilotagem ou da captura para instalar.": [
+    "Finish driving or capturing before installing.",
+    "Termina de conducir o capturar antes de instalar."
+  ],
+  "Baixar versão portátil": [
+    "Download portable version",
+    "Descargar versión portátil"
+  ],
+  "Baixar atualização": [
+    "Download update",
+    "Descargar actualización"
+  ],
+  "Atualizações disponíveis no pacote do Windows.": [
+    "Updates are available in the Windows package.",
+    "Las actualizaciones están disponibles en el paquete de Windows."
+  ],
+  "Última verificação: {0}": [
+    "Last checked: {0}",
+    "Última comprobación: {0}"
+  ],
+  "Verificar atualizações": [
+    "Check for updates",
+    "Buscar actualizaciones"
+  ],
+  "Ver o que mudou": [
+    "See what changed",
+    "Ver qué cambió"
+  ],
+  "Reiniciar e instalar": [
+    "Restart and install",
+    "Reiniciar e instalar"
+  ],
+  "Notas da versão instalada": [
+    "Installed release notes",
+    "Notas de la versión instalada"
+  ],
+  "Notas da versão indisponíveis.": [
+    "Release notes are unavailable.",
+    "Las notas de la versión no están disponibles."
+  ],
+  "O que mudou na versão {0}": [
+    "What changed in version {0}",
+    "Qué cambió en la versión {0}"
+  ],
   " — referência automática": [" — automatic reference", " — referencia automática"],
   " · {0} abas": [" · {0} tabs", " · {0} pestañas"],
   " · acesso com senha (token)": [" · token required", " · se requiere token"],

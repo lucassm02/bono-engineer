@@ -1,5 +1,5 @@
 /**
- * #/analise/semana?w=N — "Resumo da semana": the last 7 days (or the 7 before them, N weeks back)
+ * #/analysis/week?w=N — "Resumo da semana": the last 7 days (or the 7 before them, N weeks back)
  * per track: best lap against the record before, personal records, goals reached. It can be copied
  * as text or shared as an image.
  */

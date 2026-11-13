@@ -38,7 +38,7 @@ const pickOption = <T extends string>(values: readonly T[], value: string, fallb
 const SPEECH_LEVELS = ['essential', 'detailed', 'mute'] as const;
 const PACES: readonly { id: EngineerPace; label: string }[] = [
   {
-    id: 'calma',
+    id: 'calm',
     get label() {
       return uiText('Calmo');
     },
@@ -50,7 +50,7 @@ const PACES: readonly { id: EngineerPace; label: string }[] = [
     },
   },
   {
-    id: 'rapida',
+    id: 'fast',
     get label() {
       return uiText('Rápido');
     },

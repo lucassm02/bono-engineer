@@ -1,7 +1,7 @@
 /**
  * GT7 "Simulator Interface" telemetry contract (raw packet level).
  *
- * Source of truth for offsets: ESTUDO-TELEMETRIA-GT7.md §5. All multi-byte values are little-endian.
+ * Source of truth for offsets: GT7-TELEMETRY-STUDY.md §5. All multi-byte values are little-endian.
  * Owned by the protocol package (wave 1). Other packages consume these types read-only.
  */
 

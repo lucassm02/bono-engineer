@@ -92,6 +92,17 @@ describe('track named from the pre-race screen', () => {
     expect(engine.trackContext.layout).toMatch(/East/);
   });
 
+  it('clears the previous replay guess when the console disconnects', () => {
+    const { engine, drive } = make();
+    engine.setIngestorState('connected');
+    drive(real.roadAtlanta, 3352, 250);
+    expect(engine.trackContext.basis).toBe('path');
+    engine.setIngestorState('timeout');
+    expect(engine.trackContext.basis).not.toBe('path');
+    engine.setIngestorState('connected');
+    expect(engine.trackContext.basis).not.toBe('path');
+  });
+
   it('follows a change of track (new car, another circuit) and forgets it in the menu', () => {
     const { engine, drive, menu } = make();
     drive(real.roadAtlanta, 3352, 250);

@@ -60,12 +60,12 @@ describe('catálogo de vozes neurais', () => {
     try {
       setLanguage('en');
       expect(t('Configurações')).toBe('Settings');
-      setEngineerVoice('radio:en-onyx', 'calma');
+      setEngineerVoice('radio:en-onyx', 'calm');
       setLanguage('es');
       expect(t('Configurações')).toBe('Configuración');
       expect(useEngineer.getState().voiceUri).toBe('radio:es-alex');
       setLanguage('en');
-      expect(useEngineer.getState()).toMatchObject({ voiceUri: 'radio:en-onyx', pace: 'calma' });
+      expect(useEngineer.getState()).toMatchObject({ voiceUri: 'radio:en-onyx', pace: 'calm' });
     } finally {
       setLanguage('pt-BR');
     }
@@ -138,7 +138,7 @@ describe('migração da voz salva', () => {
     expect(migrateRadioVoice('radio:santa')).toBe('radio:santa');
     expect(migrateVoicePrefs({ voiceUri: 'radio:bruno', pace: 'rapida' })).toEqual({
       voiceUri: 'radio:bruno',
-      pace: 'rapida',
+      pace: 'fast',
     });
   });
 
@@ -157,7 +157,7 @@ describe('migração da voz salva', () => {
       expect(migrateRadioVoice(saved), String(saved)).toBe(DEFAULT_RADIO_VOICE);
     expect(migrateVoicePrefs({ voiceUri: 'radio:dora', pace: 'calma' })).toEqual({
       voiceUri: DEFAULT_RADIO_VOICE,
-      pace: 'calma',
+      pace: 'calm',
     });
     expect(migrateVoicePrefs(null)).toEqual({ voiceUri: DEFAULT_RADIO_VOICE, pace: 'normal' });
     expect(migrateVoicePrefs({ pace: 'turbo' })).toEqual({

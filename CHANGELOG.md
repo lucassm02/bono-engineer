@@ -7,13 +7,20 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-13
+
 ### Added
 
-- **Track recognised on the pre-race screen.** Before a race or a time trial the game plays a lap with your car in the background. Bono now reads the path of that car and names the circuit within about 150 m of it moving, before you drive a metre, with no lap of yours on that track needed (checked on a real PS5: Trial Mountain, Suzuka and Road Atlanta). The live bar shows "Pista: …"; layouts that share their first metres (Suzuka Full and East) show the circuit first and the layout once the car has run one loop. It is a "probable" label only: nothing is saved from it.
+- **Track recognised on the pre-race screen.** Before a race or a time trial the game plays a lap with your car in the background. Bono now reads the path of that car and names the circuit within about 150 m of it moving, before you drive a metre, with no lap of yours on that track needed (checked on a real PS5: Trial Mountain, Suzuka and Road Atlanta). The live bar shows the circuit name; layouts that share their first metres (Suzuka Full and East) show the circuit first and the layout once the car has run one loop. It is a "probable" label only: nothing is saved from it.
 - **Engineer tasks.** An AI agent (through MCP) or the in-app AI Coach can now *propose* instructions for the radio engineer, such as "At turn seven, entry. Brake twenty meters later.", and you approve them in the app: **Home → Agent proposals** and the new **Tasks** tab on each track (listen, approve, edit, pause or delete; you can also create your own). Nothing is said before you approve. The engineer says each approved task at its place on the lap, finishing right at the point, at most twice per lap (1–4 in **Settings → Engineer → More options**), never on the out lap and never inside a corner.
 - Sentences are composed only from a dictionary of recorded phrases (about 217 pieces per voice, in Portuguese, English and Spanish): the MCP and the server refuse anything the dictionary cannot say and list what is valid, and the requests it could not say are kept so the dictionary can grow.
 - New MCP tools: `get_task_dictionary`, `propose_engineer_task` (with `dry_run`), `list_engineer_tasks`, `update_engineer_task` and `withdraw_engineer_task`. They need no token: tasks only add speech and text, and an agent can never activate, pause or delete an approved task.
 - **Tasks voice:** the audio of the tasks is downloaded from GitHub only after you allow it, only for the voice in use (about 14 MB), and is checked by size and SHA-256 before it is played.
+- Windows checks for Bono releases on startup and in Settings → About. The installed edition can download and install a new release from inside Bono. Release notes are available before installation and after restart.
+
+### Changed
+
+- Standardised technical identifiers and app and site URLs in English. Existing dashboard profiles and bookmarks are accepted.
 
 ## [0.7.1] - 2026-11-13
 
@@ -29,7 +36,7 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- Added the **weekly summary** (`#/analise/semana`): the last 7 days on one screen (or the 7 before them, one week back at a time) with sessions, laps, time on track, the best lap of each track against the record before it, personal records and goals reached. Copy it as text or share it as an image (download or copy the PNG). A **Your week** card on Home links to it.
+- Added the **weekly summary** (`#/analysis/week`): the last 7 days on one screen (or the 7 before them, one week back at a time) with sessions, laps, time on track, the best lap of each track against the record before it, personal records and goals reached. Copy it as text or share it as an image (download or copy the PNG). A **Your week** card on Home links to it.
 - Added a **goal suggestion from this week's Daily Race medal**: on a track that runs as one of the three races of the week, **My goal** offers the next medal above your best lap ("the gold medal is 2:02.662, 1.1 s from your best lap") with a button to use it. It needs the Daily Races turned on.
 - Added MCP tools that give the AI Coach (and any MCP agent) the newer data: `get_goal`, `get_session_summary`, `get_sectors`, `list_corner_drills` and `get_weekly_summary`, plus two more ready-made questions in the coach ("Close to my goal?" and "Weekly summary"). `GET /api/analysis/weekly` serves the summary.
 
@@ -39,7 +46,7 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- Added a **lap replay** (`#/analise/volta/:id`), like the Gran Turismo replay: one dot runs the track map while the readout and the synced charts follow the lap clock (speed, gear, rpm, brake, throttle and steering). It has play/pause, 0.25×/0.5×/1×/2×, a time bar, 0.1 s steps (Shift: 1 s) and keyboard shortcuts. Pick your best lap or a top reference and a ghost runs beside it, at the same distance (default) or at the same lap clock, with the live delta; **What went wrong / What went right** lists the driving events and the corners that lose or gain time against it, and tapping one jumps the replay to the spot. It opens from **Replay** on every lap (track page, session page) and from the comparison.
+- Added a **lap replay** (`#/analysis/lap/:id`), like the Gran Turismo replay: one dot runs the track map while the readout and the synced charts follow the lap clock (speed, gear, rpm, brake, throttle and steering). It has play/pause, 0.25×/0.5×/1×/2×, a time bar, 0.1 s steps (Shift: 1 s) and keyboard shortcuts. Pick your best lap or a top reference and a ghost runs beside it, at the same distance (default) or at the same lap clock, with the live delta; **What went wrong / What went right** lists the driving events and the corners that lose or gain time against it, and tapping one jumps the replay to the spot. It opens from **Replay** on every lap (track page, session page) and from the comparison.
 - Added exact values to the **Best lap by day** chart on the track page: pointing at (or touching) a day shows its time to the thousandth for every line, and a table under the chart lists every day with the best lap, the average of the best three and the difference to the base.
 
 - Added **AI Coach with a chat**: ask about your driving in plain language and the coach fetches the real data with the same tools the app uses. One tap on ready-made questions (strengths and weaknesses, times of your latest sessions, what to improve, how you are progressing, which corner to drill, consistency, best times, debrief of the last session) or write your own, with no session to pick first; follow-up questions continue the same conversation, and the specific-session debrief is still there.
@@ -64,7 +71,7 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Added a goal per track (**My goal** on the track page): type a lap time or take the suggestion (the ideal lap, or 0.5% under your best). Live, a small line shows the difference to the goal pace; after each valid lap the engineer says how far you are ("Distância para a meta") or "Boa volta." when you reach it. Goals reached go to a history and travel in the `.bono` backup.
 - Added a **Sectors** tab on the track page: best time of each sector and the lap that made it, the average of the best five, what your best lap leaves behind, and the ideal lap (sum of the best sectors), with a button to use it as the goal.
-- Added a **session summary** (`#/analise/sessao/:id/resumo`): best lap against your record, pace (average of the best five and median), consistency and trend, comparison with the last session, the best one or the goal, where you gained and lost per corner, and up to three rule-made tips. It opens from the "Session saved" notice, a card on Home or the session page, and can be copied as text.
+- Added a **session summary** (`#/analysis/session/:id/summary`): best lap against your record, pace (average of the best five and median), consistency and trend, comparison with the last session, the best one or the goal, where you gained and lost per corner, and up to three rule-made tips. It opens from the "Session saved" notice, a card on Home or the session page, and can be copied as text.
 - Added **Where you lose time** to the lap comparison: the three corners that cost the most with the probable cause and the number behind it, closing with the straights so the sum matches the lap delta. The map can now colour your lap by gain and loss, speed, brake, throttle or line difference (with text markers for the larger differences).
 - Added **corner drills**: pick a corner and the engineer talks only about it, rating every pass against your best one (stretch time, speeds, braking point). It works on any lap, keeps the last ten passes, shows a summary when you stop and stores the passes with the session. Start it on the Corner drill screen or from "Drill this corner" in a comparison.
 - Added a **pit planner** to the fuel screen (last lap to pit, fuel to add, number of stops) and an **estimate of tyre pace** on the tyres screen, read from the lap times because the game does not send wear. Both are labelled as estimates.
@@ -114,7 +121,7 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- Added a help center (Help in the menu, `#/ajuda`) with short guides by topic, in Portuguese, English and Spanish, and URL parameters to start the guided tours directly (`?tour=live` and `?tour=analysis`).
+- Added a help center (Help in the menu, `#/help`) with short guides by topic, in Portuguese, English and Spanish, and URL parameters to start the guided tours directly (`?tour=live` and `?tour=analysis`).
 - Added Daily Races: the three races of the week with their rules, medal times, top 100 and top 1000, most used cars and 1st place, shown next to your best lap on the same track. They are off until you say yes to a one-time question on Home, then read from DG EDGE on your own PC (at most once an hour, cached, honouring `robots.txt`, with a link back to the source), and can be turned off in Settings. Only the time and car of 1st place are kept, never the player's name. "Use as reference" opens the replay capture with the ranking time filled in.
 - Added a choice of data folder in the Windows app (including OneDrive, Dropbox and similar folders, with a safer write mode there) and `.bono` backups: export sessions, laps and settings (never keys or passwords) and import them to add to or replace your history.
 
@@ -216,7 +223,9 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Added replay reference capture, distance-aligned lap comparisons, synchronized telemetry charts, consistency and progress analysis, and data exports.
 - Added the driving guide, an Anthropic-powered AI debrief, and MCP tools for telemetry, laps, sessions, tracks, comparisons, and PNG charts.
 
-[Unreleased]: https://github.com/lucassm02/bono-engineer/compare/v0.4.0...main
+[Unreleased]: https://github.com/lucassm02/bono-engineer/compare/v0.8.0...main
+[0.8.0]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.8.0
+[0.7.1]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.7.1
 [0.4.0]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.4.0
 [0.3.1]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.3.1
 [0.3.0]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.3.0

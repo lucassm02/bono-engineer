@@ -36,7 +36,7 @@ export function DataSection({ status }: { status: ApiStatus }) {
   return (
     <>
       <Panel
-        id="dados"
+        id="data"
         title={uiText('Seus dados')}
         description={uiText(
           'Suas sessões, voltas e gravações ficam só neste PC, na pasta que você escolher.',

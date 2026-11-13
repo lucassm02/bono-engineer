@@ -1,6 +1,6 @@
 /** /api/devices: per-device dashboard profiles + remote "show view". */
 
-import { type DeviceInfo, isViewId, normalizeDeviceProfile } from '@gt7/shared';
+import { type DeviceInfo, normalizeDeviceProfile, toViewId } from '@gt7/shared';
 import type { FastifyInstance } from 'fastify';
 import { badRequest, bodyObject, conflict, notFound, type Obj, optString } from '../http.ts';
 import type { RouteContext } from './context.ts';
@@ -51,9 +51,10 @@ export function deviceRoutes(app: FastifyInstance, ctx: RouteContext): void {
   app.post('/devices/:id/show-view', async (req) => {
     const id = deviceId(req.params);
     const b = bodyObject(req.body);
-    if (!isViewId(b.view)) throw badRequest('Tela desconhecida.');
+    const view = toViewId(b.view);
+    if (!view) throw badRequest('Tela desconhecida.');
     const from = optString(b, 'from', 'from', 100) ?? 'api';
-    const delivered = hub.showView(id, b.view, from);
+    const delivered = hub.showView(id, view, from);
     if (delivered === 0) throw conflict('O dispositivo não está conectado.', 'deviceOffline');
     return { ok: true, delivered };
   });

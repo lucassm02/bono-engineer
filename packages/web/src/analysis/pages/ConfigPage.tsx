@@ -2,7 +2,7 @@
  * #/config — Configurações em seis grupos: Início (resumo de saúde), Console, Engenheiro, Painel e
  * aparelhos, Contas e dados, Sobre. No PC, lista de grupos à esquerda e o grupo aberto à direita;
  * no celular, a lista de grupos é a tela inicial e cada grupo abre como detalhe.
- * A rota `#/config?s=<grupo>` aceita também as âncoras antigas (`conexao`, `captura`, `discord`,
+ * A rota `#/config?s=<grupo>` aceita também as âncoras antigas (`connection`, `capture`, `discord`,
  * `coach`, `mcp`…), mapeadas para o grupo novo (ver `resolveConfigTarget`).
  */
 
@@ -52,12 +52,12 @@ function useIsMobile(): boolean {
 }
 
 const GROUP_ICON: Record<ConfigGroupId, Parameters<typeof Icon>[0]['name']> = {
-  inicio: 'home',
+  overview: 'home',
   console: 'capture',
-  engenheiro: 'radio',
-  painel: 'remote',
-  contas: 'coach',
-  sobre: 'info',
+  engineer: 'radio',
+  display: 'remote',
+  accounts: 'coach',
+  about: 'info',
 };
 
 /** Marca a linha por um instante, para o olho achar o que a busca apontou. */
@@ -76,7 +76,7 @@ function GroupList({
   variant: 'side' | 'cards';
 }) {
   const groups = CONFIG_GROUPS.filter(
-    (g) => (!g.desktopOnly || hasDiscord) && !(variant === 'cards' && g.id === 'inicio'),
+    (g) => (!g.desktopOnly || hasDiscord) && !(variant === 'cards' && g.id === 'overview'),
   );
   return (
     <ul className="ui-list cfg-groups" data-variant={variant}>
@@ -176,7 +176,7 @@ export function ConfigPage({ route }: { route: Route }) {
     const wanted = focus && focus.group === group ? [rowDomId(focus.id), focus.anchor] : [];
     const ids = [...wanted, target.anchor].filter((x): x is string => !!x);
     // O conteúdo de alguns grupos depende do status: espera por ele antes de procurar.
-    const needsStatus = group !== 'inicio' && group !== 'engenheiro' && group !== 'sobre';
+    const needsStatus = group !== 'overview' && group !== 'engineer' && group !== 'about';
     if (needsStatus && !ready) return;
     const timer = window.setTimeout(() => {
       for (const id of ids) {
@@ -199,9 +199,9 @@ export function ConfigPage({ route }: { route: Route }) {
   };
 
   const openAdvanced = !!focus?.advanced && focus.group === group;
-  const openMcp = target.anchor === 'mcp' || (openAdvanced && group === 'contas');
+  const openMcp = target.anchor === 'mcp' || (openAdvanced && group === 'accounts');
   const expandMine =
-    target.anchor === 'telas' || ['screens', 'lap-popup', 'lock'].includes(focus?.id ?? '');
+    target.anchor === 'screens' || ['screens', 'lap-popup', 'lock'].includes(focus?.id ?? '');
 
   const needsStatus = (render: (s: NonNullable<typeof status.data>) => ReactNode) =>
     status.error && !status.data ? (
@@ -214,7 +214,7 @@ export function ConfigPage({ route }: { route: Route }) {
 
   let content: ReactNode;
   switch (group) {
-    case 'inicio':
+    case 'overview':
       content = (
         <>
           <HealthSummary
@@ -232,15 +232,15 @@ export function ConfigPage({ route }: { route: Route }) {
         <ConsoleGroup status={s} onChange={status.reload} openAdvanced={openAdvanced} />
       ));
       break;
-    case 'engenheiro':
+    case 'engineer':
       content = <EngineerSettingsPanel openMore={openAdvanced} />;
       break;
-    case 'painel':
+    case 'display':
       content = needsStatus((s) => (
         <PanelGroup status={s} onChange={status.reload} expandMine={expandMine} />
       ));
       break;
-    case 'contas':
+    case 'accounts':
       content = status.data ? (
         <AccountsGroup status={status.data} openMcp={openMcp} />
       ) : (
@@ -250,7 +250,7 @@ export function ConfigPage({ route }: { route: Route }) {
         </>
       );
       break;
-    case 'sobre':
+    case 'about':
       content = needsStatus((s) => <AboutGroup status={s} />);
       break;
   }
@@ -328,7 +328,7 @@ export function ConfigPage({ route }: { route: Route }) {
             </nav>
           )}
           <div className="cfg-main" id="cfg-main" data-group={group}>
-            {isMobile && group !== 'inicio' && (
+            {isMobile && group !== 'overview' && (
               <div className="cfg-detail-head">
                 <a className="ui-btn" data-variant="secondary" href={routes.config()}>
                   <Icon name="back" size={16} />

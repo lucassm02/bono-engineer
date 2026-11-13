@@ -1,5 +1,5 @@
 /**
- * Pure logic of the lap replay (`#/analise/volta/:id`): the lap clock (time ↔ distance), the pace of
+ * Pure logic of the lap replay (`#/analysis/lap/:id`): the lap clock (time ↔ distance), the pace of
  * the playback, the ghost of the reference (same distance or same time) and the live gap.
  *
  * The traces endpoint resamples laps on a distance grid and already carries the lap time at each

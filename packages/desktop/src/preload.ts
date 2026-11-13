@@ -1,4 +1,9 @@
-import type { DesktopDataBridge, DesktopDiscordBridge, Language } from '@gt7/shared';
+import type {
+  DesktopDataBridge,
+  DesktopDiscordBridge,
+  DesktopUpdateBridge,
+  Language,
+} from '@gt7/shared';
 import { contextBridge, ipcRenderer } from 'electron';
 
 const discord: DesktopDiscordBridge = {
@@ -30,6 +35,21 @@ const data: DesktopDataBridge = {
   openFolder: () => ipcRenderer.invoke('bono:data:open-folder'),
 };
 contextBridge.exposeInMainWorld('bonoData', data);
+const updates: DesktopUpdateBridge = {
+  get: () => ipcRenderer.invoke('bono:updates:get'),
+  check: () => ipcRenderer.invoke('bono:updates:check'),
+  download: () => ipcRenderer.invoke('bono:updates:download'),
+  install: () => ipcRenderer.invoke('bono:updates:install'),
+  dismiss: () => ipcRenderer.invoke('bono:updates:dismiss'),
+  markNotesRead: () => ipcRenderer.invoke('bono:updates:mark-notes-read'),
+  onStatus(callback) {
+    const receive = (_event: Electron.IpcRendererEvent, status: Parameters<typeof callback>[0]) =>
+      callback(status);
+    ipcRenderer.on('bono:updates:status', receive);
+    return () => ipcRenderer.removeListener('bono:updates:status', receive);
+  },
+};
+contextBridge.exposeInMainWorld('bonoUpdates', updates);
 contextBridge.exposeInMainWorld('bonoDesktop', {
   getLanguage: () => ipcRenderer.invoke('bono:language:get'),
   setLanguage: (language: Language) => ipcRenderer.invoke('bono:language', language),

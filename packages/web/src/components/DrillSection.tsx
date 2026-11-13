@@ -18,7 +18,7 @@ import {
   stopDrill,
   useDrill,
 } from '../state/drill.ts';
-import { cornerLabel } from '../views/MapaView.tsx';
+import { cornerLabel } from '../views/MapView.tsx';
 
 const sec = (ms: number) => (ms / 1000).toFixed(3).replace('.', ',');
 
@@ -151,7 +151,7 @@ export function DrillSection() {
   if (drill) {
     return (
       <section
-        className="treino-drill ui-card"
+        className="drill-drill ui-card"
         data-no-gesture
         aria-label={uiText('Treino de curva')}
       >
@@ -186,7 +186,7 @@ export function DrillSection() {
             )}
           </p>
         )}
-        <div className="treino-controls">
+        <div className="drill-controls">
           <button
             type="button"
             className="ui-btn"
@@ -202,11 +202,7 @@ export function DrillSection() {
   }
 
   return (
-    <section
-      className="treino-drill ui-card"
-      data-no-gesture
-      aria-label={uiText('Treino de curva')}
-    >
+    <section className="drill-drill ui-card" data-no-gesture aria-label={uiText('Treino de curva')}>
       {summary && (
         <div className="dr-summary" role="status">
           <strong>{uiText('Treino de {0} encerrado', cornerLabel(summary.cornerId, null))}</strong>

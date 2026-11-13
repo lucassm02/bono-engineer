@@ -1,5 +1,5 @@
 /**
- * Central de ajuda (`#/ajuda`): tópicos e artigos curtos, escritos à mão em cada idioma (não passam
+ * Central de ajuda (`#/help`): tópicos e artigos curtos, escritos à mão em cada idioma (não passam
  * por `translations.json`: a explicação muda de forma entre idiomas, não só de palavras).
  *
  * Regras de escrita
@@ -153,7 +153,7 @@ const PT: HelpContent = {
   ],
   articles: [
     {
-      id: 'primeiros-passos',
+      id: 'getting-started',
       topic: 'start',
       title: 'Da instalação à primeira volta',
       summary: 'O caminho mais curto para ouvir o engenheiro.',
@@ -173,7 +173,7 @@ const PT: HelpContent = {
       keywords: 'instalar começar iniciar comecar tutorial',
     },
     {
-      id: 'refazer-assistente',
+      id: 'redo-setup',
       topic: 'start',
       title: 'Refazer o assistente inicial',
       summary: 'Passa de novo por idioma, voz, PS5, engenheiro e telas.',
@@ -183,12 +183,12 @@ const PT: HelpContent = {
         'Em cada passo, siga ou use Pular passo. “Fazer isso depois” fecha o assistente sem perder o que já foi feito.',
       ],
       note: 'Os passos que ficarem para depois aparecem no cartão “Falta configurar”, no topo da Início e das Configurações.',
-      links: [lnk('Configurações → Sobre', routes.config('sobre'))],
+      links: [lnk('Configurações → Sobre', routes.config('about'))],
       actions: ['setup'],
       keywords: 'onboarding boas-vindas reiniciar configuração inicial',
     },
     {
-      id: 'ver-os-tours',
+      id: 'guided-tours',
       topic: 'start',
       title: 'Ver os tours',
       summary: 'Dois passeios curtos: o do Ao vivo (numa demonstração, sem PS5) e o do histórico.',
@@ -203,7 +203,7 @@ const PT: HelpContent = {
     },
 
     {
-      id: 'ligar-o-engenheiro',
+      id: 'enable-engineer',
       topic: 'engineer',
       title: 'Ligar o engenheiro e escolher o modo',
       summary: 'Ele fica em silêncio quando tudo corre bem e fala quando há o que corrigir.',
@@ -214,11 +214,11 @@ const PT: HelpContent = {
         'Ajuste o Volume e confira com Testar voz.',
         'Em Onde ele fala, escolha este aparelho, o Discord ou outro aparelho.',
       ],
-      links: [lnk('Configurações → Engenheiro', routes.config('engenheiro'))],
+      links: [lnk('Configurações → Engenheiro', routes.config('engineer'))],
       keywords: 'rádio radio ligar desligar treino classificação corrida aprender pista',
     },
     {
-      id: 'escolher-a-voz',
+      id: 'choose-voice',
       topic: 'engineer',
       title: 'Escolher a voz',
       summary:
@@ -233,11 +233,11 @@ const PT: HelpContent = {
         'Voz 3: grave e calma.',
       ],
       note: 'Trocar o idioma do app troca também as vozes, e o Bono lembra a sua escolha em cada idioma (Configurações → Contas e dados → Idioma do app).',
-      links: [lnk('Escolher a voz', routes.config('engenheiro'))],
+      links: [lnk('Escolher a voz', routes.config('engineer'))],
       keywords: 'voz 1 voz 2 voz 3 timbre ouvir testar idioma',
     },
     {
-      id: 'como-ele-fala',
+      id: 'radio-calls',
       topic: 'engineer',
       title: 'Quanto e quando ele fala',
       summary: 'Ajustes finos que ficam em Mais opções, em Configurações → Engenheiro.',
@@ -249,12 +249,12 @@ const PT: HelpContent = {
         'Reforço positivo: avisa também quando você acerta a curva.',
       ],
       note: 'Na tela do Ao vivo, o botão do rádio mostra ou esconde o cartão do engenheiro sem desligá-lo.',
-      links: [lnk('Configurações → Engenheiro', routes.config('engenheiro'))],
+      links: [lnk('Configurações → Engenheiro', routes.config('engineer'))],
       keywords: 'silenciar mudo velocidade ritmo elogio resumo antecipação',
     },
 
     {
-      id: 'gestos',
+      id: 'gestures',
       topic: 'live',
       title: 'Gestos e botões do Ao vivo',
       summary: 'Pensados para usar com a mão no volante ou no controle.',
@@ -271,7 +271,7 @@ const PT: HelpContent = {
       keywords: 'deslizar swipe tocar segurar cadeado travar trocar tela',
     },
     {
-      id: 'delta-e-referencia',
+      id: 'delta-and-reference',
       topic: 'live',
       title: 'Delta, setores e volta de referência',
       summary: 'O delta compara você, a cada instante, com uma volta de referência.',
@@ -286,7 +286,7 @@ const PT: HelpContent = {
       keywords: 'delta setor melhor volta pessoal sessão tempo ganho perda',
     },
     {
-      id: 'telas-e-aparelhos',
+      id: 'screens-and-devices',
       topic: 'live',
       title: 'Telas e outros aparelhos',
       summary: 'Cada aparelho guarda as próprias telas.',
@@ -297,14 +297,14 @@ const PT: HelpContent = {
         'Para abrir no celular ou tablet, escaneie o QR Code em Abrir no celular ou tablet, com o aparelho na mesma rede. Use o celular na horizontal.',
       ],
       links: [
-        lnk('Ao vivo e aparelhos', routes.config('painel')),
-        lnk('Abrir no celular ou tablet', routes.config('acesso-remoto')),
+        lnk('Ao vivo e aparelhos', routes.config('display')),
+        lnk('Abrir no celular ou tablet', routes.config('remote-access')),
       ],
       keywords: 'celular tablet qr code preset personalizada widgets remoto lan',
     },
 
     {
-      id: 'reconhecer-a-pista',
+      id: 'track-recognition',
       topic: 'tracks',
       title: 'Como o Bono reconhece a pista',
       summary:
@@ -318,7 +318,7 @@ const PT: HelpContent = {
       keywords: 'volta de reconhecimento detectar identificar traçado nova pista nome',
     },
     {
-      id: 'escolher-a-pista',
+      id: 'choose-track',
       topic: 'tracks',
       title: 'Escolher a pista antes de sair',
       summary: 'Com pistas já salvas, o engenheiro fala desde a volta 1.',
@@ -328,11 +328,11 @@ const PT: HelpContent = {
         'Ao fechar a primeira volta, o Bono confere. Se a pista não bate, avisa quando você parar.',
       ],
       note: 'Para não ser perguntado, desligue Perguntar a pista ao começar em Configurações → Engenheiro. Nunca pergunta com o carro andando.',
-      links: [lnk('Configurações → Engenheiro', routes.config('engenheiro'))],
+      links: [lnk('Configurações → Engenheiro', routes.config('engineer'))],
       keywords: 'pista de hoje qual pista hoje perguntar escolher manual',
     },
     {
-      id: 'historico-e-voltas',
+      id: 'history-and-laps',
       topic: 'tracks',
       title: 'Sessões, voltas e comparação',
       summary: 'O Bono guarda sozinho cada sessão e cada volta, sem botão de iniciar.',
@@ -353,7 +353,7 @@ const PT: HelpContent = {
     },
 
     {
-      id: 'onde-fica-cada-coisa',
+      id: 'settings-overview',
       topic: 'settings',
       title: 'Onde fica cada coisa',
       summary: 'Seis grupos, sem arquivo de configuração.',
@@ -368,15 +368,15 @@ const PT: HelpContent = {
       note: 'Com muitas opções, a busca no topo acha pelo que você digita (voz, delta, firewall…). Cada grupo tem um “?” que abre a ajuda dele.',
       links: [
         lnk('Console', routes.config('console')),
-        lnk('Engenheiro', routes.config('engenheiro')),
-        lnk('Ao vivo e aparelhos', routes.config('painel')),
-        lnk('Contas e dados', routes.config('contas')),
-        lnk('Sobre', routes.config('sobre')),
+        lnk('Engenheiro', routes.config('engineer')),
+        lnk('Ao vivo e aparelhos', routes.config('display')),
+        lnk('Contas e dados', routes.config('accounts')),
+        lnk('Sobre', routes.config('about')),
       ],
       keywords: 'configurações ajustes grupos buscar menu opções',
     },
     {
-      id: 'idioma-e-dados',
+      id: 'language-and-data',
       topic: 'settings',
       title: 'Idioma e seus dados',
       summary: 'O idioma vale para a tela e para a voz do engenheiro.',
@@ -385,11 +385,11 @@ const PT: HelpContent = {
         'Para fazer uma cópia de segurança ou levar suas voltas para outro PC, veja “Backup e pasta dos dados”.',
       ],
       note: 'Sessões, voltas e gravações ficam só no seu PC. O Bono não tem servidor nem conta.',
-      links: [lnk('Contas e dados', routes.config('contas'))],
+      links: [lnk('Contas e dados', routes.config('accounts'))],
       keywords: 'english español língua privacidade',
     },
     {
-      id: 'backup-e-pasta',
+      id: 'backup-and-folder',
       topic: 'settings',
       title: 'Backup e pasta dos dados',
       summary: 'Exporte tudo num arquivo .bono, importe em outro PC ou mude onde os dados ficam.',
@@ -405,7 +405,7 @@ const PT: HelpContent = {
         'backup exportar importar restaurar onedrive dropbox nuvem pasta mudar local armazenamento bono arquivo',
     },
     {
-      id: 'corridas-diarias',
+      id: 'daily-races',
       topic: 'tracks',
       title: 'Corridas diárias da semana',
       summary: 'As três corridas do GT7, com os tempos das medalhas e o 1º lugar como referência.',
@@ -421,7 +421,7 @@ const PT: HelpContent = {
     },
 
     {
-      id: 'meta-da-pista',
+      id: 'track-goal',
       topic: 'tracks',
       title: 'Definir uma meta de tempo',
       summary:
@@ -436,7 +436,7 @@ const PT: HelpContent = {
       keywords: 'meta objetivo alvo tempo sugerir volta ideal bater',
     },
     {
-      id: 'tarefas-do-engenheiro',
+      id: 'engineer-tasks',
       topic: 'engineer',
       title: 'Tarefas do engenheiro',
       summary:
@@ -447,11 +447,11 @@ const PT: HelpContent = {
         'Na pista, aba Tarefas, você também cria, edita, pausa ou apaga.',
       ],
       note: 'A frase é montada só com um dicionário de falas gravadas. Em Configurações → Engenheiro → Mais opções você baixa a voz das tarefas (só da voz em uso), escolhe os modos e o máximo por volta. Não fala na volta de saída.',
-      links: [lnk('Configurações', routes.config('engenheiro'))],
+      links: [lnk('Configurações', routes.config('engineer'))],
       keywords: 'tarefas instrução agente mcp propostas aprovar rádio frase dicionário voz baixar',
     },
     {
-      id: 'setores-e-volta-ideal',
+      id: 'sectors-and-optimal-lap',
       topic: 'tracks',
       title: 'Setores e volta ideal',
       summary: 'A volta ideal é a soma dos seus melhores setores. É um teto, não uma promessa.',
@@ -465,7 +465,7 @@ const PT: HelpContent = {
       keywords: 'setor setores volta ideal teórica melhor trecho soma',
     },
     {
-      id: 'resumo-da-sessao',
+      id: 'session-summary',
       topic: 'tracks',
       title: 'Resumo da sessão',
       summary: 'Uma tela só para responder: foi uma boa sessão e o que fazer na próxima.',
@@ -480,7 +480,7 @@ const PT: HelpContent = {
       keywords: 'resumo sessão ritmo regularidade tendência dicas comparar',
     },
     {
-      id: 'onde-perde-tempo',
+      id: 'where-you-lose-time',
       topic: 'tracks',
       title: 'Onde você perde tempo',
       summary:
@@ -495,7 +495,7 @@ const PT: HelpContent = {
       keywords: 'perda curva causa provável mapa cor velocidade freio acelerador linha diferença',
     },
     {
-      id: 'replay-da-volta',
+      id: 'lap-replay',
       topic: 'tracks',
       title: 'Replay de uma volta',
       summary:
@@ -512,7 +512,7 @@ const PT: HelpContent = {
         'replay volta reproduzir fantasma timeline barra tempo freio acelerador volante passo',
     },
     {
-      id: 'coach-ia',
+      id: 'ai-coach',
       topic: 'settings',
       title: 'Coach IA: perguntar sobre as suas voltas',
       summary:
@@ -529,7 +529,7 @@ const PT: HelpContent = {
         'coach ia chat pergunta mcp claude openai chatgpt codex chave api modelo pontos fortes fracos',
     },
     {
-      id: 'resumo-da-semana',
+      id: 'weekly-summary',
       topic: 'tracks',
       title: 'Resumo da semana',
       summary:
@@ -545,7 +545,7 @@ const PT: HelpContent = {
       keywords: 'resumo semana recordes metas batidas compartilhar imagem texto semanal',
     },
     {
-      id: 'meta-pela-corrida-diaria',
+      id: 'daily-race-goal',
       topic: 'tracks',
       title: 'Meta pela medalha da corrida diária',
       summary:
@@ -560,7 +560,7 @@ const PT: HelpContent = {
       keywords: 'meta medalha corrida diária ouro prata bronze platina sugestão',
     },
     {
-      id: 'treinar-uma-curva',
+      id: 'corner-drill',
       topic: 'tracks',
       title: 'Treinar uma curva',
       summary: 'Escolha uma curva e o engenheiro avalia cada passagem, falando só dela.',
@@ -574,7 +574,7 @@ const PT: HelpContent = {
       keywords: 'treino curva drill passagem trecho engenheiro foco',
     },
     {
-      id: 'combustivel-e-pneus',
+      id: 'fuel-and-tyres',
       topic: 'tracks',
       title: 'Combustível, parada e ritmo do pneu',
       summary: 'O Bono estima as voltas de combustível, quando parar e se o pneu está no fim.',
@@ -589,7 +589,7 @@ const PT: HelpContent = {
     },
 
     {
-      id: 'discord-configurar',
+      id: 'discord-setup',
       topic: 'discord',
       title: 'Configurar o Discord em 4 passos',
       summary:
@@ -606,7 +606,7 @@ const PT: HelpContent = {
       keywords: 'bot token convite servidor canal developer portal',
     },
     {
-      id: 'discord-ouvir-no-ps5',
+      id: 'discord-on-ps5',
       topic: 'discord',
       title: 'Ouvir o engenheiro no headset do PS5',
       summary: 'Depois de configurado, falta só entrar no canal.',
@@ -620,7 +620,7 @@ const PT: HelpContent = {
       keywords: 'headset game base falar pelo discord canal de voz ouvir',
     },
     {
-      id: 'discord-atraso',
+      id: 'discord-latency',
       topic: 'discord',
       title: 'Calibrar o atraso (opcional)',
       summary: 'Sem calibrar, o Bono usa 300 ms e o som pode chegar um pouco depois da curva.',
@@ -636,7 +636,7 @@ const PT: HelpContent = {
     },
 
     {
-      id: 'sem-sinal',
+      id: 'no-signal',
       topic: 'problems',
       title: 'Sem sinal do PS5',
       summary: 'O chip de conexão não fica verde.',
@@ -654,7 +654,7 @@ const PT: HelpContent = {
       keywords: 'sem sinal desconectado não conecta firewall rede privada ps5 ip udp',
     },
     {
-      id: 'engenheiro-mudo',
+      id: 'engineer-silent',
       topic: 'problems',
       title: 'O engenheiro não fala',
       summary: 'Confira nesta ordem.',
@@ -665,11 +665,11 @@ const PT: HelpContent = {
         'A pista é nova? Na primeira volta ele só aprende o traçado e começa a falar na seguinte.',
         'Falta referência? Ele avisa na faixa; dê mais uma volta ou grave um replay.',
       ],
-      links: [lnk('Configurações → Engenheiro', routes.config('engenheiro'))],
+      links: [lnk('Configurações → Engenheiro', routes.config('engineer'))],
       keywords: 'mudo sem som não ouço silêncio calado volume desligado áudio',
     },
     {
-      id: 'discord-com-problema',
+      id: 'discord-troubleshooting',
       topic: 'problems',
       title: 'O Discord não funciona',
       summary: 'Cada mensagem do Bono diz o que falta.',
@@ -684,7 +684,7 @@ const PT: HelpContent = {
       keywords: 'token permissão canal bot recusou reconfigurar apagar configuração',
     },
     {
-      id: 'pista-nao-reconhecida',
+      id: 'unrecognized-track',
       topic: 'problems',
       title: 'A pista não foi reconhecida',
       summary: 'O reconhecimento só acontece quando uma volta cronometrada fecha.',
@@ -698,7 +698,7 @@ const PT: HelpContent = {
       keywords: 'não reconhece pista desconhecida nova nome errada volta suja',
     },
     {
-      id: 'celular-nao-abre',
+      id: 'phone-cannot-connect',
       topic: 'problems',
       title: 'O celular não abre o Ao vivo',
       summary: 'O aparelho precisa alcançar o Bono pela rede.',
@@ -708,12 +708,12 @@ const PT: HelpContent = {
         'Se não abrir, veja Acesso pela rede (Windows). Se o Windows estiver bloqueando, clique em corrigir.',
         'Gire o celular para a horizontal.',
       ],
-      links: [lnk('Abrir no celular ou tablet', routes.config('acesso-remoto'))],
+      links: [lnk('Abrir no celular ou tablet', routes.config('remote-access'))],
       keywords: 'tablet qr code não abre lan firewall 8770 remoto',
     },
 
     {
-      id: 'atalhos',
+      id: 'shortcuts',
       topic: 'keys',
       title: 'Atalhos de teclado',
       summary: 'No Ao vivo e na ajuda.',
@@ -790,7 +790,7 @@ const EN: HelpContent = {
   ],
   articles: [
     {
-      id: 'primeiros-passos',
+      id: 'getting-started',
       topic: 'start',
       title: 'From install to your first lap',
       summary: 'The shortest way to hear the engineer.',
@@ -807,7 +807,7 @@ const EN: HelpContent = {
       keywords: 'install start begin tutorial',
     },
     {
-      id: 'refazer-assistente',
+      id: 'redo-setup',
       topic: 'start',
       title: 'Redo the setup assistant',
       summary: 'Goes through language, voice, PS5, engineer and screens again.',
@@ -817,12 +817,12 @@ const EN: HelpContent = {
         'At each step, continue or use Skip step. “Do this later” closes the assistant and keeps what you already did.',
       ],
       note: 'Steps you leave for later show up in the “Still to set up” card, at the top of Home and Settings.',
-      links: [lnk('Settings → About', routes.config('sobre'))],
+      links: [lnk('Settings → About', routes.config('about'))],
       actions: ['setup'],
       keywords: 'onboarding welcome restart first-run',
     },
     {
-      id: 'ver-os-tours',
+      id: 'guided-tours',
       topic: 'start',
       title: 'See the tours',
       summary:
@@ -838,7 +838,7 @@ const EN: HelpContent = {
     },
 
     {
-      id: 'ligar-o-engenheiro',
+      id: 'enable-engineer',
       topic: 'engineer',
       title: 'Turn on the engineer and pick a mode',
       summary: 'It stays quiet when all goes well and speaks when there is something to fix.',
@@ -849,11 +849,11 @@ const EN: HelpContent = {
         'Set the Volume and check it with Preview voice.',
         'In Where it speaks, choose this device, Discord or another device.',
       ],
-      links: [lnk('Settings → Engineer', routes.config('engenheiro'))],
+      links: [lnk('Settings → Engineer', routes.config('engineer'))],
       keywords: 'radio on off training qualifying race learn track',
     },
     {
-      id: 'escolher-a-voz',
+      id: 'choose-voice',
       topic: 'engineer',
       title: 'Pick the voice',
       summary:
@@ -868,11 +868,11 @@ const EN: HelpContent = {
         'Voice 3: deep and calm.',
       ],
       note: 'Changing the app language also changes the voices, and Bono remembers your pick for each language (Settings → Accounts and data → App language).',
-      links: [lnk('Pick the voice', routes.config('engenheiro'))],
+      links: [lnk('Pick the voice', routes.config('engineer'))],
       keywords: 'voice 1 voice 2 voice 3 tone listen test language',
     },
     {
-      id: 'como-ele-fala',
+      id: 'radio-calls',
       topic: 'engineer',
       title: 'How much and when it talks',
       summary: 'Fine settings under More options, in Settings → Engineer.',
@@ -884,12 +884,12 @@ const EN: HelpContent = {
         'Positive feedback: also tells you when you nail a corner.',
       ],
       note: 'On the Live screen, the radio button shows or hides the engineer card without turning it off.',
-      links: [lnk('Settings → Engineer', routes.config('engenheiro'))],
+      links: [lnk('Settings → Engineer', routes.config('engineer'))],
       keywords: 'mute silence speed pace praise summary anticipation',
     },
 
     {
-      id: 'gestos',
+      id: 'gestures',
       topic: 'live',
       title: 'Live gestures and buttons',
       summary: 'Made for a hand on the wheel or the controller.',
@@ -906,7 +906,7 @@ const EN: HelpContent = {
       keywords: 'swipe tap hold padlock lock switch screen',
     },
     {
-      id: 'delta-e-referencia',
+      id: 'delta-and-reference',
       topic: 'live',
       title: 'Delta, sectors and reference lap',
       summary: 'The delta compares you, at every instant, with a reference lap.',
@@ -921,7 +921,7 @@ const EN: HelpContent = {
       keywords: 'delta sector best lap personal session time gain loss',
     },
     {
-      id: 'telas-e-aparelhos',
+      id: 'screens-and-devices',
       topic: 'live',
       title: 'Screens and other devices',
       summary: 'Each device keeps its own screens.',
@@ -932,14 +932,14 @@ const EN: HelpContent = {
         'To open it on a phone or tablet, scan the QR code in Open on a phone or tablet, on the same network. Use the phone in landscape.',
       ],
       links: [
-        lnk('Live and devices', routes.config('painel')),
-        lnk('Open on a phone or tablet', routes.config('acesso-remoto')),
+        lnk('Live and devices', routes.config('display')),
+        lnk('Open on a phone or tablet', routes.config('remote-access')),
       ],
       keywords: 'phone tablet qr code preset custom widgets remote lan',
     },
 
     {
-      id: 'reconhecer-a-pista',
+      id: 'track-recognition',
       topic: 'tracks',
       title: 'How Bono recognises the track',
       summary:
@@ -953,7 +953,7 @@ const EN: HelpContent = {
       keywords: 'recognition lap detect identify layout new track name',
     },
     {
-      id: 'escolher-a-pista',
+      id: 'choose-track',
       topic: 'tracks',
       title: 'Pick the track before you start',
       summary: 'With saved tracks, the engineer talks from lap 1.',
@@ -963,11 +963,11 @@ const EN: HelpContent = {
         'When the first lap closes, Bono checks. If the track does not match, it tells you when you stop.',
       ],
       note: 'To stop being asked, turn off Ask for the track at the start in Settings → Engineer. It never asks while the car moves.',
-      links: [lnk('Settings → Engineer', routes.config('engenheiro'))],
+      links: [lnk('Settings → Engineer', routes.config('engineer'))],
       keywords: 'todays track which track today ask choose manual',
     },
     {
-      id: 'historico-e-voltas',
+      id: 'history-and-laps',
       topic: 'tracks',
       title: 'Sessions, laps and comparison',
       summary: 'Bono saves every session and lap by itself, with no start button.',
@@ -988,7 +988,7 @@ const EN: HelpContent = {
     },
 
     {
-      id: 'onde-fica-cada-coisa',
+      id: 'settings-overview',
       topic: 'settings',
       title: 'Where everything is',
       summary: 'Six groups, no configuration file.',
@@ -1003,15 +1003,15 @@ const EN: HelpContent = {
       note: 'With many options, the search at the top finds what you type (voice, delta, firewall…). Each group has a “?” that opens its help.',
       links: [
         lnk('Console', routes.config('console')),
-        lnk('Engineer', routes.config('engenheiro')),
-        lnk('Live and devices', routes.config('painel')),
-        lnk('Accounts and data', routes.config('contas')),
-        lnk('About', routes.config('sobre')),
+        lnk('Engineer', routes.config('engineer')),
+        lnk('Live and devices', routes.config('display')),
+        lnk('Accounts and data', routes.config('accounts')),
+        lnk('About', routes.config('about')),
       ],
       keywords: 'settings groups search menu options',
     },
     {
-      id: 'idioma-e-dados',
+      id: 'language-and-data',
       topic: 'settings',
       title: 'Language and your data',
       summary: 'The language applies to the screen and to the engineer’s voice.',
@@ -1020,11 +1020,11 @@ const EN: HelpContent = {
         'To back up or take your laps to another PC, see “Backup and data folder”.',
       ],
       note: 'Sessions, laps and recordings stay on your PC only. Bono has no server and no account.',
-      links: [lnk('Accounts and data', routes.config('contas'))],
+      links: [lnk('Accounts and data', routes.config('accounts'))],
       keywords: 'portugues espanol language privacy',
     },
     {
-      id: 'backup-e-pasta',
+      id: 'backup-and-folder',
       topic: 'settings',
       title: 'Backup and data folder',
       summary:
@@ -1041,7 +1041,7 @@ const EN: HelpContent = {
         'backup export import restore onedrive dropbox cloud folder change location storage bono file',
     },
     {
-      id: 'corridas-diarias',
+      id: 'daily-races',
       topic: 'tracks',
       title: 'This week’s Daily Races',
       summary: 'The three GT7 races, with the medal times and 1st place as a reference.',
@@ -1056,7 +1056,7 @@ const EN: HelpContent = {
     },
 
     {
-      id: 'meta-da-pista',
+      id: 'track-goal',
       topic: 'tracks',
       title: 'Set a lap time goal',
       summary:
@@ -1071,7 +1071,7 @@ const EN: HelpContent = {
       keywords: 'goal target time suggest ideal lap reach',
     },
     {
-      id: 'tarefas-do-engenheiro',
+      id: 'engineer-tasks',
       topic: 'engineer',
       title: 'Engineer tasks',
       summary:
@@ -1082,12 +1082,12 @@ const EN: HelpContent = {
         'On the track, Tasks tab, you can also create, edit, pause or delete them.',
       ],
       note: 'The sentence is built only from a dictionary of recorded phrases. In Settings → Engineer → More options you download the tasks voice (only the voice in use), pick the modes and the maximum per lap. It stays quiet on the out lap.',
-      links: [lnk('Settings', routes.config('engenheiro'))],
+      links: [lnk('Settings', routes.config('engineer'))],
       keywords:
         'tasks instruction agent mcp proposals approve radio sentence dictionary voice download',
     },
     {
-      id: 'setores-e-volta-ideal',
+      id: 'sectors-and-optimal-lap',
       topic: 'tracks',
       title: 'Sectors and ideal lap',
       summary: 'The ideal lap is the sum of your best sectors. It is a ceiling, not a promise.',
@@ -1101,7 +1101,7 @@ const EN: HelpContent = {
       keywords: 'sector sectors ideal lap theoretical best sum',
     },
     {
-      id: 'resumo-da-sessao',
+      id: 'session-summary',
       topic: 'tracks',
       title: 'Session summary',
       summary: 'One screen to answer: was it a good session and what to do next.',
@@ -1116,7 +1116,7 @@ const EN: HelpContent = {
       keywords: 'summary session pace consistency trend tips compare',
     },
     {
-      id: 'onde-perde-tempo',
+      id: 'where-you-lose-time',
       topic: 'tracks',
       title: 'Where you lose time',
       summary:
@@ -1131,7 +1131,7 @@ const EN: HelpContent = {
       keywords: 'loss corner cause likely map colour speed brake throttle line difference',
     },
     {
-      id: 'replay-da-volta',
+      id: 'lap-replay',
       topic: 'tracks',
       title: 'Replaying one lap',
       summary:
@@ -1147,7 +1147,7 @@ const EN: HelpContent = {
       keywords: 'replay lap play ghost timeline scrub brake throttle steering step',
     },
     {
-      id: 'coach-ia',
+      id: 'ai-coach',
       topic: 'settings',
       title: 'AI Coach: ask about your laps',
       summary:
@@ -1164,7 +1164,7 @@ const EN: HelpContent = {
         'ai coach chat question mcp claude openai chatgpt codex key api model strengths weaknesses',
     },
     {
-      id: 'resumo-da-semana',
+      id: 'weekly-summary',
       topic: 'tracks',
       title: 'Weekly summary',
       summary:
@@ -1180,7 +1180,7 @@ const EN: HelpContent = {
       keywords: 'weekly summary records goals reached share image text',
     },
     {
-      id: 'meta-pela-corrida-diaria',
+      id: 'daily-race-goal',
       topic: 'tracks',
       title: 'Goal from the Daily Race medal',
       summary:
@@ -1195,7 +1195,7 @@ const EN: HelpContent = {
       keywords: 'goal medal daily race gold silver bronze platinum suggestion',
     },
     {
-      id: 'treinar-uma-curva',
+      id: 'corner-drill',
       topic: 'tracks',
       title: 'Drill a corner',
       summary: 'Pick one corner and the engineer rates every pass, talking only about it.',
@@ -1209,7 +1209,7 @@ const EN: HelpContent = {
       keywords: 'drill corner pass stretch engineer focus',
     },
     {
-      id: 'combustivel-e-pneus',
+      id: 'fuel-and-tyres',
       topic: 'tracks',
       title: 'Fuel, pit stop and tyre pace',
       summary: 'Bono estimates the laps of fuel, when to stop and whether the tyres are done.',
@@ -1224,7 +1224,7 @@ const EN: HelpContent = {
     },
 
     {
-      id: 'discord-configurar',
+      id: 'discord-setup',
       topic: 'discord',
       title: 'Set up Discord in 4 steps',
       summary:
@@ -1241,7 +1241,7 @@ const EN: HelpContent = {
       keywords: 'bot token invite server channel developer portal',
     },
     {
-      id: 'discord-ouvir-no-ps5',
+      id: 'discord-on-ps5',
       topic: 'discord',
       title: 'Hear the engineer in the PS5 headset',
       summary: 'Once set up, you only need to join the channel.',
@@ -1255,7 +1255,7 @@ const EN: HelpContent = {
       keywords: 'headset game base speak through discord voice channel listen',
     },
     {
-      id: 'discord-atraso',
+      id: 'discord-latency',
       topic: 'discord',
       title: 'Calibrate the delay (optional)',
       summary:
@@ -1272,7 +1272,7 @@ const EN: HelpContent = {
     },
 
     {
-      id: 'sem-sinal',
+      id: 'no-signal',
       topic: 'problems',
       title: 'No signal from the PS5',
       summary: 'The connection chip does not turn green.',
@@ -1290,7 +1290,7 @@ const EN: HelpContent = {
       keywords: 'no signal disconnected not connecting firewall private network ps5 ip udp',
     },
     {
-      id: 'engenheiro-mudo',
+      id: 'engineer-silent',
       topic: 'problems',
       title: 'The engineer is silent',
       summary: 'Check in this order.',
@@ -1301,11 +1301,11 @@ const EN: HelpContent = {
         'Is the track new? On the first lap it only learns the shape, and starts talking on the next.',
         'Missing a reference? It says so in the strip; drive one more lap or record a replay.',
       ],
-      links: [lnk('Settings → Engineer', routes.config('engenheiro'))],
+      links: [lnk('Settings → Engineer', routes.config('engineer'))],
       keywords: 'silent mute no sound cannot hear quiet volume off audio',
     },
     {
-      id: 'discord-com-problema',
+      id: 'discord-troubleshooting',
       topic: 'problems',
       title: 'Discord is not working',
       summary: 'Each Bono message says what is missing.',
@@ -1320,7 +1320,7 @@ const EN: HelpContent = {
       keywords: 'token permission channel bot refused set up again delete configuration',
     },
     {
-      id: 'pista-nao-reconhecida',
+      id: 'unrecognized-track',
       topic: 'problems',
       title: 'The track was not recognised',
       summary: 'Recognition only happens when a timed lap closes.',
@@ -1334,7 +1334,7 @@ const EN: HelpContent = {
       keywords: 'not recognised unknown track new name wrong dirty lap',
     },
     {
-      id: 'celular-nao-abre',
+      id: 'phone-cannot-connect',
       topic: 'problems',
       title: 'The phone cannot open Live',
       summary: 'The device must reach Bono over the network.',
@@ -1344,12 +1344,12 @@ const EN: HelpContent = {
         'If it does not open, check Network access (Windows). If Windows is blocking, click fix.',
         'Turn the phone to landscape.',
       ],
-      links: [lnk('Open on a phone or tablet', routes.config('acesso-remoto'))],
+      links: [lnk('Open on a phone or tablet', routes.config('remote-access'))],
       keywords: 'tablet qr code does not open lan firewall 8770 remote',
     },
 
     {
-      id: 'atalhos',
+      id: 'shortcuts',
       topic: 'keys',
       title: 'Keyboard shortcuts',
       summary: 'On the Live dashboard and in help.',
@@ -1426,7 +1426,7 @@ const ES: HelpContent = {
   ],
   articles: [
     {
-      id: 'primeiros-passos',
+      id: 'getting-started',
       topic: 'start',
       title: 'De la instalación a la primera vuelta',
       summary: 'El camino más corto para oír al ingeniero.',
@@ -1446,7 +1446,7 @@ const ES: HelpContent = {
       keywords: 'instalar empezar comenzar tutorial',
     },
     {
-      id: 'refazer-assistente',
+      id: 'redo-setup',
       topic: 'start',
       title: 'Repetir el asistente inicial',
       summary: 'Pasa otra vez por idioma, voz, PS5, ingeniero y pantallas.',
@@ -1456,12 +1456,12 @@ const ES: HelpContent = {
         'En cada paso, sigue o usa Saltar paso. “Hacerlo después” cierra el asistente y conserva lo ya hecho.',
       ],
       note: 'Los pasos que dejes para después aparecen en la tarjeta “Falta configurar”, arriba en Inicio y en Configuración.',
-      links: [lnk('Configuración → Acerca de', routes.config('sobre'))],
+      links: [lnk('Configuración → Acerca de', routes.config('about'))],
       actions: ['setup'],
       keywords: 'onboarding bienvenida reiniciar configuración inicial',
     },
     {
-      id: 'ver-os-tours',
+      id: 'guided-tours',
       topic: 'start',
       title: 'Ver los tours',
       summary:
@@ -1477,7 +1477,7 @@ const ES: HelpContent = {
     },
 
     {
-      id: 'ligar-o-engenheiro',
+      id: 'enable-engineer',
       topic: 'engineer',
       title: 'Activar al ingeniero y elegir el modo',
       summary: 'Se queda en silencio cuando todo va bien y habla cuando hay algo que corregir.',
@@ -1488,11 +1488,11 @@ const ES: HelpContent = {
         'Ajusta el Volumen y compruébalo con Probar voz.',
         'En Dónde habla, elige este dispositivo, Discord u otro dispositivo.',
       ],
-      links: [lnk('Configuración → Ingeniero', routes.config('engenheiro'))],
+      links: [lnk('Configuración → Ingeniero', routes.config('engineer'))],
       keywords: 'radio activar desactivar entrenamiento clasificación carrera aprender circuito',
     },
     {
-      id: 'escolher-a-voz',
+      id: 'choose-voice',
       topic: 'engineer',
       title: 'Elegir la voz',
       summary:
@@ -1507,11 +1507,11 @@ const ES: HelpContent = {
         'Voz 3: grave y tranquila.',
       ],
       note: 'Cambiar el idioma de la app cambia también las voces, y Bono recuerda tu elección en cada idioma (Configuración → Cuentas y datos → Idioma de la app).',
-      links: [lnk('Elegir la voz', routes.config('engenheiro'))],
+      links: [lnk('Elegir la voz', routes.config('engineer'))],
       keywords: 'voz 1 voz 2 voz 3 tono escuchar probar idioma',
     },
     {
-      id: 'como-ele-fala',
+      id: 'radio-calls',
       topic: 'engineer',
       title: 'Cuánto y cuándo habla',
       summary: 'Ajustes finos en Más opciones, dentro de Configuración → Ingeniero.',
@@ -1523,12 +1523,12 @@ const ES: HelpContent = {
         'Refuerzo positivo: avisa también cuando aciertas la curva.',
       ],
       note: 'En la pantalla En directo, el botón de radio muestra u oculta la tarjeta del ingeniero sin desactivarlo.',
-      links: [lnk('Configuración → Ingeniero', routes.config('engenheiro'))],
+      links: [lnk('Configuración → Ingeniero', routes.config('engineer'))],
       keywords: 'silenciar mudo velocidad ritmo elogio resumen anticipación',
     },
 
     {
-      id: 'gestos',
+      id: 'gestures',
       topic: 'live',
       title: 'Gestos y botones de En directo',
       summary: 'Pensados para usar con la mano en el volante o en el mando.',
@@ -1545,7 +1545,7 @@ const ES: HelpContent = {
       keywords: 'deslizar swipe tocar mantener candado bloquear cambiar pantalla',
     },
     {
-      id: 'delta-e-referencia',
+      id: 'delta-and-reference',
       topic: 'live',
       title: 'Delta, sectores y vuelta de referencia',
       summary: 'El delta te compara, en cada instante, con una vuelta de referencia.',
@@ -1560,7 +1560,7 @@ const ES: HelpContent = {
       keywords: 'delta sector mejor vuelta personal sesión tiempo ganancia pérdida',
     },
     {
-      id: 'telas-e-aparelhos',
+      id: 'screens-and-devices',
       topic: 'live',
       title: 'Pantallas y otros dispositivos',
       summary: 'Cada dispositivo guarda sus propias pantallas.',
@@ -1571,14 +1571,14 @@ const ES: HelpContent = {
         'Para abrirlo en el móvil o la tableta, escanea el código QR en Abrir en el móvil o la tableta, en la misma red. Usa el móvil en horizontal.',
       ],
       links: [
-        lnk('En directo y dispositivos', routes.config('painel')),
-        lnk('Abrir en el móvil o la tableta', routes.config('acesso-remoto')),
+        lnk('En directo y dispositivos', routes.config('display')),
+        lnk('Abrir en el móvil o la tableta', routes.config('remote-access')),
       ],
       keywords: 'móvil tableta código qr preset personalizada widgets remoto lan',
     },
 
     {
-      id: 'reconhecer-a-pista',
+      id: 'track-recognition',
       topic: 'tracks',
       title: 'Cómo reconoce Bono la pista',
       summary:
@@ -1592,7 +1592,7 @@ const ES: HelpContent = {
       keywords: 'vuelta de reconocimiento detectar identificar trazado pista nueva nombre',
     },
     {
-      id: 'escolher-a-pista',
+      id: 'choose-track',
       topic: 'tracks',
       title: 'Elegir la pista antes de salir',
       summary: 'Con pistas ya guardadas, el ingeniero habla desde la vuelta 1.',
@@ -1602,11 +1602,11 @@ const ES: HelpContent = {
         'Al cerrarse la primera vuelta, Bono comprueba. Si la pista no coincide, te avisa cuando te detengas.',
       ],
       note: 'Para que no pregunte, desactiva Preguntar la pista al empezar en Configuración → Ingeniero. Nunca pregunta con el coche en movimiento.',
-      links: [lnk('Configuración → Ingeniero', routes.config('engenheiro'))],
+      links: [lnk('Configuración → Ingeniero', routes.config('engineer'))],
       keywords: 'pista de hoy qué pista hoy preguntar elegir manual',
     },
     {
-      id: 'historico-e-voltas',
+      id: 'history-and-laps',
       topic: 'tracks',
       title: 'Sesiones, vueltas y comparación',
       summary: 'Bono guarda solo cada sesión y cada vuelta, sin botón de inicio.',
@@ -1627,7 +1627,7 @@ const ES: HelpContent = {
     },
 
     {
-      id: 'onde-fica-cada-coisa',
+      id: 'settings-overview',
       topic: 'settings',
       title: 'Dónde está cada cosa',
       summary: 'Seis grupos, sin archivo de configuración.',
@@ -1642,15 +1642,15 @@ const ES: HelpContent = {
       note: 'Con muchas opciones, la búsqueda de arriba encuentra lo que escribas (voz, delta, firewall…). Cada grupo tiene un “?” que abre su ayuda.',
       links: [
         lnk('Consola', routes.config('console')),
-        lnk('Ingeniero', routes.config('engenheiro')),
-        lnk('En directo y dispositivos', routes.config('painel')),
-        lnk('Cuentas y datos', routes.config('contas')),
-        lnk('Acerca de', routes.config('sobre')),
+        lnk('Ingeniero', routes.config('engineer')),
+        lnk('En directo y dispositivos', routes.config('display')),
+        lnk('Cuentas y datos', routes.config('accounts')),
+        lnk('Acerca de', routes.config('about')),
       ],
       keywords: 'configuración ajustes grupos buscar menú opciones',
     },
     {
-      id: 'idioma-e-dados',
+      id: 'language-and-data',
       topic: 'settings',
       title: 'Idioma y tus datos',
       summary: 'El idioma vale para la pantalla y para la voz del ingeniero.',
@@ -1659,11 +1659,11 @@ const ES: HelpContent = {
         'Para hacer una copia de seguridad o llevar tus vueltas a otro PC, mira “Copia de seguridad y carpeta de datos”.',
       ],
       note: 'Sesiones, vueltas y grabaciones quedan solo en tu PC. Bono no tiene servidor ni cuenta.',
-      links: [lnk('Cuentas y datos', routes.config('contas'))],
+      links: [lnk('Cuentas y datos', routes.config('accounts'))],
       keywords: 'english portugués idioma privacidad',
     },
     {
-      id: 'backup-e-pasta',
+      id: 'backup-and-folder',
       topic: 'settings',
       title: 'Copia de seguridad y carpeta de datos',
       summary:
@@ -1680,7 +1680,7 @@ const ES: HelpContent = {
         'copia seguridad exportar importar restaurar onedrive dropbox nube carpeta cambiar ubicación almacenamiento bono archivo',
     },
     {
-      id: 'corridas-diarias',
+      id: 'daily-races',
       topic: 'tracks',
       title: 'Carreras diarias de la semana',
       summary:
@@ -1697,7 +1697,7 @@ const ES: HelpContent = {
     },
 
     {
-      id: 'meta-da-pista',
+      id: 'track-goal',
       topic: 'tracks',
       title: 'Definir una meta de tiempo',
       summary:
@@ -1712,7 +1712,7 @@ const ES: HelpContent = {
       keywords: 'meta objetivo tiempo sugerir vuelta ideal lograr',
     },
     {
-      id: 'tarefas-do-engenheiro',
+      id: 'engineer-tasks',
       topic: 'engineer',
       title: 'Tareas del ingeniero',
       summary:
@@ -1723,12 +1723,12 @@ const ES: HelpContent = {
         'En la pista, pestaña Tareas, también puedes crear, editar, pausar o borrar.',
       ],
       note: 'La frase se arma solo con un diccionario de frases grabadas. En Configuración → Ingeniero → Más opciones descargas la voz de las tareas (solo la voz en uso), eliges los modos y el máximo por vuelta. No habla en la vuelta de salida.',
-      links: [lnk('Configuración', routes.config('engenheiro'))],
+      links: [lnk('Configuración', routes.config('engineer'))],
       keywords:
         'tareas instrucción agente mcp propuestas aprobar radio frase diccionario voz descargar',
     },
     {
-      id: 'setores-e-volta-ideal',
+      id: 'sectors-and-optimal-lap',
       topic: 'tracks',
       title: 'Sectores y vuelta ideal',
       summary: 'La vuelta ideal es la suma de tus mejores sectores. Es un techo, no una promesa.',
@@ -1742,7 +1742,7 @@ const ES: HelpContent = {
       keywords: 'sector sectores vuelta ideal teórica mejor suma',
     },
     {
-      id: 'resumo-da-sessao',
+      id: 'session-summary',
       topic: 'tracks',
       title: 'Resumen de la sesión',
       summary: 'Una sola pantalla para responder: fue una buena sesión y qué hacer la próxima vez.',
@@ -1757,7 +1757,7 @@ const ES: HelpContent = {
       keywords: 'resumen sesión ritmo regularidad tendencia consejos comparar',
     },
     {
-      id: 'onde-perde-tempo',
+      id: 'where-you-lose-time',
       topic: 'tracks',
       title: 'Dónde pierdes tiempo',
       summary:
@@ -1773,7 +1773,7 @@ const ES: HelpContent = {
         'pérdida curva causa probable mapa color velocidad freno acelerador línea diferencia',
     },
     {
-      id: 'replay-da-volta',
+      id: 'lap-replay',
       topic: 'tracks',
       title: 'Repetición de una vuelta',
       summary:
@@ -1790,7 +1790,7 @@ const ES: HelpContent = {
         'repetición vuelta reproducir fantasma línea de tiempo barra freno acelerador volante paso',
     },
     {
-      id: 'coach-ia',
+      id: 'ai-coach',
       topic: 'settings',
       title: 'Coach IA: pregunta sobre tus vueltas',
       summary:
@@ -1807,7 +1807,7 @@ const ES: HelpContent = {
         'coach ia chat pregunta mcp claude openai chatgpt codex clave api modelo puntos fuertes débiles',
     },
     {
-      id: 'resumo-da-semana',
+      id: 'weekly-summary',
       topic: 'tracks',
       title: 'Resumen de la semana',
       summary:
@@ -1823,7 +1823,7 @@ const ES: HelpContent = {
       keywords: 'resumen semana récords metas alcanzadas compartir imagen texto semanal',
     },
     {
-      id: 'meta-pela-corrida-diaria',
+      id: 'daily-race-goal',
       topic: 'tracks',
       title: 'Meta con la medalla de la carrera diaria',
       summary:
@@ -1838,7 +1838,7 @@ const ES: HelpContent = {
       keywords: 'meta medalla carrera diaria oro plata bronce platino sugerencia',
     },
     {
-      id: 'treinar-uma-curva',
+      id: 'corner-drill',
       topic: 'tracks',
       title: 'Entrenar una curva',
       summary: 'Elige una curva y el ingeniero evalúa cada paso, hablando solo de ella.',
@@ -1852,7 +1852,7 @@ const ES: HelpContent = {
       keywords: 'entrenamiento curva paso tramo ingeniero foco',
     },
     {
-      id: 'combustivel-e-pneus',
+      id: 'fuel-and-tyres',
       topic: 'tracks',
       title: 'Combustible, parada y ritmo del neumático',
       summary:
@@ -1868,7 +1868,7 @@ const ES: HelpContent = {
     },
 
     {
-      id: 'discord-configurar',
+      id: 'discord-setup',
       topic: 'discord',
       title: 'Configurar Discord en 4 pasos',
       summary:
@@ -1885,7 +1885,7 @@ const ES: HelpContent = {
       keywords: 'bot token invitación servidor canal developer portal',
     },
     {
-      id: 'discord-ouvir-no-ps5',
+      id: 'discord-on-ps5',
       topic: 'discord',
       title: 'Oír al ingeniero en los auriculares de la PS5',
       summary: 'Una vez configurado, solo falta entrar en el canal.',
@@ -1899,7 +1899,7 @@ const ES: HelpContent = {
       keywords: 'auriculares game base hablar por discord canal de voz escuchar',
     },
     {
-      id: 'discord-atraso',
+      id: 'discord-latency',
       topic: 'discord',
       title: 'Calibrar el retardo (opcional)',
       summary:
@@ -1916,7 +1916,7 @@ const ES: HelpContent = {
     },
 
     {
-      id: 'sem-sinal',
+      id: 'no-signal',
       topic: 'problems',
       title: 'Sin señal de la PS5',
       summary: 'El chip de conexión no se pone verde.',
@@ -1934,7 +1934,7 @@ const ES: HelpContent = {
       keywords: 'sin señal desconectado no conecta firewall red privada ps5 ip udp',
     },
     {
-      id: 'engenheiro-mudo',
+      id: 'engineer-silent',
       topic: 'problems',
       title: 'El ingeniero no habla',
       summary: 'Comprueba en este orden.',
@@ -1945,11 +1945,11 @@ const ES: HelpContent = {
         '¿La pista es nueva? En la primera vuelta solo aprende el trazado y empieza a hablar en la siguiente.',
         '¿Falta referencia? Lo dice en la franja; da una vuelta más o graba una repetición.',
       ],
-      links: [lnk('Configuración → Ingeniero', routes.config('engenheiro'))],
+      links: [lnk('Configuración → Ingeniero', routes.config('engineer'))],
       keywords: 'mudo sin sonido no oigo silencio callado volumen desactivado audio',
     },
     {
-      id: 'discord-com-problema',
+      id: 'discord-troubleshooting',
       topic: 'problems',
       title: 'Discord no funciona',
       summary: 'Cada mensaje de Bono dice qué falta.',
@@ -1964,7 +1964,7 @@ const ES: HelpContent = {
       keywords: 'token permiso canal bot rechazó reconfigurar borrar configuración',
     },
     {
-      id: 'pista-nao-reconhecida',
+      id: 'unrecognized-track',
       topic: 'problems',
       title: 'No se reconoció la pista',
       summary: 'El reconocimiento solo ocurre cuando se cierra una vuelta cronometrada.',
@@ -1978,7 +1978,7 @@ const ES: HelpContent = {
       keywords: 'no reconoce pista desconocida nueva nombre equivocado vuelta sucia',
     },
     {
-      id: 'celular-nao-abre',
+      id: 'phone-cannot-connect',
       topic: 'problems',
       title: 'El móvil no abre En directo',
       summary: 'El dispositivo debe llegar a Bono por la red.',
@@ -1988,12 +1988,12 @@ const ES: HelpContent = {
         'Si no abre, revisa Acceso por la red (Windows). Si Windows lo bloquea, haz clic en corregir.',
         'Gira el móvil a horizontal.',
       ],
-      links: [lnk('Abrir en el móvil o la tableta', routes.config('acesso-remoto'))],
+      links: [lnk('Abrir en el móvil o la tableta', routes.config('remote-access'))],
       keywords: 'tableta código qr no abre lan firewall 8770 remoto',
     },
 
     {
-      id: 'atalhos',
+      id: 'shortcuts',
       topic: 'keys',
       title: 'Atajos de teclado',
       summary: 'En En directo y en la ayuda.',
@@ -2075,12 +2075,12 @@ export function searchHelp(query: string, articles: readonly HelpArticle[]): Hel
     .map((x) => x.a);
 }
 
-/** Tópico de ajuda de cada grupo de Configurações (o “?” de cada grupo abre `#/ajuda?t=<tópico>`). */
+/** Tópico de ajuda de cada grupo de Configurações (o “?” de cada grupo abre `#/help?t=<tópico>`). */
 export const CONFIG_GROUP_HELP: Readonly<Record<string, HelpTopicId>> = {
-  inicio: 'settings',
+  overview: 'settings',
   console: 'problems',
-  engenheiro: 'engineer',
-  painel: 'live',
-  contas: 'discord',
-  sobre: 'start',
+  engineer: 'engineer',
+  display: 'live',
+  accounts: 'discord',
+  about: 'start',
 };

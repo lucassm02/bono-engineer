@@ -65,21 +65,21 @@ export function liveTourSteps(): TourStep[] {
       selector: anchor(A.delta),
       title: uiText('O delta'),
       body: uiText('Verde: você está mais rápido que a referência. Vermelho: mais lento.'),
-      views: ['corrida', 'deltaGrande'],
+      views: ['race', 'bigDelta'],
     },
     {
       id: 'gear-speed',
       selector: anchor(A.gear, A.speed),
       title: uiText('Marcha e velocidade'),
       body: uiText('O que você precisa ler de relance, sempre no mesmo lugar.'),
-      views: ['corrida'],
+      views: ['race'],
     },
     {
       id: 'sectors',
       selector: anchor(A.sectors),
       title: uiText('Setores'),
       body: uiText('Cada setor mostra a diferença para a sua melhor volta.'),
-      views: ['corrida'],
+      views: ['race'],
     },
     {
       id: 'dots',
@@ -113,14 +113,14 @@ export function analysisTourSteps(): TourStep[] {
       selector: anchor(A.nav),
       title: uiText('Barra lateral'),
       body: uiText('Ao vivo, Início, Comparar, Gravar volta, Coach, Guia, Ajuda e Ajustes.'),
-      route: '#/inicio',
+      route: '#/home',
     },
     {
       id: 'track-card',
       selector: anchor(A.trackCard),
       title: uiText('Cartão de pista'),
       body: uiText('Cada pista guarda suas sessões, melhor volta e evolução.'),
-      route: '#/inicio',
+      route: '#/home',
     },
     {
       id: 'compare',
@@ -141,7 +141,7 @@ export function analysisTourSteps(): TourStep[] {
       body: uiText(
         'Dúvidas? A Ajuda explica cada tela e deixa refazer o tour ou o assistente quando quiser.',
       ),
-      route: '#/inicio',
+      route: '#/home',
     },
   ];
 }

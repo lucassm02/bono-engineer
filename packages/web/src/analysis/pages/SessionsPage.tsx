@@ -1,4 +1,4 @@
-/** #/analise — every session in one table, with track/car/mode filters (the home is #/inicio). */
+/** #/analysis — every session in one table, with track/car/mode filters (the home is #/home). */
 
 import type { Session, Track } from '@gt7/shared';
 import { useMemo, useState } from 'react';

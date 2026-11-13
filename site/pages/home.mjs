@@ -44,14 +44,14 @@ export const FAQ = [
   {
     q: 'Como eu melhoro o meu tempo de volta com os números do Bono?',
     a: 'Escolha uma curva e uma métrica por vez, treine 8 a 10 voltas e compare de novo. O guia explica o que cada número quer dizer na pista.',
-    link: { id: 'guia', label: 'Abra o guia de pilotagem.' },
+    link: { id: 'guide', label: 'Abra o guia de pilotagem.' },
   },
 ];
 
 export function render(ctx) {
   const v = SITE.version;
   const hero = ctx.pic(
-    'ao-vivo',
+    'live-dashboard',
     'Tela ao vivo do Bono com a faixa de contexto (pista, carro e engenheiro), o delta contra a melhor volta, marcha, velocidade, tempos, setores e as luzes de troca de marcha',
     {
       eager: true,
@@ -83,10 +83,10 @@ export function render(ctx) {
 
 ${motionSection(ctx, 'pt-BR')}
 
-<section class="sec" id="o-que-faz" aria-labelledby="h-faz">
+<section class="sec" id="what-it-does" aria-labelledby="h-features">
   <div class="wrap split">
     <div class="split-head">
-      <h2 id="h-faz">Um engenheiro de pista, não só uma tela de números</h2>
+      <h2 id="h-features">Um engenheiro de pista, não só uma tela de números</h2>
       <p>Do aquecimento ao debrief, o Bono acompanha a sessão e mostra o que treinar na próxima volta.</p>
     </div>
     <ul class="rows">
@@ -134,15 +134,15 @@ ${motionSection(ctx, 'pt-BR')}
   </div>
 </section>
 
-<section class="sec" id="como-funciona" aria-labelledby="h-como">
+<section class="sec" id="how-it-works" aria-labelledby="h-how">
   <div class="wrap">
-    <h2 id="h-como">Conectar, pilotar, analisar</h2>
+    <h2 id="h-how">Conectar, pilotar, analisar</h2>
     <ol class="sectors">
       <li class="sector">
         <span class="tag" aria-hidden="true">S1</span>
         <h3>Conecte o PS5</h3>
         <p>Instale o Bono no PC, na mesma rede do console. Ele encontra o PS5 sozinho e o assistente guia a primeira conexão.</p>
-        <p><a href="${ctx.rel('instalar')}">Ver como instalar</a></p>
+        <p><a href="${ctx.rel('install')}">Ver como instalar</a></p>
       </li>
       <li class="sector">
         <span class="tag" aria-hidden="true">S2</span>
@@ -154,34 +154,34 @@ ${motionSection(ctx, 'pt-BR')}
         <span class="tag" aria-hidden="true">S3</span>
         <h3>Analise</h3>
         <p>Compare com a sua melhor volta ou com um replay do top, veja onde o tempo foi embora e treine uma curva de cada vez.</p>
-        <p><a href="${ctx.rel('guia')}">Ler o guia de pilotagem</a></p>
+        <p><a href="${ctx.rel('guide')}">Ler o guia de pilotagem</a></p>
       </li>
     </ol>
   </div>
 </section>
 
-<section class="sec" id="telas" aria-labelledby="h-telas">
+<section class="sec" id="screens" aria-labelledby="h-screens">
   <div class="wrap">
-    <h2 id="h-telas">O Bono por dentro</h2>
+    <h2 id="h-screens">O Bono por dentro</h2>
     <p class="lead">Capturas do app com dados de demonstração.</p>
     <div class="gal">
       <figure class="fig wide">
-        ${ctx.pic('comparar-voltas', 'Tela Comparar voltas com velocidade, acelerador, freio, marcha e volante de duas voltas sobrepostos, e o mapa da pista colorido por ganho e perda de tempo', { sizes: '(min-width: 1240px) 1200px, 100vw' })}
+        ${ctx.pic('lap-comparison', 'Tela Comparar voltas com velocidade, acelerador, freio, marcha e volante de duas voltas sobrepostos, e o mapa da pista colorido por ganho e perda de tempo', { sizes: '(min-width: 1240px) 1200px, 100vw' })}
         <figcaption><strong>Comparar voltas</strong>Velocidade, acelerador, freio, marcha e volante sobrepostos, com o delta acumulado e um mapa que mostra onde você ganha e onde perde.</figcaption>
       </figure>
       <figure class="fig">
-        ${ctx.pic('inicio-por-pista', 'Tela Início por pista com o total de pistas, sessões e voltas, a busca e a melhor volta de uma pista', { sizes: '(min-width: 900px) 590px, 100vw' })}
+        ${ctx.pic('track-history', 'Tela Início por pista com o total de pistas, sessões e voltas, a busca e a melhor volta de uma pista', { sizes: '(min-width: 900px) 590px, 100vw' })}
         <figcaption><strong>Início por pista</strong>Seus melhores tempos por pista e por carro, com a evolução e o que ainda dá para ganhar.</figcaption>
       </figure>
       <figure class="fig">
-        ${ctx.pic('menu-engenheiro', 'Menu do engenheiro aberto sobre a tela ao vivo, na aba Engenheiro', { sizes: '(min-width: 900px) 590px, 100vw' })}
+        ${ctx.pic('engineer-menu', 'Menu do engenheiro aberto sobre a tela ao vivo, na aba Engenheiro', { sizes: '(min-width: 900px) 590px, 100vw' })}
         <figcaption><strong>Menu do engenheiro</strong>Escolha o modo (treino, classificação ou corrida), o nível de fala e a voz do engenheiro, sem sair da tela ao vivo.</figcaption>
       </figure>
     </div>
   </div>
 </section>
 
-<section class="sec" id="privacidade" aria-labelledby="h-priv">
+<section class="sec" id="privacy" aria-labelledby="h-priv">
   <div class="wrap split">
     <div class="split-head">
       <h2 id="h-priv">Seus dados ficam no seu PC</h2>
@@ -196,16 +196,16 @@ ${motionSection(ctx, 'pt-BR')}
   </div>
 </section>
 
-<section class="sec" id="baixar" aria-labelledby="h-baixar">
+<section class="sec" id="download" aria-labelledby="h-download">
   <div class="wrap">
     <div class="dl">
       <div>
         <p class="ver">Versão <span class="num">${v}</span> para Windows 64 bits</p>
-        <h2 id="h-baixar">Baixe o Bono e abra o GT7</h2>
+        <h2 id="h-download">Baixe o Bono e abra o GT7</h2>
         <p class="lead">O instalador está na página de versões do GitHub. Se preferir não instalar, há uma versão portátil.</p>
         <div class="cta-row">
           <a class="btn" href="${SITE.releases}" rel="noopener">${ICON_DOWNLOAD}Baixar o Bono ${v}</a>
-          <a class="btn btn-ghost" href="${ctx.rel('instalar')}">Ver como instalar</a>
+          <a class="btn btn-ghost" href="${ctx.rel('install')}">Ver como instalar</a>
         </div>
       </div>
       <div>
@@ -221,7 +221,7 @@ ${motionSection(ctx, 'pt-BR')}
   </div>
 </section>
 
-<section class="sec" id="perguntas" aria-labelledby="h-faq">
+<section class="sec" id="questions" aria-labelledby="h-faq">
   <div class="wrap">
     <h2 id="h-faq">Perguntas frequentes</h2>
     <div class="faq">

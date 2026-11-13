@@ -108,7 +108,7 @@ export function ConsoleGroup({
   return (
     <>
       <Panel
-        id="conexao"
+        id="connection"
         title={uiText('PS5')}
         description={uiText('Como o Bono recebe os dados do jogo.')}
         actions={
@@ -132,7 +132,7 @@ export function ConsoleGroup({
       </Panel>
 
       <Panel
-        id="captura"
+        id="capture"
         title={uiText('Gravação')}
         description={uiText('Quando o app salva sessões, voltas e pistas por conta própria.')}
       >

@@ -1,5 +1,5 @@
 /**
- * Live review of one corner pass (docs/spec-engenheiro-de-radio.md, "Ganhar tempo" and "Eventos de
+ * Live review of one corner pass (docs/radio-engineer-spec.md, "Ganhar tempo" and "Eventos de
  * pilotagem"): the pass and the reference are aligned by distance on the same line, the corner
  * metrics of the analysis (brake release, trail braking, throttle pickup, coasting, gear) are
  * compared, and a cause is kept only with an observable effect in the zone delta. A different line

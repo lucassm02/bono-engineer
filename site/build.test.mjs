@@ -85,7 +85,7 @@ describe('metadados de SEO', () => {
         assert.ok(levels[i] - levels[i - 1] <= 1, `salto de h${levels[i - 1]} para h${levels[i]}`);
       }
       assert.ok(
-        /<main id="conteudo">/.test(html) &&
+        /<main id="content">/.test(html) &&
           /<header class="top">/.test(html) &&
           /<footer/.test(html),
       );
@@ -164,7 +164,7 @@ describe('JSON-LD', () => {
   });
 
   it('páginas internas têm BreadcrumbList', () => {
-    for (const id of ['instalar', 'discord', 'guia']) {
+    for (const id of ['install', 'discord', 'guide']) {
       const items = ld(PAGES.find((p) => p.id === id));
       assert.equal(items[0]['@type'], 'BreadcrumbList');
       assert.equal(items[0].itemListElement.length, 2);

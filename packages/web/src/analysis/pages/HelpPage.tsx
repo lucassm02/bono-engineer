@@ -1,12 +1,12 @@
 /**
- * #/ajuda — Central de ajuda. Tópicos em cartões, busca no topo (título e corpo, sem diferenciar
+ * #/help — Central de ajuda. Tópicos em cartões, busca no topo (título e corpo, sem diferenciar
  * acento), artigos curtos com passos numerados, links para a tela certa e botões que reusam as
  * ações do app (tours, assistente inicial).
  *
- *   #/ajuda               tópicos (e os atalhos "Comece por aqui")
- *   #/ajuda?t=<tópico>    os artigos de um tópico
- *   #/ajuda?q=<texto>     resultados da busca
- *   #/ajuda/<artigo>      um artigo
+ *   #/help               tópicos (e os atalhos "Comece por aqui")
+ *   #/help?t=<tópico>    os artigos de um tópico
+ *   #/help?q=<texto>     resultados da busca
+ *   #/help/<artigo>      um artigo
  *
  * O conteúdo vem de `lib/helpContent.ts` (um objeto por idioma).
  */
@@ -326,7 +326,7 @@ export function HelpPage({ route }: { route: Route }) {
   const content = useMemo(() => helpContent(language), [language]);
   const [query, setQuery] = useState(route.query.q ?? '');
 
-  // Um link para #/ajuda?q=… (mesma página, hash novo) atualiza o campo.
+  // Um link para #/help?q=… (mesma página, hash novo) atualiza o campo.
   const qParam = route.query.q;
   useEffect(() => setQuery(qParam ?? ''), [qParam]);
 

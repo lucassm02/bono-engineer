@@ -1,5 +1,5 @@
 /**
- * #/analise/pista/:trackId?tab=&session= — one track in five tabs: best laps per car, sessions by
+ * #/analysis/track/:trackId?tab=&session= — one track in five tabs: best laps per car, sessions by
  * day, evolution (+ consistency), top-of-the-world references and corners (map, names, sectors).
  */
 
@@ -569,43 +569,43 @@ function EvolutionSection({ evo, corners }: { evo: EvolutionReport; corners: Map
 
 const TABS = [
   {
-    id: 'melhores',
+    id: 'best',
     get label() {
       return uiText('Melhores voltas');
     },
   },
   {
-    id: 'sessoes',
+    id: 'sessions',
     get label() {
       return uiText('Sessões');
     },
   },
   {
-    id: 'evolucao',
+    id: 'evolution',
     get label() {
       return uiText('Evolução');
     },
   },
   {
-    id: 'setores',
+    id: 'sectors',
     get label() {
       return uiText('Setores');
     },
   },
   {
-    id: 'referencias',
+    id: 'references',
     get label() {
       return uiText('Referências do top');
     },
   },
   {
-    id: 'curvas',
+    id: 'corners',
     get label() {
       return uiText('Curvas');
     },
   },
   {
-    id: 'tarefas',
+    id: 'tasks',
     get label() {
       return uiText('Tarefas');
     },
@@ -836,7 +836,7 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
   const [focus, setFocus] = useState<string | null>(null);
   const [sectors, setSectors] = useState<string>('');
   const [carCode, setCarCode] = useState<number | null>(null);
-  const tab: TabId = isTab(route.query.tab) ? route.query.tab : 'melhores';
+  const tab: TabId = isTab(route.query.tab) ? route.query.tab : 'best';
 
   const data: ApiTrackAnalysis | null = ta.data;
   const track = data?.track ?? trackOnly.data ?? null;
@@ -844,10 +844,10 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
   const sessionList = sessions.data ?? [];
   const sessionId = pickSession(sessionList, route.query.session);
 
-  const consistency = useFetch(tab === 'evolucao' && sessionId ? `cons:${sessionId}` : null, () =>
+  const consistency = useFetch(tab === 'evolution' && sessionId ? `cons:${sessionId}` : null, () =>
     api.consistency(sessionId),
   );
-  const theo = useFetch(tab === 'evolucao' && sessionId ? `theo:${sessionId}` : null, async () => {
+  const theo = useFetch(tab === 'evolution' && sessionId ? `theo:${sessionId}` : null, async () => {
     const s = await api.session(sessionId);
     const ids = s.laps
       .filter((l) => l.valid && !l.isReference)
@@ -859,7 +859,7 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
   const cars = data?.records.cars ?? [];
   const car =
     carCode ?? (cars.length ? [...cars].sort((a, b) => b.laps - a.laps)[0]!.carCode : null);
-  const evo = useFetch(tab === 'evolucao' ? `evo:${id}:${car ?? ''}` : null, () =>
+  const evo = useFetch(tab === 'evolution' ? `evo:${id}:${car ?? ''}` : null, () =>
     api.evolution(id, car ?? undefined),
   );
 
@@ -910,7 +910,7 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
     ) ?? null;
   const tabHref = (t: TabId) =>
     routes.track(id, {
-      tab: t === 'melhores' ? undefined : t,
+      tab: t === 'best' ? undefined : t,
       session: route.query.session,
       from: fromDailies ? 'dailies' : undefined,
     });
@@ -988,7 +988,7 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
         ))}
       </nav>
 
-      {tab === 'melhores' && (
+      {tab === 'best' && (
         <>
           <GoalCard trackId={id} cars={cars} />
           <BestLapsTab trackId={id} hasTopReference={!!data?.references.length} />
@@ -996,7 +996,7 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
         </>
       )}
 
-      {tab === 'sessoes' &&
+      {tab === 'sessions' &&
         (sessions.error && !sessions.data ? (
           <ErrorBox error={sessions.error} onRetry={sessions.reload} />
         ) : !sessions.data ? (
@@ -1005,7 +1005,7 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
           <SessionsTab sessions={sessionList} />
         ))}
 
-      {tab === 'evolucao' && (
+      {tab === 'evolution' && (
         <>
           <Card
             title={uiText('Evolução')}
@@ -1041,7 +1041,7 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
                 <select
                   value={sessionId}
                   onChange={(e) =>
-                    navigate(routes.track(id, { tab: 'evolucao', session: e.target.value }), true)
+                    navigate(routes.track(id, { tab: 'evolution', session: e.target.value }), true)
                   }
                   aria-label={uiText('Sessão')}
                 >
@@ -1109,11 +1109,11 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
         </>
       )}
 
-      {tab === 'setores' && <SectorsTab trackId={id} cars={cars} />}
+      {tab === 'sectors' && <SectorsTab trackId={id} cars={cars} />}
 
-      {tab === 'tarefas' && <TasksTab trackId={id} cars={cars} />}
+      {tab === 'tasks' && <TasksTab trackId={id} cars={cars} />}
 
-      {tab === 'referencias' && (
+      {tab === 'references' && (
         <Card title={uiText('Referências do top mundial')}>
           {data && data.references.length > 0 ? (
             <div className="a-table-wrap">
@@ -1174,7 +1174,7 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
         </Card>
       )}
 
-      {tab === 'curvas' && (
+      {tab === 'corners' && (
         <div className="a-track-grid">
           <div className="a-map-box a-map-track">
             {data ? (

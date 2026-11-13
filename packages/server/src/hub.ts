@@ -23,12 +23,12 @@ import {
   type DeviceProfile,
   type FirewallStatus,
   isPacketFormat,
-  isViewId,
   normalizeDeviceProfile,
   normalizeDriverName,
   type ServerMessage,
   type ServerStatus,
   type TrackMismatchInfo,
+  toViewId,
   type ViewId,
   WS_PROTOCOL_VERSION,
 } from '@gt7/shared';
@@ -486,19 +486,21 @@ export class WsHub {
         return;
       }
       case 'currentView': {
-        if (!isViewId(msg.view)) return this.#error(c, 'badMessage', 'Tela desconhecida.');
-        c.currentView = msg.view;
+        const view = toViewId(msg.view);
+        if (!view) return this.#error(c, 'badMessage', 'Tela desconhecida.');
+        c.currentView = view;
         const d = this.#devices.get(deviceId);
-        if (d) d.currentView = msg.view;
+        if (d) d.currentView = view;
         this.scheduleStatus();
         return;
       }
       case 'setTargetView': {
-        if (!isViewId(msg.view)) return this.#error(c, 'badMessage', 'Tela desconhecida.');
+        const view = toViewId(msg.view);
+        if (!view) return this.#error(c, 'badMessage', 'Tela desconhecida.');
         if (typeof msg.targetDeviceId !== 'string' || !msg.targetDeviceId) {
           return this.#error(c, 'badMessage', 'Dispositivo de destino inválido.');
         }
-        const n = this.showView(msg.targetDeviceId, msg.view, deviceId);
+        const n = this.showView(msg.targetDeviceId, view, deviceId);
         if (n === 0) {
           this.#send(c, {
             type: 'notice',

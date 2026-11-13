@@ -257,7 +257,7 @@ export function LanguageSection() {
   const language = useLanguage();
   return (
     <Panel
-      id="idioma"
+      id="language"
       title={uiText('Idioma')}
       description={uiText('Vale para o app inteiro e para a voz do engenheiro.')}
     >

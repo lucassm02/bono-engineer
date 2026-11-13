@@ -59,7 +59,7 @@ describe('help content', () => {
       for (const voice of RADIO_VOICES.filter((v) => v.language === language)) {
         expect(text).not.toMatch(new RegExp(`\b${voice.name}\b`));
       }
-      const voices = content.articles.find((a) => a.id === 'escolher-a-voz');
+      const voices = content.articles.find((a) => a.id === 'choose-voice');
       const labels = RADIO_VOICES.filter((v) => v.language === language).map(voiceLabel);
       for (const label of labels) {
         expect(
@@ -91,10 +91,10 @@ describe('help search', () => {
   const pt = helpContent('pt-BR').articles;
 
   it('ignores accents and case, in title and body', () => {
-    expect(searchHelp('FIREWALL', pt).map((a) => a.id)).toContain('sem-sinal');
+    expect(searchHelp('FIREWALL', pt).map((a) => a.id)).toContain('no-signal');
     expect(searchHelp('conexao', pt).length).toBeGreaterThan(0);
     expect(searchHelp('configuracoes', pt).length).toBeGreaterThan(0);
-    expect(searchHelp('engenheiro mudo', pt)[0]?.id).toBe('engenheiro-mudo');
+    expect(searchHelp('engenheiro mudo', pt)[0]?.id).toBe('engineer-silent');
   });
 
   it('wants every word, and answers nothing for an empty or unknown query', () => {

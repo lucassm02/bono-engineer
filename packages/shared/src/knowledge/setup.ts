@@ -1,6 +1,6 @@
 /**
  * Symptom → tuning-direction map (pt-BR). Principles only, from Coach Dave's tuning guide, the
- * Traxion FWD guide and the research draft (docs/pesquisa/carros-bop-e-setups.md §5.3).
+ * Traxion FWD guide and the research draft (docs/research/cars-bop-and-setups.md §5.3).
  *
  * HONEST LIMITS: there is no open database of GT7 setups and the app does not read the car's setup
  * (the telemetry has no springs, dampers, LSD or aero values). Directions below are typical, not
@@ -12,12 +12,12 @@ import type { SetupEntry, Tip } from './types.ts';
 
 const gen = (text: string, ...src: string[]): Tip => ({
   text,
-  basis: 'regra-geral',
+  basis: 'general-rule',
   ...(src.length ? { src } : {}),
 });
 const car = (text: string, ...src: string[]): Tip => ({
   text,
-  basis: 'depende-do-carro',
+  basis: 'car-dependent',
   ...(src.length ? { src } : {}),
 });
 
@@ -32,9 +32,9 @@ export const SETUP_RULES: readonly string[] = [
 
 export const SETUP_MAP: readonly SetupEntry[] = [
   {
-    id: 'subesterco-entrada',
+    id: 'entry-understeer',
     symptom: 'Subesterço na entrada (o carro não fecha ao virar com freio)',
-    phase: 'entrada',
+    phase: 'entry',
     diagnostics: ['noTrailBraking', 'lowerMinSpeed', 'lateApex', 'steeringCorrections'],
     likelyCause:
       'Dianteira saturada: entra rápido, pouco peso na frente ou diferencial travando sob freio.',
@@ -60,9 +60,9 @@ export const SETUP_MAP: readonly SetupEntry[] = [
       'Mudanças de rotação podem criar sobresterço ao soltar o freio; refaça 5 voltas após cada passo.',
   },
   {
-    id: 'subesterco-meio',
+    id: 'mid-corner-understeer',
     symptom: 'Subesterço no meio da curva (V-mín baixa, carro empurra)',
-    phase: 'meio',
+    phase: 'mid-corner',
     diagnostics: ['lowerMinSpeed', 'steeringCorrections'],
     likelyCause: 'Falta aderência dianteira em carga constante.',
     adjustments: [
@@ -84,9 +84,9 @@ export const SETUP_MAP: readonly SetupEntry[] = [
       'Aerodinâmica e camber têm efeito diferente conforme a pista; teste em passos pequenos.',
   },
   {
-    id: 'subesterco-saida',
+    id: 'exit-understeer',
     symptom: 'Subesterço na saída (acelera e o carro abre)',
-    phase: 'saida',
+    phase: 'exit',
     diagnostics: ['lateThrottle', 'slowerExit', 'exitSlip'],
     likelyCause:
       'Acelerar com o volante aberto em FF, ou diferencial/barras empurrando a dianteira.',
@@ -107,9 +107,9 @@ export const SETUP_MAP: readonly SetupEntry[] = [
     caution: 'Rotação extra na saída pode virar sobresterço em RWD potente.',
   },
   {
-    id: 'sobresterco-entrada',
+    id: 'entry-oversteer',
     symptom: 'Sobresterço na entrada ou ao soltar o freio (a traseira vem)',
-    phase: 'entrada',
+    phase: 'entry',
     diagnostics: ['steeringCorrections', 'brakeLater'],
     likelyCause:
       'Muito peso saindo da traseira ao aliviar o freio, ou balanço de freio muito atrás.',
@@ -130,9 +130,9 @@ export const SETUP_MAP: readonly SetupEntry[] = [
     caution: 'Estabilidade extra costuma custar rotação: pode surgir subesterço.',
   },
   {
-    id: 'sobresterco-saida',
+    id: 'exit-oversteer',
     symptom: 'Sobresterço ou patinagem na saída (traseira acelera e vai)',
-    phase: 'saida',
+    phase: 'exit',
     diagnostics: ['exitSlip', 'slowerExit'],
     likelyCause:
       'Acelerador demais com o volante aberto, pouca aderência traseira ou diferencial agressivo.',
@@ -153,9 +153,9 @@ export const SETUP_MAP: readonly SetupEntry[] = [
     caution: 'Meça TCS ativo e patinagem traseira no app antes e depois.',
   },
   {
-    id: 'instavel-frenagem',
+    id: 'braking-instability',
     symptom: 'Instabilidade na frenagem (traseira solta ou carro dança)',
-    phase: 'frenagem',
+    phase: 'braking',
     diagnostics: ['softBraking', 'brakeEarlier', 'noTrailBraking'],
     likelyCause: 'Balanço de freio muito atrás, frenagem virando ou pico brusco.',
     adjustments: [
@@ -169,9 +169,9 @@ export const SETUP_MAP: readonly SetupEntry[] = [
       'Corrija primeiro o pico e o ponto de frenagem; afinação não substitui frenagem em reta.',
   },
   {
-    id: 'trava-dianteira',
+    id: 'front-lockup',
     symptom: 'Dianteira trava na frenagem',
-    phase: 'frenagem',
+    phase: 'braking',
     diagnostics: ['frontLock'],
     likelyCause: 'Pico alto demais para a aderência do momento ou balanço de freio muito à frente.',
     adjustments: [
@@ -181,9 +181,9 @@ export const SETUP_MAP: readonly SetupEntry[] = [
     caution: 'Balanço muito para trás causa instabilidade (traseira trava).',
   },
   {
-    id: 'pneu-dianteiro',
+    id: 'front-tyre-wear',
     symptom: 'Pneu dianteiro esquenta ou desgasta antes do traseiro',
-    phase: 'geral',
+    phase: 'general',
     diagnostics: ['noTrailBraking'],
     likelyCause: 'Virar cedo, trail braking forte ou camber/entrada de carga em excesso.',
     adjustments: [
@@ -197,9 +197,9 @@ export const SETUP_MAP: readonly SetupEntry[] = [
       'A telemetria do GT7 tem uma temperatura por pneu (não dá para ler camber por ela): compare frente × trás e esquerda × direita.',
   },
   {
-    id: 'reta-lenta',
+    id: 'low-straight-speed',
     symptom: 'Perde velocidade final ou aceleração na reta',
-    phase: 'reta',
+    phase: 'straight',
     diagnostics: ['slowerExit'],
     likelyCause: 'Muito downforce ou câmbio mal ajustado à pista.',
     adjustments: [

@@ -24,7 +24,7 @@ export function animateStep(by: 1 | -1): void {
 function slotKeys(views: ViewId[], indices: number[]): string[] {
   const seen = new Map<string, number>();
   return indices.map((i) => {
-    const v = views[i] ?? 'corrida';
+    const v = views[i] ?? 'race';
     const n = seen.get(v) ?? 0;
     seen.set(v, n + 1);
     return n === 0 ? v : `${v}#${n}`;
@@ -128,7 +128,7 @@ export function Carousel() {
   return (
     <div className="carousel" ref={scrollerRef} data-locked={locked ? '1' : '0'}>
       {slots.map((slot, i) => {
-        const view = views[slot.index] ?? 'corrida';
+        const view = views[slot.index] ?? 'race';
         const active = slot.role === 'cur' && !pickerOpen;
         return (
           <section

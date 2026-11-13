@@ -2,7 +2,7 @@ import type { ApiTraces, CornerComparisonRow } from '@gt7/shared';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { href, isAnalysisRoute, parseRoute, routes } from '../../lib/route.ts';
+import { canonicalHash, href, isAnalysisRoute, parseRoute, routes } from '../../lib/route.ts';
 import { Markdown } from '../components/Markdown.tsx';
 import {
   COMPARE_PANELS,
@@ -28,43 +28,43 @@ describe('router', () => {
   it('parses live and analysis routes', () => {
     expect(parseRoute('').name).toBe('live');
     expect(parseRoute('#/').name).toBe('live');
-    expect(parseRoute('#/painel').name).toBe('live');
-    expect(parseRoute('#/analise').name).toBe('sessions');
-    expect(parseRoute('#/analise/sessao/abc-1')).toMatchObject({
+    expect(parseRoute('#/live').name).toBe('live');
+    expect(parseRoute('#/analysis').name).toBe('sessions');
+    expect(parseRoute('#/analysis/session/abc-1')).toMatchObject({
       name: 'session',
       params: { id: 'abc-1' },
     });
-    expect(parseRoute('#/analise/pista/t%201?session=s1')).toMatchObject({
+    expect(parseRoute('#/analysis/track/t%201?session=s1')).toMatchObject({
       name: 'track',
       params: { id: 't 1' },
       query: { session: 's1' },
     });
-    expect(parseRoute('#/captura').name).toBe('capture');
+    expect(parseRoute('#/capture').name).toBe('capture');
     expect(parseRoute('#/config?s=mcp')).toMatchObject({ name: 'config', query: { s: 'mcp' } });
     expect(parseRoute('#/coach/r1')).toMatchObject({ name: 'coach', params: { id: 'r1' } });
-    expect(parseRoute('#/ajuda').name).toBe('help');
-    expect(parseRoute('#/ajuda?t=discord')).toMatchObject({
+    expect(parseRoute('#/help').name).toBe('help');
+    expect(parseRoute('#/help?t=discord')).toMatchObject({
       name: 'help',
       query: { t: 'discord' },
     });
-    expect(parseRoute('#/ajuda/sem-sinal')).toMatchObject({
+    expect(parseRoute('#/help/no-signal')).toMatchObject({
       name: 'help',
-      params: { id: 'sem-sinal' },
+      params: { id: 'no-signal' },
     });
-    expect(parseRoute('#/ajuda/a/b').name).toBe('notFound');
-    expect(routes.help()).toBe('#/ajuda');
-    expect(routes.help('discord')).toBe('#/ajuda?t=discord');
-    expect(routes.help(undefined, 'sem-sinal')).toBe('#/ajuda/sem-sinal');
-    expect(isAnalysisRoute(parseRoute('#/ajuda'))).toBe(true);
+    expect(parseRoute('#/help/a/b').name).toBe('notFound');
+    expect(routes.help()).toBe('#/help');
+    expect(routes.help('discord')).toBe('#/help?t=discord');
+    expect(routes.help(undefined, 'no-signal')).toBe('#/help/no-signal');
+    expect(isAnalysisRoute(parseRoute('#/help'))).toBe(true);
     expect(parseRoute('#/nada').name).toBe('notFound');
-    expect(parseRoute('#/analise/x/y/z').name).toBe('notFound');
+    expect(parseRoute('#/analysis/x/y/z').name).toBe('notFound');
     expect(isAnalysisRoute(parseRoute('#/config'))).toBe(true);
     expect(isAnalysisRoute(parseRoute(''))).toBe(false);
   });
 
   it('round-trips the comparison query', () => {
     const h = routes.compare({ lap: 'L 1', ref: 'personalBest', extra: ['a', 'b'] });
-    expect(h).toBe('#/analise/comparar?lap=L%201&ref=personalBest&extra=a%2Cb');
+    expect(h).toBe('#/analysis/compare?lap=L%201&ref=personalBest&extra=a%2Cb');
     const r = parseRoute(h);
     expect(r.name).toBe('compare');
     expect(r.query).toEqual({ lap: 'L 1', ref: 'personalBest', extra: 'a,b' });
@@ -289,5 +289,41 @@ describe('labels', () => {
   it('translates capture issues', () => {
     expect(captureIssueLabel('timeMismatch')).toMatch(/ranking/);
     expect(captureIssueLabel('xyz')).toContain('xyz');
+  });
+});
+
+describe('links saved before the routes were renamed to English', () => {
+  it('rewrites the old hashes and keeps the current ones as they are', () => {
+    expect(canonicalHash('#/inicio')).toBe('#/home');
+    expect(canonicalHash('#/analise')).toBe('#/analysis');
+    expect(canonicalHash('#/analise/pista/t1?tab=sessoes&session=s')).toBe(
+      '#/analysis/track/t1?tab=sessions&session=s',
+    );
+    expect(canonicalHash('#/analise/sessao/abc/resumo')).toBe('#/analysis/session/abc/summary');
+    expect(canonicalHash('#/analise/volta/x?ref=auto&modo=tempo')).toBe(
+      '#/analysis/lap/x?ref=auto&mode=time',
+    );
+    expect(canonicalHash('#/guia?q=a&classe=4&topico=classe')).toBe(
+      '#/guide?q=a&class=4&topic=class',
+    );
+    expect(canonicalHash('#/ajuda?t=discord')).toBe('#/help?t=discord');
+    expect(canonicalHash('#/ajuda/sem-sinal')).toBe('#/help/no-signal');
+    expect(canonicalHash('#/config?s=engenheiro')).toBe('#/config?s=engineer');
+    expect(canonicalHash('#/analysis/track/x?from=diarias')).toBe('#/analysis/track/x?from=dailies');
+    expect(canonicalHash('#/painel')).toBe('#/live');
+    for (const h of [
+      '#/',
+      '#/home',
+      '#/analysis/track/x?tab=tasks',
+      '#/config?s=engineer',
+      '#/coach',
+    ]) {
+      expect(canonicalHash(h)).toBe(h);
+    }
+    expect(parseRoute('#/analise/pista/abc?tab=curvas')).toMatchObject({
+      name: 'track',
+      params: { id: 'abc' },
+      query: { tab: 'corners' },
+    });
   });
 });

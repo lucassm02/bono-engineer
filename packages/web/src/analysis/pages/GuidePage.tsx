@@ -1,5 +1,5 @@
 /**
- * #/guia — "Guia de pilotagem": the coach's driving knowledge base (principles, car classes,
+ * #/guide — "Guia de pilotagem": the coach's driving knowledge base (principles, car classes,
  * diagnostics of the app, tuning map, glossary, sources) as a searchable page. Same data and text as
  * the AI coach and the MCP `get_knowledge` tool (`@gt7/shared` knowledge module): no network.
  */
@@ -31,29 +31,29 @@ import {
 import '../../styles/guide.css';
 
 const KIND_TAGS: Record<TopicRef['kind'], string> = {
-  get geral() {
+  get general() {
     return uiText('Princípio');
   },
-  get classe() {
+  get class() {
     return uiText('Classe');
   },
-  get diagnostico() {
+  get diagnostics() {
     return uiText('Diagnóstico');
   },
-  get afinacao() {
+  get setup() {
     return uiText('Afinação');
   },
-  get glossario() {
+  get glossary() {
     return uiText('Glossário');
   },
-  get fonte() {
+  get sources() {
     return uiText('Fontes');
   },
 };
 
 const KIND_TONES: Partial<Record<TopicRef['kind'], string>> = {
-  classe: 'info',
-  diagnostico: 'accent',
+  class: 'info',
+  diagnostics: 'accent',
 };
 
 /** Page body without its first "## Title" line (the card header already shows it). */
@@ -72,7 +72,7 @@ function Topic({
   defaultOpen: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
-  const evidenceLow = topic.kind === 'classe' && /gr(2|b|n|x)$/.test(topic.id);
+  const evidenceLow = topic.kind === 'class' && /gr(2|b|n|x)$/.test(topic.id);
   return (
     <details
       className="g-topic"
@@ -102,16 +102,16 @@ function Topic({
 export function GuidePage({ route }: { route: Route }) {
   useTitle(uiText('Guia de pilotagem'));
   const [query, setQuery] = useState(route.query.q ?? '');
-  const [kind, setKind] = useState<GuideKind>(parseGuideKind(route.query.topico));
-  const [group, setGroup] = useState<CarGroup | null>(parseGuideGroup(route.query.classe));
+  const [kind, setKind] = useState<GuideKind>(parseGuideKind(route.query.topic));
+  const [group, setGroup] = useState<CarGroup | null>(parseGuideGroup(route.query.class));
 
-  // A link to #/guia?q=…&classe=… (same page, new hash) updates the controls.
-  const { q: qParam, classe: classeParam, topico: topicoParam } = route.query;
+  // A link to #/guide?q=…&class=… (same page, new hash) updates the controls.
+  const { q: qParam, class: classParam, topic: topicParam } = route.query;
   useEffect(() => {
     setQuery(qParam ?? '');
-    setGroup(parseGuideGroup(classeParam));
-    setKind(parseGuideKind(topicoParam));
-  }, [qParam, classeParam, topicoParam]);
+    setGroup(parseGuideGroup(classParam));
+    setKind(parseGuideKind(topicParam));
+  }, [qParam, classParam, topicParam]);
 
   const topics = useMemo(() => filterGuide({ query, kind, group }), [query, kind, group]);
   const stats = useMemo(() => knowledgeStats(), []);
@@ -121,7 +121,7 @@ export function GuidePage({ route }: { route: Route }) {
   );
   // Few results (or an explicit search) open by default; the full list stays collapsed.
   const autoOpen = query.trim() !== '' && topics.length <= 4;
-  const filtered = query.trim() !== '' || kind !== 'todos' || group !== null;
+  const filtered = query.trim() !== '' || kind !== 'all' || group !== null;
 
   return (
     <div className="g-page">
@@ -221,7 +221,7 @@ export function GuidePage({ route }: { route: Route }) {
             data-size="sm"
             onClick={() => {
               setQuery('');
-              setKind('todos');
+              setKind('all');
               setGroup(null);
             }}
           >
@@ -244,7 +244,7 @@ export function GuidePage({ route }: { route: Route }) {
             data-variant="secondary"
             onClick={() => {
               setQuery('');
-              setKind('todos');
+              setKind('all');
               setGroup(null);
             }}
           >

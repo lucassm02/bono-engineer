@@ -145,7 +145,7 @@ export function head(page, ctx, jsonLd = []) {
   return lines.filter(Boolean).join('\n    ');
 }
 
-const NAV_IDS = ['instalar', 'discord', 'guia', 'en'];
+const NAV_IDS = ['install', 'discord', 'guide', 'en'];
 
 function header(page, ctx) {
   const home = ctx.rel('home');
@@ -161,7 +161,7 @@ function header(page, ctx) {
     items.push(`<li><a href="${ctx.rel('home')}" lang="pt-BR" hreflang="pt-BR">Português</a></li>`);
   }
   const cta = en ? 'Download' : 'Baixar';
-  return `<a class="skip" href="#conteudo">${en ? 'Skip to content' : 'Ir para o conteúdo'}</a>
+  return `<a class="skip" href="#content">${en ? 'Skip to content' : 'Ir para o conteúdo'}</a>
 <header class="top">
   <div class="wrap bar">
     <a class="brand" href="${en ? ctx.rel('en') : home}" aria-label="${SITE.name}">${LOGO_SVG}<span>Bono<small>Engineer</small></span></a>
@@ -179,7 +179,7 @@ function footer(page, ctx) {
     <div class="foot-grid">
       <div><p><strong>Bono Engineer</strong> is a free race engineer for Gran Turismo 7 on PlayStation. Source available under the PolyForm Noncommercial License 1.0.0 (noncommercial use).</p></div>
       <div><h2>Project</h2><ul><li><a href="${SITE.repo}" rel="noopener">Source on GitHub</a></li><li><a href="${SITE.releases}" rel="noopener">Releases</a></li><li><a href="${SITE.repo}/blob/main/CHANGELOG.md" rel="noopener">Changelog</a></li></ul></div>
-      <div><h2>Site</h2><ul><li><a href="${ctx.rel('home')}" lang="pt-BR" hreflang="pt-BR">Português (Brasil)</a></li><li><a href="${ctx.rel('guia')}" lang="pt-BR" hreflang="pt-BR">Driving guide (pt-BR)</a></li></ul></div>
+      <div><h2>Site</h2><ul><li><a href="${ctx.rel('home')}" lang="pt-BR" hreflang="pt-BR">Português (Brasil)</a></li><li><a href="${ctx.rel('guide')}" lang="pt-BR" hreflang="pt-BR">Driving guide (pt-BR)</a></li></ul></div>
     </div>
     <p class="legal">Personal project, not affiliated with Polyphony Digital or Sony. Gran Turismo and PlayStation are trademarks of their owners. This site sets no cookies and has no trackers.</p>
   </div>
@@ -189,7 +189,7 @@ function footer(page, ctx) {
   <div class="wrap">
     <div class="foot-grid">
       <div><p><strong>Bono Engineer</strong> é um engenheiro de pista grátis para Gran Turismo 7 no PlayStation. Código disponível sob a licença PolyForm Noncommercial 1.0.0 (uso não comercial).</p></div>
-      <div><h2>No site</h2><ul><li><a href="${ctx.rel('instalar')}">Como instalar</a></li><li><a href="${ctx.rel('discord')}">Rádio no Discord</a></li><li><a href="${ctx.rel('guia')}">Guia de pilotagem</a></li><li><a href="${ctx.rel('en')}" lang="en" hreflang="en">English</a></li></ul></div>
+      <div><h2>No site</h2><ul><li><a href="${ctx.rel('install')}">Como instalar</a></li><li><a href="${ctx.rel('discord')}">Rádio no Discord</a></li><li><a href="${ctx.rel('guide')}">Guia de pilotagem</a></li><li><a href="${ctx.rel('en')}" lang="en" hreflang="en">English</a></li></ul></div>
       <div><h2>Projeto</h2><ul><li><a href="${SITE.repo}" rel="noopener">Código no GitHub</a></li><li><a href="${SITE.releases}" rel="noopener">Versões para baixar</a></li><li><a href="${SITE.repo}/blob/main/CHANGELOG.md" rel="noopener">Histórico de versões</a></li></ul></div>
     </div>
     <p class="legal">${SITE.disclaimer} Gran Turismo e PlayStation são marcas de seus donos. Este site não usa cookies nem rastreadores.</p>
@@ -206,7 +206,7 @@ export function htmlDocument(page, ctx, body, jsonLd = []) {
   </head>
   <body>
 ${header(page, ctx)}
-<main id="conteudo">
+<main id="content">
 ${body}
 </main>
 ${footer(page, ctx)}
@@ -231,7 +231,7 @@ export function softwareLd(page) {
     inLanguage: ['pt-BR', 'en', 'es'],
     license: 'https://polyformproject.org/licenses/noncommercial/1.0.0',
     image: `${SITE.origin}${SITE.base}/assets/og/${page.id}.png`,
-    screenshot: `${SITE.origin}${SITE.base}/assets/shots/ao-vivo.png`,
+    screenshot: `${SITE.origin}${SITE.base}/assets/shots/live-dashboard.png`,
     author: { '@type': 'Person', name: SITE.author },
     offers: { '@type': 'Offer', price: '0', priceCurrency: en ? 'USD' : 'BRL' },
   };

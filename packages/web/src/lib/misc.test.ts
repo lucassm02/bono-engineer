@@ -1,4 +1,4 @@
-import { normalizeDeviceProfile } from '@gt7/shared';
+import { normalizeDeviceProfile, toViewId } from '@gt7/shared';
 import { describe, expect, it } from 'vitest';
 import { RollingHistory } from '../live/history.ts';
 import { backoffMs, parseServerMessage, wsUrlFor } from '../net/wsClient.ts';
@@ -9,17 +9,17 @@ describe('normalizeDeviceProfile (shared/ui.ts)', () => {
   it('fills defaults from garbage', () => {
     const p = normalizeDeviceProfile(null, 'dev');
     expect(p.deviceId).toBe('dev');
-    expect(p.views[0]).toBe('corrida');
-    expect(p.startView).toBe('corrida');
+    expect(p.views[0]).toBe('race');
+    expect(p.startView).toBe('race');
   });
 
   it('drops unknown / duplicate views and fixes the start view', () => {
     const p = normalizeDeviceProfile(
-      { views: ['pneus', 'xyz', 'pneus', 'motor'], startView: 'mapa', deltaReference: 'bogus' },
+      { views: ['tyres', 'xyz', 'tyres', 'engine'], startView: 'map', deltaReference: 'bogus' },
       'dev',
     );
-    expect(p.views).toEqual(['pneus', 'motor']);
-    expect(p.startView).toBe('pneus');
+    expect(p.views).toEqual(['tyres', 'engine']);
+    expect(p.startView).toBe('tyres');
     expect(p.deltaReference).toBe('personalBest');
   });
 
@@ -104,5 +104,21 @@ describe('rolling history', () => {
     h.clear();
     expect(h.size).toBe(0);
     expect(h.countWithin(2)).toBe(0);
+  });
+});
+
+describe('profiles saved before the view ids were renamed to English', () => {
+  it('keeps the views and the start view of an old profile', () => {
+    const p = normalizeDeviceProfile(
+      {
+        views: ['corrida', 'deltaGrande', 'pneus', 'treinoCurva', 'personalizada'],
+        startView: 'pneus',
+      },
+      'dev',
+    );
+    expect(p.views).toEqual(['race', 'bigDelta', 'tyres', 'cornerDrill', 'custom']);
+    expect(p.startView).toBe('tyres');
+    expect(toViewId('forcasG')).toBe('gForces');
+    expect(toViewId('constructor')).toBeNull();
   });
 });

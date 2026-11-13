@@ -96,7 +96,7 @@ function DeviceRow({
     (device.currentView && enabled.includes(device.currentView)
       ? device.currentView
       : enabled[0]) ??
-    'corrida';
+    'race';
 
   return (
     <li className="cfg-dev" data-online={device.online ? '1' : '0'}>
@@ -295,11 +295,11 @@ export function DevicesSection({ expandMine }: { expandMine?: boolean }) {
 
   return (
     <Panel
-      id="dispositivos"
+      id="devices"
       title={uiText('Aparelhos')}
       description={uiText('Escolha as telas de cada aparelho. Abra a linha para ver os detalhes.')}
     >
-      <span id="telas" className="cfg-anchor" />
+      <span id="screens" className="cfg-anchor" />
       {devices.error && !devices.data ? (
         <ErrorBox error={devices.error} compact onRetry={devices.reload} />
       ) : !devices.data && ws !== 'open' ? (
@@ -432,7 +432,7 @@ export function RemoteSection({ status, onChange }: { status: ApiStatus; onChang
   const lan = useFetch('lan', () => api.lan());
   return (
     <Panel
-      id="acesso-remoto"
+      id="remote-access"
       title={uiText('Abrir no celular ou tablet')}
       description={uiText('Funciona pela rede local, sem instalar nada.')}
     >

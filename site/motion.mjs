@@ -382,7 +382,7 @@ export function radioCycle(lang = 'pt-BR') {
  * mesma (fundo liso) e desenha o número novo por cima. Posições em pixels da captura (1442 x 863).
  */
 export function heroDash(ctx) {
-  const plate = ctx.asset('assets/shots/ao-vivo-1440.webp');
+  const plate = ctx.asset('assets/shots/live-dashboard-1440.webp');
   const cover = (x, y, w, h, sx, sw) =>
     `<i class="fx-cover" style="--x:${x};--y:${y};--w:${w};--h:${h};--sx:${sx};--sw:${sw}"></i>`;
   const gears = [2, 3, 4, 5]

@@ -1,5 +1,5 @@
 /**
- * Corridas diárias (#/diarias): as três corridas da semana do GT7 com as regras, os tempos de corte
+ * Corridas diárias (#/dailies): as três corridas da semana do GT7 com as regras, os tempos de corte
  * das medalhas e, ao lado, a melhor volta do piloto na mesma pista. Os dados vêm do DG EDGE (buscados
  * pelo servidor local, com cache) e cada cartão leva o link para a página original.
  */

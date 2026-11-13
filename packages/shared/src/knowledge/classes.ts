@@ -4,7 +4,7 @@
  * Evidence is uneven and said so: Gr.1/3/4/B have a public class guide each (Coach Dave) and the
  * DG-EDGE physics notes; Gr.2 (9 cars), the N road cars (289 cars, all kinds) and the X specials
  * (Vision GT, historic racers, Super Formula, kart…) have NO good source: those are our synthesis
- * from general principles and are marked `baixa-evidencia` / `evidence: 'baixa'`.
+ * from general principles and are marked `limited-evidence` / `evidence: 'baixa'`.
  */
 
 import type { CarGroup } from '../cars/catalog.ts';
@@ -12,18 +12,18 @@ import type { CarClassKnowledge, Tip } from './types.ts';
 
 const rg = (text: string, ...src: string[]): Tip => ({
   text,
-  basis: 'regra-geral',
+  basis: 'general-rule',
   ...(src.length ? { src } : {}),
 });
 const dc = (text: string, ...src: string[]): Tip => ({
   text,
-  basis: 'depende-do-carro',
+  basis: 'car-dependent',
   ...(src.length ? { src } : {}),
 });
-const fo = (text: string, ...src: string[]): Tip => ({ text, basis: 'fonte', src });
+const fo = (text: string, ...src: string[]): Tip => ({ text, basis: 'sources', src });
 const be = (text: string, ...src: string[]): Tip => ({
   text,
-  basis: 'baixa-evidencia',
+  basis: 'limited-evidence',
   ...(src.length ? { src } : {}),
 });
 

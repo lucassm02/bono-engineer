@@ -12,9 +12,18 @@ import {
   ONBOARDING_KEY,
   ONBOARDING_WAIT_MS,
 } from './lib/onboarding.ts';
-import { isAnalysisRoute, navigate, parseRoute, type Route, routes } from './lib/route.ts';
+import {
+  canonicalHash,
+  isAnalysisRoute,
+  navigate,
+  parseRoute,
+  type Route,
+  routes,
+} from './lib/route.ts';
 import { loadString } from './lib/storage.ts';
 import { startSwUpdateWatch } from './lib/swUpdate.ts';
+import { DesktopUpdateNotice, startDesktopUpdates } from './components/DesktopUpdate.tsx';
+import { UpdateNotice } from './components/UpdateNotice.tsx';
 import { setupKeepAwake } from './lib/wakeLock.ts';
 import { startConnection } from './net/connection.ts';
 import { prepareSavedEngineerAudio } from './state/engineer.ts';
@@ -57,7 +66,8 @@ void window.bonoDesktop
   .catch(() => {});
 startConnection();
 startTasks();
-startSwUpdateWatch();
+if (window.bonoUpdates) startDesktopUpdates();
+else startSwUpdateWatch();
 setupKeepAwake((mode) => {
   useUi.setState({ keepAwake: mode });
   // Sem a dica na demonstração (o tour roda sobre ela): o aviso cobriria o destaque do passo.
@@ -74,10 +84,18 @@ setupKeepAwake((mode) => {
   }
 });
 
+function readHashRoute(): Route {
+  const hash = canonicalHash(location.hash);
+  if (hash !== location.hash) {
+    history.replaceState(history.state, '', `${location.pathname}${location.search}${hash}`);
+  }
+  return parseRoute(hash);
+}
+
 function useHashRoute(): Route {
-  const [route, setRoute] = useState(() => parseRoute(location.hash));
+  const [route, setRoute] = useState(readHashRoute);
   useEffect(() => {
-    const on = () => setRoute(parseRoute(location.hash));
+    const on = () => setRoute(readHashRoute());
     window.addEventListener('hashchange', on);
     return () => window.removeEventListener('hashchange', on);
   }, []);
@@ -86,7 +104,7 @@ function useHashRoute(): Route {
 
 /**
  * Opening without a route: waits (briefly) for the server to say whether a race is on. Racing or
- * demo = live dashboard; otherwise the history home. Explicit routes (`#/painel`, `#/inicio`, ...)
+ * demo = live dashboard; otherwise the history home. Explicit routes (`#/live`, `#/home`, ...)
  * and `?mock=1` are never redirected.
  */
 function useBootGate(): boolean {
@@ -250,6 +268,7 @@ function Root() {
           <AnalysisApp route={route} />
         </Suspense>
       )}
+      {window.bonoUpdates ? <DesktopUpdateNotice /> : <UpdateNotice />}
       {onboarding && (
         <Suspense fallback={null}>
           <Onboarding />

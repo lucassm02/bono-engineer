@@ -152,7 +152,7 @@ As tarefas não exigem token: só acrescentam fala e texto na tela do engenheiro
 da aprovação do piloto no app (Início → Propostas do agente).
 
 Recursos: `gt7://tracks` e `gt7://tracks/{trackId}`; **base de pilotagem:** `gt7://knowledge` (índice) e
-`gt7://knowledge/{topic}` (ex.: `gt7://knowledge/classe/gr4`, `gt7://knowledge/diagnostico/brakeEarlier`,
+`gt7://knowledge/{topic}` (ex.: `gt7://knowledge/class/gr4`, `gt7://knowledge/diagnostics/brakeEarlier`,
 `gt7://knowledge/afinacao`).
 
 ### Base de conhecimento de pilotagem
@@ -161,11 +161,11 @@ Texto em pt-BR escrito para este app (resumos com palavras próprias, **com a fo
 guia oficial Beyond the Apex, etc.; lista completa em `gt7://knowledge/fonte`). Cada afirmação traz a base: *regra geral*,
 *depende do carro*, *segundo uma fonte* ou *pouca evidência* (Gr.2, Gr.B, N e X quase não têm fonte publicada).
 **A base não tem pontos de frenagem por pista** (não existe base aberta): só princípios; os pontos de frenagem são
-sempre os medidos nas suas voltas. A mesma base alimenta o coach do app e a página **Guia de pilotagem** (`#/guia`).
+sempre os medidos nas suas voltas. A mesma base alimenta o coach do app e a página **Guia de pilotagem** (`#/guide`).
 O código fica em `packages/shared/src/knowledge/` (`knowledgeFor`, `knowledgeIndex`, `knowledgeTopic`).
 
-Exemplo de gráfico: [`docs/exemplo-grafico.png`](../../docs/exemplo-grafico.png) (volta inteira) e
-[`docs/exemplo-grafico-curva.png`](../../docs/exemplo-grafico-curva.png) (zoom na curva). Gere de novo
+Exemplo de gráfico: [`docs/chart-example.png`](../../docs/chart-example.png) (volta inteira) e
+[`docs/corner-chart-example.png`](../../docs/corner-chart-example.png) (zoom na curva). Gere de novo
 com `npm run mcp:sample-chart` (dados sintéticos).
 
 ## Prompts prontos

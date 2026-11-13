@@ -218,8 +218,8 @@ describe('server app (Fastify + WS hub + REST) over a FakeConsole', () => {
       profile: {
         deviceId: 'someone-else',
         name: 'Celular',
-        views: ['deltaGrande', 'pneus', 'naoExiste'],
-        startView: 'pneus',
+        views: ['bigDelta', 'tyres', 'naoExiste'],
+        startView: 'tyres',
         locked: true,
         popupsEnabled: false,
         deltaReference: 'sessionBest',
@@ -232,7 +232,7 @@ describe('server app (Fastify + WS hub + REST) over a FakeConsole', () => {
       return p?.name === 'Celular' ? p : null;
     });
     expect(saved.deviceId).toBe('dev-a');
-    expect(saved.views).toEqual(['deltaGrande', 'pneus']);
+    expect(saved.views).toEqual(['bigDelta', 'tyres']);
     expect(saved.locked).toBe(true);
     expect(saved.updatedAt).toBe(123);
   });
@@ -241,18 +241,18 @@ describe('server app (Fastify + WS hub + REST) over a FakeConsole', () => {
     b = await TestClient.open();
     b.hello('dev-b', 'Tablet');
     await b.waitFor('welcome');
-    b.send({ type: 'currentView', view: 'pneus' });
-    a.send({ type: 'setTargetView', targetDeviceId: 'dev-b', view: 'motor' });
+    b.send({ type: 'currentView', view: 'tyres' });
+    a.send({ type: 'setTargetView', targetDeviceId: 'dev-b', view: 'engine' });
     const sv = await b.waitFor('showView');
-    expect(sv).toMatchObject({ view: 'motor', from: 'dev-a' });
+    expect(sv).toMatchObject({ view: 'engine', from: 'dev-a' });
     expect(a.all('showView')).toHaveLength(0);
 
-    a.send({ type: 'setTargetView', targetDeviceId: 'ghost', view: 'motor' });
+    a.send({ type: 'setTargetView', targetDeviceId: 'ghost', view: 'engine' });
     await a.waitFor('notice', (n) => n.code === 'targetOffline');
 
     const st = await waitFor(async () => {
       const r = await api<ApiStatus>('GET', '/api/status');
-      return r.body.devices?.find((d) => d.deviceId === 'dev-b' && d.currentView === 'pneus')
+      return r.body.devices?.find((d) => d.deviceId === 'dev-b' && d.currentView === 'tyres')
         ? r.body
         : null;
     });
@@ -266,7 +266,7 @@ describe('server app (Fastify + WS hub + REST) over a FakeConsole', () => {
     a.ws.send('{not json');
     await a.waitFor('notice', (n) => n.code === 'badMessage');
     const c = await TestClient.open();
-    c.send({ type: 'currentView', view: 'corrida' });
+    c.send({ type: 'currentView', view: 'race' });
     await c.waitFor('notice', (n) => n.code === 'helloRequired');
     expect(c.all('frame')).toHaveLength(0);
     c.close();
@@ -404,15 +404,15 @@ describe('server app (Fastify + WS hub + REST) over a FakeConsole', () => {
     expect(devA?.profile?.name).toBe('Celular');
     const put = await api<{ name: string }>('PUT', '/api/devices/dev-b', {
       name: 'Tablet da sala',
-      views: ['mapa', 'corrida'],
+      views: ['map', 'race'],
     });
     expect(put.body.name).toBe('Tablet da sala');
     const pushed = await b.waitFor('deviceProfile', (m) => m.profile.name === 'Tablet da sala');
-    expect(pushed.profile.views).toEqual(['mapa', 'corrida']);
-    const show = await api('POST', '/api/devices/dev-b/show-view', { view: 'mapa' });
+    expect(pushed.profile.views).toEqual(['map', 'race']);
+    const show = await api('POST', '/api/devices/dev-b/show-view', { view: 'map' });
     expect(show.status).toBe(200);
-    await b.waitFor('showView', (m) => m.view === 'mapa' && m.from === 'api');
-    expect((await api('POST', '/api/devices/ghost/show-view', { view: 'mapa' })).status).toBe(409);
+    await b.waitFor('showView', (m) => m.view === 'map' && m.from === 'api');
+    expect((await api('POST', '/api/devices/ghost/show-view', { view: 'map' })).status).toBe(409);
     expect((await api('POST', '/api/devices/dev-b/show-view', { view: 'xyz' })).status).toBe(400);
     expect((await api('DELETE', '/api/devices/ghost')).status).toBe(404);
 

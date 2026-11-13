@@ -1,5 +1,5 @@
 /**
- * #/analise/volta/:lapId?ref=&modo=&corner= — replay of ONE lap, like the Gran Turismo replay: a dot
+ * #/analysis/lap/:lapId?ref=&modo=&corner= — replay of ONE lap, like the Gran Turismo replay: a dot
  * runs the track while the brake, throttle and steering readouts and charts follow the clock. With
  * a reference (your best lap or a top lap) a ghost runs beside it, at the same distance or at the
  * same lap clock, and the live delta shows where the time goes. The moments the analysis found
@@ -195,7 +195,7 @@ export function LapReplayPage({ lapId, route }: { lapId: string; route: Route })
       referenceError={cmpError ? humanizeError(cmpError).text : null}
       trackLaps={trackLaps.data ?? []}
       refParam={refParam}
-      mode={route.query.modo === 'tempo' ? 'time' : DEFAULT_GHOST_MODE}
+      mode={route.query.mode === 'time' ? 'time' : DEFAULT_GHOST_MODE}
       initialCorner={route.query.corner ?? null}
       resumeAt={resumeAt}
     />

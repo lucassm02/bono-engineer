@@ -2,17 +2,17 @@ import type { ViewId } from '@gt7/shared';
 import type { ComponentType } from 'react';
 import { t as uiText } from '../lib/i18n.ts';
 import { VIEW_DESCRIPTIONS, VIEW_LABELS } from '../lib/labels.ts';
-import { CombustivelView } from './CombustivelView.tsx';
-import { CorridaView } from './CorridaView.tsx';
-import { DeltaGrandeView } from './DeltaGrandeView.tsx';
-import { ForcasGView } from './ForcasGView.tsx';
+import { BigDeltaView } from './BigDeltaView.tsx';
+import { CornerDrillView } from './CornerDrillView.tsx';
+import { CustomView } from './CustomView.tsx';
+import { EngineView } from './EngineView.tsx';
+import { FuelView } from './FuelView.tsx';
+import { GForcesView } from './GForcesView.tsx';
 import { InputsView } from './InputsView.tsx';
-import { MapaView } from './MapaView.tsx';
-import { MotorView } from './MotorView.tsx';
-import { PersonalizadaView } from './PersonalizadaView.tsx';
-import { PneusView } from './PneusView.tsx';
-import { TemposView } from './TemposView.tsx';
-import { TreinoCurvaView } from './TreinoCurvaView.tsx';
+import { MapView } from './MapView.tsx';
+import { RaceView } from './RaceView.tsx';
+import { TimesView } from './TimesView.tsx';
+import { TyresView } from './TyresView.tsx';
 
 /** Placeholder for views planned for a later wave. */
 function EmBreveView({ view }: { view: ViewId }) {
@@ -26,17 +26,17 @@ function EmBreveView({ view }: { view: ViewId }) {
 }
 
 const VIEW_COMPONENTS: Partial<Record<ViewId, ComponentType>> = {
-  corrida: CorridaView,
-  deltaGrande: DeltaGrandeView,
-  pneus: PneusView,
+  race: RaceView,
+  bigDelta: BigDeltaView,
+  tyres: TyresView,
   inputs: InputsView,
-  motor: MotorView,
-  mapa: MapaView,
-  tempos: TemposView,
-  combustivel: CombustivelView,
-  forcasG: ForcasGView,
-  treinoCurva: TreinoCurvaView,
-  personalizada: PersonalizadaView,
+  engine: EngineView,
+  map: MapView,
+  times: TimesView,
+  fuel: FuelView,
+  gForces: GForcesView,
+  cornerDrill: CornerDrillView,
+  custom: CustomView,
 };
 
 /** Renders the component of a view (or the "Em breve" placeholder). */

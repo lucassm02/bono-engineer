@@ -1,7 +1,7 @@
 /**
  * `npm run desktop:dist`: builds the bundle and packages the Windows app with electron-builder
  * into packages/desktop/release (NSIS installer for the current user + a portable .exe; neither
- * needs admin rights or code signing).
+ * needs admin rights).
  */
 
 import { spawnSync } from 'node:child_process';
@@ -18,7 +18,7 @@ async function main(): Promise<void> {
   electronBinary(); // makes sure the Electron binary is in the cache
   const cli = join(dirname(require.resolve('electron-builder/package.json')), 'cli.js');
   console.log('[desktop] gerando o pacote para Windows (electron-builder)…');
-  const env: NodeJS.ProcessEnv = { ...process.env, CSC_IDENTITY_AUTO_DISCOVERY: 'false' }; // never try to sign
+  const env: NodeJS.ProcessEnv = { ...process.env, CSC_IDENTITY_AUTO_DISCOVERY: 'false' }; // use only explicitly configured credentials
   delete env.ELECTRON_RUN_AS_NODE;
   const r = spawnSync(process.execPath, [cli, '--win', '--x64', ...process.argv.slice(2)], {
     cwd: DESKTOP_DIR,

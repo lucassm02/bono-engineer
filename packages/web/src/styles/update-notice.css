@@ -28,3 +28,31 @@
     bottom: calc(84px + env(safe-area-inset-bottom, 0px));
   }
 }
+
+.desktop-update-controls {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.desktop-update-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.desktop-update-dialog {
+  width: min(42rem, calc(100% - 2rem));
+  max-height: min(80vh, 42rem);
+  overflow: auto;
+  padding: 1.25rem;
+  color: inherit;
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+  border-radius: 0.75rem;
+  color-scheme: dark;
+}
+
+.desktop-update-dialog::backdrop {
+  background: rgb(0 0 0 / 65%);
+}

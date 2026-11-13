@@ -5,7 +5,7 @@
  *   npm run site:shots -- --server http://localhost:8770    usa um servidor de demonstração já aberto
  *
  *   --lang en        captura com o app em inglês (nome da pista em inglês)
- *   --only ao-vivo    captura só uma tela (por nome)
+ *   --only live-dashboard    captura só uma tela (por nome)
  *   --out docs/x      pasta de saída (relativa à raiz), em vez de site/assets/shots
  *
  * O Electron do projeto (já instalado) abre cada tela numa janela invisível; as imagens vão para
@@ -130,18 +130,18 @@ const demo = serverArg
 let code = 0;
 try {
   await waitFor(() => getJson(`${demo.base}/api/status`), 'servidor de demonstração', 180_000);
-  // A tela ao vivo não depende de voltas salvas: com `--only ao-vivo` não espera o simulador.
-  const needLaps = ONLY !== 'ao-vivo';
+  // A tela ao vivo não depende de voltas salvas: com `--only live-dashboard` não espera o simulador.
+  const needLaps = ONLY !== 'live-dashboard';
   const { session, best, other } = needLaps
     ? await pickLaps(demo.base)
     : { session: {}, best: {}, other: {} };
   // Só renomeia a pista no servidor que este script iniciou; um servidor já aberto não é alterado.
   if (!serverArg) await nameDemoTrack(demo.base, session.trackId);
   // ao vivo com o servidor de demonstração (sem o selo "Demonstração" do modo mock): mostra a faixa de contexto
-  const live = `${demo.base}/#/painel`;
+  const live = `${demo.base}/#/live`;
   const shots = [
     {
-      name: 'ao-vivo',
+      name: 'live-dashboard',
       url: live,
       width: 1440,
       height: 860,
@@ -156,8 +156,8 @@ try {
       ],
     },
     {
-      name: 'comparar-voltas',
-      url: `${demo.base}/?s=comparar#/analise/comparar?lap=${best.id}&ref=${other.id}`,
+      name: 'lap-comparison',
+      url: `${demo.base}/?s=compare#/analysis/compare?lap=${best.id}&ref=${other.id}`,
       width: 1440,
       height: 860,
       waitMs: 4500,
@@ -167,16 +167,16 @@ try {
       ],
     },
     {
-      name: 'inicio-por-pista',
-      url: `${demo.base}/?s=inicio#/inicio`,
+      name: 'track-history',
+      url: `${demo.base}/?s=home#/home`,
       width: 1440,
       height: 860,
       waitMs: 4500,
       steps: [{ js: DISMISS_INVITE, waitMs: 800 }],
     },
     {
-      name: 'menu-engenheiro',
-      url: `${demo.base}/?s=menu#/painel`,
+      name: 'engineer-menu',
+      url: `${demo.base}/?s=menu#/live`,
       width: 1440,
       height: 860,
       waitMs: 4000,

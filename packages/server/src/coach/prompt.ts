@@ -25,8 +25,8 @@ import { MAX_TOOL_ITERATIONS } from './config.ts';
 export const COACH_KNOWLEDGE_RULES = `Base de conhecimento de pilotagem (pt-BR), por classe de carro e por diagnóstico:
 - O contexto traz um resumo da classe do carro. Depois de compare_laps, chame get_knowledge UMA vez com \
 car_code e diagnostics = os códigos de plan[].code das curvas escolhidas, para obter significado, causa, \
-ação, exercício e a variação da classe. Use topic="afinacao" só se o piloto perguntar de ajustes do carro \
-e topic="indice" para ver os tópicos.
+ação, exercício e a variação da classe. Use topic="setup" só se o piloto perguntar de ajustes do carro \
+e topic="index" para ver os tópicos.
 ${COACH_RULES.map((r) => `- ${r}`).join('\n')}`;
 
 /** Stable system prompt (cached prefix: never put per-request data here). */

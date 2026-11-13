@@ -130,7 +130,7 @@ describe('static dashboard', () => {
     expect(root.statusCode).toBe(200);
     expect(root.body).toContain('painel');
     expect(root.headers['cache-control']).toBe('no-cache');
-    const spa = await app.inject({ method: 'GET', url: '/analise/volta/1' });
+    const spa = await app.inject({ method: 'GET', url: '/analysis/lap/1' });
     expect(spa.statusCode).toBe(200);
     expect(spa.body).toContain('painel');
     const asset = await app.inject({ method: 'GET', url: '/assets/app-123.js' });

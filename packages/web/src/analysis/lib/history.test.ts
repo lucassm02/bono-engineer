@@ -254,16 +254,16 @@ describe('boot and routes', () => {
     expect(openedWithoutRoute('', '')).toBe(true);
     expect(openedWithoutRoute('#', '')).toBe(true);
     expect(openedWithoutRoute('#/', '')).toBe(false);
-    expect(openedWithoutRoute('#/painel', '')).toBe(false);
+    expect(openedWithoutRoute('#/live', '')).toBe(false);
     expect(openedWithoutRoute('', '?mock=1')).toBe(false);
   });
 
   it('routes: home, track tab, sessions', () => {
-    expect(parseRoute('#/inicio').name).toBe('home');
-    expect(parseRoute('#/inicio/x').name).toBe('notFound');
-    expect(routes.home()).toBe('#/inicio');
-    expect(routes.track('abc', { tab: 'sessoes' })).toBe('#/analise/pista/abc?tab=sessoes');
-    expect(parseRoute('#/analise/pista/abc?tab=sessoes').query.tab).toBe('sessoes');
-    expect(parseRoute('#/analise').name).toBe('sessions');
+    expect(parseRoute('#/home').name).toBe('home');
+    expect(parseRoute('#/home/x').name).toBe('notFound');
+    expect(routes.home()).toBe('#/home');
+    expect(routes.track('abc', { tab: 'sessions' })).toBe('#/analysis/track/abc?tab=sessions');
+    expect(parseRoute('#/analysis/track/abc?tab=sessions').query.tab).toBe('sessions');
+    expect(parseRoute('#/analysis').name).toBe('sessions');
   });
 });

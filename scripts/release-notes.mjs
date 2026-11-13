@@ -1,6 +1,7 @@
 import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
+const VERSION_HEADING = /^## \[(\d+\.\d+\.\d+)\] - (\d{4}-\d{2}-\d{2})$/;
 const { version } = JSON.parse(read('../package.json'));
 const desktop = JSON.parse(read('../packages/desktop/package.json'));
 if (
@@ -12,7 +13,7 @@ if (
 }
 
 const lines = read('../CHANGELOG.md').split(/\r?\n/);
-const start = lines.findIndex((line) => /^## \[\d+\.\d+\.\d+\] - \d{4}-\d{2}-\d{2}$/.test(line));
+const start = lines.findIndex((line) => VERSION_HEADING.test(line));
 if (start === -1 || !lines[start].startsWith(`## [${version}] - `)) {
   throw new Error(`The latest version in CHANGELOG.md must be ${version}.`);
 }
@@ -44,7 +45,7 @@ function historySince(since) {
   const sections = [];
   let found = false;
   lines.forEach((line, index) => {
-    const m = /^## \[(\d+\.\d+\.\d+)\] - (\d{4}-\d{2}-\d{2})$/.exec(line);
+    const m = VERSION_HEADING.exec(line);
     if (!m || index <= start) return;
     const body = entryNotes(entryLines(index));
     if (body) sections.push(`### ${m[1]} (${m[2]})\n\n${body.replace(/^### /gm, '#### ')}`);
@@ -72,6 +73,18 @@ if (sinceVersion) {
   description = `${baseNotes}\n\n## New in ${version}\n\n${notes}`;
 }
 writeFileSync(outputPath, `${description}\n`);
+const jsonPath = process.argv[3];
+if (jsonPath) {
+  const entries = lines.flatMap((line, index) => {
+    const match = VERSION_HEADING.exec(line);
+    if (!match) return [];
+    const markdown = entryNotes(entryLines(index));
+    return markdown ? [{ version: match[1], date: match[2], markdown }] : [];
+  });
+  const json = `${JSON.stringify({ version, entries }, null, 2)}\n`;
+  if (Buffer.byteLength(json) > 512 * 1024) throw new Error('Release notes exceed 512 KiB.');
+  writeFileSync(jsonPath, json);
+}
 
 const tag = `v${version}`;
 if (process.env.GITHUB_OUTPUT) {

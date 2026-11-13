@@ -4,12 +4,12 @@ import { parseRoute, routes } from '../../lib/route.ts';
 import { classTopicId, filterGuide, parseGuideGroup, parseGuideKind } from './guide.ts';
 
 describe('guide route', () => {
-  it('parses #/guia and builds hrefs', () => {
-    expect(parseRoute('#/guia').name).toBe('guide');
-    expect(parseRoute('#/guia?q=trail&classe=4').query).toEqual({ q: 'trail', classe: '4' });
-    expect(parseRoute('#/guia/x').name).toBe('notFound');
-    expect(routes.guide()).toBe('#/guia');
-    expect(routes.guide({ q: 'freio', classe: '3' })).toBe('#/guia?q=freio&classe=3');
+  it('parses #/guide and builds hrefs', () => {
+    expect(parseRoute('#/guide').name).toBe('guide');
+    expect(parseRoute('#/guide?q=trail&class=4').query).toEqual({ q: 'trail', class: '4' });
+    expect(parseRoute('#/guide/x').name).toBe('notFound');
+    expect(routes.guide()).toBe('#/guide');
+    expect(routes.guide({ q: 'freio', class: '3' })).toBe('#/guide?q=freio&class=3');
   });
 });
 
@@ -17,29 +17,29 @@ describe('filterGuide', () => {
   const all = knowledgeIndex();
 
   it('returns everything without filters', () => {
-    expect(filterGuide({ query: '', kind: 'todos', group: null })).toHaveLength(all.length);
+    expect(filterGuide({ query: '', kind: 'all', group: null })).toHaveLength(all.length);
   });
 
   it('filters by kind and by search without accents', () => {
-    const diag = filterGuide({ query: '', kind: 'diagnostico', group: null });
+    const diag = filterGuide({ query: '', kind: 'diagnostics', group: null });
     expect(diag.length).toBeGreaterThanOrEqual(23);
-    expect(diag.every((t) => t.kind === 'diagnostico')).toBe(true);
-    const hits = filterGuide({ query: 'subesterco', kind: 'todos', group: null });
+    expect(diag.every((t) => t.kind === 'diagnostics')).toBe(true);
+    const hits = filterGuide({ query: 'subesterco', kind: 'all', group: null });
     expect(hits.length).toBeGreaterThan(0);
-    expect(filterGuide({ query: 'zzzzqqq', kind: 'todos', group: null })).toEqual([]);
+    expect(filterGuide({ query: 'zzzzqqq', kind: 'all', group: null })).toEqual([]);
   });
 
   it('keeps only the chosen class among the class cards', () => {
-    const cls = filterGuide({ query: '', kind: 'classe', group: '4' });
+    const cls = filterGuide({ query: '', kind: 'class', group: '4' });
     expect(cls.map((t) => t.id)).toEqual([classTopicId('4')]);
-    const mixed = filterGuide({ query: '', kind: 'todos', group: 'B' });
-    expect(mixed.filter((t) => t.kind === 'classe').map((t) => t.id)).toEqual(['classe/grb']);
-    expect(mixed.some((t) => t.kind === 'diagnostico')).toBe(true);
+    const mixed = filterGuide({ query: '', kind: 'all', group: 'B' });
+    expect(mixed.filter((t) => t.kind === 'class').map((t) => t.id)).toEqual(['class/grb']);
+    expect(mixed.some((t) => t.kind === 'diagnostics')).toBe(true);
   });
 
   it('parses the query-string values', () => {
-    expect(parseGuideKind('classe')).toBe('classe');
-    expect(parseGuideKind('x')).toBe('todos');
+    expect(parseGuideKind('class')).toBe('class');
+    expect(parseGuideKind('x')).toBe('all');
     expect(parseGuideGroup('gr3')).toBe('3');
     expect(parseGuideGroup('zz')).toBeNull();
   });

@@ -97,15 +97,17 @@ Bono serves the web app and API on `http://localhost:8770` by default. When the 
 
 ## Releases and CI
 
-[Windows build and release](.github/workflows/windows.yml) runs on pull requests to `main`, pushes to `main`, and manual runs. It installs locked dependencies, checks types, runs the tests, and saves both Windows x64 executables as a workflow artifact. On `main`, it publishes the first successful build for each version to [GitHub Releases](https://github.com/lucassm02/bono-engineer/releases), using the tag `v<version>` and the matching changelog entry as the release description.
+The Windows installer checks for releases after launch and under **Settings → About**. That screen shows release notes and lets the user download an update and restart to install it. Portable users can save the new executable from the same screen and open it after closing Bono.
+
+[Windows build and release](.github/workflows/windows.yml) runs on pull requests to `main`, pushes to `main`, and manual runs. It installs locked dependencies, checks types, runs the tests, and saves both Windows x64 executables, update metadata and release notes as a workflow artifact. On `main`, it publishes the first successful build for each version to [GitHub Releases](https://github.com/lucassm02/bono-engineer/releases), using the tag `v<version>` and the matching changelog entry as the release description.
 
 For a new release, update `version` in the root and desktop `package.json` files, refresh `package-lock.json` with `npm install --package-lock-only`, and add a dated entry below **Unreleased** in [CHANGELOG.md](CHANGELOG.md). Update the version links at the bottom of the changelog. An entry can carry `<!-- release-notes-since: x.y.z -->` so the release description also lists every earlier version since `x.y.z`. The workflow verifies that the package versions and newest entry agree.
 
 ## More documentation
 
 - [Discord on Windows and PS5](docs/radio-discord.md)
-- [Driving guide and telemetry interpretation](docs/guia-de-pilotagem.md)
-- [PS5 telemetry test checklist](docs/primeiro-teste-com-ps5.md)
+- [Driving guide and telemetry interpretation](docs/driving-guide.md)
+- [PS5 telemetry test checklist](docs/first-ps5-test.md)
 - [REST API and WebSocket](packages/server/README.md) · [MCP tools](packages/mcp/README.md) · [GT7 protocol](packages/protocol/README.md)
 - [Bono Engineer design system](docs/design-system.md)
 

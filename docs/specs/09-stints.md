@@ -1,7 +1,7 @@
 # Spec 09 · Sessões com vários stints (box confirmado pelo piloto)
 
-**Status:** futura (não implementar agora) · **Base:** [relatório](../relatorio-stints-setup-pit-wall.md), seção 4 ·
-**Alimenta:** [spec 10](10-setup-entre-stints.md)
+**Status:** futura (não implementar agora) · **Base:** [relatório](../stints-setup-pit-wall-report.md), seção 4 ·
+**Alimenta:** [spec 10](10-setup-between-stints.md)
 
 ## Problema
 

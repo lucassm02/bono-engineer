@@ -16,7 +16,7 @@ export function DailiesSetting() {
 
   return (
     <Panel
-      id="diarias"
+      id="dailies"
       title={uiText('Corridas diárias')}
       description={uiText(
         'Mostra as corridas da semana do GT7, os tempos das medalhas e o 1º lugar, para usar de referência.',

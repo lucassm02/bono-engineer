@@ -462,7 +462,7 @@ writeFileSync(
   `${header(
     'Facts only (ids, official names, lengths, corner counts, elevation, longest straight, country, flags).',
   )}
-/** Where the data came from (shown in the README, DECISOES.md and tests). */
+/** Where the data came from (shown in the README, DECISIONS.md and tests). */
 ${sources}
 /**
  * Official layout rows:

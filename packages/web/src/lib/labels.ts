@@ -8,73 +8,73 @@ import {
 import { getLanguage, t as uiText } from './i18n.ts';
 
 export const VIEW_LABELS: Record<ViewId, string> = {
-  get corrida() {
+  get race() {
     return uiText('Corrida');
   },
-  get deltaGrande() {
+  get bigDelta() {
     return uiText('Delta grande');
   },
-  get pneus() {
+  get tyres() {
     return uiText('Pneus');
   },
   get inputs() {
     return uiText('Inputs');
   },
-  get motor() {
+  get engine() {
     return uiText('Motor e câmbio');
   },
-  get mapa() {
+  get map() {
     return uiText('Mapa');
   },
-  get tempos() {
+  get times() {
     return uiText('Tempos');
   },
-  get combustivel() {
+  get fuel() {
     return uiText('Combustível');
   },
-  get forcasG() {
+  get gForces() {
     return uiText('Forças G');
   },
-  get treinoCurva() {
+  get cornerDrill() {
     return uiText('Treino de curva');
   },
-  get personalizada() {
+  get custom() {
     return uiText('Personalizada');
   },
 };
 
 export const VIEW_DESCRIPTIONS: Record<ViewId, string> = {
-  get corrida() {
+  get race() {
     return uiText('Delta, tempos, setores, marcha e velocidade');
   },
-  get deltaGrande() {
+  get bigDelta() {
     return uiText('Só o delta, enorme, para ler de longe');
   },
-  get pneus() {
+  get tyres() {
     return uiText('Temperatura, patinagem e suspensão por roda');
   },
   get inputs() {
     return uiText('Acelerador, freio, volante e gráfico de 10 s');
   },
-  get motor() {
+  get engine() {
     return uiText('RPM, marchas, turbo e óleo');
   },
-  get mapa() {
+  get map() {
     return uiText('Traçado com sua posição e microssetores');
   },
-  get tempos() {
+  get times() {
     return uiText('Tabela de voltas e setores da sessão');
   },
-  get combustivel() {
+  get fuel() {
     return uiText('Consumo, voltas restantes e energia');
   },
-  get forcasG() {
+  get gForces() {
     return uiText('Círculo de G com rastro');
   },
-  get treinoCurva() {
+  get cornerDrill() {
     return uiText('Metas da próxima curva contra a referência');
   },
-  get personalizada() {
+  get custom() {
     return uiText('Grade de widgets montada por você');
   },
 };

@@ -1,4 +1,4 @@
-/** Pure helpers of the "Guia de pilotagem" page (#/guia): filtering of the knowledge topics. */
+/** Pure helpers of the "Guia de pilotagem" page (#/guide): filtering of the knowledge topics. */
 
 import {
   type CarGroup,
@@ -9,47 +9,47 @@ import {
 } from '@gt7/shared';
 import { t as uiText } from '../../lib/i18n.ts';
 
-export type GuideKind = 'todos' | TopicRef['kind'];
+export type GuideKind = 'all' | TopicRef['kind'];
 
 export const GUIDE_KINDS: readonly { id: GuideKind; label: string }[] = [
   {
-    id: 'todos',
+    id: 'all',
     get label() {
       return uiText('Tudo');
     },
   },
   {
-    id: 'geral',
+    id: 'general',
     get label() {
       return uiText('Princípios');
     },
   },
   {
-    id: 'classe',
+    id: 'class',
     get label() {
       return uiText('Classes');
     },
   },
   {
-    id: 'diagnostico',
+    id: 'diagnostics',
     get label() {
       return uiText('Diagnósticos');
     },
   },
   {
-    id: 'afinacao',
+    id: 'setup',
     get label() {
       return uiText('Afinação');
     },
   },
   {
-    id: 'glossario',
+    id: 'glossary',
     get label() {
       return uiText('Glossário');
     },
   },
   {
-    id: 'fonte',
+    id: 'sources',
     get label() {
       return uiText('Fontes');
     },
@@ -77,12 +77,12 @@ export const GUIDE_GROUPS: readonly { id: CarGroup; label: string }[] = [
 ];
 
 export function parseGuideKind(v: string | undefined): GuideKind {
-  return GUIDE_KINDS.some((k) => k.id === v) ? (v as GuideKind) : 'todos';
+  return GUIDE_KINDS.some((k) => k.id === v) ? (v as GuideKind) : 'all';
 }
 
-/** Topic id of the class card of a group (`classe/gr4`). */
+/** Topic id of the class card of a group (`class/gr4`). */
 export function classTopicId(group: CarGroup): string {
-  return `classe/gr${group.toLowerCase()}`;
+  return `class/gr${group.toLowerCase()}`;
 }
 
 /**
@@ -97,8 +97,8 @@ export function filterGuide(opts: {
 }): TopicRef[] {
   const base = opts.query.trim() ? searchKnowledge(opts.query) : knowledgeIndex();
   return base.filter((t) => {
-    if (opts.kind !== 'todos' && t.kind !== opts.kind) return false;
-    if (opts.group && t.kind === 'classe' && t.id !== classTopicId(opts.group)) return false;
+    if (opts.kind !== 'all' && t.kind !== opts.kind) return false;
+    if (opts.group && t.kind === 'class' && t.id !== classTopicId(opts.group)) return false;
     return true;
   });
 }

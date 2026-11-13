@@ -11,7 +11,7 @@ export function render(ctx) {
 <div class="wrap prose">
   <h2>O que você precisa</h2>
   <ul>
-    <li>O <a href="${ctx.rel('instalar')}">Bono instalado</a> no PC com Windows e aberto durante a sessão.</li>
+    <li>O <a href="${ctx.rel('install')}">Bono instalado</a> no PC com Windows e aberto durante a sessão.</li>
     <li>Um servidor do Discord seu, com um canal de voz <strong>privado</strong>. Quem entrar nele ouve o rádio.</li>
     <li>O Discord vinculado à sua conta PlayStation, para entrar no canal pelo <strong>Game Base → Discord</strong>. Veja o <a href="https://www.playstation.com/pt-br/support/games/discord-voice-chat/" rel="noopener">guia da PlayStation</a>.</li>
   </ul>
@@ -76,7 +76,7 @@ export function render(ctx) {
   <p>Pode. O mesmo rádio toca no PC e no tablet, com três vozes por idioma que funcionam sem internet. O Discord só leva a voz para o headset do PS5.</p>
   <h3>Quero que o bot entre só quando eu entrar.</h3>
   <p>Em <strong>Ajuste fino</strong>, use <strong>Só seguir este usuário</strong> e informe o ID da sua conta. Vem vazio por padrão.</p>
-  <p>Próximo passo: <a href="${ctx.rel('guia')}">entenda o que o engenheiro quer dizer na pista</a>.</p>
+  <p>Próximo passo: <a href="${ctx.rel('guide')}">entenda o que o engenheiro quer dizer na pista</a>.</p>
 </div>`;
   return { body, jsonLd: [breadcrumbLd(ctx.page)] };
 }

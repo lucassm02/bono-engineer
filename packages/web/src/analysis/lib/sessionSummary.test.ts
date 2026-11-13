@@ -36,7 +36,7 @@ describe('summary route', () => {
   });
 
   it('keeps the session page and rejects extra segments', () => {
-    expect(parseRoute('#/analise/sessao/abc').name).toBe('session');
-    expect(parseRoute('#/analise/sessao/abc/outra').name).toBe('notFound');
+    expect(parseRoute('#/analysis/session/abc').name).toBe('session');
+    expect(parseRoute('#/analysis/session/abc/outra').name).toBe('notFound');
   });
 });

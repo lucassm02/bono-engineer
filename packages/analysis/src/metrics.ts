@@ -1,5 +1,5 @@
 /**
- * Per-corner driver metrics (PLANO-APP.md §5.2) computed on the raw samples of a prepared lap
+ * Per-corner driver metrics (APP-PLAN.md §5.2) computed on the raw samples of a prepared lap
  * (60 Hz, aligned distance), so distances are not quantized by a resampling grid.
  *
  * Windows per corner (k), with prev/next corners wrapping around the lap:

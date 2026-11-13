@@ -125,15 +125,17 @@ O painel e a API ficam em `http://localhost:8770` por padrão. Quando a porta es
 
 ## Releases e CI
 
-O workflow [Windows build and release](../.github/workflows/windows.yml) roda em pull requests e pushes para `main` e também pode ser disparado manualmente. Ele instala as dependências do lockfile, checa os tipos, roda os testes e disponibiliza os dois executáveis Windows x64 como artefato. Em `main`, o primeiro build aprovado de cada versão é publicado no [GitHub Releases](https://github.com/lucassm02/bono-engineer/releases), com tag `v<versão>` e a entrada correspondente do changelog como descrição.
+O aplicativo instalado no Windows verifica novas versões ao abrir e em **Configurações → Sobre**. Nessa tela, o piloto pode ler as notas, baixar a atualização e reiniciar para instalar. Na versão portátil, o Bono salva o novo executável para abrir depois de fechar a versão atual.
+
+O workflow [Windows build and release](../.github/workflows/windows.yml) roda em pull requests e pushes para `main` e também pode ser disparado manualmente. Ele instala as dependências do lockfile, checa os tipos, roda os testes e disponibiliza os executáveis Windows x64, o manifesto de atualização e as notas da versão como artefato. Em `main`, o primeiro build aprovado de cada versão é publicado no [GitHub Releases](https://github.com/lucassm02/bono-engineer/releases), com tag `v<versão>` e a entrada correspondente do changelog como descrição.
 
 Para lançar uma versão, atualize `version` no `package.json` da raiz e no de `packages/desktop`, sincronize o lockfile com `npm install --package-lock-only` e adicione uma entrada datada abaixo de **Unreleased** no [CHANGELOG.md](../CHANGELOG.md). Atualize os links de versão no fim do changelog. Uma entrada pode levar `<!-- release-notes-since: x.y.z -->` para a descrição da release listar também todas as versões anteriores desde a `x.y.z`. O workflow verifica se as versões e a entrada mais recente conferem.
 
 ## Mais documentação
 
 - [Configuração do Discord no Windows e no PS5](radio-discord.md)
-- [Guia de pilotagem e interpretação da telemetria](guia-de-pilotagem.md)
-- [Roteiro de teste da telemetria no PS5](primeiro-teste-com-ps5.md)
+- [Guia de pilotagem e interpretação da telemetria](driving-guide.md)
+- [Roteiro de teste da telemetria no PS5](first-ps5-test.md)
 - [API REST e WebSocket](../packages/server/README.md) · [Ferramentas MCP](../packages/mcp/README.md) · [Protocolo do GT7](../packages/protocol/README.md)
 - [Sistema visual do Bono Engineer](design-system.md)
 

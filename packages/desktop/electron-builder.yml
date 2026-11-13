@@ -1,8 +1,12 @@
-# Windows package. No code signing and no admin rights needed:
+# Windows packages for the current user. Release builds may use an explicit signing identity:
 #  - "nsis": one-click installer for the CURRENT user (%LOCALAPPDATA%\Programs), no UAC prompt;
 #  - "portable": a single .exe that runs from anywhere (extracts to a temp folder on each start).
 appId: com.lucas.bonoengineer
 productName: Bono Engineer
+publish:
+  provider: github
+  owner: lucassm02
+  repo: bono-engineer
 copyright: Projeto pessoal
 directories:
   output: release

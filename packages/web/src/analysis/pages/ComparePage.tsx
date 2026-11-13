@@ -1,5 +1,5 @@
 /**
- * #/analise/comparar?lap=&ref=&extra=&corner= — the learning page: summary, synced traces by
+ * #/analysis/compare?lap=&ref=&extra=&corner= — the learning page: summary, synced traces by
  * distance, track map coloured by microsectors, corner table and ranked findings.
  */
 

@@ -34,6 +34,7 @@ export {
   migrateDiscordConfig,
   type StoredDiscordConfig,
 } from './desktop-discord.ts';
+export * from './desktop-updates.ts';
 export * from './domain.ts';
 export * from './drill.ts';
 export * from './driver.ts';

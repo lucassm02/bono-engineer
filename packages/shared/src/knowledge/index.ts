@@ -20,6 +20,7 @@ import {
   type KnowledgeCornerKind,
   type Tip,
   type TopicRef,
+  type SetupEntry,
 } from './types.ts';
 
 export * from './classes.ts';
@@ -92,7 +93,7 @@ function publishers(ids: readonly string[] | undefined): string {
 
 /** "texto (regra geral)" / "texto (segundo DG-EDGE)". */
 function tipText(t: Tip): string {
-  const pub = t.basis === 'fonte' ? publishers(t.src) : '';
+  const pub = t.basis === 'sources' ? publishers(t.src) : '';
   const tag = pub ? `segundo ${pub}` : BASIS_LABELS[t.basis];
   return `${t.text} _(${tag})_`;
 }
@@ -211,7 +212,7 @@ export function knowledgeBrief(q: KnowledgeQuery = {}): KnowledgeBrief {
     .split('; ')
     .slice(0, 6)
     .join('; ')}.`;
-  const sourcesShort = 'Fontes: get_knowledge(topic="fonte") lista os links.';
+  const sourcesShort = 'Fontes: get_knowledge(topic="sources") lista os links.';
 
   const build = (level: number): string => {
     const parts: string[] = ['## Base de pilotagem (resumo para este contexto)', carLine];
@@ -291,53 +292,53 @@ export function knowledgeIndex(): TopicRef[] {
   if (indexCache) return indexCache;
   const out: TopicRef[] = [];
   for (const t of GENERAL_TOPICS)
-    out.push({ id: `geral/${t.id}`, kind: 'geral', title: t.title, summary: t.summary });
+    out.push({ id: `general/${t.id}`, kind: 'general', title: t.title, summary: t.summary });
   out.push({
-    id: 'geral/tipos-de-curva',
-    kind: 'geral',
+    id: 'general/corner-types',
+    kind: 'general',
     title: 'Tipos de curva',
     summary:
       'Conselho por tipo de curva detectado pelo app: grampo, lenta, média, rápida, inflexão e chicane.',
   });
   out.push({
-    id: 'geral/regras-do-coach',
-    kind: 'geral',
+    id: 'general/coach-rules',
+    kind: 'general',
     title: 'Regras de uso para o coach',
     summary:
       'Como a IA deve usar a base: números, classe, regra geral × depende, sem pontos absolutos.',
   });
   for (const c of CAR_CLASSES)
     out.push({
-      id: `classe/${groupSlug(c.group)}`,
-      kind: 'classe',
+      id: `class/${groupSlug(c.group)}`,
+      kind: 'class',
       title: `${c.label} — ${c.name}`,
       summary: firstSentence(c.summary),
     });
   for (const code of ALL_DIAGNOSTIC_CODES) {
     const d = diagnosticFor(code)!;
     out.push({
-      id: `diagnostico/${code}`,
-      kind: 'diagnostico',
+      id: `diagnostics/${code}`,
+      kind: 'diagnostics',
       title: `${code}: ${d.title}`,
       summary: firstSentence(d.meaning),
     });
   }
   out.push({
-    id: 'afinacao',
-    kind: 'afinacao',
+    id: 'setup',
+    kind: 'setup',
     title: 'Afinação: sintoma → ajuste',
     summary:
       'Mapa de sintomas de comportamento para a direção típica do ajuste (princípios gerais).',
   });
   out.push({
-    id: 'glossario',
-    kind: 'glossario',
+    id: 'glossary',
+    kind: 'glossary',
     title: 'Glossário pt-BR / inglês',
     summary: 'Termos de pilotagem e afinação usados pelo app e pela comunidade.',
   });
   out.push({
-    id: 'fonte',
-    kind: 'fonte',
+    id: 'sources',
+    kind: 'sources',
     title: 'Fontes e links',
     summary: 'Todas as fontes consultadas, com URL e data de consulta.',
   });
@@ -349,12 +350,12 @@ export function knowledgeIndex(): TopicRef[] {
 export function knowledgeIndexMarkdown(): string {
   const idx = knowledgeIndex();
   const kinds: [string, string][] = [
-    ['geral', 'Princípios gerais'],
-    ['classe', 'Classes de carro'],
-    ['diagnostico', 'Diagnósticos do app'],
-    ['afinacao', 'Afinação'],
-    ['glossario', 'Glossário'],
-    ['fonte', 'Fontes'],
+    ['general', 'Princípios gerais'],
+    ['class', 'Classes de carro'],
+    ['diagnostics', 'Diagnósticos do app'],
+    ['setup', 'Afinação'],
+    ['glossary', 'Glossário'],
+    ['sources', 'Fontes'],
   ];
   const parts = ['# Base de conhecimento de pilotagem (pt-BR)'];
   for (const [k, title] of kinds) {
@@ -364,21 +365,47 @@ export function knowledgeIndexMarkdown(): string {
   return parts.join('\n\n');
 }
 
+const LEGACY_TOPIC_PARTS: Readonly<Record<string, string>> = {
+  geral: 'general',
+  classe: 'class',
+  diagnostico: 'diagnostics',
+  afinacao: 'setup',
+  glossario: 'glossary',
+  fonte: 'sources',
+  'ponto-de-frenagem': 'braking-point',
+  'pressao-de-freio': 'brake-pressure',
+  rotacao: 'rotation',
+  'saida-e-aceleracao': 'exit-and-throttle',
+  linha: 'racing-line',
+  pneus: 'tyres',
+  consistencia: 'consistency',
+  assistencias: 'assists',
+  'layout-tracao': 'drivetrain',
+  'como-treinar': 'how-to-practise',
+  'tipos-de-curva': 'corner-types',
+  'regras-do-coach': 'coach-rules',
+  indice: 'index',
+};
+
 /** Resolves loose input ("gr4", "Gr.4", "brakeEarlier", "trail-braking") to a topic id. */
 export function resolveTopicId(input: string): string | null {
   const s = input.trim();
   if (!s) return null;
   const idx = knowledgeIndex();
   const lower = s.toLowerCase();
-  const exact = idx.find((t) => t.id.toLowerCase() === lower);
+  const canonical = lower
+    .split('/')
+    .map((part) => (Object.hasOwn(LEGACY_TOPIC_PARTS, part) ? LEGACY_TOPIC_PARTS[part]! : part))
+    .join('/');
+  const exact = idx.find((t) => t.id.toLowerCase() === canonical);
   if (exact) return exact.id;
   const g = parseCarGroup(s);
-  if (g) return `classe/${groupSlug(g)}`;
-  const byTail = idx.find((t) => t.id.split('/').pop()!.toLowerCase() === lower);
+  if (g) return `class/${groupSlug(g)}`;
+  const byTail = idx.find((t) => t.id.split('/').pop()!.toLowerCase() === canonical);
   if (byTail) return byTail.id;
-  if (['sources', 'fontes'].includes(lower)) return 'fonte';
-  if (['setup', 'afinação', 'afinacao', 'tuning'].includes(lower)) return 'afinacao';
-  if (['glossary', 'glossário'].includes(lower)) return 'glossario';
+  if (['sources', 'fontes'].includes(lower)) return 'sources';
+  if (['setup', 'afinação', 'setup', 'tuning'].includes(lower)) return 'setup';
+  if (['glossary', 'glossário'].includes(lower)) return 'glossary';
   return null;
 }
 
@@ -418,6 +445,14 @@ function classPage(c: CarClassKnowledge): string {
 }
 
 function setupPage(): string {
+  const phaseLabels: Record<SetupEntry['phase'], string> = {
+    entry: 'entrada',
+    'mid-corner': 'meio',
+    exit: 'saída',
+    braking: 'frenagem',
+    straight: 'reta',
+    general: 'geral',
+  };
   const parts = [
     '## Afinação: sintoma → ajuste',
     `_${SETUP_HEADER}_`,
@@ -427,7 +462,7 @@ function setupPage(): string {
     parts.push(
       [
         `### ${e.symptom}`,
-        `Onde: ${e.phase}. Diagnósticos do app relacionados: ${e.diagnostics.join(', ') || '—'}.`,
+        `Onde: ${phaseLabels[e.phase]}. Diagnósticos do app relacionados: ${e.diagnostics.join(', ') || '—'}.`,
         `Causa provável: ${e.likelyCause}`,
         bullets(e.adjustments),
         `**Cuidado:** ${e.caution}`,
@@ -454,30 +489,30 @@ export function knowledgeTopic(
   if (!id) return null;
   const group = parseCarGroup(opts.group);
   const [kind, rest = ''] = id.split('/') as [string, string | undefined];
-  if (kind === 'geral') {
-    if (rest === 'tipos-de-curva') {
+  if (kind === 'general') {
+    if (rest === 'corner-types') {
       return `## Tipos de curva\n\n${(Object.keys(CORNER_TYPE_ADVICE) as KnowledgeCornerKind[])
         .map((k) => `### ${CORNER_TYPE_ADVICE[k].title}\n${bullets(CORNER_TYPE_ADVICE[k].tips)}`)
         .join('\n\n')}`;
     }
-    if (rest === 'regras-do-coach')
+    if (rest === 'coach-rules')
       return `## Regras de uso para o coach\n\n${COACH_RULES.map((r) => `- ${r}`).join('\n')}`;
     const t = GENERAL_TOPICS.find((x) => x.id === rest);
     if (!t) return null;
     return `## ${t.title}\n\n${t.summary}\n\n${bullets(t.points)}\n\n_Fontes: ${sourceLine([...new Set(t.points.flatMap((p) => p.src ?? []))]) || '—'}._`;
   }
-  if (kind === 'classe') {
+  if (kind === 'class') {
     const c = CAR_CLASSES.find((x) => groupSlug(x.group) === rest);
     return c ? classPage(c) : null;
   }
-  if (kind === 'diagnostico') {
+  if (kind === 'diagnostics') {
     const d = diagnosticFor(rest);
     return d ? diagnosticPage(d, group) : null;
   }
-  if (kind === 'afinacao') return setupPage();
-  if (kind === 'glossario')
+  if (kind === 'setup') return setupPage();
+  if (kind === 'glossary')
     return `## Glossário\n\n${GLOSSARY.map((g) => `- **${g.term}**${g.en ? ` (${g.en})` : ''}: ${g.definition}`).join('\n')}`;
-  if (kind === 'fonte') return sourcesPage();
+  if (kind === 'sources') return sourcesPage();
   return null;
 }
 

@@ -55,7 +55,7 @@ describe('server address', () => {
 
 describe('isInternalUrl', () => {
   it('accepts only our own server (loopback + port)', () => {
-    expect(isInternalUrl('http://127.0.0.1:8770/#/inicio', 8770)).toBe(true);
+    expect(isInternalUrl('http://127.0.0.1:8770/#/home', 8770)).toBe(true);
     expect(isInternalUrl('http://localhost:8770/api/status', 8770)).toBe(true);
     expect(isInternalUrl('http://[::1]:8770/', 8770)).toBe(true);
     expect(isInternalUrl('http://127.0.0.1:8771/', 8770)).toBe(false);

@@ -12,7 +12,7 @@ import type { IngestorStats, PacketFormat } from './telemetry.ts';
 import type { LiveTrackContext, TrackMismatchInfo } from './track-context.ts';
 import type { DeviceProfile, ViewId } from './ui.ts';
 
-export const WS_PROTOCOL_VERSION = 1;
+export const WS_PROTOCOL_VERSION = 2;
 
 /** Default HTTP/WebSocket port of the server (0.0.0.0). */
 export const DEFAULT_HTTP_PORT = 8770;

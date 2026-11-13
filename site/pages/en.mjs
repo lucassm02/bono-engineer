@@ -40,7 +40,7 @@ export const FAQ_EN = [
 export function render(ctx) {
   const v = SITE.version;
   const hero = ctx.pic(
-    'ao-vivo',
+    'live-dashboard',
     'Bono Live screen with the context strip (track, car and engineer), the delta against your best lap, gear, speed, lap times, sectors and the shift lights',
     { eager: true, sizes: '(min-width: 1000px) 62vw, 100vw' },
   );
@@ -136,15 +136,15 @@ ${motionSection(ctx, 'en')}
     <p class="lead">Screenshots use demo data and the Brazilian Portuguese interface.</p>
     <div class="gal">
       <figure class="fig wide">
-        ${ctx.pic('comparar-voltas', 'Lap comparison screen with speed, throttle, brake, gear and steering of two laps overlaid, and a track map coloured by time gained or lost', { sizes: '(min-width: 1240px) 1200px, 100vw' })}
+        ${ctx.pic('lap-comparison', 'Lap comparison screen with speed, throttle, brake, gear and steering of two laps overlaid, and a track map coloured by time gained or lost', { sizes: '(min-width: 1240px) 1200px, 100vw' })}
         <figcaption><strong>Lap comparison</strong>Speed, throttle, brake, gear and steering overlaid, with accumulated delta and a map of where you gain and lose.</figcaption>
       </figure>
       <figure class="fig">
-        ${ctx.pic('inicio-por-pista', 'Track home screen with totals for tracks, sessions and laps, search, and the best lap on a track', { sizes: '(min-width: 900px) 590px, 100vw' })}
+        ${ctx.pic('track-history', 'Track home screen with totals for tracks, sessions and laps, search, and the best lap on a track', { sizes: '(min-width: 900px) 590px, 100vw' })}
         <figcaption><strong>Home by track</strong>Your best times per track and car, with progress and what is left to gain.</figcaption>
       </figure>
       <figure class="fig">
-        ${ctx.pic('menu-engenheiro', 'Engineer menu open over the Live screen', { sizes: '(min-width: 900px) 590px, 100vw' })}
+        ${ctx.pic('engineer-menu', 'Engineer menu open over the Live screen', { sizes: '(min-width: 900px) 590px, 100vw' })}
         <figcaption><strong>Engineer menu</strong>Pick the mode (practice, qualifying or race), speech level and engineer voice without leaving Live.</figcaption>
       </figure>
     </div>
@@ -182,7 +182,7 @@ ${motionSection(ctx, 'en')}
           <li>Click <strong>Run anyway</strong>.</li>
           <li>If the firewall asks, allow Bono on <strong>private networks</strong>.</li>
         </ol>
-        <p>Detailed setup, firewall rules and the Discord radio guide are available in Portuguese: <a href="${ctx.rel('instalar')}" lang="pt-BR" hreflang="pt-BR">Como instalar</a>, <a href="${ctx.rel('discord')}" lang="pt-BR" hreflang="pt-BR">Rádio no Discord</a>.</p>
+        <p>Detailed setup, firewall rules and the Discord radio guide are available in Portuguese: <a href="${ctx.rel('install')}" lang="pt-BR" hreflang="pt-BR">Como instalar</a>, <a href="${ctx.rel('discord')}" lang="pt-BR" hreflang="pt-BR">Rádio no Discord</a>.</p>
       </div>
     </div>
   </div>

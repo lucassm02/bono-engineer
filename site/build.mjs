@@ -15,9 +15,9 @@ import { checkAssets, htmlDocument, makeCtx } from './render.mjs';
 
 const RENDERERS = {
   home: () => import('./pages/home.mjs'),
-  instalar: () => import('./pages/instalar.mjs'),
+  install: () => import('./pages/install.mjs'),
   discord: () => import('./pages/discord.mjs'),
-  guia: () => import('./pages/guia.mjs'),
+  guide: () => import('./pages/guide.mjs'),
   en: () => import('./pages/en.mjs'),
   404: () => import('./pages/notfound.mjs'),
 };
@@ -74,7 +74,33 @@ export async function build({ out = DEFAULT_OUT, og = true } = {}) {
     writeFileSync(file, htmlDocument(page, ctx, body, jsonLd));
   }
 
-  // Arquivos estáticos
+  // Keep bookmarks working when the published paths change.
+  for (const [legacy, current] of Object.entries({
+    'como-instalar': 'install',
+    'guia-de-pilotagem': 'driving-guide',
+  })) {
+    const dir = join(out, legacy);
+    const href = '../' + current + '/';
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(
+      join(dir, 'index.html'),
+      '<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="robots" content="noindex">' +
+        '<link rel="canonical" href="' +
+        SITE.origin +
+        SITE.base +
+        '/' +
+        current +
+        '/">' +
+        '<meta http-equiv="refresh" content="0; url=' +
+        href +
+        '">' +
+        '<title>Bono Engineer</title><a href="' +
+        href +
+        '">Bono Engineer</a></html>',
+    );
+  }
+
+  // Static files
   cpSync(join(SITE_DIR, 'assets', 'shots'), join(out, 'assets', 'shots'), { recursive: true });
   // Vídeo curto opcional (site/assets/motion/bono-explainer.webm|mp4 + poster): só os arquivos de mídia.
   for (const file of Object.values(MOTION_FILES)) {

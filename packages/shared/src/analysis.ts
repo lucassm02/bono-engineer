@@ -1,7 +1,7 @@
 /**
  * Analysis contract: corners, per-corner driver metrics, lap comparison, consistency, traces.
  *
- * Owned by @gt7/analysis (wave 2). See PLANO-APP.md §5. Wave 2 additions are additive: optional
+ * Owned by @gt7/analysis (wave 2). See APP-PLAN.md §5. Wave 2 additions are additive: optional
  * fields on existing interfaces plus new result types (distance delta, microsectors, validity).
  *
  * Conventions:
@@ -62,7 +62,7 @@ export interface LateralOffsets {
   exit: number;
 }
 
-/** Driver metrics for one corner of one lap (PLANO-APP.md §5.2). */
+/** Driver metrics for one corner of one lap (APP-PLAN.md §5.2). */
 export interface CornerMetrics {
   cornerId: string;
   lapId: Id;
@@ -418,7 +418,7 @@ export interface LapValidityReport {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Driving events (docs/spec-engenheiro-de-radio.md, "Eventos de pilotagem")
+// Driving events (docs/radio-engineer-spec.md, "Eventos de pilotagem")
 // ---------------------------------------------------------------------------------------------
 
 /**

@@ -232,5 +232,5 @@ um exercício e uma meta numérica verificável no app (ex.: "T1: V-mín ≥ 62 
 "desvio-padrão do ponto de frenagem da T6 < 5 m").
 - **Assistências** (TCS/ASM) se os dados sugerirem (patinagem/TCS ativo), sugerindo reduzir aos poucos.
 
-Para os exercícios e as metas, use a base de pilotagem: get_knowledge(topic="geral/como-treinar") e, para \ncada foco, get_knowledge(car_code, diagnostics=[código]) com a variação para a classe do carro. Marque o que \né "regra geral" e não prometa ganhos de tempo que o app não mediu.${knowledgeContext(carNum, trackId)}`;
+Para os exercícios e as metas, use a base de pilotagem: get_knowledge(topic="general/how-to-practise") e, para \ncada foco, get_knowledge(car_code, diagnostics=[código]) com a variação para a classe do carro. Marque o que \né "regra geral" e não prometa ganhos de tempo que o app não mediu.${knowledgeContext(carNum, trackId)}`;
 }

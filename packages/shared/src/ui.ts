@@ -1,5 +1,5 @@
 /**
- * UI contract: views, widgets and per-device profiles (PLANO-APP.md §3.1).
+ * UI contract: views, widgets and per-device profiles (APP-PLAN.md §3.1).
  *
  * Owned by @gt7/web (later wave). Device profiles are persisted server-side by deviceId.
  */
@@ -8,37 +8,57 @@ import type { DeltaReferenceKind } from './domain.ts';
 
 /** The 11 dashboard views (ids are stable; labels are pt-BR and live in the web package). */
 export type ViewId =
-  | 'corrida'
-  | 'deltaGrande'
-  | 'pneus'
+  | 'race'
+  | 'bigDelta'
+  | 'tyres'
   | 'inputs'
-  | 'motor'
-  | 'mapa'
-  | 'tempos'
-  | 'combustivel'
-  | 'forcasG'
-  | 'treinoCurva'
-  | 'personalizada';
+  | 'engine'
+  | 'map'
+  | 'times'
+  | 'fuel'
+  | 'gForces'
+  | 'cornerDrill'
+  | 'custom';
 
 export const VIEW_IDS: readonly ViewId[] = [
-  'corrida',
-  'deltaGrande',
-  'pneus',
+  'race',
+  'bigDelta',
+  'tyres',
   'inputs',
-  'motor',
-  'mapa',
-  'tempos',
-  'combustivel',
-  'forcasG',
-  'treinoCurva',
-  'personalizada',
+  'engine',
+  'map',
+  'times',
+  'fuel',
+  'gForces',
+  'cornerDrill',
+  'custom',
 ] as const;
 
 export function isViewId(v: unknown): v is ViewId {
   return typeof v === 'string' && (VIEW_IDS as readonly string[]).includes(v);
 }
 
-/** Widgets usable in the custom grid view ("personalizada"). */
+/** View ids saved or sent before they were renamed to English (device profiles, old browsers). */
+export const LEGACY_VIEW_IDS: Readonly<Record<string, ViewId>> = {
+  corrida: 'race',
+  deltaGrande: 'bigDelta',
+  pneus: 'tyres',
+  motor: 'engine',
+  mapa: 'map',
+  tempos: 'times',
+  combustivel: 'fuel',
+  forcasG: 'gForces',
+  treinoCurva: 'cornerDrill',
+  personalizada: 'custom',
+};
+
+/** A current view id, or the one a legacy id stands for; null for anything else. */
+export function toViewId(v: unknown): ViewId | null {
+  if (isViewId(v)) return v;
+  return typeof v === 'string' && Object.hasOwn(LEGACY_VIEW_IDS, v) ? LEGACY_VIEW_IDS[v]! : null;
+}
+
+/** Widgets usable in the custom grid view ("custom"). */
 export type WidgetId =
   | 'delta'
   | 'deltaBar'
@@ -150,7 +170,7 @@ export function createDefaultDeviceProfile(deviceId: string, name = 'Dispositivo
     deviceId,
     name,
     views: [...DEFAULT_ENABLED_VIEWS],
-    startView: 'corrida',
+    startView: 'race',
     locked: false,
     popupsEnabled: true,
     deltaReference: 'personalBest',
@@ -165,11 +185,11 @@ export function createDefaultDeviceProfile(deviceId: string, name = 'Dispositivo
 
 /** Views enabled in a fresh profile (F1 views), in carousel order. */
 export const DEFAULT_ENABLED_VIEWS: readonly ViewId[] = [
-  'corrida',
-  'deltaGrande',
-  'pneus',
+  'race',
+  'bigDelta',
+  'tyres',
   'inputs',
-  'motor',
+  'engine',
 ] as const;
 
 /**
@@ -184,10 +204,14 @@ export function normalizeDeviceProfile(input: unknown, deviceId: string): Device
   const p = input as Partial<Record<keyof DeviceProfile, unknown>>;
   const views: ViewId[] = [];
   if (Array.isArray(p.views)) {
-    for (const v of p.views) if (isViewId(v) && !views.includes(v)) views.push(v);
+    for (const raw of p.views) {
+      const v = toViewId(raw);
+      if (v && !views.includes(v)) views.push(v);
+    }
   }
   if (views.length === 0) views.push(...base.views);
-  const startView = isViewId(p.startView) && views.includes(p.startView) ? p.startView : views[0]!;
+  const start = toViewId(p.startView);
+  const startView = start && views.includes(start) ? start : views[0]!;
   const ref = p.deltaReference;
   const deltaReference: DeltaReferenceKind =
     ref === 'personalBest' || ref === 'sessionBest' || ref === 'reference'

@@ -1,5 +1,5 @@
 /**
- * #/analise/sessao/:id — session summary, laps table (invalid / out / in laps marked), quick
+ * #/analysis/session/:id — session summary, laps table (invalid / out / in laps marked), quick
  * actions per lap (compare with my best, set as reference, delete), downloads and delete session.
  */
 
@@ -208,7 +208,7 @@ export function SessionPage({ id }: { id: string }) {
       <PageHead
         back={
           trackId
-            ? { href: routes.track(trackId, { tab: 'sessoes' }), label: trackLabel }
+            ? { href: routes.track(trackId, { tab: 'sessions' }), label: trackLabel }
             : { href: routes.home(), label: uiText('Suas pistas') }
         }
         title={trackId ? <a href={routes.track(trackId)}>{trackLabel}</a> : trackLabel}
@@ -253,7 +253,7 @@ export function SessionPage({ id }: { id: string }) {
                 try {
                   await api.deleteSession(session.id);
                   addNotice('info', uiText('Sessão apagada.'));
-                  navigate(trackId ? routes.track(trackId, { tab: 'sessoes' }) : routes.home());
+                  navigate(trackId ? routes.track(trackId, { tab: 'sessions' }) : routes.home());
                 } catch (e) {
                   addNotice('error', (e as Error).message, 6000);
                 }

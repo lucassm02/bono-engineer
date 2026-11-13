@@ -49,7 +49,7 @@ export const DIAGNOSTICS: Readonly<Record<DiagnosticCode, DiagnosticKnowledge>> 
   // ---------------------------------------------------------------- braking
   brakeEarlier: {
     code: 'brakeEarlier',
-    area: 'frenagem',
+    area: 'braking',
     title: 'Freia mais cedo que a referência',
     meaning:
       'O ponto onde o freio começa está 5 m ou mais antes do da referência (no app, brakePointM menor em relação à entrada da curva).',
@@ -72,12 +72,12 @@ export const DIAGNOSTICS: Readonly<Record<DiagnosticCode, DiagnosticKnowledge>> 
     },
     caveat:
       'Se a referência for replay, os pontos têm precisão de alguns metros; diferenças abaixo de ~10 m são indício, não certeza. Com carro diferente, o ponto não é comparável 1:1.',
-    basis: 'regra-geral',
+    basis: 'general-rule',
     src: ['dgedge-5-reasons', 'dgedge-physics-149', 'fisica-geral'],
   },
   brakeLater: {
     code: 'brakeLater',
-    area: 'frenagem',
+    area: 'braking',
     title: 'Freia mais tarde e chega lento ao ápice',
     meaning:
       'O ponto de frenagem está 5 m ou mais depois do da referência e a V-mín é menor (2 km/h ou mais): frear tarde não rendeu nada no meio da curva.',
@@ -97,12 +97,12 @@ export const DIAGNOSTICS: Readonly<Record<DiagnosticCode, DiagnosticKnowledge>> 
       B: 'Gr.B: tração integral empurra a dianteira em entradas rápidas; volte alguns metros e gire com freio aliviando.',
       N: 'Carros de rua (N): frear tarde demais aumenta mergulho e rolagem; volte o ponto e entre mais devagar.',
     },
-    basis: 'regra-geral',
+    basis: 'general-rule',
     src: ['dgedge-5-reasons', 'fisica-geral'],
   },
   softBraking: {
     code: 'softBraking',
-    area: 'frenagem',
+    area: 'braking',
     title: 'Pico de freio baixo',
     meaning:
       'O pico de freio nesta curva é pelo menos 12 pontos percentuais menor que o da referência (20 pontos se a referência é replay, que suaviza pedais).',
@@ -124,12 +124,12 @@ export const DIAGNOSTICS: Readonly<Record<DiagnosticCode, DiagnosticKnowledge>> 
     },
     caveat:
       'Com referência de replay a forma do pedal é suavizada: trate como indício. Pico baixo em curva rápida pode ser intencional.',
-    basis: 'regra-geral',
+    basis: 'general-rule',
     src: ['dgedge-5-reasons', 'fisica-geral'],
   },
   noTrailBraking: {
     code: 'noTrailBraking',
-    area: 'frenagem',
+    area: 'braking',
     title: 'Solta o freio antes de virar',
     meaning:
       'Na referência há trail braking (freio e volante juntos por 0,25 s ou mais), mas aqui o tempo com freio e volante é menos de 40% disso: o freio acaba antes de o carro girar.',
@@ -151,12 +151,12 @@ export const DIAGNOSTICS: Readonly<Record<DiagnosticCode, DiagnosticKnowledge>> 
     },
     caveat:
       'A forma dos pedais em replay é suavizada; trail_s da referência de replay é indício, não medida exata.',
-    basis: 'regra-geral',
+    basis: 'general-rule',
     src: ['dgedge-physics-149', 'coachdave-gr4', 'fisica-geral'],
   },
   frontLock: {
     code: 'frontLock',
-    area: 'frenagem',
+    area: 'braking',
     title: 'Dianteira travando na frenagem',
     meaning:
       'As rodas dianteiras travam por 0,08 s ou mais (e mais que na referência): o pico de freio passou da aderência do momento.',
@@ -176,12 +176,12 @@ export const DIAGNOSTICS: Readonly<Record<DiagnosticCode, DiagnosticKnowledge>> 
       B: 'Gr.B: em piso com menos aderência o travamento aparece cedo; reduza o pico.',
       N: 'Carros de rua (N): com ABS ligado o valor deveria ser baixo; se aparecer, confira se o ABS está ligado e reduza o pico.',
     },
-    basis: 'regra-geral',
+    basis: 'general-rule',
     src: ['dgedge-brake-balance', 'fisica-geral'],
   },
   coasting: {
     code: 'coasting',
-    area: 'frenagem',
+    area: 'braking',
     title: 'Roda livre entre freio e acelerador',
     meaning:
       'Há 0,25 s ou mais sem freio nem acelerador (e 0,15 s a mais que na referência): o carro fica sem apoio entre a frenagem e a retomada.',
@@ -201,13 +201,13 @@ export const DIAGNOSTICS: Readonly<Record<DiagnosticCode, DiagnosticKnowledge>> 
       B: 'Gr.B: tração integral aguenta acelerador cedo; use para empurrar o carro para fora do ápice.',
       N: 'Carros de rua (N): em FF, acelerador leve após o ápice ajuda a puxar o carro; em RWD, só depois do ápice.',
     },
-    basis: 'regra-geral',
+    basis: 'general-rule',
     src: ['sintese-propria'],
   },
   // ---------------------------------------------------------------- mid corner
   lowerMinSpeed: {
     code: 'lowerMinSpeed',
-    area: 'meio',
+    area: 'mid-corner',
     title: 'V-mín menor que a referência',
     meaning:
       'A menor velocidade da curva é 2 km/h ou mais abaixo da referência: o carro passa pelo ápice mais lento.',
@@ -229,12 +229,12 @@ export const DIAGNOSTICS: Readonly<Record<DiagnosticCode, DiagnosticKnowledge>> 
       N: 'Carros de rua (N): pneus de rua limitam muito a V-mín; compare só com sua melhor volta ou referências de carro igual.',
     },
     caveat: 'Se o carro da referência for diferente, a V-mín não é comparável 1:1.',
-    basis: 'regra-geral',
+    basis: 'general-rule',
     src: ['fisica-geral', 'dgedge-5-reasons'],
   },
   higherMinSpeed: {
     code: 'higherMinSpeed',
-    area: 'meio',
+    area: 'mid-corner',
     title: 'V-mín maior, mas saída pior',
     meaning:
       'A V-mín é 3 km/h ou mais acima da referência, mas a saída é 3 km/h ou mais mais lenta: velocidade carregada demais custa a retomada.',
@@ -254,12 +254,12 @@ export const DIAGNOSTICS: Readonly<Record<DiagnosticCode, DiagnosticKnowledge>> 
       B: 'Gr.B: 4WD premia a saída forte; sacrifique entrada.',
       N: 'Carros de rua (N): a saída vale mais que a V-mín; sacrifique entrada.',
     },
-    basis: 'regra-geral',
+    basis: 'general-rule',
     src: ['fisica-geral', 'sintese-propria'],
   },
   earlyApex: {
     code: 'earlyApex',
-    area: 'meio',
+    area: 'mid-corner',
     title: 'Ápice cedo (tangenciando cedo)',
     meaning:
       'O ponto de V-mín está 15 m ou mais antes do da referência (só em curvas curtas): o carro chega ao ápice cedo e abre na saída.',
@@ -281,12 +281,12 @@ export const DIAGNOSTICS: Readonly<Record<DiagnosticCode, DiagnosticKnowledge>> 
     },
     caveat:
       'Só curvas com até ~80 m têm V-mín bem definida; em curvas longas esse sinal não é usado.',
-    basis: 'regra-geral',
+    basis: 'general-rule',
     src: ['dgedge-5-reasons', 'fisica-geral'],
   },
   lateApex: {
     code: 'lateApex',
-    area: 'meio',
+    area: 'mid-corner',
     title: 'Ápice tardio',
     meaning:
       'O ponto de V-mín está 15 m ou mais depois do da referência (só em curvas curtas): o carro vira tarde e aponta tarde.',
@@ -306,12 +306,12 @@ export const DIAGNOSTICS: Readonly<Record<DiagnosticCode, DiagnosticKnowledge>> 
       B: 'Gr.B: antecipe com trail braking suave.',
       N: 'Carros de rua (N): o ápice tardio costuma ser mais seguro, o ajuste fino é pequeno.',
     },
-    basis: 'regra-geral',
+    basis: 'general-rule',
     src: ['fisica-geral'],
   },
   gearChoice: {
     code: 'gearChoice',
-    area: 'meio',
+    area: 'mid-corner',
     title: 'Marcha diferente no ápice',
     meaning: 'A referência passa pelo ápice numa marcha diferente da sua (gearAtApex).',
     causes: [
@@ -331,13 +331,13 @@ export const DIAGNOSTICS: Readonly<Record<DiagnosticCode, DiagnosticKnowledge>> 
       N: 'Carros de rua (N): a marcha ideal depende muito do carro; confie na referência só se o carro for igual.',
     },
     caveat: 'Só compare marchas com o mesmo carro e câmbio; câmbio ajustado muda tudo.',
-    basis: 'depende-do-carro',
+    basis: 'car-dependent',
     src: ['coachdave-tuning'],
   },
   // ---------------------------------------------------------------- exit
   lateThrottle: {
     code: 'lateThrottle',
-    area: 'saida',
+    area: 'exit',
     title: 'Acelera tarde',
     meaning:
       'O acelerador volta 8 m ou mais depois da referência (throttlePickupM): a retomada atrasa.',
@@ -357,12 +357,12 @@ export const DIAGNOSTICS: Readonly<Record<DiagnosticCode, DiagnosticKnowledge>> 
       B: 'Gr.B: 4WD permite acelerar cedo; use isso.',
       N: 'Carros de rua (N): em FF, acelere cedo mas progressivo; em RWD, espere o volante abrir.',
     },
-    basis: 'regra-geral',
+    basis: 'general-rule',
     src: ['sintese-propria', 'fisica-geral'],
   },
   earlyThrottle: {
     code: 'earlyThrottle',
-    area: 'saida',
+    area: 'exit',
     title: 'Acelera cedo demais',
     meaning:
       'O acelerador volta antes do ápice ou antes de o carro estar apontado (código previsto; hoje o app ainda não o gera).',
@@ -382,12 +382,12 @@ export const DIAGNOSTICS: Readonly<Record<DiagnosticCode, DiagnosticKnowledge>> 
       N: 'Carros de rua (N): mesmo conselho.',
     },
     caveat: 'Código reservado: a regra ainda não é gerada pelo app.',
-    basis: 'regra-geral',
+    basis: 'general-rule',
     src: ['fisica-geral'],
   },
   exitSlip: {
     code: 'exitSlip',
-    area: 'saida',
+    area: 'exit',
     title: 'Patinando na saída',
     meaning:
       'O TCS atua 0,15 s ou mais a mais que na referência, ou a patinagem traseira passa 5 pontos percentuais da referência (e 10% no total).',
@@ -408,12 +408,12 @@ export const DIAGNOSTICS: Readonly<Record<DiagnosticCode, DiagnosticKnowledge>> 
       B: 'Gr.B: 4WD patina menos; confira a marcha.',
       N: 'Carros de rua (N): pneus de rua patinam fácil; em RWD potente, só depois do ápice.',
     },
-    basis: 'regra-geral',
+    basis: 'general-rule',
     src: ['fisica-geral', 'coachdave-gr4'],
   },
   slowerExit: {
     code: 'slowerExit',
-    area: 'saida',
+    area: 'exit',
     title: 'Saída mais lenta',
     meaning:
       'A velocidade ao sair da curva é 3 km/h ou mais menor que a da referência; o custo se repete em toda a reta seguinte.',
@@ -433,13 +433,13 @@ export const DIAGNOSTICS: Readonly<Record<DiagnosticCode, DiagnosticKnowledge>> 
       B: 'Gr.B: 4WD premia saída forte.',
       N: 'Carros de rua (N): acelere cedo mas progressivo.',
     },
-    basis: 'regra-geral',
+    basis: 'general-rule',
     src: ['sintese-propria'],
   },
   // ---------------------------------------------------------------- line/technique
   lineOffset: {
     code: 'lineOffset',
-    area: 'linha',
+    area: 'racing-line',
     title: 'Linha diferente da referência',
     meaning:
       'Entrada, ápice ou saída estão 1,2 m ou mais deslocados do traçado da referência (lateralOffsetM).',
@@ -461,12 +461,12 @@ export const DIAGNOSTICS: Readonly<Record<DiagnosticCode, DiagnosticKnowledge>> 
     },
     caveat:
       'O app mede o desvio lateral com a geometria da pista; em pistas novas o erro pode ser maior.',
-    basis: 'regra-geral',
+    basis: 'general-rule',
     src: ['dgedge-5-reasons'],
   },
   steeringCorrections: {
     code: 'steeringCorrections',
-    area: 'tecnica',
+    area: 'technique',
     title: 'Muitas correções de volante',
     meaning:
       'Há 4 ou mais correções de volante na curva (e 3 a mais que a referência): o carro está sendo pedido além do que dá.',
@@ -487,13 +487,13 @@ export const DIAGNOSTICS: Readonly<Record<DiagnosticCode, DiagnosticKnowledge>> 
       B: 'Gr.B: volante mais progressivo.',
       N: 'Carros de rua (N): dirija suave; o carro rola e precisa de tempo.',
     },
-    basis: 'regra-geral',
+    basis: 'general-rule',
     src: ['sintese-propria'],
   },
   // ---------------------------------------------------------------- lap validity
   offTrack: {
     code: 'offTrack',
-    area: 'dados',
+    area: 'data',
     title: 'Volta com saída de pista',
     meaning:
       'A volta tem um trecho fora da pista, então o tempo e as métricas dela são pouco confiáveis.',
@@ -502,48 +502,48 @@ export const DIAGNOSTICS: Readonly<Record<DiagnosticCode, DiagnosticKnowledge>> 
     drill: 'Refaça a curva da saída de pista com ponto de frenagem menos agressivo.',
     byGroup: {},
     caveat: 'A detecção usa a posição lateral; pode haver falso positivo perto de zebras largas.',
-    basis: 'regra-geral',
+    basis: 'general-rule',
     src: ['sintese-propria'],
   },
   timeGap: {
     code: 'timeGap',
-    area: 'dados',
+    area: 'data',
     title: 'Falha no tempo dos dados',
     meaning: 'Há um intervalo de tempo maior que o normal entre amostras (pacotes perdidos).',
     causes: ['perda de pacotes de rede', 'pausa do jogo', 'carga do PC ou do Wi-Fi'],
     fix: 'Trate a volta com cuidado; prefira outra volta sem falhas.',
     drill: 'Verifique a conexão (cabo ou Wi-Fi 5 GHz) e repita a volta.',
     byGroup: {},
-    basis: 'regra-geral',
+    basis: 'general-rule',
     src: ['sintese-propria'],
   },
   distanceJump: {
     code: 'distanceJump',
-    area: 'dados',
+    area: 'data',
     title: 'Salto de distância',
     meaning: 'A distância percorrida pulou de um jeito incompatível com a velocidade.',
     causes: ['pacotes perdidos', 'reposicionamento do carro'],
     fix: 'Descarte a volta da comparação.',
     drill: 'Repita a volta.',
     byGroup: {},
-    basis: 'regra-geral',
+    basis: 'general-rule',
     src: ['sintese-propria'],
   },
   backwards: {
     code: 'backwards',
-    area: 'dados',
+    area: 'data',
     title: 'Distância regrediu',
     meaning: 'A distância percorrida diminuiu durante a volta (carro girou ou foi reposicionado).',
     causes: ['rodopio', 'retorno à pista', 'dados fora de ordem'],
     fix: 'Descarte a volta da comparação.',
     drill: 'Repita a volta.',
     byGroup: {},
-    basis: 'regra-geral',
+    basis: 'general-rule',
     src: ['sintese-propria'],
   },
   incomplete: {
     code: 'incomplete',
-    area: 'dados',
+    area: 'data',
     title: 'Volta incompleta',
     meaning: 'A volta não cobre toda a pista ou tem poucas amostras.',
     causes: [
@@ -554,19 +554,19 @@ export const DIAGNOSTICS: Readonly<Record<DiagnosticCode, DiagnosticKnowledge>> 
     fix: 'Ignore essa volta na análise.',
     drill: 'Complete uma volta inteira.',
     byGroup: {},
-    basis: 'regra-geral',
+    basis: 'general-rule',
     src: ['sintese-propria'],
   },
   timeMismatch: {
     code: 'timeMismatch',
-    area: 'dados',
+    area: 'data',
     title: 'Tempo medido difere do jogo',
     meaning: 'O tempo calculado pelo app não bate com o tempo oficial da volta no jogo.',
     causes: ['pacotes perdidos', 'pausa durante a volta'],
     fix: 'Confie no tempo do jogo e trate as métricas com cautela.',
     drill: 'Repita a volta com conexão estável.',
     byGroup: {},
-    basis: 'regra-geral',
+    basis: 'general-rule',
     src: ['sintese-propria'],
   },
 };

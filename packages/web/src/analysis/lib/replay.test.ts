@@ -371,20 +371,20 @@ describe('ReplayPlayer', () => {
 });
 
 describe('replay route', () => {
-  it('builds and parses #/analise/volta/:id with the reference, the ghost mode and a corner', () => {
-    expect(routes.replay('L 1')).toBe('#/analise/volta/L%201');
+  it('builds and parses #/analysis/lap/:id with the reference, the ghost mode and a corner', () => {
+    expect(routes.replay('L 1')).toBe('#/analysis/lap/L%201');
     const href = routes.replay('abc', { ref: 'bestReference', mode: 'time', corner: 'T4' });
-    expect(href).toBe('#/analise/volta/abc?ref=bestReference&modo=tempo&corner=T4');
+    expect(href).toBe('#/analysis/lap/abc?ref=bestReference&mode=time&corner=T4');
     const r = parseRoute(href);
     expect(r.name).toBe('replay');
     expect(r.params.id).toBe('abc');
-    expect(r.query).toMatchObject({ ref: 'bestReference', modo: 'tempo', corner: 'T4' });
+    expect(r.query).toMatchObject({ ref: 'bestReference', mode: 'time', corner: 'T4' });
     // distance is the default: no param
-    expect(routes.replay('abc', { mode: 'distance' })).toBe('#/analise/volta/abc');
+    expect(routes.replay('abc', { mode: 'distance' })).toBe('#/analysis/lap/abc');
   });
 
   it('does not match a missing id or extra segments', () => {
-    expect(parseRoute('#/analise/volta').name).toBe('notFound');
-    expect(parseRoute('#/analise/volta/a/b').name).toBe('notFound');
+    expect(parseRoute('#/analysis/lap').name).toBe('notFound');
+    expect(parseRoute('#/analysis/lap/a/b').name).toBe('notFound');
   });
 });
