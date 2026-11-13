@@ -1,6 +1,7 @@
 import type { DailyRace } from '@gt7/shared';
 import { describe, expect, it } from 'vitest';
 import {
+  dailyGoalSuggestion,
   formatRaceMinutes,
   leaderTimeText,
   matchSavedTrack,
@@ -97,5 +98,54 @@ describe('matchSavedTrack', () => {
         saved('Suzuka Circuit', 'East Course'),
       ]),
     ).toBeNull();
+  });
+});
+
+describe('dailyGoalSuggestion', () => {
+  const race = (over: Partial<DailyRace> = {}) =>
+    ({
+      id: 1,
+      type: 'A',
+      trackName: 'Trial Mountain Circuit',
+      trackLayoutId: '802508',
+      carLabel: 'Gr.3',
+      medals,
+      ...over,
+    }) as DailyRace;
+  const trial = saved('Trial Mountain Circuit', null);
+
+  it('suggests the next medal above the best lap, with how far it is', () => {
+    // 2:04.000 is between silver (2:05.044 is slower) and gold (2:02.662): silver reached, gold next.
+    const s = dailyGoalSuggestion(trial, 124_000, [race()]);
+    expect(s).toMatchObject({ medal: 'gold', targetMs: 122_662, gapMs: 1338, reached: 'silver' });
+    expect(s?.race).toMatchObject({ type: 'A', carLabel: 'Gr.3' });
+  });
+
+  it('suggests bronze to a driver slower than every medal, and nothing at platinum', () => {
+    expect(dailyGoalSuggestion(trial, 135_000, [race()])).toMatchObject({
+      medal: 'bronze',
+      targetMs: 130_998,
+      reached: null,
+    });
+    expect(dailyGoalSuggestion(trial, 119_000, [race()])).toBeNull();
+  });
+
+  it('ignores other tracks, races without medal times and a missing best lap', () => {
+    expect(
+      dailyGoalSuggestion(trial, 124_000, [
+        race({ trackName: 'Dragon Trail – Gardens', trackLayoutId: null }),
+      ]),
+    ).toBeNull();
+    expect(dailyGoalSuggestion(trial, 124_000, [race({ medals: null })])).toBeNull();
+    expect(dailyGoalSuggestion(trial, null, [race()])).toBeNull();
+  });
+
+  it('takes the closest medal when two races run on the same track', () => {
+    const far = race({
+      id: 2,
+      type: 'B',
+      medals: { ...medals, gold: { timeMs: 120_000, percentPlayers: 1 } },
+    });
+    expect(dailyGoalSuggestion(trial, 124_000, [far, race()])?.race.type).toBe('A');
   });
 });

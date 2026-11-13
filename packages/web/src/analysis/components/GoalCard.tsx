@@ -9,12 +9,20 @@ import { formatFixed, formatLapTime } from '../../lib/format.ts';
 import { t as uiText } from '../../lib/i18n.ts';
 import { addNotice } from '../../state/uiStore.ts';
 import { ApiError, api } from '../api.ts';
+import { type DailyGoalSuggestion, dailyGoalSuggestion } from '../lib/dailies.ts';
 import { carLabel, formatDateTime } from '../lib/labels.ts';
 import { formatLapTimeInput, parseLapTime } from '../lib/lapTime.ts';
 import { useFetch } from '../useFetch.ts';
 import { Card, ConfirmButton, ErrorBox, Loading } from './ui.tsx';
 
 const ANY_CAR = '';
+
+const MEDAL_TEXT: Record<DailyGoalSuggestion['medal'], () => string> = {
+  platinum: () => uiText('Platina'),
+  gold: () => uiText('Ouro'),
+  silver: () => uiText('Prata'),
+  bronze: () => uiText('Bronze'),
+};
 
 export function GoalCard({
   trackId,
@@ -31,6 +39,13 @@ export function GoalCard({
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<{ message: string; slower: boolean } | null>(null);
   const data: ApiTrackGoal | null = goal.data;
+  // A goal from this week's Daily Races (only when the driver turned them on): the next medal.
+  const dailies = useFetch('dailies', () => api.dailyRaces());
+  const track = useFetch(`track:${trackId}`, () => api.track(trackId));
+  const daily: DailyGoalSuggestion | null =
+    dailies.data?.enabled && track.data && data?.bestLapMs != null
+      ? dailyGoalSuggestion(track.data, data.bestLapMs, dailies.data.races)
+      : null;
 
   const parsed = parseLapTime(text);
   const activeId = data?.active?.id ?? null;
@@ -189,6 +204,30 @@ export function GoalCard({
                     : uiText('Minutos, segundos e milésimos, como no jogo.')}
               </span>
             </div>
+            {daily && (
+              <div className="a-goal-daily">
+                <p>
+                  {uiText(
+                    'Corrida diária {0} desta semana ({1}): a medalha de {2} é {3}, a {4} s da sua melhor volta.',
+                    daily.race.type,
+                    daily.race.carLabel,
+                    MEDAL_TEXT[daily.medal]().toLowerCase(),
+                    formatLapTime(daily.targetMs),
+                    formatFixed(daily.gapMs / 1000, 3),
+                  )}
+                </p>
+                <button
+                  type="button"
+                  className="a-btn a-btn-ghost a-btn-sm"
+                  onClick={() => {
+                    setText(formatLapTimeInput(daily.targetMs));
+                    setProblem(null);
+                  }}
+                >
+                  {uiText('Usar a medalha como meta')}
+                </button>
+              </div>
+            )}
             <div className="a-goal-actions">
               <button type="submit" className="a-btn" disabled={busy || parsed === null}>
                 {data.active ? uiText('Atualizar meta') : uiText('Definir meta')}

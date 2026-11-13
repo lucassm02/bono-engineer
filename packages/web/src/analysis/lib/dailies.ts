@@ -83,3 +83,44 @@ export function leaderTimeText(ms: number): string {
   const milli = total % 1000;
   return `${m}:${String(s).padStart(2, '0')}.${String(milli).padStart(3, '0')}`;
 }
+
+export interface DailyGoalSuggestion {
+  /** The race of the week whose medal is the target. */
+  race: Pick<DailyRace, 'id' | 'type' | 'carLabel' | 'trackName'>;
+  /** The next medal above the driver's best lap on this track. */
+  medal: MedalName;
+  /** Cut-off time of that medal (ms): the suggested goal. */
+  targetMs: number;
+  /** How far the best lap is from it (ms, > 0). */
+  gapMs: number;
+  /** The medal the best lap already reaches, null when slower than bronze. */
+  reached: MedalName | null;
+}
+
+/**
+ * A goal from this week's Daily Races: the next medal above the best lap, on a race that runs on
+ * this track. With several races on the same track the closest medal wins. Null without a race on
+ * the track, without medal times, without a best lap, or when the best lap is already platinum.
+ */
+export function dailyGoalSuggestion<T extends { name: string; layout?: string | null }>(
+  track: T,
+  bestLapMs: number | null,
+  races: readonly DailyRace[],
+): DailyGoalSuggestion | null {
+  if (bestLapMs === null || bestLapMs <= 0) return null;
+  let best: DailyGoalSuggestion | null = null;
+  for (const race of races) {
+    if (!race.medals || !matchSavedTrack(race, [track])) continue;
+    const status = medalStatus(bestLapMs, race.medals);
+    if (!status.next) continue;
+    const candidate: DailyGoalSuggestion = {
+      race: { id: race.id, type: race.type, carLabel: race.carLabel, trackName: race.trackName },
+      medal: status.next.medal,
+      targetMs: race.medals[status.next.medal].timeMs,
+      gapMs: status.next.gapMs,
+      reached: status.reached,
+    };
+    if (!best || candidate.gapMs < best.gapMs) best = candidate;
+  }
+  return best;
+}

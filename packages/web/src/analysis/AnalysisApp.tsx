@@ -26,6 +26,7 @@ import { SessionPage } from './pages/SessionPage.tsx';
 import { SessionSummaryPage } from './pages/SessionSummaryPage.tsx';
 import { SessionsPage } from './pages/SessionsPage.tsx';
 import { TrackPage } from './pages/TrackPage.tsx';
+import { WeeklySummaryPage } from './pages/WeeklySummaryPage.tsx';
 import '../styles/analysis.css';
 import '../styles/home.css';
 import '../styles/cars.css';
@@ -67,7 +68,7 @@ const LIVE: NavItem = {
 const MAIN_NAV: NavItem[] = [
   {
     icon: 'home',
-    names: ['home', 'sessions', 'session', 'summary', 'track', 'replay'],
+    names: ['home', 'sessions', 'session', 'summary', 'weekly', 'track', 'replay'],
     href: routes.home(),
     get label() {
       return uiText('Início');
@@ -249,6 +250,8 @@ function page(route: Route): ReactNode {
       return <SessionPage id={route.params.id!} />;
     case 'summary':
       return <SessionSummaryPage id={route.params.id!} />;
+    case 'weekly':
+      return <WeeklySummaryPage route={route} />;
     case 'compare':
       return <ComparePage route={route} />;
     case 'replay':

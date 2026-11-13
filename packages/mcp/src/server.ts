@@ -16,10 +16,13 @@ import {
 } from '@gt7/core';
 import {
   type CornerMetrics,
+  drillSummary,
   type Lap,
   PRODUCT_NAME,
   PRODUCT_SLUG,
+  suggestionText,
   TRACE_CHANNELS,
+  weeklyToText,
 } from '@gt7/shared';
 import { McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
@@ -30,6 +33,7 @@ import {
   compactLap,
   compactSession,
   compactStats,
+  dateTime,
   jsonText,
   lapTime,
   latestDrivingSession,
@@ -54,6 +58,8 @@ const INSTRUCTIONS = `Servidor de telemetria do ${PRODUCT_NAME}. Integração di
 Fluxo típico: list_sessions → list_laps → compare_laps(lap_id, reference="auto") → \
 get_corner_detail / render_comparison_chart nas curvas que mais custam; depois \
 get_knowledge(car_code, diagnostics = os plan[].code) para a base de pilotagem da classe do carro.
+Visões prontas: get_weekly_summary (a semana), get_session_summary (uma sessão), get_goal (meta da pista), \
+get_sectors (setores e volta ideal) e list_corner_drills (treinos de uma curva).
 Convenções: distâncias em metros ao longo da volta; delta e tempo perdido positivos = você mais lento; \
 pares [você, referência]. Referências capturadas de replay têm precisão de alguns metros.
 Use só os números retornados; diga quando um dado não existe.`;
@@ -809,6 +815,287 @@ export function createGt7McpServer(deps: McpDeps): McpServer {
             { type: 'text', text: res.caption },
           ],
         };
+      }),
+  );
+
+  server.registerTool(
+    'get_goal',
+    {
+      title: 'Meta de tempo da pista',
+      description:
+        'Meta de tempo do piloto numa pista (e carro): o tempo alvo, a melhor volta, quanto falta, as metas ' +
+        'já batidas e a meta sugerida (volta ideal ou 0,5% abaixo da melhor). Use para "estou perto da minha meta?".',
+      inputSchema: {
+        track_id: z.string(),
+        car_code: z.number().int().optional().describe('Padrão: meta para qualquer carro.'),
+      },
+      annotations: RO,
+    },
+    async ({ track_id, car_code }) =>
+      safe(async () => {
+        const g = await analysis.getTrackGoal(track_id, car_code ?? null);
+        const remaining =
+          g.active && g.bestLapMs !== null ? Math.max(0, g.bestLapMs - g.active.targetMs) : null;
+        return ok(
+          jsonText({
+            track: trackName(track_id),
+            trackId: track_id,
+            goal: g.active
+              ? {
+                  target: lapTime(g.active.targetMs),
+                  targetMs: g.active.targetMs,
+                  ...(g.active.carCode !== null ? { car: g.active.carCode } : { car: 'qualquer' }),
+                  setAt: dateTime(g.active.createdAt),
+                  reached: remaining === 0,
+                  remaining_s: r(remaining === null ? null : remaining / 1000, 3),
+                  startedFrom: lapTime(g.baselineMs),
+                }
+              : null,
+            bestLap: lapTime(g.bestLapMs),
+            reached: g.history.slice(0, 10).map((h) => ({
+              target: lapTime(h.targetMs),
+              reachedAt: h.achievedAt === null ? null : dateTime(h.achievedAt),
+              car: h.carCode ?? 'qualquer',
+            })),
+            suggestion: g.suggestion
+              ? {
+                  target: lapTime(g.suggestion.targetMs),
+                  basis:
+                    g.suggestion.basis === 'idealLap' ? 'volta ideal' : '0,5% abaixo da melhor',
+                  idealLap: lapTime(g.suggestion.idealLapMs),
+                }
+              : null,
+          }),
+        );
+      }),
+  );
+
+  server.registerTool(
+    'get_session_summary',
+    {
+      title: 'Resumo da sessão',
+      description:
+        'Resumo pronto de uma sessão: melhor volta contra o recorde anterior, ritmo (média das 5 melhores, ' +
+        'mediana), regularidade e tendência, comparação com a última sessão / a melhor / a meta, curvas onde ' +
+        'ganhou e perdeu e até 3 dicas. Padrão: a sessão de pilotagem mais recente.',
+      inputSchema: {
+        session_id: z.string().optional().describe('Padrão: a sessão mais recente com voltas.'),
+      },
+      annotations: RO,
+    },
+    async ({ session_id }) =>
+      safe(async () => {
+        const id = session_id ?? latestDrivingSession(store)?.id;
+        if (!id) return ok('Ainda não há sessões com voltas gravadas.');
+        const sum = await analysis.getSessionSummary(id);
+        const best = sum.best;
+        return ok(
+          jsonText({
+            sessionId: id,
+            track: trackName(sum.trackId),
+            ...carFields(sum.carCode),
+            startedAt: dateTime(sum.startedAt),
+            laps: sum.laps,
+            bestLap: best
+              ? {
+                  time: lapTime(best.timeMs),
+                  vsPreviousRecord_s: r(best.deltaMs === null ? null : best.deltaMs / 1000, 3),
+                  firstTime: best.firstTime,
+                }
+              : null,
+            pace: sum.pace
+              ? {
+                  top5Avg: lapTime(sum.pace.top5AvgMs),
+                  median: lapTime(sum.pace.medianMs),
+                  spread_s: r(sum.pace.spreadMs / 1000, 3),
+                }
+              : null,
+            consistency: sum.consistency
+              ? { stdDev_s: r(sum.consistency.stdDevMs / 1000, 3), trend: sum.consistency.trend }
+              : null,
+            comparisons: Object.fromEntries(
+              Object.entries(sum.comparisons)
+                .filter(([, c]) => c)
+                .map(([k, c]) => [
+                  k,
+                  {
+                    baseline: lapTime(c!.baselineMs),
+                    bestDelta_s: r(c!.bestDeltaMs / 1000, 3),
+                    paceDelta_s: r(c!.paceDeltaMs === null ? null : c!.paceDeltaMs / 1000, 3),
+                  },
+                ]),
+            ),
+            gained: sum.corners?.gains.map((c) => ({
+              corner: c.name ?? c.cornerId,
+              delta_ms: c.deltaMs,
+            })),
+            lost: sum.corners?.losses.map((c) => ({
+              corner: c.name ?? c.cornerId,
+              delta_ms: c.deltaMs,
+            })),
+            tips: sum.suggestions.map((t) => suggestionText(t)),
+            note: 'deltas negativos = mais rápido que a base',
+          }),
+        );
+      }),
+  );
+
+  server.registerTool(
+    'get_sectors',
+    {
+      title: 'Setores e volta ideal',
+      description:
+        'Melhor tempo de cada setor da pista (e a volta que o fez), média dos 5 melhores, quanto a melhor ' +
+        'volta deixa para trás em cada setor e a volta ideal (soma dos melhores setores).',
+      inputSchema: {
+        track_id: z.string(),
+        car_code: z.number().int().optional().describe('Padrão: todos os carros.'),
+      },
+      annotations: RO,
+    },
+    async ({ track_id, car_code }) =>
+      safe(async () => {
+        const res = await analysis.getTrackSectors(
+          track_id,
+          car_code !== undefined ? { carCode: car_code } : {},
+        );
+        const t = res.table;
+        return ok(
+          jsonText({
+            track: trackName(track_id),
+            ...(res.carCode === null ? {} : carFields(res.carCode)),
+            laps: t.lapCount,
+            bestLap: lapTime(t.bestLapMs),
+            idealLap: lapTime(t.idealLapMs),
+            gain_s: r(t.gainMs / 1000, 3),
+            sectors: t.rows.map((row) => ({
+              sector: row.index + 1,
+              from_m: r(row.fromM),
+              to_m: r(row.toM),
+              best: lapTime(row.bestMs),
+              bestLapId: row.bestLapId,
+              top5Avg: lapTime(row.avgTopMs),
+              bestLapLoses_ms: r(row.bestLapLossMs),
+            })),
+            note: 'a volta ideal é um teto, não uma promessa',
+          }),
+        );
+      }),
+  );
+
+  server.registerTool(
+    'list_corner_drills',
+    {
+      title: 'Treinos de curva',
+      description:
+        'Treinos de uma curva já feitos (o piloto escolheu a curva e passou várias vezes): por treino, a curva, ' +
+        'a data, o número de passagens, o melhor tempo do trecho, o primeiro e o último e quanto melhorou. ' +
+        'Sem corner_id lista os treinos recentes de todas as curvas da pista.',
+      inputSchema: {
+        track_id: z.string(),
+        corner_id: z.string().optional().describe('Ex.: T7.'),
+        limit: z.number().int().min(1).max(30).default(10),
+      },
+      annotations: RO,
+    },
+    async ({ track_id, corner_id, limit }) =>
+      safe(() => {
+        const drills = corner_id
+          ? store.listDrillsForCorner(track_id, corner_id, limit)
+          : store
+              .listSessions({ trackId: track_id, limit: 30 })
+              .flatMap((s) => store.listDrills(s.id))
+              .sort((a, b) => b.startedAt - a.startedAt)
+              .slice(0, limit);
+        const corners = new Map(
+          (store.getTrack(track_id)?.corners ?? []).map((c) => [c.id, c.name]),
+        );
+        return ok(
+          jsonText({
+            track: trackName(track_id),
+            drills: drills.flatMap((d) => {
+              const sum = drillSummary(d.passes);
+              if (!sum) return [];
+              return [
+                {
+                  corner: d.cornerId,
+                  name: corners.get(d.cornerId) ?? null,
+                  date: dateTime(d.startedAt),
+                  passes: sum.count,
+                  best_s: r(sum.bestMs / 1000, 3),
+                  first_s: r(sum.firstMs / 1000, 3),
+                  last_s: r(sum.lastMs / 1000, 3),
+                  average_s: r(sum.averageMs / 1000, 3),
+                  improvement_s: r(sum.improvementMs / 1000, 3),
+                  target_s: r(d.targetMs === null ? null : d.targetMs / 1000, 3),
+                },
+              ];
+            }),
+          }),
+        );
+      }),
+  );
+
+  server.registerTool(
+    'get_weekly_summary',
+    {
+      title: 'Resumo da semana',
+      description:
+        'O que o piloto fez em 7 dias: sessões, voltas, tempo na pista, e por pista (e carro) a melhor volta, ' +
+        'quanto mudou contra o recorde anterior, recordes pessoais e metas batidas. weeks_ago 0 = os últimos ' +
+        '7 dias, 1 = os 7 dias antes deles. Traz também o texto pronto para compartilhar.',
+      inputSchema: {
+        weeks_ago: z.number().int().min(0).max(520).default(0),
+      },
+      annotations: RO,
+    },
+    async ({ weeks_ago }) =>
+      safe(() => {
+        const w = analysis.getWeeklySummary(weeks_ago);
+        const text = weeklyToText(w, {
+          lapTime: (ms) => lapTime(ms) ?? '',
+          delta: (ms) =>
+            `${ms < 0 ? '−' : '+'}${(Math.abs(ms) / 1000).toFixed(3).replace('.', ',')}`,
+          date: (ms) => dateTime(ms).slice(5, 10).split('-').reverse().join('/'),
+        });
+        return ok(
+          jsonText({
+            from: dateTime(w.fromMs),
+            to: dateTime(w.toMs),
+            sessions: w.sessions,
+            laps: w.laps,
+            validLaps: w.validLaps,
+            timeOnTrack_min: Math.round(w.drivingMs / 60_000),
+            personalRecords: w.records,
+            tracks: w.tracks.map((t) => ({
+              track: t.trackName,
+              trackId: t.trackId,
+              ...carFields(t.carCode),
+              sessions: t.sessions,
+              laps: t.laps,
+              validLaps: t.validLaps,
+              best: lapTime(t.bestMs),
+              previousBest: lapTime(t.previousBestMs),
+              vsPrevious_s: r(t.deltaMs === null ? null : t.deltaMs / 1000, 3),
+              record: t.isRecord,
+              firstTime: t.firstTime,
+              goal: t.goal
+                ? {
+                    target: lapTime(t.goal.targetMs),
+                    reached: t.goal.reached,
+                    remaining_s: r(t.goal.remainingMs / 1000, 3),
+                  }
+                : null,
+            })),
+            goalsReached: w.goalsReached.map((g) => ({
+              track: g.trackName,
+              target: lapTime(g.targetMs),
+              at: dateTime(g.achievedAt),
+            })),
+            shareableText: text,
+            note: 'vsPrevious negativo = mais rápido que o recorde anterior',
+          }),
+        );
       }),
   );
 

@@ -44,6 +44,7 @@ import {
   type LapTrace,
   TRACE_CHANNELS,
   type TraceChannel,
+  type WeeklySummary,
 } from '@gt7/shared';
 import type { FastifyInstance } from 'fastify';
 import { badRequest, isSafeId, notFound, type Obj, queryInt, queryString } from '../http.ts';
@@ -264,6 +265,12 @@ export function analysisRoutes(app: FastifyInstance, ctx: RouteContext): void {
     const trackId = idParam(req.params, 'trackId');
     const carCode = queryInt(req.query as Obj, 'carCode', 'carCode', { min: 1 });
     return analysis.getTrackSectors(trackId, carCode !== undefined ? { carCode } : {});
+  });
+
+  /** "Resumo da semana": 7 days of sessions, laps, records and goals (weeksAgo 0 = the last 7 days). */
+  app.get('/analysis/weekly', async (req): Promise<WeeklySummary> => {
+    const weeksAgo = queryInt(req.query as Obj, 'weeksAgo', 'weeksAgo', { min: 0, max: 520 }) ?? 0;
+    return analysis.getWeeklySummary(weeksAgo);
   });
 
   app.post('/tracks/:id/redetect-corners', async (req): Promise<ApiRedetectCornersResult> => {

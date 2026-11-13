@@ -7,6 +7,7 @@
  *   #/analise                         all sessions list
  *   #/analise/sessao/:sessionId       session detail (laps)
  *   #/analise/sessao/:sessionId/resumo   session summary (spec 12)
+ *   #/analise/semana?w=N              weekly summary (N weeks back, default 0)
  *   #/analise/comparar?lap=&ref=&extra=a,b   lap comparison
  *   #/analise/volta/:lapId?ref=&modo=&corner=  replay of one lap (reference ghost, modo=tempo|distancia)
  *   #/analise/pista/:trackId?session= track page (consistency, evolution)
@@ -24,6 +25,7 @@ export type RouteName =
   | 'sessions'
   | 'session'
   | 'summary'
+  | 'weekly'
   | 'compare'
   | 'replay'
   | 'track'
@@ -92,6 +94,7 @@ export function parseRoute(hash: string): Route {
     if (b === 'sessao' && c && segs.length === 4 && segs[3] === 'resumo') {
       return r('summary', { id: c });
     }
+    if (b === 'semana' && segs.length === 2) return r('weekly');
     if (b === 'comparar' && segs.length === 2) return r('compare');
     if (b === 'volta' && c && segs.length === 3) return r('replay', { id: c });
     if (b === 'pista' && c && segs.length === 3) return r('track', { id: c });
@@ -137,6 +140,8 @@ export const routes = {
   session: (id: string) => href(`/analise/sessao/${encodeURIComponent(id)}`),
   /** Session summary: best lap, pace, consistency, what to do next. */
   summary: (id: string) => href(`/analise/sessao/${encodeURIComponent(id)}/resumo`),
+  /** Weekly summary: `weeksAgo` 0 = the last 7 days. */
+  weekly: (weeksAgo = 0) => href('/analise/semana', { w: weeksAgo > 0 ? weeksAgo : undefined }),
   compare: (q: { lap?: string; ref?: string; extra?: string[]; corner?: string }) =>
     href('/analise/comparar', {
       lap: q.lap,

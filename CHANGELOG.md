@@ -5,6 +5,16 @@ All notable changes to Bono Engineer are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-11-12
+
+<!-- release-notes-since: 0.1.0 -->
+
+### Added
+
+- Added the **weekly summary** (`#/analise/semana`): the last 7 days on one screen (or the 7 before them, one week back at a time) with sessions, laps, time on track, the best lap of each track against the record before it, personal records and goals reached. Copy it as text or share it as an image (download or copy the PNG). A **Your week** card on Home links to it.
+- Added a **goal suggestion from this week's Daily Race medal**: on a track that runs as one of the three races of the week, **My goal** offers the next medal above your best lap ("the gold medal is 2:02.662, 1.1 s from your best lap") with a button to use it. It needs the Daily Races turned on.
+- Added MCP tools that give the AI Coach (and any MCP agent) the newer data: `get_goal`, `get_session_summary`, `get_sectors`, `list_corner_drills` and `get_weekly_summary`, plus two more ready-made questions in the coach ("Close to my goal?" and "Weekly summary"). `GET /api/analysis/weekly` serves the summary.
+
 ## [0.6.0] - 2026-11-12
 
 <!-- release-notes-since: 0.1.0 -->

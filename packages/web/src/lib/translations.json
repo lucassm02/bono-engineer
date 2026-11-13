@@ -4835,5 +4835,86 @@
   "Abra Configurações → Desenvolvedor → Editar configuração (ou o arquivo claude_desktop_config.json em %APPDATA%\\Claude) e coloque isto. Depois feche o app do Claude por completo e abra de novo. Se já existir um bloco mcpServers, junte só a entrada bono:": [
     "Open Settings → Developer → Edit config (or the claude_desktop_config.json file in %APPDATA%\\Claude) and put this in. Then close the Claude app completely and open it again. If an mcpServers block already exists, just add the bono entry:",
     "Abre Configuración → Desarrollador → Editar configuración (o el archivo claude_desktop_config.json en %APPDATA%\\Claude) y pon esto. Luego cierra la app de Claude por completo y ábrela de nuevo. Si ya existe un bloque mcpServers, añade solo la entrada bono:"
-  ]
+  ],
+  "Imagem copiada.": ["Image copied.", "Imagen copiada."],
+  "Não foi possível copiar a imagem. Baixe o arquivo.": [
+    "Could not copy the image. Download the file.",
+    "No se pudo copiar la imagen. Descarga el archivo."
+  ],
+  "Imagem para compartilhar": ["Image to share", "Imagen para compartir"],
+  "Baixar imagem": ["Download image", "Descargar imagen"],
+  "Copiar imagem": ["Copy image", "Copiar imagen"],
+  "Resumo da semana, pronto para compartilhar": [
+    "Weekly summary, ready to share",
+    "Resumen de la semana, listo para compartir"
+  ],
+  "Resumo da semana": ["Weekly summary", "Resumen de la semana"],
+  "Semana anterior": ["Previous week", "Semana anterior"],
+  "Semana seguinte": ["Next week", "Semana siguiente"],
+  "{0} a {1}": ["{0} to {1}", "{0} a {1}"],
+  "Nenhuma volta nesta semana.": ["No laps this week.", "Ninguna vuelta esta semana."],
+  "Recordes pessoais": ["Personal records", "Récords personales"],
+  "{0} meta(s) batida(s)": ["{0} goal(s) reached", "{0} meta(s) alcanzada(s)"],
+  "Nenhuma meta batida": ["No goals reached", "Ninguna meta alcanzada"],
+  "{0} válidas": ["{0} valid", "{0} válidas"],
+  "Por pista": ["By track", "Por pista"],
+  "primeira vez": ["first time", "primera vez"],
+  "vs. recorde anterior": ["vs. previous record", "vs. récord anterior"],
+  "do recorde anterior": ["from the previous record", "del récord anterior"],
+  "Meta batida": ["Goal reached", "Meta alcanzada"],
+  "Faltam {0} para a meta": ["{0} to go to the goal", "Faltan {0} para la meta"],
+  "Metas batidas na semana": ["Goals reached this week", "Metas alcanzadas en la semana"],
+  "Sua semana": ["Your week", "Tu semana"],
+  "{0} sessões · {1} voltas · {2} recorde(s) pessoal(is)": [
+    "{0} sessions · {1} laps · {2} personal record(s)",
+    "{0} sesiones · {1} vueltas · {2} récord(s) personal(es)"
+  ],
+  "{0} sessões · {1} voltas": ["{0} sessions · {1} laps", "{0} sesiones · {1} vueltas"],
+  "Ver resumo da semana": ["See the weekly summary", "Ver el resumen de la semana"],
+  "Melhor volta de cada pista, recordes e metas batidas, para copiar ou compartilhar como imagem.": [
+    "Best lap of each track, records and goals reached, to copy or share as an image.",
+    "Mejor vuelta de cada pista, récords y metas alcanzadas, para copiar o compartir como imagen."
+  ],
+  "{0} vs. recorde": ["{0} vs. record", "{0} vs. récord"],
+  "{0} do recorde": ["{0} from the record", "{0} del récord"],
+  "meta batida": ["goal reached", "meta alcanzada"],
+  "faltam {0} para a meta": ["{0} to go to the goal", "faltan {0} para la meta"],
+  "Minha semana no Bono": ["My week in Bono", "Mi semana en Bono"],
+  "Recordes": ["Records", "Récords"],
+  "Meta batida: {0} em {1}": ["Goal reached: {0} at {1}", "Meta alcanzada: {0} en {1}"],
+  "Minha semana no Bono · {0} a {1}": [
+    "My week in Bono · {0} to {1}",
+    "Mi semana en Bono · {0} a {1}"
+  ],
+  "{0} sessões · {1} voltas ({2} válidas) · {3} na pista": [
+    "{0} sessions · {1} laps ({2} valid) · {3} on track",
+    "{0} sesiones · {1} vueltas ({2} válidas) · {3} en pista"
+  ],
+  "1 recorde pessoal": ["1 personal record", "1 récord personal"],
+  "{0} recordes pessoais": ["{0} personal records", "{0} récords personales"],
+  "{0} voltas, nenhuma válida": ["{0} laps, none valid", "{0} vueltas, ninguna válida"],
+  "{0} contra o recorde anterior": [
+    "{0} against the previous record",
+    "{0} contra el récord anterior"
+  ],
+  "{0} do recorde anterior": ["{0} from the previous record", "{0} del récord anterior"],
+  "Perto da minha meta?": ["Close to my goal?", "¿Cerca de mi meta?"],
+  "Estou perto da minha meta de tempo? Quanto falta e o que preciso mudar?": [
+    "Am I close to my time goal? How far is it and what do I need to change?",
+    "¿Estoy cerca de mi meta de tiempo? ¿Cuánto falta y qué necesito cambiar?"
+  ],
+  "Faça o resumo da minha semana: recordes, metas batidas e uma linha por pista, pronto para compartilhar.": [
+    "Write my weekly summary: records, goals reached and one line per track, ready to share.",
+    "Haz el resumen de mi semana: récords, metas alcanzadas y una línea por pista, listo para compartir."
+  ],
+  "Lendo a sua meta": ["Reading your goal", "Leyendo tu meta"],
+  "Resumindo a sessão": ["Summarising the session", "Resumiendo la sesión"],
+  "Lendo os setores": ["Reading the sectors", "Leyendo los sectores"],
+  "Lendo os treinos de curva": ["Reading the corner drills", "Leyendo los entrenamientos de curva"],
+  "Resumindo a semana": ["Summarising the week", "Resumiendo la semana"],
+  "Corrida diária {0} desta semana ({1}): a medalha de {2} é {3}, a {4} s da sua melhor volta.": [
+    "This week's Daily Race {0} ({1}): the {2} medal is {3}, {4} s from your best lap.",
+    "Carrera diaria {0} de esta semana ({1}): la medalla de {2} es {3}, a {4} s de tu mejor vuelta."
+  ],
+  "Usar a medalha como meta": ["Use the medal as the goal", "Usar la medalla como meta"]
 }

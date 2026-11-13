@@ -514,6 +514,37 @@ const PT: HelpContent = {
         'coach ia chat pergunta mcp claude openai chatgpt codex chave api modelo pontos fortes fracos',
     },
     {
+      id: 'resumo-da-semana',
+      topic: 'tracks',
+      title: 'Resumo da semana',
+      summary:
+        'Os últimos 7 dias numa tela: melhor volta de cada pista, recordes e metas batidas, para copiar ou compartilhar.',
+      steps: [
+        'Em Início, abra o cartão Sua semana e toque em Ver resumo da semana.',
+        'Veja sessões, voltas, tempo de pista e, por pista, a melhor volta contra o recorde anterior.',
+        'Toque em Copiar resumo para o texto, ou em Baixar imagem / Copiar imagem para compartilhar.',
+        'Semana anterior mostra os 7 dias antes. Também dá para pedir ao Coach IA: "Faça o resumo da minha semana".',
+      ],
+      note: 'Primeira vez na pista não conta como recorde. A semana são os últimos 7 dias, não a semana do calendário.',
+      links: [lnk('Resumo da semana', routes.weekly())],
+      keywords: 'resumo semana recordes metas batidas compartilhar imagem texto semanal',
+    },
+    {
+      id: 'meta-pela-corrida-diaria',
+      topic: 'tracks',
+      title: 'Meta pela medalha da corrida diária',
+      summary:
+        'Se a corrida diária da semana roda na sua pista, o Bono sugere como meta a próxima medalha acima da sua melhor volta.',
+      steps: [
+        'Ligue as Corridas diárias (Início) para o Bono ler as medalhas da semana.',
+        'Na pista, em Minha meta, aparece: a medalha de ouro é 2:02,662, a 1,1 s da sua melhor volta.',
+        'Toque em Usar a medalha como meta e depois em Definir meta.',
+      ],
+      note: 'O tempo da medalha vale para o carro da corrida, que aparece na frase. Em outro carro, é só uma referência.',
+      links: [lnk('Corridas diárias', routes.dailies())],
+      keywords: 'meta medalha corrida diária ouro prata bronze platina sugestão',
+    },
+    {
       id: 'treinar-uma-curva',
       topic: 'tracks',
       title: 'Treinar uma curva',
@@ -1100,6 +1131,37 @@ const EN: HelpContent = {
       links: [lnk('AI Coach', routes.coach())],
       keywords:
         'ai coach chat question mcp claude openai chatgpt codex key api model strengths weaknesses',
+    },
+    {
+      id: 'resumo-da-semana',
+      topic: 'tracks',
+      title: 'Weekly summary',
+      summary:
+        'The last 7 days on one screen: best lap of each track, records and goals reached, to copy or share.',
+      steps: [
+        'In Home, open the Your week card and tap See the weekly summary.',
+        'See sessions, laps, time on track and, per track, the best lap against the previous record.',
+        'Tap Copy summary for the text, or Download image / Copy image to share.',
+        'Previous week shows the 7 days before. You can also ask the AI Coach: "Write my weekly summary".',
+      ],
+      note: 'A first time on a track does not count as a record. The week is the last 7 days, not the calendar week.',
+      links: [lnk('Weekly summary', routes.weekly())],
+      keywords: 'weekly summary records goals reached share image text',
+    },
+    {
+      id: 'meta-pela-corrida-diaria',
+      topic: 'tracks',
+      title: 'Goal from the Daily Race medal',
+      summary:
+        "If this week's Daily Race runs on your track, Bono suggests the next medal above your best lap as a goal.",
+      steps: [
+        'Turn on Daily Races (Home) so Bono reads the medals of the week.',
+        'On the track, in My goal, it shows: the gold medal is 2:02.662, 1.1 s from your best lap.',
+        'Tap Use the medal as the goal and then Set goal.',
+      ],
+      note: "The medal time is for the race's car, shown in the sentence. On another car, it is only a reference.",
+      links: [lnk('Daily Races', routes.dailies())],
+      keywords: 'goal medal daily race gold silver bronze platinum suggestion',
     },
     {
       id: 'treinar-uma-curva',
@@ -1696,6 +1758,37 @@ const ES: HelpContent = {
       links: [lnk('Coach IA', routes.coach())],
       keywords:
         'coach ia chat pregunta mcp claude openai chatgpt codex clave api modelo puntos fuertes débiles',
+    },
+    {
+      id: 'resumo-da-semana',
+      topic: 'tracks',
+      title: 'Resumen de la semana',
+      summary:
+        'Los últimos 7 días en una pantalla: mejor vuelta de cada pista, récords y metas alcanzadas, para copiar o compartir.',
+      steps: [
+        'En Inicio, abre la tarjeta Tu semana y toca Ver el resumen de la semana.',
+        'Ve sesiones, vueltas, tiempo en pista y, por pista, la mejor vuelta frente al récord anterior.',
+        'Toca Copiar resumen para el texto, o Descargar imagen / Copiar imagen para compartir.',
+        'Semana anterior muestra los 7 días de antes. También puedes pedir al Coach IA: "Haz el resumen de mi semana".',
+      ],
+      note: 'La primera vez en una pista no cuenta como récord. La semana son los últimos 7 días, no la semana del calendario.',
+      links: [lnk('Resumen de la semana', routes.weekly())],
+      keywords: 'resumen semana récords metas alcanzadas compartir imagen texto semanal',
+    },
+    {
+      id: 'meta-pela-corrida-diaria',
+      topic: 'tracks',
+      title: 'Meta con la medalla de la carrera diaria',
+      summary:
+        'Si la carrera diaria de la semana corre en tu pista, Bono sugiere como meta la próxima medalla sobre tu mejor vuelta.',
+      steps: [
+        'Activa las Carreras diarias (Inicio) para que Bono lea las medallas de la semana.',
+        'En la pista, en Mi meta, aparece: la medalla de oro es 2:02,662, a 1,1 s de tu mejor vuelta.',
+        'Toca Usar la medalla como meta y luego Definir meta.',
+      ],
+      note: 'El tiempo de la medalla es para el coche de la carrera, que aparece en la frase. En otro coche es solo una referencia.',
+      links: [lnk('Carreras diarias', routes.dailies())],
+      keywords: 'meta medalla carrera diaria oro plata bronce platino sugerencia',
     },
     {
       id: 'treinar-uma-curva',

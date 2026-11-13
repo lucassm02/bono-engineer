@@ -119,3 +119,11 @@ export {
   summarizeLapForAI,
 } from './summary.ts';
 export { checkLapValidity, type ValidityOptions } from './validity.ts';
+export {
+  buildWeeklySummary,
+  DAY_MS,
+  WEEK_MS,
+  type WeeklyInput,
+  type WeeklySessionInput,
+  weekWindow,
+} from './weekly-summary.ts';

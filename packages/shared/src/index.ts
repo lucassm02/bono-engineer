@@ -71,6 +71,7 @@ export * from './pit-plan.ts';
 export * from './radio/index.ts';
 export { localizedRadioUtterance } from './radio-translations.ts';
 export * from './summary-text.ts';
+export * from './weekly-text.ts';
 export * from './telemetry.ts';
 export * from './track-context.ts';
 export * from './tracks/index.ts';

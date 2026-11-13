@@ -848,3 +848,65 @@ export interface EvolutionReport {
   /** Most relevant changes between the first and the last day, biggest first. */
   trends: EvolutionTrend[];
 }
+
+// ---------------------------------------------------------------------------------------------
+// Weekly summary ("Resumo da semana"): what the driver did in 7 days, per track
+// ---------------------------------------------------------------------------------------------
+
+/** A goal chased on a track, seen from the end of the week. */
+export interface WeeklyGoalState {
+  targetMs: number;
+  reached: boolean;
+  /** How far the best lap is from the goal (ms, > 0), 0 once reached. */
+  remainingMs: number;
+}
+
+/** One track (and car) driven during the week. */
+export interface WeeklyTrackRow {
+  trackId: Id;
+  /** Filled by the service; null when the track has no name. */
+  trackName: string | null;
+  /** Car the driver used most on the track in the week. */
+  carCode: number;
+  sessions: number;
+  laps: number;
+  validLaps: number;
+  /** Best valid lap of the week (ms), null without a valid lap. */
+  bestMs: number | null;
+  /** Best valid own lap on this track and car before the week (ms), null the first time. */
+  previousBestMs: number | null;
+  /** bestMs − previousBestMs (negative = faster than before), null when either is missing. */
+  deltaMs: number | null;
+  /** The week's best lap beat the previous best (a personal record). */
+  isRecord: boolean;
+  /** First valid lap ever on this track and car. */
+  firstTime: boolean;
+  /** The active goal against the best lap overall (week or before), null without a goal. */
+  goal: WeeklyGoalState | null;
+}
+
+export interface WeeklyGoalReached {
+  trackId: Id;
+  trackName: string | null;
+  carCode: number | null;
+  targetMs: number;
+  achievedAt: number;
+}
+
+/** GET /api/analysis/weekly?weeksAgo=: 0 = the last 7 days, 1 = the 7 days before them, ... */
+export interface WeeklySummary {
+  weeksAgo: number;
+  /** Window [fromMs, toMs) in epoch ms. */
+  fromMs: number;
+  toMs: number;
+  sessions: number;
+  laps: number;
+  validLaps: number;
+  /** Time on track in the week (ms): sum of the sessions' durations. */
+  drivingMs: number;
+  /** Tracks driven, most laps first. */
+  tracks: WeeklyTrackRow[];
+  /** Personal records of the week (first times do not count). */
+  records: number;
+  goalsReached: WeeklyGoalReached[];
+}

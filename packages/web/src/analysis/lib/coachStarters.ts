@@ -49,6 +49,18 @@ export function coachStarters(): CoachStarter[] {
       question: uiText('Qual curva eu devo treinar hoje e por quê?'),
     },
     {
+      id: 'goal',
+      title: uiText('Perto da minha meta?'),
+      question: uiText('Estou perto da minha meta de tempo? Quanto falta e o que preciso mudar?'),
+    },
+    {
+      id: 'week',
+      title: uiText('Resumo da semana'),
+      question: uiText(
+        'Faça o resumo da minha semana: recordes, metas batidas e uma linha por pista, pronto para compartilhar.',
+      ),
+    },
+    {
       id: 'consistency',
       title: uiText('Regularidade'),
       question: uiText('Estou regular nas minhas voltas? Onde eu mais oscilo?'),

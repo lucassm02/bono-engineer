@@ -7,7 +7,6 @@ import {
   type Goal,
   recognizeTrack,
   type SectorGate,
-  suggestGoal,
   type Track,
   type TrackRecognition,
   type Vec2,
@@ -127,48 +126,10 @@ export function trackRoutes(app: FastifyInstance, ctx: RouteContext): void {
     return car ?? null;
   };
 
-  /** Ideal lap of the fastest own laps (sum of the best sectors), null when it cannot be made. */
-  const idealLapMs = async (id: string, carCode: number | null): Promise<number | null> => {
-    const laps = store
-      .listLapsForTrack(id, {
-        ...(carCode !== null ? { carCode } : {}),
-        validOnly: true,
-        includeReferences: false,
-        limit: 12,
-      })
-      .filter((l) => !l.flags.includes('replay'));
-    if (laps.length < 2) return null;
-    try {
-      const m = await runtime.analysis.getMicrosectors(laps.map((l) => l.id));
-      return m.report.theoreticalBestSectorsMs;
-    } catch {
-      return null;
-    }
-  };
-
   app.get('/tracks/:id/goal', async (req): Promise<ApiTrackGoal> => {
     const id = trackId(req.params);
     getTrack(id);
-    const carCode = carParam(req.query as Obj);
-    const own = store
-      .listLapsForTrack(id, {
-        ...(carCode !== null ? { carCode } : {}),
-        validOnly: true,
-        includeReferences: false,
-        orderBy: 'time',
-      })
-      .filter((l) => !l.flags.includes('replay'));
-    const bestLapMs = own[0]?.timeMs ?? null;
-    const active = store.getActiveGoal(id, carCode);
-    const before = active ? own.filter((l) => l.startedAt < active.createdAt) : [];
-    return {
-      trackId: id,
-      active,
-      history: store.listGoalHistory(id),
-      suggestion: suggestGoal(bestLapMs, await idealLapMs(id, carCode)),
-      bestLapMs,
-      baselineMs: before[0]?.timeMs ?? null,
-    };
+    return runtime.analysis.getTrackGoal(id, carParam(req.query as Obj));
   });
 
   app.put('/tracks/:id/goal', async (req): Promise<Goal> => {

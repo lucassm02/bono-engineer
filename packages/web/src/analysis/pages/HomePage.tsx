@@ -22,6 +22,7 @@ import { RecentSessionCard } from '../components/RecentSessionCard.tsx';
 import { NewTrackPrompt } from '../components/TrackNaming.tsx';
 import { TrackThumb } from '../components/TrackThumb.tsx';
 import { ErrorBox, Loading, Tag, useTitle } from '../components/ui.tsx';
+import { WeekCard } from '../components/WeekCard.tsx';
 import {
   type CarFilter,
   carMatchesFilter,
@@ -372,6 +373,8 @@ export function HomePage() {
       <PendingSetupCard onOpenAssistant={openSetupAssistant} />
 
       <RecentSessionCard />
+
+      <WeekCard />
 
       <DailiesStrip />
       <DailiesAsk />

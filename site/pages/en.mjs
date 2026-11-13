@@ -92,6 +92,10 @@ ${motionSection(ctx, 'en')}
         <div class="read gain">−0.215<small>best lap against the goal, in seconds</small></div>
       </li>
       <li class="row">
+        <div><h3>Weekly summary</h3><p>The last 7 days on one screen: the best lap of each track against the record before it, personal records and goals reached. Copy it as text or share it as an image. If this week's Daily Race runs on your track, the next medal becomes a goal suggestion.</p></div>
+        <div class="read acc">7 days<small>text or image to share</small></div>
+      </li>
+      <li class="row">
         <div><h3>Lap replay</h3><p>Watch a lap the way Gran Turismo shows it: a dot runs the map while you see brake, throttle and steering at every instant. Put your best lap or a top driver's lap beside it as a ghost, and tap what went wrong to jump straight to the spot.</p></div>
         <div class="read acc">0.25× to 2×<small>replay speed, 0.1 s steps</small></div>
       </li>

@@ -107,6 +107,10 @@ ${motionSection(ctx, 'pt-BR')}
         <div class="read gain">−0,215<small>melhor volta contra a meta, em segundos</small></div>
       </li>
       <li class="row">
+        <div><h3>Resumo da semana</h3><p>Os últimos 7 dias numa tela: a melhor volta de cada pista contra o recorde anterior, recordes pessoais e metas batidas. Copie como texto ou compartilhe como imagem. Se a corrida diária da semana roda na sua pista, a medalha seguinte vira sugestão de meta.</p></div>
+        <div class="read acc">7 dias<small>texto ou imagem para compartilhar</small></div>
+      </li>
+      <li class="row">
         <div><h3>Replay de uma volta</h3><p>Reveja uma volta como no Gran Turismo: uma bolinha percorre o mapa enquanto você vê freio, acelerador e volante a cada instante. Ponha a sua melhor volta ou a de um piloto do top ao lado, como um fantasma, e toque no que errou para ir direto ao ponto.</p></div>
         <div class="read acc">0,25× a 2×<small>velocidade do replay, passo de 0,1 s</small></div>
       </li>

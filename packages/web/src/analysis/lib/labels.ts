@@ -281,6 +281,21 @@ export const COACH_TOOL_LABELS: Record<string, string> = {
   get get_corner_detail() {
     return uiText('Olhando a curva de perto');
   },
+  get get_goal() {
+    return uiText('Lendo a sua meta');
+  },
+  get get_session_summary() {
+    return uiText('Resumindo a sessão');
+  },
+  get get_sectors() {
+    return uiText('Lendo os setores');
+  },
+  get list_corner_drills() {
+    return uiText('Lendo os treinos de curva');
+  },
+  get get_weekly_summary() {
+    return uiText('Resumindo a semana');
+  },
   get get_consistency() {
     return uiText('Medindo a consistência');
   },

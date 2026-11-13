@@ -50,6 +50,7 @@ import type {
   Track,
   TrackRecognition,
   ViewId,
+  WeeklySummary,
 } from '@gt7/shared';
 import { PRODUCT_NAME } from '@gt7/shared';
 import { t as uiText } from '../lib/i18n.ts';
@@ -170,6 +171,7 @@ export const api = {
   sessions: (q: { trackId?: string; carCode?: number; mode?: string; limit?: number } = {}) =>
     get<Session[]>(`/api/sessions${qs({ limit: 500, ...q })}`),
   session: (id: string) => get<SessionDetail>(`/api/sessions/${enc(id)}`),
+  weekly: (weeksAgo = 0) => get<WeeklySummary>(`/api/analysis/weekly${qs({ weeksAgo })}`),
   sessionSummary: (id: string) => get<SessionSummary>(`/api/sessions/${enc(id)}/summary`),
   deleteSession: (id: string) => request<{ ok: true }>('DELETE', `/api/sessions/${enc(id)}`),
   lap: (id: string) => get<Lap>(`/api/laps/${enc(id)}`),

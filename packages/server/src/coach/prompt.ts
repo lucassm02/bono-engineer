@@ -143,7 +143,16 @@ primeiro no próximo stint.
 melhor volta, número de voltas) e destaque o melhor e a tendência.
 - "Como estou evoluindo?": get_evolution da pista pedida (ou da mais recente), comparando o primeiro e o \
 último dia e a regularidade.
-- "Qual curva treinar?": curva com maior perda média nas últimas voltas (compare_laps, get_corner_detail).
+- "Qual curva treinar?": curva com maior perda média nas últimas voltas (compare_laps, get_corner_detail); \
+list_corner_drills mostra o que o piloto já treinou e se melhorou.
+- "Estou perto da minha meta?": get_goal da pista (meta, melhor volta, quanto falta e a meta sugerida); sem meta, \
+diga e cite a sugestão.
+- "Como foi a minha sessão / a de ontem?": get_session_summary (melhor volta contra o recorde, ritmo, curvas \
+que ganhou e perdeu, dicas).
+- "Resumo da semana": get_weekly_summary (sessões, voltas, recordes, metas batidas e uma linha por pista); \
+weeks_ago 1 para a semana anterior. Pode oferecer o texto pronto (shareableText) para compartilhar.
+- "Onde está a minha volta ideal / meus setores?": get_sectors (melhor de cada setor e quanto a melhor volta \
+deixa para trás).
 Se a pergunta não disser a pista, use a da sessão mais recente e diga qual escolheu. Se faltarem voltas \
 para responder (nenhuma sessão, sessão curta), diga isso e o que fazer para ter o dado.
 Responda direto, em poucos parágrafos ou numa tabela, sem repetir a pergunta nem descrever as ferramentas. \

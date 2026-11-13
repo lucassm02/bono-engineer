@@ -14,6 +14,7 @@
 import {
   buildChartData,
   buildSessionSummary,
+  buildWeeklySummary,
   type Centerline,
   type ChartChannel,
   type ChartData,
@@ -36,8 +37,10 @@ import {
   summarizeComparisonForAI,
   summarizeLapForAI,
   topAverage,
+  weekWindow,
 } from '@gt7/analysis';
 import {
+  type ApiTrackGoal,
   COMPARISON_REFERENCE_KINDS,
   type ComparisonReferenceKind,
   type ConsistencyReport,
@@ -59,9 +62,12 @@ import {
   type SessionSummary,
   type SummaryBaseline,
   type SummaryCornerChange,
+  suggestGoal,
   type TraceChannel,
   type Track,
   type TrackAnalysis,
+  type WeeklyGoalReached,
+  type WeeklySummary,
 } from '@gt7/shared';
 import { isPersonalLap } from '../live/context.ts';
 import type { Gt7Store } from '../store/store.ts';
@@ -929,6 +935,109 @@ export class AnalysisService {
         timeMs: l.timeMs,
       })),
     };
+  }
+
+  /**
+   * The goal state of a track for a car (null = any car): the active goal, the reached ones, a
+   * suggested target and the best lap that measures the progress. Shared by the REST route and the
+   * MCP `get_goal` tool.
+   */
+  async getTrackGoal(trackId: Id, carCode: number | null): Promise<ApiTrackGoal> {
+    this.getTrackOrThrow(trackId);
+    const own = this.store
+      .listLapsForTrack(trackId, {
+        ...(carCode !== null ? { carCode } : {}),
+        validOnly: true,
+        includeReferences: false,
+        orderBy: 'time',
+      })
+      .filter((l) => !l.flags.includes('replay'));
+    const bestLapMs = own[0]?.timeMs ?? null;
+    const active = this.store.getActiveGoal(trackId, carCode);
+    const before = active ? own.filter((l) => l.startedAt < active.createdAt) : [];
+    let idealLapMs: number | null = null;
+    if (own.length >= 2) {
+      try {
+        idealLapMs = (await this.getMicrosectors(own.slice(0, 12).map((l) => l.id))).report
+          .theoreticalBestSectorsMs;
+      } catch {
+        idealLapMs = null;
+      }
+    }
+    return {
+      trackId,
+      active,
+      history: this.store.listGoalHistory(trackId),
+      suggestion: suggestGoal(bestLapMs, idealLapMs),
+      bestLapMs,
+      baselineMs: before[0]?.timeMs ?? null,
+    };
+  }
+
+  /**
+   * "Resumo da semana": sessions, laps, records and goals of a 7-day window (0 = the last 7 days,
+   * 1 = the 7 before them...), per track and car. Replays and references are not the driver's laps.
+   */
+  getWeeklySummary(weeksAgo = 0, now = Date.now()): WeeklySummary {
+    const { fromMs, toMs } = weekWindow(weeksAgo, now);
+    const own = (l: Lap) => !l.isReference && !l.flags.includes('replay');
+    const sessions = this.store
+      .listSessions({ limit: 5000 })
+      .filter((s) => s.mode === 'live' && s.startedAt >= fromMs && s.startedAt < toMs)
+      .map((s) => ({
+        trackId: s.trackId,
+        carCode: s.carCode,
+        startedAt: s.startedAt,
+        endedAt: s.endedAt,
+        laps: this.store
+          .listLaps(s.id)
+          .filter(own)
+          .map((l) => ({ timeMs: l.timeMs, valid: l.valid })),
+      }));
+    const name = (id: Id) => {
+      const t = this.store.getTrack(id);
+      return t ? (t.layout ? `${t.name} · ${t.layout}` : t.name) : null;
+    };
+    const previous = new Map<string, number | null>();
+    const goalsReached: WeeklyGoalReached[] = [];
+    for (const track of this.store.listTracks()) {
+      for (const g of this.store.listGoalHistory(track.id)) {
+        if (g.achievedAt === null) continue;
+        goalsReached.push({
+          trackId: track.id,
+          trackName: name(track.id),
+          carCode: g.carCode,
+          targetMs: g.targetMs,
+          achievedAt: g.achievedAt,
+        });
+      }
+    }
+    return buildWeeklySummary({
+      weeksAgo,
+      now,
+      sessions,
+      previousBestMs: (trackId, carCode) => {
+        const key = `${trackId}|${carCode}`;
+        if (!previous.has(key)) {
+          const best = this.store
+            .listLapsForTrack(trackId, {
+              carCode,
+              validOnly: true,
+              includeReferences: false,
+              orderBy: 'time',
+            })
+            .find((l) => own(l) && l.startedAt < fromMs);
+          previous.set(key, best?.timeMs ?? null);
+        }
+        return previous.get(key) ?? null;
+      },
+      goalMs: (trackId, carCode) => {
+        const g = this.store.getActiveGoal(trackId, carCode);
+        return g && g.createdAt < toMs ? g.targetMs : null;
+      },
+      trackName: name,
+      goalsReached,
+    });
   }
 
   /** Lap resampled on a distance grid (bounded number of points). */
