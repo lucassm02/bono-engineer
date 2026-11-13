@@ -1168,6 +1168,19 @@ textarea.a-input {
   padding: var(--sp-6) var(--page-gutter) var(--sp-7);
 }
 
+/*
+ * Blocos que ficam um embaixo do outro direto na página (cartões, painéis, estatísticas, avisos de
+ * "nada aqui") têm sempre um espaço entre eles. Sem isso cada componente novo precisa lembrar da sua
+ * própria margem, e dois cartões encostados passam sem ninguém ver. `:where` zera a especificidade:
+ * uma margem própria do componente continua mandando, e margens verticais irmãs se fundem, então
+ * nada fica duplicado.
+ */
+:where(.a-main)
+  > :where(section, .ui-card, .a-card, .a-stats, .ui-empty)
+  + :where(section, .ui-card, .a-card, .a-stats, .ui-empty) {
+  margin-top: var(--sp-5);
+}
+
 /* Faixa de tablet: barra lateral mais estreita e tabelas mais compactas. */
 @media (max-width: 1100px) {
   .a-table th,

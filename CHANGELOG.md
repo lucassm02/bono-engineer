@@ -5,6 +5,14 @@ All notable changes to Bono Engineer are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] - 2026-11-13
+
+<!-- release-notes-since: 0.1.0 -->
+
+### Fixed
+
+- Fixed cards touching each other on Home (the "session ended" card and **Your week**) and anywhere else two cards, panels or stat rows sit one under the other on a page: they now always have space between them, by one rule for the whole analysis area instead of a margin each component had to remember.
+
 ## [0.7.0] - 2026-11-12
 
 <!-- release-notes-since: 0.1.0 -->
