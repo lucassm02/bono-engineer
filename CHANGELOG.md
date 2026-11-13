@@ -7,6 +7,8 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-11-13
+
 ### Fixed
 
 - The Discord radio now speaks the approved engineer tasks. It gets the task voice from the Bono (once downloaded and checked there), keeps trying until the download is allowed and finished, and counts each spoken task.
@@ -241,7 +243,8 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Added replay reference capture, distance-aligned lap comparisons, synchronized telemetry charts, consistency and progress analysis, and data exports.
 - Added the driving guide, an Anthropic-powered AI debrief, and MCP tools for telemetry, laps, sessions, tracks, comparisons, and PNG charts.
 
-[Unreleased]: https://github.com/lucassm02/bono-engineer/compare/v0.8.1...main
+[Unreleased]: https://github.com/lucassm02/bono-engineer/compare/v0.8.2...main
+[0.8.2]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.8.2
 [0.8.1]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.8.1
 [0.8.0]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.8.0
 [0.7.1]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.7.1
