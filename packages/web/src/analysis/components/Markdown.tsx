@@ -2,6 +2,7 @@
 
 import { type ReactNode, useMemo } from 'react';
 import { type Block, type Inline, type ListItem, parseMarkdown } from '../lib/markdown.ts';
+import '../../styles/markdown.css';
 
 function renderInline(nodes: Inline[], key = 'i'): ReactNode[] {
   return nodes.map((n, k) => {

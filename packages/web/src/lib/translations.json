@@ -1328,6 +1328,7 @@
   "Guia de pilotagem": ["Driving guide", "Guía de conducción"],
   "Guinada": ["Yaw", "Guiñada"],
   "há {0} {1}": ["{0} {1} ago", "hace {0} {1}"],
+  "há 1 dia": ["1 day ago", "hace 1 día"],
   "há {0} dias": ["{0} days ago", "hace {0} días"],
   "há {0} h": ["{0} h ago", "hace {0} h"],
   "há {0} min": ["{0} min ago", "hace {0} min"],

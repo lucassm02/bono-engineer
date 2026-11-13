@@ -35,7 +35,7 @@ function Diagnostics() {
       </dl>
       <button
         type="button"
-        className="ui-btn"
+        className="ui-btn cfg-diag-reset"
         data-variant="secondary"
         onClick={() => {
           resetUsage();
@@ -64,9 +64,7 @@ export function AboutGroup({ status }: { status: ApiStatus }) {
           <span className="ui-badge">v{status.serverVersion}</span>
         </CfgRow>
         {window.bonoUpdates ? (
-          <CfgRow title={uiText('Atualizações')} wide>
-            <DesktopUpdateControls />
-          </CfgRow>
+          <DesktopUpdateControls />
         ) : (
           <CfgRow
             title={uiText('Atualizações')}

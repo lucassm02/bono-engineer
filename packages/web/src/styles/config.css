@@ -171,21 +171,23 @@
   color: var(--text-3);
 }
 .cfg-diag {
-  display: grid;
-  gap: var(--sp-1);
-  max-width: 480px;
   margin: 0;
 }
 .cfg-diag-row {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--sp-4);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: var(--sp-3);
   padding: var(--sp-2) 0;
   border-bottom: 1px solid var(--line-soft);
   font-size: var(--fs-sm);
 }
 .cfg-diag dt {
   color: var(--text-2);
+  overflow-wrap: anywhere;
+}
+.cfg-diag-reset {
+  justify-self: start;
 }
 .cfg-diag dd {
   margin: 0;

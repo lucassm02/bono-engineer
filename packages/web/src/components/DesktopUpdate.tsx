@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import { Markdown } from '../analysis/components/Markdown.tsx';
 import { t as uiText } from '../lib/i18n.ts';
 import { useUi } from '../state/uiStore.ts';
+import { Icon } from './ui/Icon.tsx';
 import '../styles/update-notice.css';
 
 declare global {
@@ -39,12 +40,9 @@ function invoke(action: 'check' | 'download' | 'install' | 'dismiss' | 'markNote
 
 function drivingOrCapturing(state: ReturnType<typeof useUi.getState>): boolean {
   const capture = state.serverStatus?.capture.state;
-  const driving = state.wsStatus === 'open' &&
-    (state.liveState === 'onTrack' || state.liveState === 'paused');
-  return (
-    driving ||
-    (capture !== undefined && capture !== 'idle')
-  );
+  const driving =
+    state.wsStatus === 'open' && (state.liveState === 'onTrack' || state.liveState === 'paused');
+  return driving || (capture !== undefined && capture !== 'idle');
 }
 
 function statusMessage(status: DesktopUpdateStatus): string {
@@ -103,81 +101,105 @@ export function DesktopUpdateControls() {
   const status = useUpdates((s) => s.status);
   const busy = useUi(drivingOrCapturing);
   if (!status) return null;
-  if (status.mode === 'development') {
-    return <p className="cfg-hint">{uiText('Atualizações disponíveis no pacote do Windows.')}</p>;
-  }
+  const development = status.mode === 'development';
   const working = ['checking', 'downloading', 'installing'].includes(status.phase);
+  const warning =
+    errorMessage(status.error) ||
+    (busy && status.phase === 'ready'
+      ? uiText('Aguarde o fim da pilotagem ou da captura para instalar.')
+      : '');
   return (
-    <div className="desktop-update-controls">
-      <p className="cfg-hint" role="status">
-        {[statusMessage(status), errorMessage(status.error)].filter(Boolean).join(' ')}
-      </p>
-      {status.checkedAt !== null && (
-        <p className="cfg-hint">
-          {uiText(
-            'Última verificação: {0}',
-            new Date(status.checkedAt).toLocaleString(document.documentElement.lang || undefined),
+    <section className="desktop-update-controls" aria-labelledby="desktop-updates-title">
+      <div className="desktop-update-status">
+        <h3 className="ui-toggle-title" id="desktop-updates-title">
+          {uiText('Atualizações')}
+        </h3>
+        <div role="status">
+          {status.phase !== 'error' && (
+            <p>
+              {development
+                ? uiText('Atualizações disponíveis no pacote do Windows.')
+                : statusMessage(status)}
+            </p>
           )}
-        </p>
-      )}
-      <div className="desktop-update-actions">
-        <button
-          type="button"
-          className="ui-btn"
-          data-variant="secondary"
-          disabled={working}
-          onClick={() => invoke('check')}
-        >
-          {uiText('Verificar atualizações')}
-        </button>
-        {status.target && (
-          <button
-            type="button"
-            className="ui-btn"
-            data-variant="secondary"
-            onClick={() => useUpdates.setState({ notes: 'available' })}
-          >
-            {uiText('Ver o que mudou')}
-          </button>
-        )}
-        <DownloadButton status={status} />
-        {status.phase === 'ready' && (
-          <button
-            type="button"
-            className="ui-btn"
-            disabled={busy}
-            onClick={() => invoke('install')}
-          >
-            {uiText('Reiniciar e instalar')}
-          </button>
-        )}
-        {status.installedNotes.length > 0 && (
-          <button
-            type="button"
-            className="ui-btn"
-            data-variant="secondary"
-            onClick={() => useUpdates.setState({ notes: 'installed' })}
-          >
-            {uiText('Notas da versão instalada')}
-          </button>
+          {warning && <p className="desktop-update-warning">{warning}</p>}
+        </div>
+        {status.checkedAt !== null && (
+          <p className="desktop-update-meta">
+            {uiText(
+              'Última verificação: {0}',
+              new Date(status.checkedAt).toLocaleString(
+                document.documentElement.lang || undefined,
+                {
+                  dateStyle: 'short',
+                  timeStyle: 'short',
+                },
+              ),
+            )}
+          </p>
         )}
       </div>
-      {busy && status.phase === 'ready' && (
-        <p className="cfg-hint">
-          {uiText('Aguarde o fim da pilotagem ou da captura para instalar.')}
-        </p>
+      {!development && (
+        <div className="desktop-update-actions">
+          <button
+            type="button"
+            className="ui-btn"
+            data-variant="secondary"
+            disabled={working}
+            onClick={() => invoke('check')}
+          >
+            {uiText('Verificar atualizações')}
+          </button>
+          {status.target && (
+            <button
+              type="button"
+              className="ui-btn"
+              data-variant="secondary"
+              onClick={() => useUpdates.setState({ notes: 'available' })}
+            >
+              {uiText('Ver o que mudou')}
+            </button>
+          )}
+          <DownloadButton status={status} />
+          {status.phase === 'ready' && (
+            <button
+              type="button"
+              className="ui-btn"
+              disabled={busy}
+              onClick={() => invoke('install')}
+            >
+              {uiText('Reiniciar e instalar')}
+            </button>
+          )}
+          {status.installedNotes.length > 0 && (
+            <button
+              type="button"
+              className="ui-btn"
+              data-variant="secondary"
+              onClick={() => useUpdates.setState({ notes: 'installed' })}
+            >
+              {uiText('Notas da versão instalada')}
+            </button>
+          )}
+        </div>
       )}
-    </div>
+    </section>
   );
 }
 
 function Notes({ entries }: { entries: ReleaseNote[] }) {
   if (entries.length === 0) return <p>{uiText('Notas da versão indisponíveis.')}</p>;
   return entries.map((entry) => (
-    <section key={entry.version}>
-      <h3>
-        v{entry.version} · <time dateTime={entry.date}>{entry.date}</time>
-      </h3>
+    <section key={entry.version} className="release-notes-entry">
+      <header className="release-notes-meta">
+        <h3 className="ui-badge">v{entry.version}</h3>
+        <time dateTime={entry.date}>
+          {new Date(entry.date + 'T00:00:00Z').toLocaleDateString(
+            document.documentElement.lang || undefined,
+            { dateStyle: 'medium', timeZone: 'UTC' },
+          )}
+        </time>
+      </header>
       <Markdown text={entry.markdown.replace(/\]\((?!https:\/\/)[^)]*\)/gi, ']')} />
     </section>
   ));
@@ -240,9 +262,23 @@ export function DesktopUpdateNotice() {
           aria-labelledby="release-notes-title"
           onClose={close}
         >
-          <h2 id="release-notes-title">{uiText('O que mudou na versão {0}', titleVersion)}</h2>
-          <Notes entries={notes === 'installed' ? status.installedNotes : status.notes} />
-          <div className="desktop-update-actions">
+          <header className="ui-modal-head">
+            <h2 id="release-notes-title" className="ui-modal-title ui-modal-titles">
+              {uiText('O que mudou na versão {0}', titleVersion)}
+            </h2>
+            <button
+              type="button"
+              className="ui-icon-btn"
+              aria-label={uiText('Fechar')}
+              onClick={() => dialog.current?.close()}
+            >
+              <Icon name="close" />
+            </button>
+          </header>
+          <div className="ui-modal-body release-notes-body" tabIndex={0}>
+            <Notes entries={notes === 'installed' ? status.installedNotes : status.notes} />
+          </div>
+          <footer className="ui-modal-foot desktop-update-actions">
             {notes === 'available' && <DownloadButton status={status} />}
             {notes === 'available' && status.phase === 'downloading' && (
               <span role="status">{statusMessage(status)}</span>
@@ -276,7 +312,7 @@ export function DesktopUpdateNotice() {
                 {uiText('Fechar')}
               </button>
             </form>
-          </div>
+          </footer>
         </dialog>
       )}
     </>

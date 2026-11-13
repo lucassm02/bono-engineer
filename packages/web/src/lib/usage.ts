@@ -115,7 +115,12 @@ export function diagnosticRows(now = Date.now()): DiagnosticRow[] {
     {
       id: 'since',
       label: uiText('Uso neste navegador'),
-      value: days === 0 ? uiText('desde hoje') : uiText('há {0} dias', String(days)),
+      value:
+        days === 0
+          ? uiText('desde hoje')
+          : days === 1
+            ? uiText('há 1 dia')
+            : uiText('há {0} dias', days),
     },
     { id: 'menu', label: uiText('Aberturas do menu ao vivo'), value: String(c.menuOpens ?? 0) },
     {

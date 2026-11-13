@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { humanizeError, noReferenceHint } from './copy.ts';
 import { DELTA_REFERENCE_LABELS } from './labels.ts';
-import { diagnosticRows, isNewcomer, NEWCOMER_DAYS, parseUsage } from './usage.ts';
+import { diagnosticRows, isNewcomer, NEWCOMER_DAYS, parseUsage, resetUsage } from './usage.ts';
 
 const SRC = fileURLToPath(new URL('..', import.meta.url));
 
@@ -110,6 +110,13 @@ describe('usage counters (spec 01, RF4)', () => {
       'tour-runs',
     ]);
     expect(rows.find((r) => r.id === 'menu')?.value).toBe('0');
+  });
+
+  it('uses the singular for one day of usage', () => {
+    const now = Date.now();
+    resetUsage(now - 24 * 60 * 60 * 1000);
+    expect(diagnosticRows(now)[0]?.value).toBe('há 1 dia');
+    resetUsage(now);
   });
 
   it('is a newcomer only during the first week', () => {
