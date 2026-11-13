@@ -7,6 +7,10 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- The Discord radio now speaks the approved engineer tasks. It gets the task voice from the Bono (once downloaded and checked there), keeps trying until the download is allowed and finished, and counts each spoken task.
+
 ## [0.8.1] - 2026-11-13
 
 ### Changed

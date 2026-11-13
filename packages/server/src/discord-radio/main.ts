@@ -32,6 +32,10 @@ import {
   shouldJoinChannel,
 } from './config.ts';
 import { loginErrorMessage } from './inspect.ts';
+import { fetchTaskPack } from './task-pack.ts';
+
+/** How often the radio asks the Bono for the task voice until it has it. */
+const TASK_PACK_RETRY_MS = 15_000;
 
 export function startDiscordRadio(
   config: ReturnType<typeof discordConfig>,
@@ -150,6 +154,39 @@ export function startDiscordRadio(
     voice.subscribe(player);
   }
 
+  /** Tells the Bono a task was said (its "spoken N times" counter). */
+  function reportTaskSpoken(id: unknown): void {
+    if (typeof id !== 'string') return;
+    void fetch(`${config.bonoHttpUrl}/api/tasks/${encodeURIComponent(id)}/spoken`, {
+      method: 'POST',
+      headers: config.bonoToken ? { 'x-gt7-token': config.bonoToken } : {},
+    }).catch(() => {});
+  }
+
+  /** Gets the engineer-task voice from the Bono; asks again until it is allowed and downloaded. */
+  let taskPackTimer: NodeJS.Timeout | undefined;
+  async function loadTaskPack(): Promise<void> {
+    if (closing || !audio) return;
+    const result = await fetchTaskPack({
+      voice: config.voice,
+      baseUrl: config.bonoHttpUrl,
+      token: config.bonoToken,
+    });
+    if (closing) return;
+    if (result.state === 'ready') {
+      try {
+        audio.setTaskPack(result.wav, result.clips, result.sampleRate);
+        report('Voz das tarefas do engenheiro carregada.');
+        return;
+      } catch {
+        report('A voz das tarefas está inválida e não será usada.', true);
+        return;
+      }
+    }
+    if (result.state === 'waiting')
+      taskPackTimer = setTimeout(() => void loadTaskPack(), TASK_PACK_RETRY_MS);
+  }
+
   function connectBono(): void {
     if (closing) return;
     const connection = new WebSocket(config.bonoUrl);
@@ -195,6 +232,7 @@ export function startDiscordRadio(
       }
       try {
         play(stream);
+        if (speech.decision.ruleId === 'tasks') reportTaskSpoken(speech.decision.evidence?.taskId);
       } catch {
         playbackError();
       }
@@ -236,6 +274,7 @@ export function startDiscordRadio(
     clearInterval(watchdog);
     clearInterval(reconnect);
     clearTimeout(retry);
+    clearTimeout(taskPackTimer);
     socket?.close();
     player.stop(true);
     if (voice && voice.state.status !== VoiceConnectionStatus.Destroyed) voice.destroy();
@@ -286,7 +325,10 @@ export function startDiscordRadio(
           : `Aguardando alguém no canal. Atraso padrão de ${config.delayMs} ms: o som pode chegar um pouco depois; calibre para sincronizar.`,
     );
     void syncVoice();
-    if (!test) connectBono();
+    if (!test) {
+      connectBono();
+      void loadTaskPack();
+    }
   });
   void client.login(config.token).catch((error: unknown) => {
     if (!closing) report(loginErrorMessage(error), true);

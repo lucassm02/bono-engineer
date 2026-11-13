@@ -95,6 +95,8 @@ export function discordConfig(env: NodeJS.ProcessEnv) {
     delayMs,
     delayCalibrated: measuredDelayMs !== null,
     bonoUrl,
+    bonoHttpUrl: `http://127.0.0.1:${port}`,
+    bonoToken: env.BONO_DISCORD_BONO_TOKEN || undefined,
     engine,
     volume,
     voice: env.BONO_DISCORD_VOICE ?? 'alex',
