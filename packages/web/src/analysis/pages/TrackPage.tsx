@@ -14,7 +14,7 @@ import type {
   MetricStats,
   Session,
 } from '@gt7/shared';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '../../components/ui/Icon.tsx';
 import { formatDelta, formatLapTime } from '../../lib/format.ts';
 import { t as uiText } from '../../lib/i18n.ts';
@@ -837,10 +837,30 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
   const [sectors, setSectors] = useState<string>('');
   const [carCode, setCarCode] = useState<number | null>(null);
   const tab: TabId = isTab(route.query.tab) ? route.query.tab : 'best';
+  const tabsRef = useRef<HTMLElement>(null);
 
   const data: ApiTrackAnalysis | null = ta.data;
   const track = data?.track ?? trackOnly.data ?? null;
   useTitle(track?.name ?? uiText('Pista'));
+  const hasTrack = track !== null;
+  useEffect(() => {
+    if (!hasTrack) return;
+    const tabs = tabsRef.current;
+    const active = tabs?.querySelector('[aria-current="page"]');
+    if (!tabs || !active) return;
+    const revealActive = () => {
+      const strip = tabs.getBoundingClientRect();
+      const link = active.getBoundingClientRect();
+      if (link.left < strip.left || link.right > strip.left + tabs.clientWidth) {
+        tabs.scrollLeft += link.left - strip.left - (tabs.clientWidth - link.width) / 2;
+      }
+    };
+    revealActive();
+    const observer = new ResizeObserver(revealActive);
+    observer.observe(tabs);
+    observer.observe(active);
+    return () => observer.disconnect();
+  }, [tab, hasTrack]);
   const sessionList = sessions.data ?? [];
   const sessionId = pickSession(sessionList, route.query.session);
 
@@ -972,7 +992,7 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
         </div>
       )}
 
-      <nav className="a-tabs" aria-label={uiText('Seções da pista')}>
+      <nav ref={tabsRef} className="a-tabs" aria-label={uiText('Seções da pista')}>
         {TABS.map((t) => (
           <a
             key={t.id}
@@ -1224,7 +1244,7 @@ export function TrackPage({ id, route }: { id: string; route: Route }) {
               <p className="dim">{uiText('Nenhuma curva detectada ainda.')}</p>
             ) : (
               <div className="a-table-wrap a-corner-edit">
-                <table className="a-table">
+                <table className="a-table a-table-cards">
                   <thead>
                     <tr>
                       <th>{uiText('Curva')}</th>

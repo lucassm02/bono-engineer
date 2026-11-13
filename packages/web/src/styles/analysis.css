@@ -1256,7 +1256,7 @@ textarea.a-input {
     left: 0;
     z-index: var(--z-chrome);
     display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-columns: repeat(7, minmax(min-content, 1fr));
     gap: 2px;
     padding: var(--sp-1) var(--safe-r) var(--safe-b) var(--safe-l);
     overflow: visible;
@@ -1306,9 +1306,6 @@ textarea.a-input {
   .a-nav-short {
     display: block;
     max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
     line-height: 1.1;
     letter-spacing: -0.02em;
   }
@@ -1346,9 +1343,6 @@ textarea.a-input {
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   }
   .a-coach {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .a-track-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 }

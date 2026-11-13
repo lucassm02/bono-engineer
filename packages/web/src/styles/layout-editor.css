@@ -14,9 +14,11 @@
   min-width: 0;
 }
 .editor-preview {
+  --editor-row-min: 60px;
   display: grid;
   gap: 6px;
   min-height: 220px;
+  overflow-x: auto;
   padding: 6px;
   border: 1px solid var(--line);
   border-radius: var(--r-md);
@@ -24,16 +26,17 @@
 }
 .editor-cell {
   position: relative;
+  display: grid;
+  place-items: center;
   min-width: 0;
-  padding: var(--sp-1);
-  overflow: hidden;
+  padding: var(--sp-4) 2px var(--sp-1);
   border: 1px solid var(--line);
   border-radius: 6px;
   background: var(--surface-3);
   color: var(--text);
   font: inherit;
-  font-size: var(--fs-sm);
-  text-overflow: ellipsis;
+  font-size: var(--fs-xs);
+  line-height: 1.2;
   cursor: pointer;
   transition:
     background var(--dur-fast) var(--ease),
@@ -58,6 +61,10 @@
   left: 5px;
   font-size: var(--fs-2xs);
   color: var(--text-3);
+}
+.editor-cell-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .editor-cell-empty {
   grid-column: 1 / -1;

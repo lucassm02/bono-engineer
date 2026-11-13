@@ -129,10 +129,10 @@
   }
 }
 
-/* Aba de curvas */
+/* Corner map and editor */
 .a-track-grid {
   display: grid;
-  grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.1fr);
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   gap: var(--sp-4);
   align-items: start;
 }
@@ -241,7 +241,26 @@
   font-size: var(--fs-sm);
 }
 
+@media (max-width: 900px) {
+  .a-track-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 640px) {
+  .a-corner-edit {
+    max-height: none;
+    overflow: visible;
+  }
+  .a-corner-edit .a-table-cards tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sp-2);
+  }
+  .a-corner-edit .a-input {
+    width: 100%;
+    min-width: 0;
+  }
   .a-stats,
   .a-records {
     grid-template-columns: repeat(2, minmax(0, 1fr));

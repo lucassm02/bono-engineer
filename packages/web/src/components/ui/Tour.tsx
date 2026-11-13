@@ -188,7 +188,15 @@ export default function Tour() {
     }
     const started = Date.now();
     const timer = setInterval(() => {
-      const found = findAnchor(step.selector);
+      let found = findAnchor(step.selector);
+      if (!found && active === 'analysis') {
+        const offscreen = [...document.querySelectorAll(step.selector)].find((el) => {
+          const bounds = el.getBoundingClientRect();
+          return bounds.width > 0 && bounds.height > 0;
+        });
+        offscreen?.scrollIntoView({ block: 'center', behavior: 'instant' });
+        found = findAnchor(step.selector);
+      }
       if (found) {
         clearInterval(timer);
         anchorEl.current = found.el;

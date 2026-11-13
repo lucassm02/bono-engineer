@@ -145,8 +145,8 @@ export function LayoutEditor() {
           <div
             className="editor-preview"
             style={{
-              gridTemplateColumns: `repeat(${layout.columns}, minmax(0, 1fr))`,
-              gridTemplateRows: `repeat(${layout.rows}, minmax(36px, 1fr))`,
+              gridTemplateColumns: `repeat(${layout.columns}, minmax(64px, 1fr))`,
+              gridTemplateRows: `repeat(${layout.rows}, minmax(var(--editor-row-min), 1fr))`,
             }}
           >
             {layout.items.map((it, i) => (
@@ -161,8 +161,10 @@ export function LayoutEditor() {
                 }}
                 onClick={() => setSelected(it.key === selected ? null : it.key)}
               >
-                <span className="editor-cell-n num">{i + 1}</span>
-                {uiText(WIDGET_META[it.widget].label)}
+                <span className="editor-cell-n num" aria-hidden="true">
+                  {i + 1}
+                </span>
+                <span className="editor-cell-label">{uiText(WIDGET_META[it.widget].label)}</span>
               </button>
             ))}
             {layout.items.length === 0 && (

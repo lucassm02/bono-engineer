@@ -336,7 +336,8 @@
 }
 @media (max-width: 900px) {
   .coach-chat {
-    bottom: calc(76px + var(--safe-b));
+    position: static;
+    box-shadow: none;
   }
 }
 @media (max-width: 640px) {
