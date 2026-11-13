@@ -160,7 +160,7 @@ export class TaskVoiceService {
   /** Starts the download in the background (once per voice); returns the current state. */
   async ensure(voice: string): Promise<ApiTaskVoice> {
     const entry = this.#entry(voice);
-    if (entry && !this.#jobs.has(voice) && !(await this.#ready(entry))) {
+    if (entry && !(await this.#ready(entry)) && !this.#jobs.has(voice)) {
       this.#errors.delete(voice);
       const job: Job = { progress: 0, done: Promise.resolve() };
       job.done = this.#download(voice, entry, job)

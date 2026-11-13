@@ -18,12 +18,13 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { Modal } from '../../components/ui/Modal.tsx';
 import { getLanguage, t as uiText, useLanguage } from '../../lib/i18n.ts';
-import { listenTask, taskKeys } from '../../state/tasks.ts';
+import { listenTask, syncTaskVoice, taskKeys } from '../../state/tasks.ts';
 import { addNotice } from '../../state/uiStore.ts';
 import '../../styles/tasks.css';
 import { ApiError, api } from '../api.ts';
 import { carLabel } from '../lib/labels.ts';
 import { useFetch } from '../useFetch.ts';
+import { TaskVoiceApproval } from './TaskVoiceApproval.tsx';
 import { ConfirmButton, Empty, ErrorBox, Loading, Tag } from './ui.tsx';
 
 const ANY_CAR = '';
@@ -693,6 +694,7 @@ export function TaskRow({
 }) {
   const language: Language = useLanguage();
   const [busy, setBusy] = useState(false);
+  const [showVoiceApproval, setShowVoiceApproval] = useState(false);
   const run = async (fn: () => Promise<unknown>, ok?: string) => {
     setBusy(true);
     try {
@@ -706,6 +708,16 @@ export function TaskRow({
     }
   };
   const status = (s: EngineerTask['status']) => run(() => api.patchTask(task.id, { status: s }));
+  const approve = async () => {
+    setBusy(true);
+    const voice = await syncTaskVoice();
+    if (voice?.status === 'ready') {
+      await status('active');
+      return;
+    }
+    setBusy(false);
+    setShowVoiceApproval(true);
+  };
   const proposed = task.status === 'proposed';
   const statusTag =
     task.status === 'active'
@@ -750,7 +762,7 @@ export function TaskRow({
             className="ui-btn"
             data-size="sm"
             disabled={busy}
-            onClick={() => void status('active')}
+            onClick={() => void approve()}
           >
             {uiText('Aprovar')}
           </button>
@@ -809,6 +821,15 @@ export function TaskRow({
           />
         )}
       </div>
+      {proposed && showVoiceApproval && (
+        <TaskVoiceApproval
+          onClose={() => setShowVoiceApproval(false)}
+          onApprove={() => {
+            setShowVoiceApproval(false);
+            void status('active');
+          }}
+        />
+      )}
     </li>
   );
 }

@@ -64,42 +64,51 @@ function apply(status: ApiTaskVoice): void {
   if (status.status === 'downloading') pollTimer = setTimeout(() => void syncTaskVoice(), 1200);
 }
 
-/**
- * Reads the state of the task voice of the voice in use and, when the driver allowed the
- * download and the voice is missing (a language or voice change), starts it in the background.
- */
-export async function syncTaskVoice(): Promise<void> {
+// Keep a read started by polling from replacing the result of a download action.
+let voiceRequest: Promise<ApiTaskVoice | null> = Promise.resolve(null);
+
+function requestTaskVoice(
+  request: (voice: string) => Promise<ApiTaskVoice>,
+  notifyError = false,
+): Promise<ApiTaskVoice | null> {
   const voice = voicePack();
-  if (!voice) return;
-  try {
-    let status = await api.taskVoice(voice);
-    if (status.enabled && status.status === 'idle') status = await api.downloadTaskVoice(voice);
-    apply(status);
-  } catch {
-    // offline or an old server: the tasks are then only shown on the panel
-  }
+  if (!voice) return Promise.resolve(null);
+  voiceRequest = voiceRequest.then(async () => {
+    if (voicePack() !== voice) return null;
+    try {
+      const status = await request(voice);
+      if (voicePack() !== voice) return null;
+      apply(status);
+      return status;
+    } catch (error) {
+      if (voicePack() !== voice) return null;
+      const current = useTasks.getState().voice;
+      if (current?.status === 'downloading') {
+        apply({ ...current, status: 'failed', progress: null, error: null });
+      }
+      if (notifyError) addNotice('warn', (error as Error).message);
+      return null;
+    }
+  });
+  return voiceRequest;
+}
+
+/** Reads the selected voice and starts a missing download if the driver already opted in. */
+export function syncTaskVoice(): Promise<ApiTaskVoice | null> {
+  return requestTaskVoice(async (voice) => {
+    const status = await api.taskVoice(voice);
+    return status.enabled && status.status === 'idle' ? api.downloadTaskVoice(voice) : status;
+  });
 }
 
 /** The driver allows (or stops) the download of the task voice. */
-export async function setTaskVoiceEnabled(enabled: boolean): Promise<void> {
-  const voice = voicePack();
-  if (!voice) return;
-  try {
-    apply(await api.setTaskVoiceEnabled(enabled, voice));
-  } catch (e) {
-    addNotice('warn', (e as Error).message);
-  }
+export function setTaskVoiceEnabled(enabled: boolean): Promise<ApiTaskVoice | null> {
+  return requestTaskVoice((voice) => api.setTaskVoiceEnabled(enabled, voice), true);
 }
 
 /** Downloads again after a failure. */
-export async function retryTaskVoice(): Promise<void> {
-  const voice = voicePack();
-  if (!voice) return;
-  try {
-    apply(await api.downloadTaskVoice(voice));
-  } catch (e) {
-    addNotice('warn', (e as Error).message);
-  }
+export function retryTaskVoice(): Promise<ApiTaskVoice | null> {
+  return requestTaskVoice(api.downloadTaskVoice, true);
 }
 
 let started = false;

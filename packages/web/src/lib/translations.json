@@ -5105,6 +5105,20 @@
     "This voice has no spoken tasks yet.",
     "Esta voz aún no tiene tareas habladas."
   ],
+  "Áudio das tarefas": ["Task audio", "Audio de las tareas"],
+  "Iniciando download…": ["Starting download…", "Iniciando la descarga…"],
+  "Aprovar sem áudio": ["Approve without audio", "Aprobar sin audio"],
+  "Aprovar quando terminar": ["Approve when finished", "Aprobar al terminar"],
+  "Baixar e aprovar": ["Download and approve", "Descargar y aprobar"],
+  "Baixar e aprovar ({0})": ["Download and approve ({0})", "Descargar y aprobar ({0})"],
+  "A tarefa será aprovada quando o áudio estiver pronto.": [
+    "The task will be approved when the audio is ready.",
+    "La tarea se aprobará cuando el audio esté listo."
+  ],
+  "O Bono baixa o áudio da voz em uso para o engenheiro falar esta tarefa no rádio.": [
+    "Bono downloads the selected voice so the engineer can say this task over the radio.",
+    "Bono descarga la voz seleccionada para que el ingeniero diga esta tarea por radio."
+  ],
   "Pronta": ["Ready", "Lista"],
   "Desligar o download": ["Turn the download off", "Desactivar la descarga"],
   "Baixando… {0}%": ["Downloading… {0}%", "Descargando… {0}%"],

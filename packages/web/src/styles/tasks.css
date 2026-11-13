@@ -118,3 +118,17 @@
   height: 100%;
   background: var(--accent);
 }
+
+@media (max-width: 640px) {
+  .tk-approval-modal .ui-modal-foot {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--sp-3);
+    padding-bottom: max(var(--sp-4), var(--safe-b));
+  }
+  .tk-approval-modal .ui-modal-foot .ui-btn {
+    min-height: var(--tap);
+    white-space: normal;
+    text-align: center;
+  }
+}

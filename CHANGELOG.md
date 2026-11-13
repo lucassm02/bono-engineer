@@ -7,6 +7,10 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- When approving an engineer task, download the selected voice and follow its progress in the same dialog. You can also approve the task without audio.
+
 ## [0.8.0] - 2026-11-13
 
 ### Added

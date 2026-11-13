@@ -66,7 +66,11 @@ async function makeApp(baseUrl: string): Promise<{ server: Gt7Server; dir: strin
 
 describe('the downloaded voice of the tasks', () => {
   it('downloads nothing until the driver allows it, then fetches, checks and serves the file', async () => {
-    const base = await releaseServer(() => AUDIO);
+    let downloads = 0;
+    const base = await releaseServer(() => {
+      downloads += 1;
+      return AUDIO;
+    });
     const { server } = await makeApp(base);
     const { app, taskVoice } = server;
 
@@ -81,13 +85,20 @@ describe('the downloaded voice of the tasks', () => {
     });
     expect(refused.statusCode).toBe(409);
 
-    const on = await app.inject({
-      method: 'PUT',
-      url: '/api/tasks/voice',
-      payload: { enabled: true, voice: 'alex' },
-    });
-    expect(['downloading', 'ready']).toContain(on.json<ApiTaskVoice>().status);
+    const attempts = await Promise.all(
+      Array.from({ length: 2 }, () =>
+        app.inject({
+          method: 'PUT',
+          url: '/api/tasks/voice',
+          payload: { enabled: true, voice: 'alex' },
+        }),
+      ),
+    );
+    for (const response of attempts) {
+      expect(['downloading', 'ready']).toContain(response.json<ApiTaskVoice>().status);
+    }
     await taskVoice.settled('alex');
+    expect(downloads).toBe(1);
     const ready = (
       await app.inject({ method: 'GET', url: '/api/tasks/voice?voice=alex' })
     ).json<ApiTaskVoice>();
