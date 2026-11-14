@@ -67,14 +67,17 @@ describe('RaceTracker on two real online races', () => {
       [5, 15, 4],
       [6, 12, 4],
     ]);
-    expect(f.map((s) => Math.round(atS(s)))).toEqual([788, 1951]);
+    // the lap counter passed lap 4 at 766 s (race 1) and 1940 s (race 2); the results began 22 s and
+    // 11 s later (totalLaps back to 0), and the position can still move in between
+    expect(f.map((s) => Math.round((s.flagAt - T0) / 1000))).toEqual([766, 1940]);
   });
 
   it('follows the stable position of race 2: P3 → P10 on lap 1, then back to P6', () => {
     const second = of('position').filter((s) => s.stable && atS(s) > 1375);
     expect(second[0]).toMatchObject({ from: 3, to: 4, lap: 1 });
     expect(second.some((s) => s.to === 10 && s.lap === 1)).toBe(true);
-    expect(second.at(-1)!.to).toBe(6);
+    // the last position held during the race is P7; the P6 of the result comes after the flag
+    expect(second.at(-1)!.to).toBe(7);
   });
 
   it('counts the cars that left the race (15 → 12 in race 2)', () => {
@@ -151,6 +154,205 @@ describe('RaceTracker rules', () => {
     expect(out.map((s) => s.type)).toEqual(['finish']);
     expect(t.live?.state).toBe('finished');
     expect(t.displayLap(5)).toBe(4);
+  });
+
+  it('against the AI the flag keeps totalLaps: the counter is held at once, the result is fixed when the car leaves the track', () => {
+    // measured: lap 6 of 5 with totalLaps still 5 until the menu, 9 s later
+    const t = new RaceTracker();
+    t.update(input({ at: T0, totalLaps: 5, lapCount: 0, position: 16, cars: 16 }));
+    t.update(
+      input({ at: T0 + 1000, totalLaps: 5, lapCount: 1, position: 16, cars: 16, speedMps: 40 }),
+    );
+    const flag = t.update(
+      input({ at: T0 + 60_000, totalLaps: 5, lapCount: 6, position: 2, cars: 16, speedMps: 45 }),
+    );
+    expect(flag).toEqual([]); // nothing is final yet
+    expect(t.latched).toBe(true);
+    expect(t.displayLap(6)).toBe(5);
+    // the others cross the line: the position moves
+    t.update(
+      input({ at: T0 + 62_000, totalLaps: 5, lapCount: 6, position: 3, cars: 16, speedMps: 45 }),
+    );
+    // the results screen / the replay: off the track, with the grid-looking values
+    const end = t.update(
+      input({ at: T0 + 69_000, totalLaps: 5, lapCount: 0, position: 16, cars: 16, onTrack: false }),
+    );
+    expect(end).toHaveLength(1);
+    expect(end[0]).toMatchObject({ type: 'finish', position: 3, cars: 16, totalLaps: 5 });
+    expect((end[0] as { flagAt: number }).flagAt).toBe(T0 + 60_000);
+  });
+
+  it('the grid-looking packets of the results screen are not the result', () => {
+    const t = new RaceTracker();
+    t.update(input({ at: T0, totalLaps: 4, lapCount: 1, position: 4, cars: 15, speedMps: 40 }));
+    t.update(
+      input({ at: T0 + 1000, totalLaps: 4, lapCount: 5, position: 5, cars: 15, speedMps: 40 }),
+    );
+    // totalLaps back to 0 with the position of the results grid
+    const out = t.update(
+      input({ at: T0 + 15_000, totalLaps: 0, lapCount: 5, position: 2, cars: 14 }),
+    );
+    expect(out[0]).toMatchObject({ type: 'finish', position: 5, cars: 15 });
+  });
+
+  it('a restart (lap counter back to 0, same totalLaps) begins a new attempt', () => {
+    // measured: lap 5 → 0, P3 → P16, totalLaps 5 → 5, a loading flicker and the car back at 80 km/h
+    const t = new RaceTracker();
+    t.update(input({ at: T0, totalLaps: 5, lapCount: 0, position: 16, cars: 16 }));
+    for (const [ms, lap, pos] of [
+      [1000, 1, 16],
+      [60_000, 3, 5],
+      [200_000, 5, 3],
+    ] as const) {
+      t.update(
+        input({ at: T0 + ms, totalLaps: 5, lapCount: lap, position: pos, cars: 16, speedMps: 40 }),
+      );
+    }
+    // the loading packet comes first: on the track but loading (no signal yet)
+    t.update(
+      input({
+        at: T0 + 209_900,
+        totalLaps: 5,
+        lapCount: 0,
+        position: 16,
+        cars: 16,
+        onTrack: false,
+        loading: true,
+        speedMps: 22,
+      }),
+    );
+    const out = t.update(
+      input({ at: T0 + 210_000, totalLaps: 5, lapCount: 0, position: 16, cars: 16, speedMps: 22 }),
+    );
+    expect(out).toHaveLength(1);
+    expect(out[0]).toMatchObject({
+      type: 'start',
+      restartedFromLap: 5,
+      midRace: false,
+      totalLaps: 5,
+    });
+    expect(t.state).toBe('racing');
+    expect(t.live?.startPosition).toBeNull(); // read again once the car moves
+    const after = t.update(
+      input({ at: T0 + 211_000, totalLaps: 5, lapCount: 0, position: 16, cars: 16, speedMps: 22 }),
+    );
+    expect(after[0]).toMatchObject({ type: 'startPosition', position: 16 });
+  });
+
+  it('a restart before the first crossing of the line (the counter stays 0) is seen by the loading flicker', () => {
+    const t = new RaceTracker();
+    t.update(input({ at: T0, totalLaps: 5, lapCount: 0, position: 16, cars: 16, speedMps: 22 }));
+    t.update(
+      input({ at: T0 + 3000, totalLaps: 5, lapCount: 0, position: 14, cars: 16, speedMps: 40 }),
+    );
+    // 9 s into the rolling start, before the line: the driver restarts
+    t.update(
+      input({
+        at: T0 + 9000,
+        totalLaps: 5,
+        lapCount: 0,
+        position: 16,
+        cars: 16,
+        onTrack: false,
+        loading: true,
+        speedMps: 22,
+      }),
+    );
+    const out = t.update(
+      input({ at: T0 + 9500, totalLaps: 5, lapCount: 0, position: 16, cars: 16, speedMps: 22 }),
+    );
+    expect(out).toHaveLength(1);
+    expect(out[0]).toMatchObject({ type: 'start', restartedFromLap: 0, totalLaps: 5 });
+    // and the same flicker never restarts it again
+    const next = t.update(
+      input({ at: T0 + 9600, totalLaps: 5, lapCount: 0, position: 16, cars: 16, speedMps: 22 }),
+    );
+    expect(next.some((s) => s.type === 'start')).toBe(false);
+  });
+
+  it('the loading flicker of the start itself is not a restart', () => {
+    const t = new RaceTracker();
+    t.update(input({ at: T0, totalLaps: 5, lapCount: 0, position: 1, cars: 16, speedMps: 36 }));
+    t.update(
+      input({
+        at: T0 + 300,
+        totalLaps: 5,
+        lapCount: 0,
+        position: 16,
+        cars: 16,
+        onTrack: false,
+        loading: true,
+      }),
+    );
+    const out = t.update(
+      input({ at: T0 + 800, totalLaps: 5, lapCount: 0, position: 16, cars: 16, speedMps: 22 }),
+    );
+    expect(out.some((s) => s.type === 'start')).toBe(false);
+  });
+
+  it('reads the grid slot after the loading flicker, not the stale position before it', () => {
+    // measured: the first packets said P1 (the lobby) for a second, then the real slot P16
+    const t = new RaceTracker();
+    t.update(input({ at: T0, totalLaps: 5, lapCount: 0, position: 1, cars: 16, speedMps: 36 }));
+    expect(t.live?.startPosition).toBeNull();
+    t.update(
+      input({
+        at: T0 + 20,
+        totalLaps: 5,
+        lapCount: 0,
+        position: 16,
+        cars: 16,
+        onTrack: false,
+        loading: true,
+        speedMps: 22,
+      }),
+    );
+    const out = t.update(
+      input({ at: T0 + 600, totalLaps: 5, lapCount: 0, position: 16, cars: 16, speedMps: 22 }),
+    );
+    expect(out.find((s) => s.type === 'startPosition')).toMatchObject({ position: 16 });
+  });
+
+  it('stale race packets after the flag, interleaved with the menu, never start another race', () => {
+    // measured: totalLaps flips between -1 (menu) and 5 (the old stream, lap 6) for several seconds
+    const t = new RaceTracker();
+    t.update(input({ at: T0, totalLaps: 5, lapCount: 1, position: 2, cars: 16, speedMps: 40 }));
+    t.update(
+      input({ at: T0 + 1000, totalLaps: 5, lapCount: 6, position: 2, cars: 16, speedMps: 40 }),
+    );
+    const sig: RaceSignal[] = [];
+    for (let k = 0; k < 6; k++) {
+      sig.push(
+        ...t.update(
+          input({
+            at: T0 + 9000 + k * 100,
+            totalLaps: -1,
+            lapCount: -1,
+            onTrack: false,
+            position: -1,
+            cars: -1,
+          }),
+        ),
+      );
+      sig.push(
+        ...t.update(
+          input({ at: T0 + 9050 + k * 100, totalLaps: 5, lapCount: 6, position: 2, cars: 16 }),
+        ),
+      );
+    }
+    expect(sig.filter((s) => s.type === 'start')).toEqual([]);
+    expect(sig.filter((s) => s.type === 'finish')).toHaveLength(1);
+    expect(t.latched).toBe(true);
+  });
+
+  it('a lap counter that is 0 in a replay of the race (not on the track) is not a restart', () => {
+    const t = new RaceTracker();
+    t.update(input({ at: T0, totalLaps: 5, lapCount: 3, position: 4, cars: 16, speedMps: 40 }));
+    const out = t.update(
+      input({ at: T0 + 100, totalLaps: 5, lapCount: 0, position: 16, cars: 16, onTrack: false }),
+    );
+    expect(out).toEqual([]);
+    expect(t.state).toBe('racing');
   });
 
   it('a race left through the menu is not a finish', () => {

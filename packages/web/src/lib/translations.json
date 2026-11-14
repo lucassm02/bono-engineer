@@ -5206,6 +5206,11 @@
   "{0} impactos": ["{0} impacts", "{0} impactos"],
   "Bandeirada · {0}/{1}": ["Chequered flag · {0}/{1}", "Bandera a cuadros · {0}/{1}"],
   "P{0}/{1}": ["P{0}/{1}", "P{0}/{1}"],
+  "No box · stint {0}": ["In the pits · stint {0}", "En boxes · stint {0}"],
+  "stint {0}": ["stint {0}", "stint {0}"],
+  "ritmo médio": ["average pace", "ritmo medio"],
+  "Stint {0}": ["Stint {0}", "Stint {0}"],
+  "{0} s no box antes": ["{0} s in the pits before", "{0} s en boxes antes"],
   "P{0}": ["P{0}", "P{0}"],
   "largou em P{0}, terminou em P{1}": [
     "started P{0}, finished P{1}",
@@ -5222,5 +5227,10 @@
     "Las carreras se reconocen solas. Para las demás, la app pregunta al guardar o las marca como elijas."
   ],
   "Perguntar ao salvar": ["Ask when saving", "Preguntar al guardar"],
-  "Preferência salva.": ["Preference saved.", "Preferencia guardada."]
+  "Preferência salva.": ["Preference saved.", "Preferencia guardada."],
+  "Corrida reiniciada": ["Race restarted", "Carrera reiniciada"],
+  "Reiniciada: a corrida seguinte está em outra sessão": [
+    "Restarted: the next attempt is in another session",
+    "Reiniciada: el siguiente intento está en otra sesión"
+  ]
 }

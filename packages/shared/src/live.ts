@@ -411,6 +411,16 @@ export interface LiveFrame {
   goal?: LiveGoal;
   /** The corner drill in progress; omitted otherwise. (core, additive) */
   drill?: LiveDrill;
+  /**
+   * The stint of the session (spec 09), once the car has been in the pits (or is there now);
+   * omitted before. (core, additive)
+   */
+  stint?: { number: number; inPits: boolean };
+  /**
+   * Position among the cars of a practice or qualifying with traffic (it ranks the best laps of
+   * the lobby); omitted in a race and when alone on the track. (core, additive)
+   */
+  ranking?: { position: number; cars: number };
   /** The active engineer tasks of this track and car (spec 20); omitted while there are none. (core, additive) */
   tasks?: LiveTask[];
   /** The race in progress or just finished (spec 21); omitted outside a race. (core, additive) */

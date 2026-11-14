@@ -93,6 +93,11 @@ export function RaceResult({ session }: { session: Session }) {
               {gainedText(gained)}
             </span>
           )}
+          {events.some((e) => e.kind === 'restart') && (
+            <span className="race-gain">
+              {uiText('Reiniciada: a corrida seguinte está em outra sessão')}
+            </span>
+          )}
           {total > 0 && (
             <span className="race-gain" data-tone="loss">
               {total === 1 ? uiText('1 impacto') : uiText('{0} impactos', total)}

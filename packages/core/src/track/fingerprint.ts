@@ -166,7 +166,11 @@ export function compareFingerprints(
   let shapeRmsRad = Number.POSITIVE_INFINITY;
   if (a.shapeVersion === b.shapeVersion && a.shape.length === b.shape.length && a.shape.length) {
     let acc = 0;
-    for (let i = 0; i < a.shape.length; i++) acc += (a.shape[i]! - b.shape[i]!) ** 2;
+    // The signature is a running sum of heading changes: at a hairpin one lap can gain a whole
+    // turn (2π) more than the same circuit driven another time, and that offset then carries to the
+    // end (seen on two laps of Trial Mountain: constant -6.27 rad, a second "track" was created).
+    // Only the difference modulo 2π says anything about the shape.
+    for (let i = 0; i < a.shape.length; i++) acc += wrapAngle(a.shape[i]! - b.shape[i]!) ** 2;
     shapeRmsRad = Math.sqrt(acc / a.shape.length);
   }
   const terms = [

@@ -119,7 +119,15 @@ export interface Session {
 }
 
 /** Something that happened during a race, stored with its session (spec 21). */
-export type SessionEventKind = 'grid' | 'position' | 'cars' | 'impact' | 'finish';
+export type SessionEventKind =
+  | 'grid'
+  | 'position'
+  | 'cars'
+  | 'impact'
+  | 'finish'
+  | 'restart'
+  /** A visit to the pits (spec 09): `at` is the arrival, `data.exitAt` the departure. */
+  | 'pit';
 
 export interface SessionEvent {
   id: Id;
@@ -131,7 +139,7 @@ export interface SessionEvent {
   lap: number;
   /** Distance along the lap in meters, null when unknown. */
   distanceM: number | null;
-  /** Kind-specific: from/to (position, cars); dvMs2, speedBeforeKmh, speedAfterKmh (impact). */
+  /** Kind-specific: from/to (position, cars); dvMs2, speedBeforeKmh, speedAfterKmh (impact); exitAt (pit). */
   data: Record<string, number | boolean | string | null>;
 }
 

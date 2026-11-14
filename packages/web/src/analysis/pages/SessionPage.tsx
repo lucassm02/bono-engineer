@@ -3,8 +3,8 @@
  * actions per lap (compare with my best, set as reference, delete), downloads and delete session.
  */
 
-import type { Lap } from '@gt7/shared';
-import { type ReactNode, useMemo, useState } from 'react';
+import { type Lap, type Stint, stintOfLaps } from '@gt7/shared';
+import { Fragment, type ReactNode, useMemo, useState } from 'react';
 import { Icon } from '../../components/ui/Icon.tsx';
 import { humanizeError } from '../../lib/copy.ts';
 import { formatDelta, formatLapTime, formatSectorTime } from '../../lib/format.ts';
@@ -135,6 +135,26 @@ function ReferenceForm({
   );
 }
 
+/** Header of a stint inside the table of laps: its laps, its best lap and how long the box took. */
+function StintRow({ stint, colSpan }: { stint: Stint; colSpan: number }) {
+  const parts = [
+    plural(stint.lapCount, uiText('volta'), uiText('voltas')),
+    stint.bestLapMs !== null ? `${uiText('melhor')} ${formatLapTime(stint.bestLapMs)}` : null,
+    stint.avgLapMs !== null ? `${uiText('ritmo médio')} ${formatLapTime(stint.avgLapMs)}` : null,
+    stint.pitMs !== null ? uiText('{0} s no box antes', Math.round(stint.pitMs / 1000)) : null,
+  ].filter((x): x is string => x !== null);
+  return (
+    <tr className="a-stint-row">
+      <td colSpan={colSpan}>
+        <div className="a-stint-head">
+          <strong>{uiText('Stint {0}', stint.number)}</strong>
+          <span>{parts.join(' · ')}</span>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
 export function SessionPage({ id }: { id: string }) {
   const detail = useFetch(`session:${id}`, () => api.session(id), 10000);
   const trackId = detail.data?.session.trackId ?? null;
@@ -159,6 +179,8 @@ export function SessionPage({ id }: { id: string }) {
   useTitle(uiText('Sessão'));
 
   const laps = detail.data?.laps ?? [];
+  const stints = detail.data?.stints ?? [];
+  const stintOf = useMemo(() => stintOfLaps(stints), [stints]);
   const best = useMemo(() => bestSectors(laps), [laps]);
   const bestLap = useMemo(
     () =>
@@ -359,163 +381,169 @@ export function SessionPage({ id }: { id: string }) {
               </tr>
             </thead>
             <tbody>
-              {laps.map((l) => {
+              {laps.map((l, idx) => {
+                const stint =
+                  stints.length > 1 ? stints.find((s) => s.number === stintOf.get(l.id)) : null;
+                const prevStint = idx > 0 ? stintOf.get(laps[idx - 1]!.id) : undefined;
+                const stintHead = stint && stint.number !== prevStint ? stint : null;
                 const sel = selected.indexOf(l.id);
                 const isBest = bestLap?.id === l.id;
                 const badFlags = l.flags.filter((f) => !INFO_FLAGS.has(f));
                 const infoFlags = l.flags.filter((f) => INFO_FLAGS.has(f));
                 return (
-                  <FragmentRows
-                    key={l.id}
-                    editing={editing === l.id}
-                    colSpan={5 + sectorCount}
-                    form={
-                      <ReferenceForm
-                        lap={l}
-                        onCancel={() => setEditing(null)}
-                        onDone={(saved) => {
-                          replaceLap(saved);
-                          setEditing(null);
-                          addNotice('info', uiText('Volta marcada como referência.'));
-                        }}
-                      />
-                    }
-                  >
-                    <tr
-                      data-selected={sel >= 0 ? '1' : '0'}
-                      data-invalid={l.valid ? '0' : '1'}
-                      data-best={isBest ? '1' : '0'}
+                  <Fragment key={l.id}>
+                    {stintHead && <StintRow stint={stintHead} colSpan={5 + sectorCount} />}
+                    <FragmentRows
+                      editing={editing === l.id}
+                      colSpan={5 + sectorCount}
+                      form={
+                        <ReferenceForm
+                          lap={l}
+                          onCancel={() => setEditing(null)}
+                          onDone={(saved) => {
+                            replaceLap(saved);
+                            setEditing(null);
+                            addNotice('info', uiText('Volta marcada como referência.'));
+                          }}
+                        />
+                      }
                     >
-                      <td>
-                        <label className="a-check">
-                          <input
-                            type="checkbox"
-                            checked={sel >= 0}
-                            disabled={sel < 0 && selected.length >= MAX_SELECTED}
-                            onChange={() => toggle(l.id)}
-                            aria-label={uiText('Selecionar volta {0}', l.number)}
-                          />
-                          {sel >= 0 && <span className="a-check-n">{sel + 1}</span>}
-                        </label>
-                      </td>
-                      <td className="num num-col a-lap-n" data-label="Volta">
-                        {l.number}
-                      </td>
-                      <td className="num num-col">
-                        <span data-best={isBest ? '1' : '0'} className="a-laptime">
-                          {formatLapTime(l.timeMs)}
-                        </span>
-                      </td>
-                      {Array.from({ length: sectorCount }, (_, k) => {
-                        const v = l.sectorTimesMs[k] ?? null;
-                        const purple = l.valid && v !== null && v === best[k];
-                        const sectorKey = `S${k + 1}`;
-                        return (
-                          <td
-                            key={sectorKey}
-                            className="num num-col"
-                            data-label={`S${k + 1}`}
-                            data-sector={purple ? 'best' : ''}
-                          >
-                            {formatSectorTime(v)}
-                          </td>
-                        );
-                      })}
-                      <td className="a-lap-status">
-                        <div className="a-laptags">
-                          {l.valid ? (
-                            <Tag tone="sb">{uiText('válida')}</Tag>
-                          ) : (
-                            <Tag
-                              tone="bad"
-                              title={badFlags.map((f) => LAP_FLAG_LABELS[f]).join(', ')}
+                      <tr
+                        data-selected={sel >= 0 ? '1' : '0'}
+                        data-invalid={l.valid ? '0' : '1'}
+                        data-best={isBest ? '1' : '0'}
+                      >
+                        <td>
+                          <label className="a-check">
+                            <input
+                              type="checkbox"
+                              checked={sel >= 0}
+                              disabled={sel < 0 && selected.length >= MAX_SELECTED}
+                              onChange={() => toggle(l.id)}
+                              aria-label={uiText('Selecionar volta {0}', l.number)}
+                            />
+                            {sel >= 0 && <span className="a-check-n">{sel + 1}</span>}
+                          </label>
+                        </td>
+                        <td className="num num-col a-lap-n" data-label="Volta">
+                          {l.number}
+                        </td>
+                        <td className="num num-col">
+                          <span data-best={isBest ? '1' : '0'} className="a-laptime">
+                            {formatLapTime(l.timeMs)}
+                          </span>
+                        </td>
+                        {Array.from({ length: sectorCount }, (_, k) => {
+                          const v = l.sectorTimesMs[k] ?? null;
+                          const purple = l.valid && v !== null && v === best[k];
+                          const sectorKey = `S${k + 1}`;
+                          return (
+                            <td
+                              key={sectorKey}
+                              className="num num-col"
+                              data-label={`S${k + 1}`}
+                              data-sector={purple ? 'best' : ''}
                             >
-                              {uiText('inválida')}
-                            </Tag>
-                          )}
-                          {isBest && <Tag tone="pb">{uiText('melhor da sessão')}</Tag>}
-                          {l.flags.includes('outLap') && (
-                            <Tag
-                              tone="warn"
-                              title={uiText(
-                                'Saiu dos boxes ou do grid: volta lenta, não conta como volta lançada',
-                              )}
-                            >
-                              {uiText('volta de saída')}
-                            </Tag>
-                          )}
-                          {l.flags.includes('inLap') && (
-                            <Tag
-                              tone="warn"
-                              title={uiText('Terminou nos boxes ou no fim da sessão')}
-                            >
-                              {uiText('volta de entrada')}
-                            </Tag>
-                          )}
-                          {badFlags
-                            .filter((f) => f !== 'outLap' && f !== 'inLap')
-                            .map((f) => (
-                              <span key={f} className="a-flag">
+                              {formatSectorTime(v)}
+                            </td>
+                          );
+                        })}
+                        <td className="a-lap-status">
+                          <div className="a-laptags">
+                            {l.valid ? (
+                              <Tag tone="sb">{uiText('válida')}</Tag>
+                            ) : (
+                              <Tag
+                                tone="bad"
+                                title={badFlags.map((f) => LAP_FLAG_LABELS[f]).join(', ')}
+                              >
+                                {uiText('inválida')}
+                              </Tag>
+                            )}
+                            {isBest && <Tag tone="pb">{uiText('melhor da sessão')}</Tag>}
+                            {l.flags.includes('outLap') && (
+                              <Tag
+                                tone="warn"
+                                title={uiText(
+                                  'Saiu dos boxes ou do grid: volta lenta, não conta como volta lançada',
+                                )}
+                              >
+                                {uiText('volta de saída')}
+                              </Tag>
+                            )}
+                            {l.flags.includes('inLap') && (
+                              <Tag
+                                tone="warn"
+                                title={uiText('Terminou nos boxes ou no fim da sessão')}
+                              >
+                                {uiText('volta de entrada')}
+                              </Tag>
+                            )}
+                            {badFlags
+                              .filter((f) => f !== 'outLap' && f !== 'inLap')
+                              .map((f) => (
+                                <span key={f} className="a-flag">
+                                  {LAP_FLAG_LABELS[f]}
+                                </span>
+                              ))}
+                            {infoFlags.map((f) => (
+                              <span key={f} className="a-flag a-flag-info">
                                 {LAP_FLAG_LABELS[f]}
                               </span>
                             ))}
-                          {infoFlags.map((f) => (
-                            <span key={f} className="a-flag a-flag-info">
-                              {LAP_FLAG_LABELS[f]}
-                            </span>
-                          ))}
-                          {l.isReference && (
-                            <Tag tone="ref" title={l.referenceMeta?.notes ?? undefined}>
-                              {`${uiText('referência ·')} `}
-                              {l.referenceMeta?.driverName ?? uiText('referência')}
-                              {l.referenceMeta?.rankingTimeMs
-                                ? ` (${formatLapTime(l.referenceMeta.rankingTimeMs)})`
-                                : ''}
-                            </Tag>
-                          )}
-                        </div>
-                      </td>
-                      <td className="a-lap-actions">
-                        <LapQuickActions
-                          lap={l}
-                          pbLapId={pb.data?.id ?? null}
-                          hasTopReference={(refs.data?.length ?? 0) > 0}
-                          onChanged={replaceLap}
-                          onDeleted={() => {
-                            setSelected((x) => x.filter((y) => y !== l.id));
-                            detail.reload();
-                            pb.reload();
-                          }}
-                          extra={
-                            <>
-                              {!l.isReference && (
-                                <button
-                                  type="button"
+                            {l.isReference && (
+                              <Tag tone="ref" title={l.referenceMeta?.notes ?? undefined}>
+                                {`${uiText('referência ·')} `}
+                                {l.referenceMeta?.driverName ?? uiText('referência')}
+                                {l.referenceMeta?.rankingTimeMs
+                                  ? ` (${formatLapTime(l.referenceMeta.rankingTimeMs)})`
+                                  : ''}
+                              </Tag>
+                            )}
+                          </div>
+                        </td>
+                        <td className="a-lap-actions">
+                          <LapQuickActions
+                            lap={l}
+                            pbLapId={pb.data?.id ?? null}
+                            hasTopReference={(refs.data?.length ?? 0) > 0}
+                            onChanged={replaceLap}
+                            onDeleted={() => {
+                              setSelected((x) => x.filter((y) => y !== l.id));
+                              detail.reload();
+                              pb.reload();
+                            }}
+                            extra={
+                              <>
+                                {!l.isReference && (
+                                  <button
+                                    type="button"
+                                    role="menuitem"
+                                    className="a-menu-item"
+                                    onClick={() => setEditing(l.id)}
+                                  >
+                                    {uiText('Referência com detalhes…')}
+                                  </button>
+                                )}
+                                <a
                                   role="menuitem"
-                                  className="a-menu-item"
-                                  onClick={() => setEditing(l.id)}
+                                  href={routes.coach({ session: session.id, lap: l.id })}
                                 >
-                                  {uiText('Referência com detalhes…')}
-                                </button>
-                              )}
-                              <a
-                                role="menuitem"
-                                href={routes.coach({ session: session.id, lap: l.id })}
-                              >
-                                {uiText('Debrief desta volta')}
-                              </a>
-                              <a role="menuitem" href={urls.lapCsv(l.id)} download>
-                                {uiText('Baixar CSV')}
-                              </a>
-                              <a role="menuitem" href={urls.lapTrace(l.id)} download>
-                                {uiText('Baixar trace (JSON)')}
-                              </a>
-                            </>
-                          }
-                        />
-                      </td>
-                    </tr>
-                  </FragmentRows>
+                                  {uiText('Debrief desta volta')}
+                                </a>
+                                <a role="menuitem" href={urls.lapCsv(l.id)} download>
+                                  {uiText('Baixar CSV')}
+                                </a>
+                                <a role="menuitem" href={urls.lapTrace(l.id)} download>
+                                  {uiText('Baixar trace (JSON)')}
+                                </a>
+                              </>
+                            }
+                          />
+                        </td>
+                      </tr>
+                    </FragmentRows>
+                  </Fragment>
                 );
               })}
             </tbody>

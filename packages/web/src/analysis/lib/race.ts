@@ -71,7 +71,7 @@ export function positionSeries(events: readonly SessionEvent[]): PositionPoint[]
 export interface TimelineRow {
   id: string;
   lap: number;
-  kind: 'position' | 'cars' | 'impact' | 'finish';
+  kind: 'position' | 'cars' | 'impact' | 'finish' | 'restart';
   tone: 'gain' | 'loss' | 'neutral';
   text: string;
 }
@@ -113,6 +113,14 @@ export function timelineRows(events: readonly SessionEvent[]): TimelineRow[] {
         kind: 'impact',
         tone: 'loss',
         text: `${uiText('Impacto')}${where}${speed}`,
+      });
+    } else if (e.kind === 'restart') {
+      rows.push({
+        id: e.id,
+        lap: e.lap,
+        kind: 'restart',
+        tone: 'neutral',
+        text: uiText('Corrida reiniciada'),
       });
     } else if (e.kind === 'finish') {
       rows.push({

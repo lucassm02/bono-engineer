@@ -99,6 +99,7 @@ import {
 } from './corner-hints.ts';
 import { DeltaReference, type StoredLap } from './delta-reference.ts';
 import { GForceEstimator, headingOf } from './gforce.ts';
+import { PitTracker } from './pit-tracker.ts';
 import { type RaceSignal, RaceTracker } from './race-tracker.ts';
 
 export const NOMINAL_MS_PER_PACKET = 1000 / 60;
@@ -117,7 +118,13 @@ const PASS_REVIEW_AFTER_EXIT_M = 80;
 /** Corner pass reviews carried by each frame (the radio accumulates them by id). */
 const PASSES_IN_FRAME = 2;
 /** Flags that make a lap invalid. */
-const INVALIDATING: readonly LapFlag[] = ['paused', 'incompleteData', 'discontinuity', 'offTrack'];
+const INVALIDATING: readonly LapFlag[] = [
+  'paused',
+  'incompleteData',
+  'discontinuity',
+  'offTrack',
+  'outLap',
+];
 
 /** A "moving" car (m/s) whose position does not change for this long is a frozen stream. */
 const FROZEN_MIN_SPEED_MPS = 2;
@@ -129,6 +136,14 @@ const FROZEN_END_MS = 30_000;
 const REPLAY_MIN_SPEED_MPS = 2;
 /** The session of a finished race closes at the latest this long after the flag (ms). */
 const RACE_CLOSE_MAX_WAIT_MS = 10_000;
+/** A race in progress that is paused keeps its session this long (ms). */
+const RACE_PAUSE_MAX_MS = 2 * 60 * 60_000;
+/** Time with other cars around (no race) before the session is suggested as a practice (ms). */
+const TRAFFIC_MIN_MS = 15_000;
+/** Fewer cars than this is a time trial (the ghost counts as the second one). */
+const TRAFFIC_MIN_CARS = 3;
+/** Only a moving car counts: in a lobby the car waits on the grid (m/s). */
+const TRAFFIC_MIN_SPEED_MPS = 8;
 
 /** Identical positions for this many packets while "moving" = the replay is stalled (paused). */
 const REPLAY_STALL_PACKETS = 4;
@@ -231,7 +246,9 @@ export type SessionEndReason =
   /** A race began (the game's totalLaps appeared): its laps get a session of their own. */
   | 'raceStart'
   /** The chequered flag fell. */
-  | 'raceFinished';
+  | 'raceFinished'
+  /** The driver restarted the race: the attempt ends and the new one gets its own session. */
+  | 'raceRestart';
 
 export interface SessionEndInfo {
   reason: SessionEndReason;
@@ -310,6 +327,8 @@ interface PendingClose {
   lap: LapState;
   countedMs: number;
   prevGameLast: number;
+  /** The game's own best lap before this one closed (-1 when it had none). */
+  prevGameBest: number;
   waited: number;
 }
 
@@ -474,14 +493,28 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   #replayPath = new ReplayPathTracker();
   /** The race in progress (spec 21): flag, position, cars, impacts. */
   #race = new RaceTracker();
+  /** Visits to the pits of the session (spec 09): the stint is 1 + the visits so far. */
+  #pit = new PitTracker();
+  #stint = 1;
+  /** The car left the pits and no lap has closed since: that lap is an out lap if the game did not count it. */
+  #pitOutPending = false;
+  /**
+   * Time on the track with other cars around and no race (the free practice and the qualifying of
+   * a Sport Mode lobby): the packet still carries a position and the number of cars, which then
+   * rank the best laps. Such a session is practice or qualifying, never a time trial alone.
+   */
+  #trafficMs = 0;
+  #ranking: { position: number; cars: number } | null = null;
   /** What the open race session is annotated with (also applied to a session that opens later). */
   #raceMeta: {
     totalLaps: number;
     fieldSize: number | null;
     startPosition: number | null;
   } | null = null;
-  /** Epoch ms of the flag: the session closes once its last lap is finalized. */
+  /** Epoch ms when the result was fixed: the session closes once its last lap is finalized. */
   #closeAfterFinishAt: number | null = null;
+  /** Epoch ms of the chequered flag: where the session ends. */
+  #raceFlagAt: number | null = null;
   /** Track learned from this session's recognition lap, until the next lap closes. */
   #learning: { trackId: Id } | null = null;
   /** The last timed lap on an unknown track did not count. */
@@ -507,6 +540,8 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
 
   // delta
   #deltaKind: DeltaReferenceKind;
+  /** The kind actually in use: a pinned lap of another track falls back to the personal best. */
+  #deltaShown: DeltaReferenceKind;
   #deltaLapId: Id | null;
   #deltaRef: DeltaReference | null = null;
   #deltaMs: number | null = null;
@@ -530,6 +565,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     this.#newId = opts.idFactory ?? (() => newId());
     this.#hints = opts.cornerHints ?? new TraceCornerHintProvider();
     this.#deltaKind = this.options.deltaReference;
+    this.#deltaShown = this.#deltaKind;
     this.#deltaLapId = opts.deltaReferenceLapId ?? null;
   }
 
@@ -827,9 +863,21 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     const idle = this.options.sessionIdleEndMs;
     if (this.#lastReceivedAt !== null && nowMs - this.#lastReceivedAt > idle) {
       this.endSession('silence', this.#lastReceivedAt);
-    } else if (this.#inactiveSince !== null && nowMs - this.#inactiveSince > idle) {
+    } else if (
+      this.#inactiveSince !== null &&
+      nowMs - this.#inactiveSince > this.#pauseLimit(idle)
+    ) {
       this.endSession('offTrack', this.#lastActiveAt ?? this.#inactiveSince);
     }
+  }
+
+  /**
+   * How long a session may stay inactive (paused, off the track) before it is closed. A race in
+   * progress that was paused is still that race: a driver left one paused for ~25 minutes (the
+   * session was cut at 10 and the last lap of the race landed in a new one).
+   */
+  #pauseLimit(idleMs: number): number {
+    return this.#race.state === 'racing' ? Math.max(idleMs, RACE_PAUSE_MAX_MS) : idleMs;
   }
 
   /** Selects the delta reference. `lapId` picks a specific lap for 'reference'. */
@@ -1069,6 +1117,11 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     this.#sessionBestRef = null;
     this.#sessionBestLapMs = null;
     this.#sessionBestSectors = [];
+    this.#pit.reset();
+    this.#stint = 1;
+    this.#pitOutPending = false;
+    this.#trafficMs = 0;
+    this.#ranking = null;
     this.#lastLapMs = null;
     this.#fuelHistory = [];
     this.#cornerPass.clear();
@@ -1225,7 +1278,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     if (
       this.#session &&
       this.#inactiveSince !== null &&
-      receivedAtMs - this.#inactiveSince > idleEnd
+      receivedAtMs - this.#inactiveSince > this.#pauseLimit(idleEnd)
     ) {
       this.endSession('offTrack', this.#lastActiveAt ?? this.#inactiveSince);
     }
@@ -1283,6 +1336,8 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       this.#handleLap(p, receivedAtMs, dPk, streamReset, onTrack, paused, recvGap);
     }
     this.#raceStep(p, receivedAtMs, dPk, onTrack, f, replay.kind !== 'none');
+    this.#pitStep(p, receivedAtMs, f, replay.kind !== 'none');
+    this.#trafficStep(p, dPk, onTrack && !paused && replay.kind === 'none');
 
     if (this.listenerCount('packet') > 0) {
       this.emit('packet', {
@@ -1334,6 +1389,76 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   // ---------------------------------------------------------------------------------------------
 
   /** One packet of the race bookkeeping; reacts to what the tracker saw. */
+  /**
+   * Other cars on the track outside a race: the session is a practice (or qualifying) with traffic.
+   * The kind is suggested once the traffic has been there for a while and never overrides the
+   * driver's choice; it cannot tell a practice from a qualifying (the packets are the same).
+   */
+  #trafficStep(p: TelemetryPacket, dPk: number, running: boolean): void {
+    const s = this.#session;
+    const traffic =
+      running &&
+      s !== null &&
+      !this.#replayMode &&
+      this.#race.state === 'idle' &&
+      p.totalLaps <= 0 &&
+      // two "cars" is the driver and the ghost of a time trial (measured); a lobby counts 9-15
+      // cars while the car stands on the grid with the handbrake on
+      p.numCarsPreRace >= TRAFFIC_MIN_CARS &&
+      p.speedMps > TRAFFIC_MIN_SPEED_MPS &&
+      !decodeFlags(p.flags).handBrake &&
+      p.preRacePosition >= 1 &&
+      p.preRacePosition <= p.numCarsPreRace;
+    if (!traffic) {
+      this.#ranking = null;
+      return;
+    }
+    this.#ranking = { position: p.preRacePosition, cars: p.numCarsPreRace };
+    this.#trafficMs += dPk * this.#msPerPacket;
+    if (this.#trafficMs >= TRAFFIC_MIN_MS && s.kind == null) {
+      s.kind = 'practice';
+      s.kindSource = 'auto';
+      this.#ctx.saveSession({ ...s });
+      this.emit('sessionUpdated', { ...s });
+    }
+  }
+
+  /**
+   * A visit to the pits ends the stint: the event is dated at the arrival in the box and carries the
+   * departure; the consumption of the next stint starts afresh (refuelled, new tyres).
+   */
+  #pitStep(
+    p: TelemetryPacket,
+    at: number,
+    f: ReturnType<typeof decodeFlags>,
+    replaying: boolean,
+  ): void {
+    if (!this.#session || this.#replayMode || replaying) {
+      this.#pit.reset();
+      return;
+    }
+    const sig = this.#pit.update({
+      at,
+      carOnTrack: f.carOnTrack,
+      loading: f.loadingOrProcessing,
+      paused: f.paused,
+      handBrake: f.handBrake,
+      speedMps: p.speedMps,
+      lapCount: p.lapCount,
+      totalLaps: p.totalLaps,
+      x: p.position.x,
+      z: p.position.z,
+    });
+    if (!sig) return;
+    this.#stint++;
+    this.#pitOutPending = true;
+    this.#fuelHistory = [];
+    this.#raceEvent('pit', sig.at, sig.lap, null, {
+      exitAt: sig.exitAt,
+      durationMs: sig.exitAt - sig.at,
+    });
+  }
+
   #raceStep(
     p: TelemetryPacket,
     at: number,
@@ -1364,11 +1489,13 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     }
     // the flag fell: the session closes once the last lap has its game time
     if (this.#closeAfterFinishAt !== null) {
-      const flagAt = this.#closeAfterFinishAt;
-      if (!this.#pending || at - flagAt > RACE_CLOSE_MAX_WAIT_MS) {
+      const settledAt = this.#closeAfterFinishAt;
+      if (!this.#pending || at - settledAt > RACE_CLOSE_MAX_WAIT_MS) {
+        const endedAt = this.#raceFlagAt ?? settledAt;
         this.#closeAfterFinishAt = null;
+        this.#raceFlagAt = null;
         this.#raceMeta = null;
-        this.endSession('raceFinished', flagAt);
+        this.endSession('raceFinished', endedAt);
       }
     }
   }
@@ -1383,6 +1510,13 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
         };
         this.#closeAfterFinishAt = null;
         const s = this.#session;
+        // the attempt that was running ends here, in ITS session (it stays a race without a
+        // finish); the new attempt gets a session of its own below
+        if (sig.restartedFromLap !== null) {
+          this.#raceEvent('restart', sig.at, sig.restartedFromLap, null, {
+            fromLap: sig.restartedFromLap,
+          });
+        }
         // joined in the middle of a race that already has its session: keep it
         if (s && !(sig.midRace && s.kind === 'race')) {
           if (s.lapCount > 0 || s.kind === 'race') {
@@ -1390,7 +1524,11 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
             if (this.#lap?.timed) this.#discard(this.#lap, 'sessionEnd');
             this.#lap = null;
             this.#lastLapCount = null;
-            this.#switchSession('raceStart', sig.at, this.#lastActiveAt ?? sig.at);
+            this.#switchSession(
+              sig.restartedFromLap !== null ? 'raceRestart' : 'raceStart',
+              sig.at,
+              this.#lastActiveAt ?? sig.at,
+            );
           } else {
             this.#updateRaceSession();
           }
@@ -1442,11 +1580,13 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
           this.#ctx.saveSession({ ...s });
           this.emit('sessionUpdated', { ...s });
         }
-        this.#raceEvent('finish', sig.at, sig.totalLaps, null, {
+        // the event is dated at the flag; the session ends there, once its last lap has its game time
+        this.#raceEvent('finish', sig.flagAt, sig.totalLaps, null, {
           position: sig.position,
           cars: sig.cars,
           totalLaps: sig.totalLaps,
         });
+        this.#raceFlagAt = sig.flagAt;
         this.#closeAfterFinishAt = sig.at;
         return;
       }
@@ -1998,7 +2138,13 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   #beginClose(lap: LapState, p: TelemetryPacket): void {
     if (this.#pending) this.#finalize(this.#pending, null);
     const prevGameLast = this.#lastPacket?.lastLapMs ?? -1;
-    this.#pending = { lap, countedMs: lap.counted * this.#msPerPacket, prevGameLast, waited: 0 };
+    this.#pending = {
+      lap,
+      countedMs: lap.counted * this.#msPerPacket,
+      prevGameLast,
+      prevGameBest: this.#lastPacket?.bestLapMs ?? -1,
+      waited: 0,
+    };
     this.#tryFinalize(p);
   }
 
@@ -2008,16 +2154,16 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     const g = p.lastLapMs;
     const plausible = g > 0 && Math.abs(g - pc.countedMs) <= Math.max(5000, pc.countedMs * 0.05);
     if (plausible && g !== pc.prevGameLast) {
-      this.#finalize(pc, g);
+      this.#finalize(pc, g, p);
       return;
     }
     pc.waited++;
     if (pc.waited >= this.options.lapCloseWaitPackets) {
-      this.#finalize(pc, plausible && Math.abs(g - pc.countedMs) <= 300 ? g : null);
+      this.#finalize(pc, plausible && Math.abs(g - pc.countedMs) <= 300 ? g : null, p);
     }
   }
 
-  #finalize(pc: PendingClose, gameMs: number | null): void {
+  #finalize(pc: PendingClose, gameMs: number | null, gamePacket?: TelemetryPacket): void {
     this.#pending = null;
     let session = this.#session;
     if (!session) return;
@@ -2029,6 +2175,20 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       gameMs ?? Math.round(lap.useGameClock ? Math.max(lap.elapsedMs, countedMs) : countedMs);
     if (gameMs !== null && Math.abs(gameMs - countedMs) > Math.max(200, gameMs * 0.003)) {
       flags.add('timeMismatch');
+    }
+    // The first lap after a visit to the pits is an out lap. The game says so itself: a lap that
+    // beats its best lap (or the first of the session) leaves `bestLapMs` as it was, so the lap
+    // does not count (measured: 90.831 s against a best of 91.321 s, left out by the game).
+    if (this.#pitOutPending) {
+      this.#pitOutPending = false;
+      if (
+        gameMs !== null &&
+        gamePacket &&
+        (pc.prevGameBest <= 0 || gameMs < pc.prevGameBest) &&
+        gamePacket.bestLapMs !== gameMs
+      ) {
+        flags.add('outLap');
+      }
     }
     // gap / loss flags
     const lossRatio = lap.lost / Math.max(1, lap.counted);
@@ -2222,8 +2382,8 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       this.#sessionBestRef = new DeltaReference(stored);
     }
     this.#refreshRecords();
-    if (this.#deltaKind === 'sessionBest' && isSessionBest)
-      this.#useReference(this.#sessionBestRef);
+    if (this.#deltaShown === 'sessionBest' && isSessionBest)
+      this.#useReference(this.#sessionBestForTrack());
     else if (this.#deltaKind === 'personalBest' && isPersonalBest)
       this.#useReference(new DeltaReference(stored));
     else if (!this.#deltaRef) this.#reloadReference();
@@ -2241,7 +2401,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       valid,
       flags: flagList,
       deltaMs: ref ? timeMs - ref.timeMs : null,
-      deltaReference: this.#deltaKind,
+      deltaReference: this.#deltaShown,
       isPersonalBest,
       isSessionBest,
       bestSectorIndex,
@@ -2308,6 +2468,14 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     this.#reloadReference();
   }
 
+  /** The session's best lap as a reference, only when it was driven on the active track. */
+  #sessionBestForTrack(): DeltaReference | null {
+    const ref = this.#sessionBestRef;
+    if (!ref) return null;
+    const track = this.#track;
+    return !track || !ref.lap.trackId || ref.lap.trackId === track.id ? ref : null;
+  }
+
   #useReference(ref: DeltaReference | null): void {
     this.#deltaRef = ref;
     this.#refLine =
@@ -2325,24 +2493,29 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     try {
       const track = this.#track;
       let stored: StoredLap | null = null;
+      this.#deltaShown = this.#deltaKind;
       if (this.#deltaKind === 'sessionBest') {
-        this.#useReference(this.#sessionBestRef);
+        this.#useReference(this.#sessionBestForTrack());
         return;
       }
       if (this.#deltaKind === 'personalBest') {
         stored = track ? this.#ctx.loadPersonalBest(track.id, this.#carCode()) : null;
       } else if (this.#deltaLapId) {
-        stored = this.#ctx.loadLap(this.#deltaLapId);
+        // A lap chosen as the reference belongs to ONE track: it says nothing about where the car
+        // is (a pinned lap of another circuit used to become "the track", with its line, so every
+        // lap elsewhere was thrown away and the delta compared different circuits), and it is no
+        // reference on another track. There the best own lap of the track takes over.
+        const pinned = this.#ctx.loadLap(this.#deltaLapId);
+        if (pinned && track && pinned.lap.trackId === track.id) stored = pinned;
       } else if (track) {
         stored = this.#ctx.loadBestReference(track.id, this.#carCode());
       }
-      if (stored && !track && stored.lap.trackId) {
-        const t = this.#ctx.getTrack(stored.lap.trackId);
-        if (t) {
-          this.#reloading = false;
-          this.#setActiveTrack(t, 'probable', 'start');
-          return; // #setActiveTrack reloaded the reference
-        }
+      if (!stored && this.#deltaKind === 'reference') {
+        // No reference lap that fits here: the best lap of THIS session leads, lap after lap (none
+        // on the first lap, so no delta at all rather than one against a stranger).
+        this.#deltaShown = 'sessionBest';
+        this.#useReference(this.#sessionBestForTrack());
+        return;
       }
       this.#useReference(stored ? new DeltaReference(stored) : null);
     } finally {
@@ -2586,7 +2759,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
         predictedLapMs: ref && delta !== null ? Math.round(ref.timeMs + delta) : null,
         delta: {
           ms: delta,
-          reference: this.#deltaKind,
+          reference: this.#deltaShown,
           referenceLapId: ref?.lapId ?? null,
           rateMsPerS: timed ? this.#deltaRate : null,
         },
@@ -2605,6 +2778,10 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       ...goalPart,
       ...(liveTasks.length ? { tasks: liveTasks } : {}),
       ...(this.#race.live ? { race: this.#race.live } : {}),
+      ...(this.#ranking && !this.#race.live ? { ranking: this.#ranking } : {}),
+      ...(this.#stint > 1 || this.#pit.inPits
+        ? { stint: { number: this.#stint, inPits: this.#pit.inPits } }
+        : {}),
       ...(this.#drill ? { drill: this.#drill.tracker.frame() } : {}),
       link: this.#link ?? {
         rateHz: 0,

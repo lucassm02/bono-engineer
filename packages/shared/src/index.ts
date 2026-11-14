@@ -72,6 +72,7 @@ export * from './pit-plan.ts';
 export * from './race.ts';
 export * from './radio/index.ts';
 export { localizedRadioUtterance } from './radio-translations.ts';
+export * from './stints.ts';
 export * from './summary-text.ts';
 export * from './tasks.ts';
 export * from './telemetry.ts';

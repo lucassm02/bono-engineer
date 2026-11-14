@@ -7,6 +7,7 @@ import {
   type ApiSessionPatch,
   type ApiSessionRace,
   type ApiSessionsKindBatch,
+  deriveStints,
   ENGINEER_CUE_KINDS,
   type EngineerCueKind,
   type Lap,
@@ -88,7 +89,9 @@ export function sessionRoutes(app: FastifyInstance, ctx: RouteContext): void {
   app.get('/sessions/:id', async (req): Promise<SessionDetail> => {
     const id = idParam(req.params);
     const session = getSession(id);
-    return { session, laps: store.listLaps(id), active: isActive(id) };
+    const laps = store.listLaps(id);
+    const stints = deriveStints(session.startedAt, laps, store.listSessionEvents(id));
+    return { session, laps, stints, active: isActive(id) };
   });
 
   /** Parses the body of a kind change: a kind or null ("sem etiqueta"). */

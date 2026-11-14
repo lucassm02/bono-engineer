@@ -1,6 +1,6 @@
 # Spec 09 · Sessões com vários stints (box confirmado pelo piloto)
 
-**Status:** futura (não implementar agora) · **Base:** [relatório](../stints-setup-pit-wall-report.md), seção 4 ·
+**Status:** implementada em 2026-11-14 com detecção automática do box (veja a nota no fim); o aviso de confirmação e a edição de stints ficaram de fora · **Base:** [relatório](../stints-setup-pit-wall-report.md), seção 4 ·
 **Alimenta:** [spec 10](10-setup-between-stints.md)
 
 ## Problema
@@ -63,3 +63,12 @@ para confirmar "estou no box". Ao confirmar, o stint termina. Quando o carro sai
 |---|---|
 | Aviso incomodar (parada no semáforo da pista, largada) | Só depois de 20 s parado; "Não" silencia até andar; limiar configurável |
 | Esquecer de confirmar o box | O stint segue aberto; dá para separar depois na tela da sessão |
+
+## Nota de implementação (2026-11-14)
+
+Os pacotes de um treino real (Civic, Tokyo Expressway) mostraram que **o box tem assinatura** (pausa, carregamento, carro
+parado a ~260 m, mesmo `lapCount`, sai depois de alguns segundos), então o aviso "Está no box?" deixou de ser necessário:
+o `PitTracker` (core) confirma a visita quando o carro sai e grava o evento `pit`. Os stints são **derivados** dos eventos
+`pit` e das voltas (`deriveStints`, shared): não há tabela `stints` nem coluna `laps.stint`, logo nenhuma migração. Telas: voltas
+agrupadas por stint na sessão, "Volta 3 · stint 2" e "No box" ao vivo, `stints` no `get_session_summary` do MCP, consumo de combustível
+reiniciado a cada stint. **Fora desta rodada:** comparar stints, juntar/separar à mão, a volta em curso na entrada no box.

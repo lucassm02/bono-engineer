@@ -81,6 +81,15 @@ function frame(patch: Partial<LiveFrame>): LiveFrame {
   } as LiveFrame;
 }
 
+describe('a restarted race', () => {
+  it('shows the restart in the timeline of the attempt that ended', () => {
+    const rows = timelineRows([ev('r', 'restart', 5, { fromLap: 3 }, { lap: 3 })]);
+    expect(rows).toEqual([
+      { id: 'r', lap: 3, kind: 'restart', tone: 'neutral', text: 'Corrida reiniciada' },
+    ]);
+  });
+});
+
 describe('live panel in a race', () => {
   it('shows N of N at the flag, never N + 1', () => {
     const f = frame({
@@ -88,6 +97,21 @@ describe('live panel in a race', () => {
     });
     expect(lapCounterText(f)).toBe('Bandeirada · 4/4');
     expect(lapCounterText(frame({}))).toBe('Volta 2/4');
+  });
+
+  it('says the stint after a visit to the pits, and the box while the car stands there', () => {
+    const lap = { lap: 3, totalLaps: null } as LiveFrame['lap'];
+    expect(lapCounterText(frame({ lap, stint: { number: 2, inPits: false } }))).toBe(
+      'Volta 3 · stint 2',
+    );
+    expect(lapCounterText(frame({ lap }))).toBe('Volta 3');
+    expect(lapCounterText(frame({ lap, stint: { number: 1, inPits: true } }))).toBe(
+      'No box · stint 2',
+    );
+  });
+
+  it('shows the ranking of a practice with traffic like a position', () => {
+    expect(racePositionText(frame({ ranking: { position: 2, cars: 17 } }))).toBe('P2/17');
   });
 
   it('shows the position with the places gained, and nothing outside a race', () => {

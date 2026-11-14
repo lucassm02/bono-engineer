@@ -30,7 +30,10 @@ function make() {
       engine.push({ ...p, packetId: id++ }, t);
     }
   };
-  return { engine, ctx, feed, frames, ended };
+  const skip = (ms: number) => {
+    t += ms;
+  };
+  return { engine, ctx, feed, frames, ended, skip, now: () => t };
 }
 
 const lapsOf = (seed: number, laps: number) =>
@@ -62,7 +65,7 @@ const menu = (n: number) =>
   );
 
 /** The 2-lap race as the game sends it: totalLaps N, position 4 then 5, a hit on lap 2, flag at the end. */
-function racePackets(): TelemetryPacket[] {
+function racePackets(keepTotal = false): TelemetryPacket[] {
   const laps = lapsOf(2, N);
   const hit = laps.findIndex((p) => p.lapCount === 2 && p.speedMps > 40);
   return laps.map((p, i) => {
@@ -70,8 +73,9 @@ function racePackets(): TelemetryPacket[] {
     const afterHit = i >= hit + 5 && i < hit + 25;
     return {
       ...p,
-      totalLaps: flag ? 0 : N,
-      preRacePosition: p.lapCount === 2 && i > hit + 600 ? 5 : 4,
+      // online the game zeroes totalLaps with the flag; against the AI it keeps N until the results
+      totalLaps: flag && !keepTotal ? 0 : N,
+      preRacePosition: p.lapCount >= 2 && i > hit + 600 ? 5 : 4,
       numCarsPreRace: 15,
       // a wall of 40 % of the speed in one packet at `hit`, held a few packets
       speedMps: i >= hit && i < hit + 25 ? p.speedMps * 0.6 : p.speedMps,
@@ -187,5 +191,109 @@ describe('a race through the engine', () => {
     const imp = ctx.sessionEvents.find((e) => e.kind === 'impact');
     expect(imp?.lap).toBe(2);
     expect(Number(imp?.data.dvMs2)).toBeGreaterThan(80);
+  });
+});
+
+const racing = (patch: Partial<TelemetryPacket>) => ({
+  flags: encodeFlags({ carOnTrack: true }),
+  totalLaps: N,
+  preRacePosition: 4,
+  numCarsPreRace: 15,
+  ...patch,
+});
+
+describe('a race restarted by the driver', () => {
+  it('ends the attempt in its own session and gives the new one a session of its own', () => {
+    const w = make();
+    w.feed(still(racing({ lapCount: 0 }), 90));
+    const attempt = racePackets();
+    const upToLap2 = attempt.findIndex((p) => p.lapCount === 2) + 300;
+    w.feed(attempt.slice(0, upToLap2)); // lap 1 done, a bit of lap 2…
+    w.feed(racePackets()); // …and the driver restarts: the lap counter falls back to 0, same totalLaps
+    w.feed(
+      still(
+        {
+          flags: 0,
+          carOnTrack: undefined,
+          carCode: 0,
+          totalLaps: -1,
+          lapCount: -1,
+          preRacePosition: -1,
+          numCarsPreRace: -1,
+        } as Partial<TelemetryPacket>,
+        600,
+      ),
+    );
+    expect(w.ended).toEqual(['raceRestart', 'raceFinished']);
+    const [first, second] = [...w.ctx.sessions.values()];
+    expect(first).toMatchObject({ kind: 'race', raceTotalLaps: N });
+    expect(first!.finishPosition ?? null).toBeNull(); // it never finished
+    expect(second).toMatchObject({ kind: 'race', raceTotalLaps: N, finishPosition: 5 });
+    const ev = w.ctx.sessionEvents.find((e) => e.kind === 'restart');
+    expect(ev?.sessionId).toBe(first!.id);
+    expect(ev?.data.fromLap).toBe(2);
+    // the second attempt has its own laps: N complete ones
+    const laps = [...w.ctx.laps.values()].map((l) => l.lap);
+    expect(laps.filter((l) => l.sessionId === second!.id)).toHaveLength(N);
+  });
+});
+
+describe('a race against the AI: the flag keeps totalLaps', () => {
+  it('holds N of N at the flag and fixes the result when the car leaves the track', () => {
+    const w = make();
+    w.feed(still(racing({ lapCount: 0 }), 90));
+    const race = racePackets(true);
+    w.feed(race);
+    // about 9 s on the cool-down lap after the flag: still the race stream (lap N + 1, totalLaps N)
+    w.feed(still(racing({ lapCount: N + 1, preRacePosition: 5, speedMps: 40 }), 540));
+    // the flag fell: lap N + 1 with totalLaps still N; the counter is already held
+    const flag = w.frames.filter((f) => f.lap.finished);
+    expect(flag.length).toBeGreaterThan(0);
+    expect(flag.every((f) => f.lap.lap === N && f.lap.totalLaps === N)).toBe(true);
+    expect(w.ctx.sessions.size).toBe(1);
+    expect(w.engine.session).not.toBeNull(); // the result is not fixed yet
+    w.feed(menu(120)); // the results screen / menu
+    const [s] = [...w.ctx.sessions.values()];
+    expect(s).toMatchObject({ kind: 'race', startPosition: 4, finishPosition: 5, fieldSize: 15 });
+    expect(w.ended).toEqual(['raceFinished']);
+    expect(w.ctx.sessions.size).toBe(1); // no phantom session from the results screen
+  });
+});
+
+describe('a race that is paused for a long time', () => {
+  const paused = (n: number) =>
+    still(racing({ flags: encodeFlags({ carOnTrack: true, paused: true }), lapCount: 2 }), n);
+
+  it('keeps its session (a race is not over because the driver went away)', () => {
+    const w = make();
+    w.feed(still(racing({ lapCount: 0 }), 90));
+    const race = racePackets();
+    const mid = race.findIndex((p) => p.lapCount === 2) + 300;
+    w.feed(race.slice(0, mid));
+    const id = w.engine.session!.id;
+    // 25 minutes paused, as measured: the game keeps sending (frozen) packets
+    for (let m = 0; m < 25; m++) {
+      w.feed(paused(5));
+      w.skip(60_000);
+    }
+    w.feed(paused(5));
+    w.engine.tick(w.now());
+    expect(w.ended).toEqual([]);
+    expect(w.engine.session?.id).toBe(id);
+    w.feed(race.slice(mid)); // the race goes on, and ends, in the same session
+    expect(w.ended).toEqual(['raceFinished']);
+    expect(w.ctx.sessions.size).toBe(1);
+    expect(w.ctx.sessions.has(id)).toBe(true);
+  });
+
+  it('still closes a session that is not a race after the usual time', () => {
+    const w = make();
+    w.feed(lapsOf(1, 1));
+    for (let m = 0; m < 25; m++) {
+      w.feed(still({ flags: encodeFlags({ carOnTrack: true, paused: true }), lapCount: 1 }, 5));
+      w.skip(60_000);
+    }
+    w.engine.tick(w.now());
+    expect(w.ended).toEqual(['offTrack']);
   });
 });

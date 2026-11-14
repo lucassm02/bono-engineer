@@ -9,6 +9,7 @@
 import type { DeltaReferenceKind, Id, Lap, Session, SessionKind } from './domain.ts';
 import type { ConnectionState, LapCompletedEvent, LiveFrame } from './live.ts';
 import type { SessionKindDefault } from './race.ts';
+import type { Stint } from './stints.ts';
 import type { IngestorStats, PacketFormat } from './telemetry.ts';
 import type { LiveTrackContext, TrackMismatchInfo } from './track-context.ts';
 import type { DeviceProfile, ViewId } from './ui.ts';
@@ -514,6 +515,8 @@ export interface DeviceInfo {
 export interface SessionDetail {
   session: Session;
   laps: Lap[];
+  /** The stretches between visits to the pits (spec 09); one for a session without a visit. */
+  stints: Stint[];
   /** The session is the one in progress. */
   active: boolean;
 }

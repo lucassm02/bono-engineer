@@ -18,6 +18,7 @@ import {
 } from '@gt7/core';
 import {
   type CornerMetrics,
+  deriveStints,
   drillSummary,
   type EngineerTask,
   type Lap,
@@ -75,6 +76,32 @@ pares [você, referência]. Referências capturadas de replay têm precisão de 
 Use só os números retornados; diga quando um dado não existe.`;
 
 /**
+ * The stints of a session (spec 09), only when the car went to the pits: laps, best lap, mean pace
+ * and the time in the box before each one.
+ */
+function stintsBlock(store: Gt7Store, sessionId: string) {
+  const s = store.getSession(sessionId);
+  if (!s) return {};
+  const stints = deriveStints(
+    s.startedAt,
+    store.listLaps(sessionId),
+    store.listSessionEvents(sessionId),
+  );
+  if (stints.length < 2) return {};
+  return {
+    stints: stints.map((st) => ({
+      number: st.number,
+      laps: st.lapCount,
+      validLaps: st.validLapCount,
+      best: st.bestLapMs === null ? null : lapTime(st.bestLapMs),
+      avg: st.avgLapMs === null ? null : lapTime(st.avgLapMs),
+      spread_s: st.spreadMs === null ? null : r(st.spreadMs / 1000, 3),
+      pitBefore_s: st.pitMs === null ? null : Math.round(st.pitMs / 1000),
+    })),
+  };
+}
+
+/**
  * What a race adds to a session summary (spec 21): the result and the events of the way (positions
  * gained or lost, cars out, impacts). Empty for sessions that are not races.
  */
@@ -93,6 +120,7 @@ function raceBlock(store: Gt7Store, sessionId: string) {
       positionChanges: events
         .filter((e) => e.kind === 'position')
         .map((e) => ({ lap: e.lap, from: e.data.from, to: e.data.to })),
+      restartedAtLap: events.find((e) => e.kind === 'restart')?.data.fromLap ?? null,
       carsOut: events
         .filter((e) => e.kind === 'cars')
         .map((e) => ({ lap: e.lap, from: e.data.from, to: e.data.to })),
@@ -948,6 +976,7 @@ export function createGt7McpServer(deps: McpDeps): McpServer {
             ...carFields(sum.carCode),
             startedAt: dateTime(sum.startedAt),
             ...raceBlock(store, id),
+            ...stintsBlock(store, id),
             laps: sum.laps,
             bestLap: best
               ? {

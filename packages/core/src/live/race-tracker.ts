@@ -30,12 +30,24 @@ export const IMPACT_MERGE_MS = 3000;
 export const MAX_PACKET_DT_S = 0.05;
 /** A position counts for the panel after being held this long (ms). */
 export const POSITION_STABLE_MS = 2000;
+/**
+ * After the flag the position still moves while the other cars finish (P7 → P6 three seconds
+ * later in a measured race): the result is fixed when the results screen begins, or after this long (ms).
+ */
+export const FINISH_SETTLE_MAX_MS = 45_000;
 /** The flag latch is released after the car stayed off the track this long (ms). */
 export const FINISH_LATCH_RELEASE_MS = 5000;
 /** The race starts moving above this speed (m/s). */
 const MOVING_MPS = 3;
 /** No impacts right after the start: the launch and the loading flicker (ms). */
 const START_QUIET_MS = 3000;
+/** A loading flicker up to this long before the start still counts as the start's (ms). */
+const START_LOAD_WINDOW_MS = 5000;
+/**
+ * A loading flicker this long after the start, before the first crossing of the line (the lap
+ * counter still 0), is a restart: the counter has nothing to fall from.
+ */
+const RESTART_BEFORE_LINE_MS = 6000;
 
 export interface RaceInput {
   /** Epoch ms of the packet. */
@@ -67,6 +79,11 @@ export type RaceSignal =
       lobby: { position: number | null; cars: number | null };
       /** The race was joined after the start. */
       midRace: boolean;
+      /**
+       * The driver restarted the race (the lap counter fell back to 0 with the same totalLaps):
+       * the attempt that ended here had reached this lap.
+       */
+      restartedFromLap: number | null;
     }
   | { type: 'startPosition'; at: number; position: number; cars: number | null }
   | {
@@ -89,7 +106,16 @@ export type RaceSignal =
       speedBeforeKmh: number;
       speedAfterKmh: number;
     }
-  | { type: 'finish'; at: number; position: number | null; cars: number | null; totalLaps: number };
+  | {
+      type: 'finish';
+      /** When the result was fixed (the results screen began). */
+      at: number;
+      /** When the lap counter passed the laps of the race (the chequered flag). */
+      flagAt: number;
+      position: number | null;
+      cars: number | null;
+      totalLaps: number;
+    };
 
 export type RaceState = 'idle' | 'racing' | 'finished';
 
@@ -109,6 +135,14 @@ interface PendingImpact {
 export class RaceTracker {
   #state: RaceState = 'idle';
   #totalLaps = 0;
+  /** The highest lap counter seen in this race (a drop means the race was restarted). */
+  #lapMax = 0;
+  /** When the last loading screen flicker was seen: the grid slot is read after it. */
+  #loadAt = Number.NEGATIVE_INFINITY;
+  /** When the lap counter passed the laps of the race. */
+  #flagAt = 0;
+  /** The result of the race was fixed (the `finish` signal went out). */
+  #settled = false;
   #prevTotal: number | null = null;
   #lobby: { position: number | null; cars: number | null } = { position: null, cars: null };
   #startedAt = 0;
@@ -162,7 +196,8 @@ export class RaceTracker {
     lastChange: { from: number; to: number; at: number } | null;
   } | null {
     if (this.#state === 'idle') return null;
-    const position = this.#stablePos ?? this.#pos;
+    // after the flag the latest position is the final one; during the race the held one is shown
+    const position = this.#state === 'finished' ? this.#pos : (this.#stablePos ?? this.#pos);
     return {
       state: this.#state,
       totalLaps: this.#totalLaps,
@@ -184,6 +219,8 @@ export class RaceTracker {
     this.#lobby = { position: null, cars: null };
     this.#startPosition = null;
     this.#startPositionSet = false;
+    this.#flagAt = 0;
+    this.#settled = false;
     this.#pos = null;
     this.#cars = null;
     this.#stablePos = null;
@@ -201,13 +238,21 @@ export class RaceTracker {
   update(i: RaceInput): RaceSignal[] {
     const out: RaceSignal[] = [];
     const prevTotal = this.#prevTotal;
+    if (i.loading) this.#loadAt = i.at;
     this.#prevTotal = i.totalLaps;
 
     if (this.#state === 'idle') {
       if (i.onTrack && i.position > 0 && i.cars > 0) {
         this.#lobby = { position: i.position, cars: i.cars };
       }
-      if (i.totalLaps > 0 && (prevTotal === null || prevTotal <= 0) && i.onTrack) {
+      // a counter past the laps of the race is the stale stream of a race that just ended (it comes
+      // interleaved with the menu: totalLaps flips between -1 and N), never a race that begins
+      if (
+        i.totalLaps > 0 &&
+        (prevTotal === null || prevTotal <= 0) &&
+        i.onTrack &&
+        i.lapCount <= i.totalLaps
+      ) {
         this.#begin(i, out);
       }
       this.#remember(i);
@@ -215,12 +260,37 @@ export class RaceTracker {
     }
 
     if (this.#state === 'finished') {
+      if (!this.#settled) {
+        // the position still moves while the others finish; the result is what the game shows when
+        // the results begin (online: totalLaps back to 0; against the AI: the car leaves the track)
+        const zeroed = i.totalLaps <= 0 && (prevTotal ?? 0) > 0;
+        if (zeroed || !i.onTrack || i.at - this.#flagAt >= FINISH_SETTLE_MAX_MS) {
+          this.#settled = true;
+          out.push({
+            type: 'finish',
+            at: i.at,
+            flagAt: this.#flagAt,
+            position: this.#pos,
+            cars: this.#cars,
+            totalLaps: this.#totalLaps,
+          });
+        } else if (i.totalLaps === this.#totalLaps && i.position > 0) {
+          // still the race stream (the results screen sends lap 0, totalLaps 0 and a grid slot)
+          this.#pos = i.position;
+          if (i.cars > 0) this.#cars = i.cars;
+        }
+      }
       // latch: the results screen looks like a grid; wait for the car to leave the track
       if (i.onTrack) this.#offSince = null;
       else this.#offSince ??= i.at;
       if (this.#offSince !== null && i.at - this.#offSince >= FINISH_LATCH_RELEASE_MS) {
         this.reset();
-      } else if (i.totalLaps > 0 && (prevTotal === null || prevTotal <= 0) && i.onTrack) {
+      } else if (
+        i.totalLaps > 0 &&
+        (prevTotal === null || prevTotal <= 0) &&
+        i.onTrack &&
+        i.lapCount <= 1
+      ) {
         this.reset();
         this.#begin(i, out);
       }
@@ -235,17 +305,57 @@ export class RaceTracker {
       this.#prevTotal = i.totalLaps;
       return out;
     }
-    if (i.totalLaps <= 0 && (prevTotal ?? 0) > 0 && i.lapCount > this.#totalLaps) {
-      out.push({
-        type: 'finish',
-        at: i.at,
-        position: this.#stablePos ?? this.#pos,
-        cars: this.#cars,
-        totalLaps: this.#totalLaps,
-      });
+    // The driver restarted the race: the lap counter falls back to 0 (the race keeps its totalLaps),
+    // the position goes to the last grid slot and the car comes back at the rolling-start speed
+    // (measured: lap 5 → 0, P3 → P16, totalLaps 5 → 5). Packets of the replay that plays after the
+    // flag also say lap 0, but never carry the car on the track.
+    if (
+      i.onTrack &&
+      i.totalLaps === this.#totalLaps &&
+      this.#lapMax >= 1 &&
+      i.lapCount < this.#lapMax &&
+      i.lapCount <= 1
+    ) {
+      const from = this.#lapMax;
+      this.#begin(i, out, from);
+      this.#remember(i);
+      return out;
+    }
+    // A restart before the first crossing of the line: the lap counter was 0 and stays 0, so only the
+    // loading flicker (the car back at the rolling start) says so.
+    if (
+      i.onTrack &&
+      i.totalLaps === this.#totalLaps &&
+      this.#lapMax === 0 &&
+      i.lapCount === 0 &&
+      this.#loadAt > this.#startedAt + RESTART_BEFORE_LINE_MS
+    ) {
+      this.#begin(i, out, 0);
+      this.#remember(i);
+      return out;
+    }
+    if (i.lapCount > this.#lapMax) this.#lapMax = i.lapCount;
+    // The flag: the lap counter passes the laps of the race. In an online race the game also zeroes
+    // totalLaps at that moment; in a race against the AI it keeps N until the results screen.
+    if (i.lapCount > this.#totalLaps && (i.totalLaps <= 0 || i.totalLaps === this.#totalLaps)) {
       this.#state = 'finished';
+      this.#flagAt = i.at;
+      this.#settled = false;
       this.#offSince = null;
       this.#pending = null;
+      if (i.onTrack && i.position > 0) this.#pos = i.position;
+      if (i.totalLaps <= 0) {
+        // the game zeroed totalLaps with the flag: the result is already what it shows
+        this.#settled = true;
+        out.push({
+          type: 'finish',
+          at: i.at,
+          flagAt: i.at,
+          position: this.#stablePos ?? this.#pos,
+          cars: this.#cars,
+          totalLaps: this.#totalLaps,
+        });
+      }
       this.#remember(i);
       return out;
     }
@@ -256,9 +366,10 @@ export class RaceTracker {
     return out;
   }
 
-  #begin(i: RaceInput, out: RaceSignal[]): void {
+  #begin(i: RaceInput, out: RaceSignal[], restartedFromLap: number | null = null): void {
     this.#state = 'racing';
     this.#totalLaps = i.totalLaps;
+    this.#lapMax = Math.max(0, i.lapCount);
     this.#startedAt = i.at;
     this.#startPosition = null;
     this.#startPositionSet = false;
@@ -279,13 +390,25 @@ export class RaceTracker {
       totalLaps: i.totalLaps,
       lobby: { position: this.#lobby.position, cars: this.#lobby.cars },
       midRace,
+      restartedFromLap,
     });
   }
 
   #track(i: RaceInput, out: RaceSignal[]): void {
     // start position: the slot settles about a second after the countdown appears, once the
     // loading flicker is over; the race is under way when the car moves
-    if (!this.#startPositionSet && !i.loading && i.speedMps > MOVING_MPS && i.position > 0) {
+    // The slot is read once the car moves AFTER the loading flicker: the packets before it still
+    // carry the position of the lobby (measured: P1 for a second, then the real slot P16). Without
+    // a flicker the first lap crossing is the fallback.
+    const loaded = this.#loadAt >= this.#startedAt - START_LOAD_WINDOW_MS || i.lapCount >= 1;
+    if (
+      !this.#startPositionSet &&
+      loaded &&
+      i.onTrack &&
+      !i.loading &&
+      i.speedMps > MOVING_MPS &&
+      i.position > 0
+    ) {
       this.#startPositionSet = true;
       this.#startPosition = i.position;
       this.#stablePos = i.position;
@@ -300,7 +423,7 @@ export class RaceTracker {
       });
     }
 
-    if (!i.loading && i.position > 0) {
+    if (i.onTrack && !i.loading && i.position > 0) {
       if (this.#startPositionSet && this.#pos !== null && i.position !== this.#pos) {
         out.push({
           type: 'position',
@@ -339,7 +462,7 @@ export class RaceTracker {
       }
     }
 
-    if (!i.loading && i.cars > 0) {
+    if (i.onTrack && !i.loading && i.cars > 0) {
       if (this.#cars !== null && i.cars !== this.#cars && this.#startPositionSet) {
         out.push({
           type: 'cars',

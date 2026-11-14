@@ -27,15 +27,24 @@ export function lapCounterText(f: LiveFrame): string {
   if (f.lap.finished && f.lap.totalLaps) {
     return uiText('Bandeirada · {0}/{1}', f.lap.lap, f.lap.totalLaps);
   }
+  // stopped in the box: the next stint begins when the car leaves
+  if (f.stint?.inPits) return uiText('No box · stint {0}', f.stint.number + 1);
+  const stint = f.stint && f.stint.number > 1 ? ` · ${uiText('stint {0}', f.stint.number)}` : '';
   if (f.lap.lap <= 0) return uiText('Volta de saída');
-  return f.lap.totalLaps
-    ? uiText('Volta {0}/{1}', f.lap.lap, f.lap.totalLaps)
-    : uiText('Volta {0}', f.lap.lap);
+  return (
+    (f.lap.totalLaps
+      ? uiText('Volta {0}/{1}', f.lap.lap, f.lap.totalLaps)
+      : uiText('Volta {0}', f.lap.lap)) + stint
+  );
 }
 
-/** "P5/15 ▲1": the position in a race and the places gained since the start; empty outside a race. */
+/**
+ * "P5/15 ▲1": the position in a race and the places gained since the start. In a practice or
+ * qualifying with traffic it is the ranking of the lobby ("P2/17"); empty when alone on the track.
+ */
 export function racePositionText(f: LiveFrame): string {
   const r = f.race;
+  if (!r && f.ranking) return uiText('P{0}/{1}', f.ranking.position, f.ranking.cars);
   if (!r || r.position === null) return '';
   const base = r.cars ? uiText('P{0}/{1}', r.position, r.cars) : uiText('P{0}', r.position);
   if (r.gained === null || r.gained === 0) return base;

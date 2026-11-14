@@ -93,3 +93,40 @@
 .kind-default-select {
   min-width: 13em;
 }
+
+/* Stint header inside the table of laps of a session (spec 09). */
+.a-table tbody tr.a-stint-row td {
+  padding: var(--sp-2) var(--sp-4);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-3);
+  color: var(--text-2);
+  font-size: var(--fs-xs);
+}
+.a-stint-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sp-1) var(--sp-3);
+}
+.a-stint-head strong {
+  color: var(--text-1);
+  font-size: var(--fs-sm);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+}
+
+/* On a phone the laps are cards: the stint header is a plain label between them, not a card. */
+@media (max-width: 640px) {
+  .a-table-cards tbody tr.a-stint-row {
+    display: block;
+    margin: var(--sp-3) 0 var(--sp-1);
+    padding: 0 var(--sp-1);
+    border: 0;
+    background: none;
+  }
+  .a-table.a-table-cards tbody tr.a-stint-row td {
+    padding: 0;
+    background: none;
+    border: 0;
+  }
+}
