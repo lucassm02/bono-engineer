@@ -46,6 +46,7 @@ import {
   type ServerStatus,
   type Session,
   type SessionCaptureStatus,
+  type SessionKindDefault,
   type SessionSavedMessage,
   type TrackHint,
   type TrackMismatchInfo,
@@ -81,6 +82,8 @@ export const SETTINGS_KEYS = {
   record: 'recordSessions',
   autoCapture: 'autoCapture',
   deltaReference: 'deltaReference',
+  /** What to do when a session that is not a race closes (spec 21): ask, practice or qualifying. */
+  sessionKindDefault: 'sessionKindDefault',
 } as const;
 
 /**
@@ -1054,7 +1057,21 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
       }
       if (s.mode !== 'live') return;
       const track = s.trackId ? this.store.getTrack(s.trackId) : null;
+      // a session that was not a race: the driver's setting may classify it right away
+      let kind = this.store.getSession(s.id)?.kind ?? null;
+      if (kind === null) {
+        const d = this.store.getSetting<SessionKindDefault>(SETTINGS_KEYS.sessionKindDefault);
+        if (d === 'practice' || d === 'qualifying') {
+          this.store.setSessionKind(s.id, d, 'auto');
+          kind = d;
+        }
+      }
       this.emit('sessionSaved', {
+        kind,
+        startPosition: s.startPosition ?? null,
+        finishPosition: s.finishPosition ?? null,
+        fieldSize: s.fieldSize ?? null,
+        raceTotalLaps: s.raceTotalLaps ?? null,
         sessionId: s.id,
         trackId: s.trackId,
         trackName: track?.name ?? null,

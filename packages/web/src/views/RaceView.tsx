@@ -23,10 +23,28 @@ export function trendGlyph(rate: number | null): string {
 }
 
 export function lapCounterText(f: LiveFrame): string {
+  // the chequered flag fell: the counter stays at N of N (the game itself says N + 1)
+  if (f.lap.finished && f.lap.totalLaps) {
+    return uiText('Bandeirada · {0}/{1}', f.lap.lap, f.lap.totalLaps);
+  }
   if (f.lap.lap <= 0) return uiText('Volta de saída');
   return f.lap.totalLaps
     ? uiText('Volta {0}/{1}', f.lap.lap, f.lap.totalLaps)
     : uiText('Volta {0}', f.lap.lap);
+}
+
+/** "P5/15 ▲1": the position in a race and the places gained since the start; empty outside a race. */
+export function racePositionText(f: LiveFrame): string {
+  const r = f.race;
+  if (!r || r.position === null) return '';
+  const base = r.cars ? uiText('P{0}/{1}', r.position, r.cars) : uiText('P{0}', r.position);
+  if (r.gained === null || r.gained === 0) return base;
+  return `${base} ${r.gained > 0 ? '▲' : '▼'}${Math.abs(r.gained)}`;
+}
+
+export function racePositionTone(f: LiveFrame): 'gain' | 'loss' | 'neutral' {
+  const g = f.race?.gained ?? 0;
+  return g > 0 ? 'gain' : g < 0 ? 'loss' : 'neutral';
 }
 
 export function fuelText(f: LiveFrame): string {
@@ -62,6 +80,8 @@ export function RaceView() {
     setText(e.last, formatLapTime(f.lap.lastLapMs));
     setText(e.best, formatLapTime(f.lap.bestLapMs));
     setText(e.lap, lapCounterText(f));
+    setText(e.pos, racePositionText(f));
+    setAttr(e.pos, 'data-tone', racePositionTone(f));
     setAttr(e.invalid, 'data-show', f.lap.currentLapValid === false ? '1' : '0');
     setText(e.fuel, fuelText(f));
     for (const i of SECTORS) {
@@ -89,6 +109,7 @@ export function RaceView() {
             {uiText('Volta inválida')}
           </span>
         </span>
+        <span ref={set('pos')} className="race-pos" data-tone="neutral" />
         <span ref={set('fuel')}>{uiText('Comb. –')}</span>
       </div>
       <div

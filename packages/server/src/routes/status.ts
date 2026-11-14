@@ -10,6 +10,8 @@ import {
   isPacketFormat,
   type LanInfo,
   type PacketFormat,
+  SESSION_KIND_DEFAULTS,
+  type SessionKindDefault,
 } from '@gt7/shared';
 import type { FastifyInstance } from 'fastify';
 import {
@@ -39,6 +41,10 @@ export function currentSettings(ctx: RouteContext): ApiSettings {
     engineerAudioDeviceId: runtime.store.getSetting<string | null>(
       SETTINGS_KEYS.engineerAudioDeviceId,
       null,
+    ),
+    sessionKindDefault: runtime.store.getSetting<SessionKindDefault>(
+      SETTINGS_KEYS.sessionKindDefault,
+      'ask',
     ),
   };
 }
@@ -83,6 +89,7 @@ export function statusRoutes(app: FastifyInstance, ctx: RouteContext): void {
       'autoCapture',
       'deltaReference',
       'engineerAudioDeviceId',
+      'sessionKindDefault',
     ];
     const unknown = Object.keys(b).filter((k) => !known.includes(k));
     if (unknown.length) throw badRequest(`Campo(s) desconhecido(s): ${unknown.join(', ')}.`);
@@ -105,6 +112,13 @@ export function statusRoutes(app: FastifyInstance, ctx: RouteContext): void {
         ? null
         : optString(b, 'engineerAudioDeviceId', 'engineerAudioDeviceId', 160);
     if (audioDevice === '') throw badRequest('Informe um identificador de aparelho válido.');
+    const kindDefault = optString(b, 'sessionKindDefault', 'sessionKindDefault', 16);
+    if (
+      kindDefault !== undefined &&
+      !(SESSION_KIND_DEFAULTS as readonly string[]).includes(kindDefault)
+    ) {
+      throw badRequest('sessionKindDefault deve ser ask, practice ou qualifying.');
+    }
     let ref: { kind: DeltaReferenceKind; lapId: string | null } | undefined;
     if (b.deltaReference !== undefined) {
       const r = bodyObject(b.deltaReference);
@@ -128,6 +142,9 @@ export function statusRoutes(app: FastifyInstance, ctx: RouteContext): void {
     if (ref) runtime.setDeltaReference(ref.kind, ref.lapId);
     if (audioDevice !== undefined)
       runtime.store.setSetting(SETTINGS_KEYS.engineerAudioDeviceId, audioDevice);
+    if (kindDefault !== undefined) {
+      runtime.store.setSetting(SETTINGS_KEYS.sessionKindDefault, kindDefault);
+    }
     const formatFailed = (e: Error) =>
       hub.notice({
         level: 'error',

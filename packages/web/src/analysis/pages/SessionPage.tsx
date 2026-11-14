@@ -14,6 +14,8 @@ import { addNotice } from '../../state/uiStore.ts';
 import { api, urls } from '../api.ts';
 import { CarName } from '../components/CarName.tsx';
 import { LapQuickActions } from '../components/LapActions.tsx';
+import { RaceResult } from '../components/RaceResult.tsx';
+import { KindTag, SessionKindSelect } from '../components/SessionKind.tsx';
 import {
   ConfirmButton,
   Empty,
@@ -220,10 +222,17 @@ export function SessionPage({ id }: { id: string }) {
               <Tag tone="ref">{uiText('captura de replay')}</Tag>
             )}
             {active && <Tag tone="info">{uiText('em andamento')}</Tag>}
+            <KindTag kind={session.kind} />
           </>
         }
         actions={
           <>
+            {session.mode === 'live' && (
+              <SessionKindSelect
+                session={session}
+                onChanged={(s) => detail.setData({ ...detail.data!, session: s })}
+              />
+            )}
             <a className="a-btn" href={routes.summary(session.id)}>
               {uiText('Resumo da sessão')}
             </a>
@@ -262,6 +271,8 @@ export function SessionPage({ id }: { id: string }) {
           </>
         }
       />
+
+      {session.kind === 'race' && <RaceResult session={session} />}
 
       <div className="a-stats a-session-stats">
         <div className="a-stat">

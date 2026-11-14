@@ -11,9 +11,29 @@ import {
   type FindingConfidence,
   type LapFlag,
   type PacketFormat,
+  type SessionKind,
   type SessionMode,
 } from '@gt7/shared';
 import { getLanguage, t as uiText } from '../../lib/i18n.ts';
+
+/** Treino, qualificatória ou corrida (spec 21). */
+export const SESSION_KIND_LABELS: Record<SessionKind, string> = {
+  get practice() {
+    return uiText('Treino');
+  },
+  get qualifying() {
+    return uiText('Qualificatória');
+  },
+  get race() {
+    return uiText('Corrida');
+  },
+};
+
+export const SESSION_KIND_TONES: Record<SessionKind, 'info' | 'pb' | 'sb'> = {
+  practice: 'info',
+  qualifying: 'pb',
+  race: 'sb',
+};
 
 export const SESSION_MODE_LABELS: Record<SessionMode, string> = {
   get live() {

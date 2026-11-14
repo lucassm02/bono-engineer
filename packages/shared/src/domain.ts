@@ -23,6 +23,14 @@ export const DELTA_REFERENCE_KINDS: readonly DeltaReferenceKind[] = [
 /** How the session was captured. */
 export type SessionMode = 'live' | 'replayCapture';
 
+/** What the session was for (spec 21). Null or absent: not classified yet. */
+export type SessionKind = 'practice' | 'qualifying' | 'race';
+
+export const SESSION_KINDS: readonly SessionKind[] = ['practice', 'qualifying', 'race'] as const;
+
+/** Who set the kind: the engine (race detected), the driver, or the schema migration. */
+export type SessionKindSource = 'auto' | 'user' | 'migrated';
+
 /**
  * Track identity inferred from geometry (GT7 sends no track id).
  * Two laps match a track when start point is within a few meters, length within ~1% and shape
@@ -99,6 +107,32 @@ export interface Session {
    * sessions saved before this field existed. (core, additive)
    */
   trackTimeMs?: number | null;
+  /** Practice, qualifying or race; null/absent until classified. (core, additive) */
+  kind?: SessionKind | null;
+  kindSource?: SessionKindSource | null;
+  /** Laps of the race (from the game's totalLaps); races only. */
+  raceTotalLaps?: number | null;
+  /** Cars in the race at the start (races only). */
+  fieldSize?: number | null;
+  startPosition?: number | null;
+  finishPosition?: number | null;
+}
+
+/** Something that happened during a race, stored with its session (spec 21). */
+export type SessionEventKind = 'grid' | 'position' | 'cars' | 'impact' | 'finish';
+
+export interface SessionEvent {
+  id: Id;
+  sessionId: Id;
+  /** Epoch ms. */
+  at: number;
+  kind: SessionEventKind;
+  /** Game lap counter at the time (0 on the grid). */
+  lap: number;
+  /** Distance along the lap in meters, null when unknown. */
+  distanceM: number | null;
+  /** Kind-specific: from/to (position, cars); dvMs2, speedBeforeKmh, speedAfterKmh (impact). */
+  data: Record<string, number | boolean | string | null>;
 }
 
 /** Quality flags attached to a lap. */

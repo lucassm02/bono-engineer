@@ -1,0 +1,95 @@
+/* Corridas e tipos de sessão (spec 21) */
+
+.kind-select {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
+
+.race-result {
+  display: grid;
+  gap: var(--sp-4);
+  min-width: 0;
+}
+.race-result-head {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sp-1) var(--sp-4);
+  font-size: var(--fs-lg);
+}
+.race-gain {
+  font-size: var(--fs-md);
+  color: var(--text-2);
+}
+.race-gain[data-tone="gain"] {
+  color: var(--gain);
+}
+.race-gain[data-tone="loss"] {
+  color: var(--loss);
+}
+.race-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 180px;
+}
+.race-chart-grid {
+  stroke: var(--line-soft);
+  stroke-width: 1;
+}
+.race-chart-tick {
+  fill: var(--text-2);
+  font-size: var(--fs-2xs);
+}
+.race-chart-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.race-chart-impact {
+  stroke: var(--loss);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+  opacity: 0.85;
+}
+.race-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+.race-timeline li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0;
+  border-top: 1px solid var(--line-soft);
+}
+.race-timeline li[data-tone="gain"] {
+  color: var(--gain);
+}
+.race-timeline li[data-tone="loss"] {
+  color: var(--loss);
+}
+.race-timeline-lap {
+  flex: 0 0 5.5em;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+.kind-bulk {
+  margin-bottom: var(--sp-4);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
+.kind-default-select {
+  min-width: 13em;
+}

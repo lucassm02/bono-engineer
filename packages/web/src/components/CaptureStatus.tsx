@@ -5,8 +5,10 @@
  * There is no "start" button on purpose: sessions open and close by themselves.
  */
 
-import type { SessionSavedMessage } from '@gt7/shared';
+import type { SessionKind, SessionSavedMessage } from '@gt7/shared';
 import { create } from 'zustand';
+import { api } from '../analysis/api.ts';
+import { SESSION_KIND_LABELS } from '../analysis/lib/labels.ts';
 import {
   type CaptureTone,
   describeCapture,
@@ -15,7 +17,7 @@ import {
 } from '../lib/captureStatus.ts';
 import { t as uiText } from '../lib/i18n.ts';
 import { routes } from '../lib/route.ts';
-import { useUi } from '../state/uiStore.ts';
+import { addNotice, useUi } from '../state/uiStore.ts';
 import { Icon } from './ui/Icon.tsx';
 import '../styles/capture-status.css';
 
@@ -45,6 +47,8 @@ interface SavedToast {
   id: number;
   message: string;
   sessionId: string;
+  /** The session is not a race and has no kind yet: the toast asks (spec 21). */
+  ask: boolean;
 }
 
 const useSavedToast = create<{ toast: SavedToast | null }>()(() => ({ toast: null }));
@@ -62,12 +66,30 @@ export function dismissSessionSaved(): void {
 export function showSessionSaved(m: SessionSavedMessage): void {
   const id = ++toastSeq;
   useSavedToast.setState({
-    toast: { id, message: savedToastText(m), sessionId: m.sessionId },
+    toast: { id, message: savedToastText(m), sessionId: m.sessionId, ask: m.kind == null },
   });
   if (toastTimer) clearTimeout(toastTimer);
   toastTimer = setTimeout(() => {
     if (useSavedToast.getState().toast?.id === id) dismissSessionSaved();
   }, TOAST_MS);
+}
+
+/** The driver answers "what was this session?" from the toast. */
+async function classify(sessionId: string, kind: SessionKind): Promise<void> {
+  try {
+    await api.setSessionKind(sessionId, kind);
+    useSavedToast.setState((s) => ({
+      toast: s.toast
+        ? {
+            ...s.toast,
+            ask: false,
+            message: uiText('Sessão marcada como {0}.', SESSION_KIND_LABELS[kind]),
+          }
+        : null,
+    }));
+  } catch (e) {
+    addNotice('error', (e as Error).message, 6000);
+  }
 }
 
 /** The chip. `live` = compact, status only (no navigation by accident while driving). */
@@ -154,6 +176,28 @@ export function SessionSavedToast() {
     >
       <Icon name="check" size={18} className="cs-toast-icon" />
       <span className="cs-toast-text">{toast.message}</span>
+      {toast.ask && (
+        <>
+          <button
+            type="button"
+            className="ui-btn"
+            data-variant="secondary"
+            data-size="sm"
+            onClick={() => void classify(toast.sessionId, 'practice')}
+          >
+            {SESSION_KIND_LABELS.practice}
+          </button>
+          <button
+            type="button"
+            className="ui-btn"
+            data-variant="secondary"
+            data-size="sm"
+            onClick={() => void classify(toast.sessionId, 'qualifying')}
+          >
+            {SESSION_KIND_LABELS.qualifying}
+          </button>
+        </>
+      )}
       <a
         className="ui-btn"
         data-variant="secondary"

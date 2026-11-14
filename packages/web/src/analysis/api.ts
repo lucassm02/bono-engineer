@@ -23,6 +23,7 @@ import type {
   ApiMcpInfo,
   ApiMicrosectors,
   ApiRedetectCornersResult,
+  ApiSessionRace,
   ApiSettings,
   ApiSettingsPatch,
   ApiStatus,
@@ -52,6 +53,7 @@ import type {
   ReferenceCaptureStatus,
   Session,
   SessionDetail,
+  SessionKind,
   SessionSummary,
   StartCaptureRequest,
   TaskDictionaryView,
@@ -177,9 +179,18 @@ export const api = {
       from,
     }),
 
-  sessions: (q: { trackId?: string; carCode?: number; mode?: string; limit?: number } = {}) =>
-    get<Session[]>(`/api/sessions${qs({ limit: 500, ...q })}`),
+  sessions: (
+    q: { trackId?: string; carCode?: number; mode?: string; kind?: string; limit?: number } = {},
+  ) => get<Session[]>(`/api/sessions${qs({ limit: 500, ...q })}`),
   session: (id: string) => get<SessionDetail>(`/api/sessions/${enc(id)}`),
+  /** The driver sets the kind of a session; null clears it (spec 21). */
+  setSessionKind: (id: string, kind: SessionKind | null) =>
+    request<Session>('PATCH', `/api/sessions/${enc(id)}`, { kind }),
+  /** The same kind for several sessions at once. */
+  setSessionsKind: (ids: string[], kind: SessionKind | null) =>
+    request<{ ok: true; changed: number }>('PATCH', '/api/sessions', { ids, kind }),
+  /** Result and events of a race. */
+  sessionRace: (id: string) => get<ApiSessionRace>(`/api/sessions/${enc(id)}/race`),
   weekly: (weeksAgo = 0) => get<WeeklySummary>(`/api/analysis/weekly${qs({ weeksAgo })}`),
   sessionSummary: (id: string) => get<SessionSummary>(`/api/sessions/${enc(id)}/summary`),
   deleteSession: (id: string) => request<{ ok: true }>('DELETE', `/api/sessions/${enc(id)}`),

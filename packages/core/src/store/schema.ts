@@ -184,6 +184,29 @@ export const MIGRATIONS: readonly string[] = [
     UNIQUE (grp, text)
   );
   `,
+  // v9 — session kinds and races (spec 21). Every session driven so far was a qualifying attempt
+  // (owner's decision, 2026-11-13), so the existing live sessions are marked as such; reference
+  // captures from a replay are not driving sessions and stay unclassified.
+  `
+  ALTER TABLE sessions ADD COLUMN kind TEXT;
+  ALTER TABLE sessions ADD COLUMN kind_source TEXT;
+  ALTER TABLE sessions ADD COLUMN race_total_laps INTEGER;
+  ALTER TABLE sessions ADD COLUMN field_size INTEGER;
+  ALTER TABLE sessions ADD COLUMN start_position INTEGER;
+  ALTER TABLE sessions ADD COLUMN finish_position INTEGER;
+  UPDATE sessions SET kind = 'qualifying', kind_source = 'migrated' WHERE mode = 'live';
+  CREATE INDEX IF NOT EXISTS sessions_kind ON sessions(kind, started_at);
+  CREATE TABLE IF NOT EXISTS session_events (
+    id TEXT PRIMARY KEY,
+    session_id TEXT NOT NULL,
+    at INTEGER NOT NULL,
+    kind TEXT NOT NULL,
+    lap INTEGER NOT NULL,
+    distance_m REAL,
+    data TEXT NOT NULL DEFAULT '{}'
+  );
+  CREATE INDEX IF NOT EXISTS session_events_session ON session_events(session_id, kind, at);
+  `,
 ];
 
 export const SCHEMA_VERSION = MIGRATIONS.length;

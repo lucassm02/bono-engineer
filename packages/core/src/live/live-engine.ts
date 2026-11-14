@@ -58,6 +58,7 @@ import {
   type LiveGForce,
   type LiveGoal,
   type LiveLearning,
+  type LiveRace,
   type LiveTask,
   type LiveTrackContext,
   type LiveTrackInfo,
@@ -66,6 +67,7 @@ import {
   type SectorSplit,
   type SectorStatus,
   type Session,
+  type SessionEvent,
   suggestedGearOf,
   type TelemetryPacket,
   TRACK_HINT_TTL_MS,
@@ -97,6 +99,7 @@ import {
 } from './corner-hints.ts';
 import { DeltaReference, type StoredLap } from './delta-reference.ts';
 import { GForceEstimator, headingOf } from './gforce.ts';
+import { type RaceSignal, RaceTracker } from './race-tracker.ts';
 
 export const NOMINAL_MS_PER_PACKET = 1000 / 60;
 /** packetId gaps larger than this are a stream reset (matches the ingestor). */
@@ -124,6 +127,9 @@ const FROZEN_END_MS = 30_000;
 
 /** Replay detection: a car faster than this (m/s) with a changing position is "playing". */
 const REPLAY_MIN_SPEED_MPS = 2;
+/** The session of a finished race closes at the latest this long after the flag (ms). */
+const RACE_CLOSE_MAX_WAIT_MS = 10_000;
+
 /** Identical positions for this many packets while "moving" = the replay is stalled (paused). */
 const REPLAY_STALL_PACKETS = 4;
 /** A stalled/slow replay still counts as a replay for this long after it last played (ms). */
@@ -221,7 +227,11 @@ export type SessionEndReason =
   /** The next laps are on another track. */
   | 'trackChange'
   /** Replay mode or the "save sessions" switch changed. */
-  | 'mode';
+  | 'mode'
+  /** A race began (the game's totalLaps appeared): its laps get a session of their own. */
+  | 'raceStart'
+  /** The chequered flag fell. */
+  | 'raceFinished';
 
 export interface SessionEndInfo {
   reason: SessionEndReason;
@@ -462,6 +472,16 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
    * (state 'replay'); never stored.
    */
   #replayPath = new ReplayPathTracker();
+  /** The race in progress (spec 21): flag, position, cars, impacts. */
+  #race = new RaceTracker();
+  /** What the open race session is annotated with (also applied to a session that opens later). */
+  #raceMeta: {
+    totalLaps: number;
+    fieldSize: number | null;
+    startPosition: number | null;
+  } | null = null;
+  /** Epoch ms of the flag: the session closes once its last lap is finalized. */
+  #closeAfterFinishAt: number | null = null;
   /** Track learned from this session's recognition lap, until the next lap closes. */
   #learning: { trackId: Id } | null = null;
   /** The last timed lap on an unknown track did not count. */
@@ -538,6 +558,11 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       lengthM: this.#track.lengthM,
       confidence: this.#trackConfidence,
     };
+  }
+
+  /** The race in progress or just finished, for the live panel; null outside a race. */
+  get race(): LiveRace | null {
+    return this.#race.live;
   }
 
   get replayMode(): boolean {
@@ -815,7 +840,9 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   }
 
   /** Patches the active session (e.g. recordingFile) and persists it. */
-  annotateSession(patch: Partial<Pick<Session, 'recordingFile' | 'notes'>>): void {
+  annotateSession(
+    patch: Partial<Pick<Session, 'recordingFile' | 'notes' | 'kind' | 'kindSource'>>,
+  ): void {
     if (!this.#session) return;
     Object.assign(this.#session, patch);
     this.#ctx.saveSession({ ...this.#session });
@@ -1227,7 +1254,8 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     if (this.#session && running && p.carCode !== this.#session.carCode) {
       this.endSession('carChange', this.#lastActiveAt ?? undefined);
     }
-    if (!this.#session && running) this.#startSession(p, receivedAtMs);
+    // after the flag the results screen looks like a grid: no new session until the car leaves
+    if (!this.#session && running && !this.#race.latched) this.#startSession(p, receivedAtMs);
     if (this.#session) {
       if (onTrack) this.#lastActiveAt = receivedAtMs;
       // "time on track" clock: only consecutive running packets count
@@ -1254,6 +1282,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     } else if (this.#session) {
       this.#handleLap(p, receivedAtMs, dPk, streamReset, onTrack, paused, recvGap);
     }
+    this.#raceStep(p, receivedAtMs, dPk, onTrack, f, replay.kind !== 'none');
 
     if (this.listenerCount('packet') > 0) {
       this.emit('packet', {
@@ -1299,6 +1328,164 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   // ---------------------------------------------------------------------------------------------
   // Internals: state
   // ---------------------------------------------------------------------------------------------
+
+  // ---------------------------------------------------------------------------------------------
+  // Internals: races (spec 21)
+  // ---------------------------------------------------------------------------------------------
+
+  /** One packet of the race bookkeeping; reacts to what the tracker saw. */
+  #raceStep(
+    p: TelemetryPacket,
+    at: number,
+    dPk: number,
+    onTrack: boolean,
+    f: ReturnType<typeof decodeFlags>,
+    replaying: boolean,
+  ): void {
+    if (this.#replayMode || replaying) {
+      // a replay or a capture is not a race of the driver
+      if (this.#race.state === 'racing') this.#race.reset();
+    } else {
+      const signals = this.#race.update({
+        at,
+        dtS: (dPk * this.#msPerPacket) / 1000,
+        totalLaps: p.totalLaps,
+        lapCount: p.lapCount,
+        position: p.preRacePosition,
+        cars: p.numCarsPreRace,
+        speedMps: p.speedMps,
+        velocity: p.velocity,
+        onTrack,
+        loading: f.loadingOrProcessing,
+        paused: f.paused,
+        distanceM: this.#lap?.dist ?? null,
+      });
+      for (const sig of signals) this.#onRaceSignal(sig);
+    }
+    // the flag fell: the session closes once the last lap has its game time
+    if (this.#closeAfterFinishAt !== null) {
+      const flagAt = this.#closeAfterFinishAt;
+      if (!this.#pending || at - flagAt > RACE_CLOSE_MAX_WAIT_MS) {
+        this.#closeAfterFinishAt = null;
+        this.#raceMeta = null;
+        this.endSession('raceFinished', flagAt);
+      }
+    }
+  }
+
+  #onRaceSignal(sig: RaceSignal): void {
+    switch (sig.type) {
+      case 'start': {
+        this.#raceMeta = {
+          totalLaps: sig.totalLaps,
+          fieldSize: sig.lobby.cars,
+          startPosition: null,
+        };
+        this.#closeAfterFinishAt = null;
+        const s = this.#session;
+        // joined in the middle of a race that already has its session: keep it
+        if (s && !(sig.midRace && s.kind === 'race')) {
+          if (s.lapCount > 0 || s.kind === 'race') {
+            // a series of laps (or an earlier race) ends here: the race has a session of its own
+            if (this.#lap?.timed) this.#discard(this.#lap, 'sessionEnd');
+            this.#lap = null;
+            this.#lastLapCount = null;
+            this.#switchSession('raceStart', sig.at, this.#lastActiveAt ?? sig.at);
+          } else {
+            this.#updateRaceSession();
+          }
+        }
+        this.#raceEvent('grid', sig.at, 0, null, {
+          position: sig.lobby.position,
+          cars: sig.lobby.cars,
+          totalLaps: sig.totalLaps,
+          midRace: sig.midRace,
+        });
+        return;
+      }
+      case 'startPosition':
+        if (this.#raceMeta) {
+          this.#raceMeta.startPosition = sig.position;
+          this.#raceMeta.fieldSize = sig.cars ?? this.#raceMeta.fieldSize;
+        }
+        this.#updateRaceSession();
+        this.#raceEvent('grid', sig.at, 0, null, {
+          position: sig.position,
+          cars: sig.cars,
+          start: true,
+        });
+        return;
+      case 'position':
+        // only a position held for a couple of seconds is stored: side by side it flips every second
+        if (sig.stable) {
+          this.#raceEvent('position', sig.at, sig.lap, sig.distanceM, {
+            from: sig.from,
+            to: sig.to,
+          });
+        }
+        return;
+      case 'cars':
+        this.#raceEvent('cars', sig.at, sig.lap, sig.distanceM, { from: sig.from, to: sig.to });
+        return;
+      case 'impact':
+        this.#raceEvent('impact', sig.at, sig.lap, sig.distanceM, {
+          dvMs2: sig.dvMs2,
+          speedBeforeKmh: sig.speedBeforeKmh,
+          speedAfterKmh: sig.speedAfterKmh,
+        });
+        return;
+      case 'finish': {
+        const s = this.#session;
+        if (s && this.#raceMeta) {
+          s.finishPosition = sig.position;
+          s.fieldSize = this.#raceMeta.fieldSize ?? sig.cars;
+          this.#ctx.saveSession({ ...s });
+          this.emit('sessionUpdated', { ...s });
+        }
+        this.#raceEvent('finish', sig.at, sig.totalLaps, null, {
+          position: sig.position,
+          cars: sig.cars,
+          totalLaps: sig.totalLaps,
+        });
+        this.#closeAfterFinishAt = sig.at;
+        return;
+      }
+    }
+  }
+
+  /** Marks a session as the race in progress (the driver's own choice of kind is respected). */
+  #applyRace(s: Session): void {
+    const m = this.#raceMeta;
+    if (!m || this.#closeAfterFinishAt !== null) return;
+    if (s.kindSource === 'user' && s.kind !== 'race') return;
+    s.kind = 'race';
+    s.kindSource = s.kindSource === 'user' ? 'user' : 'auto';
+    s.raceTotalLaps = m.totalLaps;
+    s.fieldSize = m.fieldSize;
+    s.startPosition = m.startPosition;
+  }
+
+  #updateRaceSession(): void {
+    const s = this.#session;
+    if (!s) return;
+    this.#applyRace(s);
+    this.#ctx.saveSession({ ...s });
+    this.emit('sessionUpdated', { ...s });
+  }
+
+  #raceEvent(
+    kind: SessionEvent['kind'],
+    at: number,
+    lap: number,
+    distanceM: number | null,
+    data: SessionEvent['data'],
+  ): void {
+    const s = this.#session;
+    if (!s) return;
+    this.#ctx.saveSessionEvents?.([
+      { id: this.#newId(), sessionId: s.id, at, kind, lap, distanceM, data },
+    ]);
+  }
 
   #composeState(): ConnectionState {
     switch (this.#ingestorState) {
@@ -1355,6 +1542,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     this.#runningSince = null;
     this.#lastLapDoneAt = null;
     this.#lastActiveAt = at;
+    this.#applyRace(s);
     this.#ctx.saveSession({ ...s });
     if (hinted) {
       // centerline, corners, sectors and the reference are loaded before the first lap
@@ -2388,8 +2576,10 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       position: { ...p.position },
       headingRad: headingOf(p),
       lap: {
-        lap: p.lapCount,
-        totalLaps: p.totalLaps > 0 ? p.totalLaps : null,
+        // in a race the counter never passes the laps of the race (the game says N + 1 at the flag)
+        lap: this.#race.displayLap(p.lapCount),
+        totalLaps: this.#race.totalLaps ?? (p.totalLaps > 0 ? p.totalLaps : null),
+        ...(this.#race.latched ? { finished: true } : {}),
         currentLapMs: lap ? Math.max(0, Math.round(lap.elapsedMs)) : 0,
         lastLapMs: this.#lastLapMs ?? (p.lastLapMs > 0 ? p.lastLapMs : null),
         bestLapMs: this.#sessionBestLapMs ?? (p.bestLapMs > 0 ? p.bestLapMs : null),
@@ -2414,6 +2604,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       ...(this.#passes.length ? { cornerPasses: this.#passes } : {}),
       ...goalPart,
       ...(liveTasks.length ? { tasks: liveTasks } : {}),
+      ...(this.#race.live ? { race: this.#race.live } : {}),
       ...(this.#drill ? { drill: this.#drill.tracker.frame() } : {}),
       link: this.#link ?? {
         rateHz: 0,

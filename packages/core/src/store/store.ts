@@ -41,6 +41,9 @@ import type {
   ReferenceMeta,
   SectorGate,
   Session,
+  SessionEvent,
+  SessionKind,
+  SessionKindSource,
   TaskMiss,
   Track,
   TrackCenterline,
@@ -55,7 +58,7 @@ import {
 import { detectCloudFolder } from '../util/cloud-folder.ts';
 import { DB_FILE, migratePreviousDataDir } from '../util/data-dir.ts';
 import { newId } from '../util/ids.ts';
-import { getSchemaVersion, migrate } from './schema.ts';
+import { getSchemaVersion, migrate, SCHEMA_VERSION } from './schema.ts';
 
 const gzipAsync = promisify(gzip);
 
@@ -112,6 +115,8 @@ export interface ListSessionsOptions {
   trackId?: Id;
   carCode?: number;
   mode?: Session['mode'];
+  /** A kind, or `none` for sessions without one. */
+  kind?: SessionKind | 'none';
   limit?: number;
   offset?: number;
 }
@@ -152,7 +157,25 @@ export class Gt7Store {
     this.db.exec(
       `PRAGMA busy_timeout = 5000; PRAGMA journal_mode = ${synced ? 'DELETE' : 'WAL'}; PRAGMA foreign_keys = ON; PRAGMA synchronous = ${synced ? 'FULL' : 'NORMAL'};`,
     );
+    this.#snapshotBeforeMigration();
     migrate(this.db);
+  }
+
+  /**
+   * Before a pending migration touches an existing database, a consistent copy is kept next to it
+   * (`sessions.db.before-v<N>.bak`, once per version): the project rule is to back up before
+   * migrating, and a migration may rewrite rows.
+   */
+  #snapshotBeforeMigration(): void {
+    const from = getSchemaVersion(this.db);
+    if (from === 0 || from >= SCHEMA_VERSION) return;
+    const target = `${this.dbPath}.before-v${from}.bak`;
+    if (existsSync(target)) return;
+    try {
+      this.db.exec(`VACUUM INTO '${target.replaceAll("'", "''")}'`);
+    } catch {
+      // a failed snapshot must not stop the app from opening; the migration is transactional
+    }
   }
 
   /** Opens (creating if needed) the store in `dataDir` and applies migrations. */
@@ -378,6 +401,12 @@ export class Gt7Store {
       recordingFile: strOrNull(r.recording_file),
       notes: strOrNull(r.notes),
       trackTimeMs: numOrNull(r.track_time_ms),
+      kind: (strOrNull(r.kind) as Session['kind']) ?? null,
+      kindSource: (strOrNull(r.kind_source) as Session['kindSource']) ?? null,
+      raceTotalLaps: numOrNull(r.race_total_laps),
+      fieldSize: numOrNull(r.field_size),
+      startPosition: numOrNull(r.start_position),
+      finishPosition: numOrNull(r.finish_position),
     };
   }
 
@@ -386,11 +415,18 @@ export class Gt7Store {
     this.db
       .prepare(
         `INSERT INTO sessions (id, track_id, car_code, started_at, ended_at, format, mode, recording_file, notes,
-          track_time_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          track_time_ms, kind, kind_source, race_total_laps, field_size, start_position, finish_position)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(id) DO UPDATE SET track_id = excluded.track_id, car_code = excluded.car_code,
           started_at = excluded.started_at, ended_at = excluded.ended_at, format = excluded.format,
           mode = excluded.mode, recording_file = excluded.recording_file, notes = excluded.notes,
-          track_time_ms = excluded.track_time_ms`,
+          track_time_ms = excluded.track_time_ms,
+          kind = CASE WHEN sessions.kind_source = 'user' AND excluded.kind_source IS NOT 'user'
+            THEN sessions.kind ELSE excluded.kind END,
+          kind_source = CASE WHEN sessions.kind_source = 'user' AND excluded.kind_source IS NOT 'user'
+            THEN sessions.kind_source ELSE excluded.kind_source END,
+          race_total_laps = excluded.race_total_laps, field_size = excluded.field_size,
+          start_position = excluded.start_position, finish_position = excluded.finish_position`,
       )
       .run(
         s.id,
@@ -403,7 +439,69 @@ export class Gt7Store {
         s.recordingFile,
         s.notes ?? null,
         s.trackTimeMs ?? null,
+        s.kind ?? null,
+        s.kindSource ?? null,
+        s.raceTotalLaps ?? null,
+        s.fieldSize ?? null,
+        s.startPosition ?? null,
+        s.finishPosition ?? null,
       );
+  }
+
+  /** Sets the kind of a session ("sem etiqueta" with null). The driver's choice is never overwritten by the engine. */
+  setSessionKind(id: Id, kind: SessionKind | null, source: SessionKindSource = 'user'): boolean {
+    const r = this.db
+      .prepare('UPDATE sessions SET kind = ?, kind_source = ? WHERE id = ?')
+      .run(kind, kind === null ? null : source, id);
+    return Number(r.changes) > 0;
+  }
+
+  /** The same kind for several sessions in one transaction. Returns how many changed. */
+  setSessionsKind(
+    ids: readonly Id[],
+    kind: SessionKind | null,
+    source: SessionKindSource = 'user',
+  ): number {
+    const db = this.db;
+    db.exec('BEGIN IMMEDIATE');
+    try {
+      const st = db.prepare('UPDATE sessions SET kind = ?, kind_source = ? WHERE id = ?');
+      let n = 0;
+      for (const id of ids) n += Number(st.run(kind, kind === null ? null : source, id).changes);
+      db.exec('COMMIT');
+      return n;
+    } catch (e) {
+      db.exec('ROLLBACK');
+      throw e;
+    }
+  }
+
+  /** Stores the events of a session (positions, impacts…). Ids already stored are kept. */
+  addSessionEvents(events: readonly SessionEvent[]): void {
+    if (events.length === 0) return;
+    const st = this.db.prepare(
+      `INSERT OR IGNORE INTO session_events (id, session_id, at, kind, lap, distance_m, data)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    );
+    for (const e of events) {
+      st.run(e.id, e.sessionId, e.at, e.kind, e.lap, e.distanceM, JSON.stringify(e.data));
+    }
+  }
+
+  /** Events of a session in the order they happened. */
+  listSessionEvents(sessionId: Id): SessionEvent[] {
+    const rows = this.db
+      .prepare('SELECT * FROM session_events WHERE session_id = ? ORDER BY at, rowid')
+      .all(sessionId) as Row[];
+    return rows.map((r) => ({
+      id: String(r.id),
+      sessionId: String(r.session_id),
+      at: num(r.at),
+      kind: String(r.kind) as SessionEvent['kind'],
+      lap: num(r.lap),
+      distanceM: numOrNull(r.distance_m),
+      data: JSON.parse(String(r.data ?? '{}')) as SessionEvent['data'],
+    }));
   }
 
   getSession(id: Id): Session | null {
@@ -428,6 +526,12 @@ export class Gt7Store {
     if (opts.mode) {
       where.push('s.mode = ?');
       params.push(opts.mode);
+    }
+    if (opts.kind === 'none') {
+      where.push('s.kind IS NULL');
+    } else if (opts.kind) {
+      where.push('s.kind = ?');
+      params.push(opts.kind);
     }
     const sql = `${Gt7Store.#SESSION_SELECT} ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
       ORDER BY s.started_at DESC LIMIT ? OFFSET ?`;
@@ -466,6 +570,7 @@ export class Gt7Store {
     const s = this.getSession(id);
     if (!s) return false;
     for (const lap of this.listLaps(id)) await this.deleteLap(lap.id);
+    this.db.prepare('DELETE FROM session_events WHERE session_id = ?').run(id);
     this.db.prepare('DELETE FROM sessions WHERE id = ?').run(id);
     if (s.recordingFile) await rm(join(this.dataDir, s.recordingFile), { force: true });
     return true;

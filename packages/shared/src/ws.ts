@@ -6,8 +6,9 @@
  * Bump {@link WS_PROTOCOL_VERSION} on breaking changes.
  */
 
-import type { DeltaReferenceKind, Id, Lap, Session } from './domain.ts';
+import type { DeltaReferenceKind, Id, Lap, Session, SessionKind } from './domain.ts';
 import type { ConnectionState, LapCompletedEvent, LiveFrame } from './live.ts';
+import type { SessionKindDefault } from './race.ts';
 import type { IngestorStats, PacketFormat } from './telemetry.ts';
 import type { LiveTrackContext, TrackMismatchInfo } from './track-context.ts';
 import type { DeviceProfile, ViewId } from './ui.ts';
@@ -241,6 +242,13 @@ export interface SessionSavedMessage {
   bestLapMs: number | null;
   startedAt: number;
   endedAt: number;
+  /** Kind of the session (spec 21); null: not classified, the app asks the driver. (core, additive) */
+  kind?: SessionKind | null;
+  /** Races only. (core, additive) */
+  startPosition?: number | null;
+  finishPosition?: number | null;
+  fieldSize?: number | null;
+  raceTotalLaps?: number | null;
 }
 
 export interface NoticeMessage {
@@ -433,6 +441,8 @@ export interface ApiSettings {
   autoCapture: boolean;
   deltaReference: { kind: DeltaReferenceKind; lapId: Id | null };
   engineerAudioDeviceId?: Id | null;
+  /** What to do when a session that is not a race closes (spec 21); default `ask`. */
+  sessionKindDefault?: SessionKindDefault;
 }
 
 /** PATCH /api/settings body (every field optional). */
@@ -448,6 +458,7 @@ export interface ApiSettingsPatch {
   autoCapture?: boolean;
   deltaReference?: { kind: DeltaReferenceKind; lapId?: Id | null };
   engineerAudioDeviceId?: Id | null;
+  sessionKindDefault?: SessionKindDefault;
 }
 
 /** POST /api/discovery/scan: restarts the console search. */

@@ -13,6 +13,7 @@ import type {
   LapTrace,
   LiveTask,
   Session,
+  SessionEvent,
   Track,
   TrackCenterline,
   Vec2,
@@ -75,6 +76,8 @@ export interface LiveEngineContext {
   getLiveTasks?(track: Track, carCode: number | null): LiveTask[];
   /** Stores a finished corner drill (spec 18); optional, absent = drills are not kept. */
   saveDrill?(drill: CornerDrill): void;
+  /** Stores race events of a session (spec 21); optional, absent = events are not kept. */
+  saveSessionEvents?(events: SessionEvent[]): void;
 }
 
 /** True if the lap counts for personal records (own driving, valid). */
@@ -129,6 +132,7 @@ function reassignInMemory(
 /** In-memory context: keeps everything in maps (no IO). */
 export class MemoryEngineContext implements LiveEngineContext {
   readonly sessions = new Map<Id, Session>();
+  readonly sessionEvents: SessionEvent[] = [];
   readonly laps = new Map<Id, StoredLap>();
   readonly tracks = new Map<Id, Track>();
   readonly centerlines = new Map<Id, TrackCenterline>();
@@ -144,6 +148,10 @@ export class MemoryEngineContext implements LiveEngineContext {
 
   saveSession(session: Session): void {
     this.sessions.set(session.id, { ...session });
+  }
+
+  saveSessionEvents(events: SessionEvent[]): void {
+    for (const e of events) this.sessionEvents.push({ ...e, data: { ...e.data } });
   }
 
   saveDrill(drill: CornerDrill): void {

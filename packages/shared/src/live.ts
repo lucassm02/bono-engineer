@@ -8,6 +8,7 @@
 
 import type { CornerDirection } from './analysis.ts';
 import type { DeltaReferenceKind, Id } from './domain.ts';
+import type { LiveRace } from './race.ts';
 import type { LiveTask } from './tasks.ts';
 import type {
   DecodedFlags,
@@ -82,6 +83,11 @@ export interface LiveLapTiming {
    */
   currentLapValid?: boolean;
   startedAt?: number;
+  /**
+   * The chequered flag fell (spec 21): `lap` is held at `totalLaps` instead of the game's N + 1.
+   * Absent while the race is running or outside a race. (core, additive)
+   */
+  finished?: boolean;
 }
 
 export interface LiveTrackInfo {
@@ -407,6 +413,8 @@ export interface LiveFrame {
   drill?: LiveDrill;
   /** The active engineer tasks of this track and car (spec 20); omitted while there are none. (core, additive) */
   tasks?: LiveTask[];
+  /** The race in progress or just finished (spec 21); omitted outside a race. (core, additive) */
+  race?: LiveRace;
   /** UDP link quality. */
   link: Pick<IngestorStats, 'rateHz' | 'lossPct' | 'lost' | 'received' | 'lastPacketAt'>;
 }

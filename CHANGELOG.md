@@ -7,6 +7,15 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- **Online races.** A race now gets a session of its own, apart from the laps before it. The result is saved with it: where you started, where you finished, how many cars were in the race, every position change held for two seconds, the cars that left, and the **impacts** (a sudden loss of speed, so a contact or a hit on the wall). The session page shows the result, a position chart and the timeline. On the live screen the lap counter stays at **4/4** at the chequered flag instead of reading 5/4, and the position shows as "P5/15 ▲1".
+- **Session types.** Every session can be a **Practice**, a **Qualifying** or a **Race**. Races are recognised on their own; for the others the Bono asks when the session is saved (or marks them as you choose in Settings → Console → Recording). Change the type any time from the session page or from the sessions list, one at a time or for all the listed sessions. The MCP lists sessions by type and returns the race result.
+
+### Changed
+
+- Sessions saved before this version are marked as **Qualifying**. The database is copied to `sessions.db.before-v8.bak` before the update touches it.
+
 ## [0.8.2] - 2026-11-13
 
 ### Fixed

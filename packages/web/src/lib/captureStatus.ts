@@ -127,9 +127,19 @@ export function describeReferenceCapture(
 
 /** "Sessão salva: Pista X, 5 voltas, melhor 1:23,456" (the "ver" link is drawn by the toast). */
 export function savedToastText(
-  m: Pick<SessionSavedMessage, 'trackName' | 'lapCount' | 'bestLapMs'>,
+  m: Pick<SessionSavedMessage, 'trackName' | 'lapCount' | 'bestLapMs'> &
+    Partial<Pick<SessionSavedMessage, 'kind' | 'startPosition' | 'finishPosition' | 'fieldSize'>>,
 ): string {
   const parts = [m.trackName ?? uiText('pista não identificada'), lapsText(m.lapCount)];
+  if (m.kind === 'race') {
+    // a race is told by its result, not by its best lap
+    if (m.startPosition != null && m.finishPosition != null) {
+      parts.push(uiText('largou em P{0}, terminou em P{1}', m.startPosition, m.finishPosition));
+    } else if (m.finishPosition != null) {
+      parts.push(uiText('terminou em P{0}', m.finishPosition));
+    }
+    return uiText('Corrida salva: {0}', parts.join(', '));
+  }
   if (m.bestLapMs !== null && m.bestLapMs > 0) parts.push(`melhor ${formatLapTime(m.bestLapMs)}`);
   return uiText('Sessão salva: {0}', parts.join(', '));
 }

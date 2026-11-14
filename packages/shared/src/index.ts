@@ -69,6 +69,7 @@ export * from './live.ts';
 export * from './map-overlay.ts';
 export * from './pace-trend.ts';
 export * from './pit-plan.ts';
+export * from './race.ts';
 export * from './radio/index.ts';
 export { localizedRadioUtterance } from './radio-translations.ts';
 export * from './summary-text.ts';

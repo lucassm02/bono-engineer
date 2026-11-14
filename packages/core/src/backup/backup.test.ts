@@ -132,6 +132,51 @@ function trace(lapId: string) {
   return b.build(lapId);
 }
 
+describe('backup .bono: races (spec 21)', () => {
+  it('carries the kind of the session, the race result and its events', async () => {
+    const a = open();
+    a.insertTrack(track('trk-a', 'Meu circuito'));
+    a.saveSession({
+      ...session('s1', 'trk-a'),
+      kind: 'race',
+      kindSource: 'auto',
+      raceTotalLaps: 4,
+      fieldSize: 15,
+      startPosition: 4,
+      finishPosition: 5,
+    });
+    a.saveLap(lap('l1', 's1', 'trk-a'), trace('l1'));
+    a.addSessionEvents([
+      {
+        id: 'e1',
+        sessionId: 's1',
+        at: 5,
+        kind: 'impact',
+        lap: 3,
+        distanceM: 900,
+        data: { dvMs2: 240 },
+      },
+    ]);
+    await a.flush();
+    const file = join(tempDir(), 'corrida.bono');
+    await createBackup(a, { laps: true, settings: false, recordings: false }, file, META);
+
+    const b = open();
+    await importBackup(b, file, { mode: 'merge', settings: false }, META);
+    expect(b.getSession('s1')).toMatchObject({
+      kind: 'race',
+      kindSource: 'auto',
+      raceTotalLaps: 4,
+      fieldSize: 15,
+      startPosition: 4,
+      finishPosition: 5,
+    });
+    expect(b.listSessionEvents('s1').map((e) => [e.kind, e.lap, e.data.dvMs2])).toEqual([
+      ['impact', 3, 240],
+    ]);
+  });
+});
+
 describe('backup .bono', () => {
   it('exports everything and imports it into another install, matching the same circuit', async () => {
     const a = open();

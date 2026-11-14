@@ -681,6 +681,21 @@ button {
   color: var(--text);
   font-weight: 650;
 }
+/* position in a race (spec 21): empty outside one */
+.race-pos {
+  color: var(--text);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.race-pos:empty {
+  display: none;
+}
+.race-pos[data-tone="gain"] {
+  color: var(--gain);
+}
+.race-pos[data-tone="loss"] {
+  color: var(--loss);
+}
 
 .race-delta,
 .map-delta {

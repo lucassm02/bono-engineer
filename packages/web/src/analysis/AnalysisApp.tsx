@@ -38,6 +38,7 @@ import '../styles/config.css';
 import '../styles/coach.css';
 import '../styles/help.css';
 import '../styles/session-summary.css';
+import '../styles/race.css';
 import '../styles/replay.css';
 
 interface NavItem {

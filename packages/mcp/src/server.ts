@@ -74,6 +74,40 @@ Convenções: distâncias em metros ao longo da volta; delta e tempo perdido pos
 pares [você, referência]. Referências capturadas de replay têm precisão de alguns metros.
 Use só os números retornados; diga quando um dado não existe.`;
 
+/**
+ * What a race adds to a session summary (spec 21): the result and the events of the way (positions
+ * gained or lost, cars out, impacts). Empty for sessions that are not races.
+ */
+function raceBlock(store: Gt7Store, sessionId: string) {
+  const s = store.getSession(sessionId);
+  if (!s?.kind) return {};
+  if (s.kind !== 'race') return { kind: s.kind };
+  const events = store.listSessionEvents(sessionId);
+  return {
+    kind: s.kind,
+    race: {
+      laps: s.raceTotalLaps ?? null,
+      startPosition: s.startPosition ?? null,
+      finishPosition: s.finishPosition ?? null,
+      cars: s.fieldSize ?? null,
+      positionChanges: events
+        .filter((e) => e.kind === 'position')
+        .map((e) => ({ lap: e.lap, from: e.data.from, to: e.data.to })),
+      carsOut: events
+        .filter((e) => e.kind === 'cars')
+        .map((e) => ({ lap: e.lap, from: e.data.from, to: e.data.to })),
+      impacts: events
+        .filter((e) => e.kind === 'impact')
+        .map((e) => ({
+          lap: e.lap,
+          distance_m: e.distanceM === null ? null : Math.round(e.distanceM),
+          speedBeforeKmh: e.data.speedBeforeKmh,
+          speedAfterKmh: e.data.speedAfterKmh,
+        })),
+    },
+  };
+}
+
 const REFERENCE_DESC =
   "Referência: id de volta ou 'auto' (top de replay → melhor pessoal → melhor da sessão), " +
   "'bestReference', 'personalBest', 'sessionBest'. Padrão 'auto'.";
@@ -265,9 +299,14 @@ export function createGt7McpServer(deps: McpDeps): McpServer {
       title: 'Sessões',
       description:
         'Lista sessões (mais recentes primeiro): data, pista, carro, modo (live/replayCapture), nº de ' +
-        'voltas e melhor tempo. Filtros opcionais por pista e carro.',
+        'voltas e melhor tempo, e o tipo (practice, qualifying ou race; nas corridas, largada e chegada). ' +
+        'Filtros opcionais por pista, carro e tipo.',
       inputSchema: {
         track_id: z.string().optional().describe('Filtra por pista.'),
+        kind: z
+          .enum(['practice', 'qualifying', 'race', 'none'])
+          .optional()
+          .describe('Filtra pelo tipo da sessão; none = sem etiqueta.'),
         car_code: z.number().int().optional().describe('Filtra por código do carro.'),
         limit: z
           .number()
@@ -279,10 +318,11 @@ export function createGt7McpServer(deps: McpDeps): McpServer {
       },
       annotations: RO,
     },
-    async ({ track_id, car_code, limit }) =>
+    async ({ track_id, car_code, kind, limit }) =>
       safe(() => {
         const sessions = store.listSessions({
           ...(track_id ? { trackId: track_id } : {}),
+          ...(kind ? { kind } : {}),
           ...(car_code !== undefined ? { carCode: car_code } : {}),
           limit,
         });
@@ -907,6 +947,7 @@ export function createGt7McpServer(deps: McpDeps): McpServer {
             track: trackName(sum.trackId),
             ...carFields(sum.carCode),
             startedAt: dateTime(sum.startedAt),
+            ...raceBlock(store, id),
             laps: sum.laps,
             bestLap: best
               ? {

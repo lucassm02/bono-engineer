@@ -4,7 +4,12 @@
  * pacotes brutos e a nota sobre o formato do replay.
  */
 
-import { type ApiSettingsPatch, type ApiStatus, PACKET_FORMATS } from '@gt7/shared';
+import {
+  type ApiSettingsPatch,
+  type ApiStatus,
+  PACKET_FORMATS,
+  type SessionKindDefault,
+} from '@gt7/shared';
 import { useState } from 'react';
 import { IpForm, LinkDot } from '../../../components/ConsoleLink.tsx';
 import { Icon } from '../../../components/ui/Icon.tsx';
@@ -16,7 +21,7 @@ import { backToAutomatic, rescanConsole } from '../../../net/consoleActions.ts';
 import { useConsoleConnection } from '../../../state/consoleLink.ts';
 import { useUi } from '../../../state/uiStore.ts';
 import { api } from '../../api.ts';
-import { PACKET_FORMAT_INFO } from '../../lib/labels.ts';
+import { PACKET_FORMAT_INFO, SESSION_KIND_LABELS } from '../../lib/labels.ts';
 import { Panel } from '../Panel.tsx';
 import { Advanced, CfgRow, CfgToggle, rowDomId, useSave } from './ConfigRow.tsx';
 
@@ -158,6 +163,31 @@ export function ConsoleGroup({
               )
             }
           />
+          <CfgRow
+            id="session-kind-default"
+            title={uiText('Quando a sessão não for corrida')}
+            description={uiText(
+              'Corridas são reconhecidas sozinhas. Para as outras, o app pergunta ao salvar ou já marca como você escolher.',
+            )}
+            wide
+          >
+            <select
+              className="ui-select kind-default-select"
+              value={s.sessionKindDefault ?? 'ask'}
+              disabled={busy}
+              aria-label={uiText('Quando a sessão não for corrida')}
+              onChange={(e) =>
+                patch(
+                  { sessionKindDefault: e.target.value as SessionKindDefault },
+                  uiText('Preferência salva.'),
+                )
+              }
+            >
+              <option value="ask">{uiText('Perguntar ao salvar')}</option>
+              <option value="practice">{SESSION_KIND_LABELS.practice}</option>
+              <option value="qualifying">{SESSION_KIND_LABELS.qualifying}</option>
+            </select>
+          </CfgRow>
         </div>
       </Panel>
 

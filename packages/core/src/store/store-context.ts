@@ -8,6 +8,7 @@ import type {
   LapTrace,
   LiveTask,
   Session,
+  SessionEvent,
   Track,
   TrackCenterline,
   Vec2,
@@ -37,6 +38,10 @@ export class StoreEngineContext implements LiveEngineContext {
 
   saveSession(session: Session): void {
     this.store.saveSession(session);
+  }
+
+  saveSessionEvents(events: SessionEvent[]): void {
+    this.store.addSessionEvents(events);
   }
 
   saveLap(lap: Lap, trace: LapTrace): void {

@@ -69,6 +69,18 @@ export function compactSession(s: Session, track: Track | null) {
     best: lapTime(s.bestLapMs),
     best_ms: s.bestLapMs,
     ...(s.endedAt === null ? { inProgress: true } : {}),
+    // treino, qualificatória ou corrida (spec 21); ausente = sem etiqueta
+    ...(s.kind ? { kind: s.kind } : {}),
+    ...(s.kind === 'race'
+      ? {
+          race: {
+            laps: s.raceTotalLaps ?? null,
+            startPosition: s.startPosition ?? null,
+            finishPosition: s.finishPosition ?? null,
+            cars: s.fieldSize ?? null,
+          },
+        }
+      : {}),
   };
 }
 

@@ -3,22 +3,13 @@
     "The update check has not finished yet.",
     "La comprobación de actualizaciones aún no ha terminado."
   ],
-  "Verificando atualizações…": [
-    "Checking for updates…",
-    "Buscando actualizaciones…"
-  ],
+  "Verificando atualizações…": ["Checking for updates…", "Buscando actualizaciones…"],
   "Você está na versão mais recente.": [
     "You’re on the latest version.",
     "Tienes la versión más reciente."
   ],
-  "Versão {0} disponível.": [
-    "Version {0} is available.",
-    "La versión {0} está disponible."
-  ],
-  "Baixando atualização… {0}%": [
-    "Downloading update… {0}%",
-    "Descargando la actualización… {0}%"
-  ],
+  "Versão {0} disponível.": ["Version {0} is available.", "La versión {0} está disponible."],
+  "Baixando atualização… {0}%": ["Downloading update… {0}%", "Descargando la actualización… {0}%"],
   "Atualização pronta para instalar.": [
     "Update ready to install.",
     "Actualización lista para instalar."
@@ -47,46 +38,22 @@
     "Finish driving or capturing before installing.",
     "Termina de conducir o capturar antes de instalar."
   ],
-  "Baixar versão portátil": [
-    "Download portable version",
-    "Descargar versión portátil"
-  ],
-  "Baixar atualização": [
-    "Download update",
-    "Descargar actualización"
-  ],
+  "Baixar versão portátil": ["Download portable version", "Descargar versión portátil"],
+  "Baixar atualização": ["Download update", "Descargar actualización"],
   "Atualizações disponíveis no pacote do Windows.": [
     "Updates are available in the Windows package.",
     "Las actualizaciones están disponibles en el paquete de Windows."
   ],
-  "Última verificação: {0}": [
-    "Last checked: {0}",
-    "Última comprobación: {0}"
-  ],
-  "Verificar atualizações": [
-    "Check for updates",
-    "Buscar actualizaciones"
-  ],
-  "Ver o que mudou": [
-    "See what changed",
-    "Ver qué cambió"
-  ],
-  "Reiniciar e instalar": [
-    "Restart and install",
-    "Reiniciar e instalar"
-  ],
-  "Notas da versão instalada": [
-    "Installed release notes",
-    "Notas de la versión instalada"
-  ],
+  "Última verificação: {0}": ["Last checked: {0}", "Última comprobación: {0}"],
+  "Verificar atualizações": ["Check for updates", "Buscar actualizaciones"],
+  "Ver o que mudou": ["See what changed", "Ver qué cambió"],
+  "Reiniciar e instalar": ["Restart and install", "Reiniciar e instalar"],
+  "Notas da versão instalada": ["Installed release notes", "Notas de la versión instalada"],
   "Notas da versão indisponíveis.": [
     "Release notes are unavailable.",
     "Las notas de la versión no están disponibles."
   ],
-  "O que mudou na versão {0}": [
-    "What changed in version {0}",
-    "Qué cambió en la versión {0}"
-  ],
+  "O que mudou na versão {0}": ["What changed in version {0}", "Qué cambió en la versión {0}"],
   " — referência automática": [" — automatic reference", " — referencia automática"],
   " · {0} abas": [" · {0} tabs", " · {0} pestañas"],
   " · acesso com senha (token)": [" · token required", " · se requiere token"],
@@ -5191,5 +5158,69 @@
   "As que passarem do limite ficam só na tela.": [
     "Tasks over the limit stay on screen only.",
     "Las que pasen del límite quedan solo en pantalla."
-  ]
+  ],
+  "Qualificatória": ["Qualifying", "Clasificación"],
+  "Sem etiqueta": ["No label", "Sin etiqueta"],
+  "Tipo da sessão": ["Session type", "Tipo de sesión"],
+  "Marcar as {0} sessões listadas como": [
+    "Mark the {0} listed sessions as",
+    "Marcar las {0} sesiones listadas como"
+  ],
+  "Tipo para as sessões listadas": [
+    "Type for the listed sessions",
+    "Tipo para las sesiones listadas"
+  ],
+  "Mudar o tipo de {0} sessões?": [
+    "Change the type of {0} sessions?",
+    "¿Cambiar el tipo de {0} sesiones?"
+  ],
+  "Mudar": ["Change", "Cambiar"],
+  "Tipo atualizado.": ["Type updated.", "Tipo actualizado."],
+  "Largou em P{0} de {1}": ["Started P{0} of {1}", "Salió en P{0} de {1}"],
+  "Largou em P{0}": ["Started P{0}", "Salió en P{0}"],
+  "terminou em P{0} de {1}": ["finished P{0} of {1}", "terminó en P{0} de {1}"],
+  "terminou em P{0}": ["finished P{0}", "terminó en P{0}"],
+  "Resultado não registrado": ["Result not recorded", "Resultado no registrado"],
+  "Manteve a posição": ["Held the position", "Mantuvo la posición"],
+  "Ganhou 1 posição": ["Gained 1 place", "Ganó 1 posición"],
+  "Ganhou {0} posições": ["Gained {0} places", "Ganó {0} posiciones"],
+  "Perdeu 1 posição": ["Lost 1 place", "Perdió 1 posición"],
+  "Perdeu {0} posições": ["Lost {0} places", "Perdió {0} posiciones"],
+  "P{0} → P{1}": ["P{0} → P{1}", "P{0} → P{1}"],
+  "Saiu 1 carro da prova ({0} → {1})": [
+    "1 car left the race ({0} → {1})",
+    "Salió 1 coche de la carrera ({0} → {1})"
+  ],
+  "Saíram {0} carros da prova ({1} → {2})": [
+    "{0} cars left the race ({1} → {2})",
+    "Salieron {0} coches de la carrera ({1} → {2})"
+  ],
+  "{0} → {1} km/h": ["{0} → {1} km/h", "{0} → {1} km/h"],
+  "a {0} m": ["at {0} m", "a {0} m"],
+  "Impacto": ["Impact", "Impacto"],
+  "Bandeirada · P{0}": ["Chequered flag · P{0}", "Bandera a cuadros · P{0}"],
+  "Bandeirada": ["Chequered flag", "Bandera a cuadros"],
+  "Posição ao longo da corrida": ["Position along the race", "Posición a lo largo de la carrera"],
+  "Resultado da corrida": ["Race result", "Resultado de la carrera"],
+  "1 impacto": ["1 impact", "1 impacto"],
+  "{0} impactos": ["{0} impacts", "{0} impactos"],
+  "Bandeirada · {0}/{1}": ["Chequered flag · {0}/{1}", "Bandera a cuadros · {0}/{1}"],
+  "P{0}/{1}": ["P{0}/{1}", "P{0}/{1}"],
+  "P{0}": ["P{0}", "P{0}"],
+  "largou em P{0}, terminou em P{1}": [
+    "started P{0}, finished P{1}",
+    "salió en P{0}, terminó en P{1}"
+  ],
+  "Corrida salva: {0}": ["Race saved: {0}", "Carrera guardada: {0}"],
+  "Sessão marcada como {0}.": ["Session marked as {0}.", "Sesión marcada como {0}."],
+  "Quando a sessão não for corrida": [
+    "When the session is not a race",
+    "Cuando la sesión no sea una carrera"
+  ],
+  "Corridas são reconhecidas sozinhas. Para as outras, o app pergunta ao salvar ou já marca como você escolher.": [
+    "Races are recognized on their own. For the others, the app asks when saving or marks them as you choose.",
+    "Las carreras se reconocen solas. Para las demás, la app pregunta al guardar o las marca como elijas."
+  ],
+  "Perguntar ao salvar": ["Ask when saving", "Preguntar al guardar"],
+  "Preferência salva.": ["Preference saved.", "Preferencia guardada."]
 }

@@ -4,12 +4,17 @@ import { createReadStream, existsSync, statSync } from 'node:fs';
 import { isAbsolute, relative, resolve } from 'node:path';
 import type { ListLapsOptions } from '@gt7/core';
 import {
+  type ApiSessionPatch,
+  type ApiSessionRace,
+  type ApiSessionsKindBatch,
   ENGINEER_CUE_KINDS,
   type EngineerCueKind,
   type Lap,
   type ReferenceMeta,
+  SESSION_KINDS,
   type Session,
   type SessionDetail,
+  type SessionKind,
   type SessionSummary,
 } from '@gt7/shared';
 import type { FastifyInstance } from 'fastify';
@@ -60,9 +65,18 @@ export function sessionRoutes(app: FastifyInstance, ctx: RouteContext): void {
     if (mode !== undefined && mode !== 'live' && mode !== 'replayCapture') {
       throw badRequest('O parâmetro "mode" deve ser live ou replayCapture.');
     }
+    const kind = queryString(q, 'kind');
+    if (
+      kind !== undefined &&
+      kind !== 'none' &&
+      !(SESSION_KINDS as readonly string[]).includes(kind)
+    ) {
+      throw badRequest('O parâmetro "kind" deve ser practice, qualifying, race ou none.');
+    }
     const trackId = queryString(q, 'trackId');
     const carCode = queryInt(q, 'carCode', 'carCode');
     return store.listSessions({
+      ...(kind ? { kind: kind as SessionKind | 'none' } : {}),
       ...(trackId ? { trackId } : {}),
       ...(carCode !== undefined ? { carCode } : {}),
       ...(mode ? { mode } : {}),
@@ -75,6 +89,59 @@ export function sessionRoutes(app: FastifyInstance, ctx: RouteContext): void {
     const id = idParam(req.params);
     const session = getSession(id);
     return { session, laps: store.listLaps(id), active: isActive(id) };
+  });
+
+  /** Parses the body of a kind change: a kind or null ("sem etiqueta"). */
+  const parseKind = (b: Obj): SessionKind | null => {
+    if (b.kind === null) return null;
+    if (typeof b.kind === 'string' && (SESSION_KINDS as readonly string[]).includes(b.kind)) {
+      return b.kind as SessionKind;
+    }
+    throw badRequest('"kind" deve ser practice, qualifying, race ou null.');
+  };
+
+  /** The driver sets the kind of a session (spec 21); the engine never overrides it afterwards. */
+  app.patch('/sessions/:id', async (req): Promise<Session> => {
+    const id = idParam(req.params);
+    getSession(id);
+    const body = bodyObject(req.body) as unknown as ApiSessionPatch;
+    const kind = parseKind(body as unknown as Obj);
+    if (isActive(id))
+      runtime.engine.annotateSession({ kind, kindSource: kind === null ? null : 'user' });
+    else store.setSessionKind(id, kind, 'user');
+    return getSession(id);
+  });
+
+  /** The same kind for several sessions (the assistant of the history, the list menu). */
+  app.patch('/sessions', async (req) => {
+    const body = bodyObject(req.body) as unknown as ApiSessionsKindBatch;
+    const kind = parseKind(body as unknown as Obj);
+    const ids = (body as unknown as Obj).ids;
+    if (
+      !Array.isArray(ids) ||
+      ids.length === 0 ||
+      ids.length > 1000 ||
+      !ids.every((x) => typeof x === 'string' && isSafeId(x))
+    ) {
+      throw badRequest('"ids" deve ser uma lista de 1 a 1000 identificadores de sessão.');
+    }
+    const active = ids.filter((x) => isActive(x as string)) as string[];
+    // the open session lives in the engine (it would overwrite the store at its end)
+    if (active.length > 0) {
+      runtime.engine.annotateSession({ kind, kindSource: kind === null ? null : 'user' });
+    }
+    const changed = store.setSessionsKind(
+      ids.filter((x) => !active.includes(x as string)) as string[],
+      kind,
+      'user',
+    );
+    return { ok: true, changed: changed + active.length };
+  });
+
+  /** The race of a session: its result and what happened (positions, cars, impacts). */
+  app.get('/sessions/:id/race', async (req): Promise<ApiSessionRace> => {
+    const id = idParam(req.params);
+    return { session: getSession(id), events: store.listSessionEvents(id) };
   });
 
   /** Summary of the session (spec 12): best lap, pace, consistency, comparisons, tips. */
