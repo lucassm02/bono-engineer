@@ -19,6 +19,7 @@ import type {
   Wheels,
 } from './telemetry.ts';
 import type { LiveTrackContext } from './track-context.ts';
+import type { LiveTyreWear } from './tyre-wear.ts';
 
 /**
  * High-level state shown to the user.
@@ -416,6 +417,11 @@ export interface LiveFrame {
    * omitted before. (core, additive)
    */
   stint?: { number: number; inPits: boolean };
+  /**
+   * Estimated tyre wear (compound said by the driver, temperature and load); present on every
+   * frame, the compound alone on the pre-race screen. (core, additive)
+   */
+  tyreWear?: LiveTyreWear;
   /**
    * Position among the cars of a practice or qualifying with traffic (it ranks the best laps of
    * the lobby); omitted in a race and when alone on the track. (core, additive)

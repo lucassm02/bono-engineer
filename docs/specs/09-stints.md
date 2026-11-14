@@ -72,3 +72,6 @@ o `PitTracker` (core) confirma a visita quando o carro sai e grava o evento `pit
 `pit` e das voltas (`deriveStints`, shared): não há tabela `stints` nem coluna `laps.stint`, logo nenhuma migração. Telas: voltas
 agrupadas por stint na sessão, "Volta 3 · stint 2" e "No box" ao vivo, `stints` no `get_session_summary` do MCP, consumo de combustível
 reiniciado a cada stint. **Fora desta rodada:** comparar stints, juntar/separar à mão, a volta em curso na entrada no box.
+
+**Pendente (2026-11-14):** confirmar com gravação se a visita ao box troca o pneu (hoje o desgaste estimado zera a cada visita) e
+se dá para distinguir parada com troca de parada sem troca. Detalhes e plano de captura na spec 21 (adendo).

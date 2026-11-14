@@ -5,7 +5,7 @@
  * (see components/LiveContextBar.tsx); frames at 30 Hz only touch the store when something changed.
  */
 
-import type { LiveFrame, LiveTrackContext, TrackMismatchInfo } from '@gt7/shared';
+import type { LiveFrame, LiveTrackContext, TrackMismatchInfo, TyreCompound } from '@gt7/shared';
 import { create } from 'zustand';
 import { api, request } from '../analysis/api.ts';
 import type { TrackOverview } from '../analysis/lib/history.ts';
@@ -45,6 +45,8 @@ export interface LiveContextState {
   skippedSessionId: string | null;
   /** The hint failed on the first lap: waiting for the car to stop to tell the driver. */
   mismatch: { info: TrackMismatchInfo; detectedIsNew: boolean } | null;
+  /** The tyres the driver said are on the car (pre-race screen); null = not said. */
+  tyre: TyreCompound | null;
 }
 
 export const useLiveContext = create<LiveContextState>()(() => ({
@@ -58,6 +60,7 @@ export const useLiveContext = create<LiveContextState>()(() => ({
   skipPending: false,
   skippedSessionId: null,
   mismatch: null,
+  tyre: null,
 }));
 
 // ---------------------------------------------------------------------------------------------
@@ -153,7 +156,8 @@ export function feedLiveContext(f: LiveFrame): void {
   const ctx = f.trackContext ?? null;
   const stopped = f.car.speedKmh < SAFE_SPEED_KMH;
   const sessionId = f.sessionId ?? null;
-  const key = JSON.stringify([ctx, f.car.carCode, f.engineer?.status, stopped, sessionId]);
+  const tyre = f.tyreWear?.compound ?? null;
+  const key = JSON.stringify([ctx, f.car.carCode, f.engineer?.status, stopped, sessionId, tyre]);
   if (key === lastKey) return;
   lastKey = key;
   const prev = useLiveContext.getState();
@@ -163,6 +167,7 @@ export function feedLiveContext(f: LiveFrame): void {
     engineerStatus: f.engineer?.status,
     stopped,
     sessionId,
+    tyre,
   };
   if (sessionId !== prev.sessionId) {
     if (sessionId && prev.skipPending) {
@@ -218,6 +223,22 @@ export async function chooseTrack(trackId: string | null, force = false): Promis
   if (sent) return true;
   try {
     await request('PUT', '/api/session/track-hint', { trackId, ...(force ? { force: true } : {}) });
+    return true;
+  } catch (e) {
+    addNotice('error', (e as Error).message, 5000);
+    return false;
+  }
+}
+
+/**
+ * Tells the server which tyres are on the car (`null` = not said); the estimate of the wear and the
+ * session use it. Shown at once, confirmed by the next frame.
+ */
+export async function chooseTyre(compound: TyreCompound | null): Promise<boolean> {
+  useLiveContext.setState({ tyre: compound });
+  if (send({ type: 'setTyreCompound', compound })) return true;
+  try {
+    await request('PUT', '/api/session/tyres', { compound });
     return true;
   } catch (e) {
     addNotice('error', (e as Error).message, 5000);

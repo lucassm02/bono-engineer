@@ -368,6 +368,12 @@ export interface SetTrackHintMessage {
   force?: boolean;
 }
 
+/** The driver says which tyres are on the car (null = not said). */
+export interface SetTyreCompoundMessage {
+  type: 'setTyreCompound';
+  compound: string | null;
+}
+
 export interface PingMessage {
   type: 'ping';
   t: number;
@@ -383,6 +389,7 @@ export type ClientMessage =
   | StopReferenceCaptureMessage
   | SetPacketFormatMessage
   | SetTrackHintMessage
+  | SetTyreCompoundMessage
   | PingMessage;
 
 export type ServerMessageType = ServerMessage['type'];

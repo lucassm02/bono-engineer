@@ -37,6 +37,7 @@ import {
   decodeFlags,
   type Id,
   isPacketFormat,
+  isTyreCompound,
   type LapCompletedEvent,
   type LiveDrill,
   type LiveFrame,
@@ -50,6 +51,7 @@ import {
   type SessionSavedMessage,
   type TrackHint,
   type TrackMismatchInfo,
+  type TyreCompound,
 } from '@gt7/shared';
 import { AnalysisService } from '../analysis-service/analysis-service.ts';
 import { AnalysisCornerHintProvider } from '../analysis-service/corner-hints.ts';
@@ -453,6 +455,17 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
     const hint = this.engine.setTrackHint(trackId, { now: Date.now(), force: opts.force === true });
     this.#emitStatus();
     return hint;
+  }
+
+  /**
+   * The tyres the driver says are on the car (pre-race screen); `null` = not said. Throws on an
+   * unknown compound. In memory until a session opens, then saved with it.
+   */
+  setTyreCompound(compound: string | null): TyreCompound | null {
+    if (compound !== null && !isTyreCompound(compound)) throw new Error('Pneu desconhecido.');
+    this.engine.setTyreCompound(compound);
+    this.#emitStatus();
+    return this.engine.tyreCompound;
   }
 
   #sessionCaptureBase(): SessionCaptureStatus {

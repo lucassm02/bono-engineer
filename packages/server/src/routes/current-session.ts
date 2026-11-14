@@ -4,7 +4,7 @@
  * corners and reference loaded, and the first closed lap checks it against the geometry.
  */
 
-import type { ApiSessionCurrent } from '@gt7/shared';
+import { type ApiSessionCurrent, isTyreCompound, type TyreCompound } from '@gt7/shared';
 import type { FastifyInstance } from 'fastify';
 import { badRequest, bodyObject, isSafeId, notFound, optBoolean } from '../http.ts';
 import type { RouteContext } from './context.ts';
@@ -31,5 +31,16 @@ export function currentSessionRoutes(app: FastifyInstance, ctx: RouteContext): v
     runtime.setTrackHint(id, { force: force === true });
     hub.scheduleStatus();
     return runtime.getSessionCurrent();
+  });
+
+  /** Body `{ compound: TyreCompound | null }`: the tyres the driver says are on the car. */
+  app.put('/session/tyres', async (req): Promise<{ compound: TyreCompound | null }> => {
+    const b = bodyObject(req.body);
+    if (!('compound' in b)) throw badRequest('Informe "compound" (um pneu ou null).');
+    const c = b.compound;
+    if (c !== null && !isTyreCompound(c)) throw badRequest('Pneu desconhecido.');
+    const compound = runtime.setTyreCompound(c);
+    hub.scheduleStatus();
+    return { compound };
   });
 }

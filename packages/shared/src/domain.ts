@@ -116,6 +116,8 @@ export interface Session {
   fieldSize?: number | null;
   startPosition?: number | null;
   finishPosition?: number | null;
+  /** Tyre compound the driver said was on the car (TyreCompound); null/absent = not said. */
+  tyreCompound?: string | null;
 }
 
 /** Something that happened during a race, stored with its session (spec 21). */

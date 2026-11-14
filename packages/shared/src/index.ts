@@ -78,6 +78,7 @@ export * from './tasks.ts';
 export * from './telemetry.ts';
 export * from './track-context.ts';
 export * from './tracks/index.ts';
+export * from './tyre-wear.ts';
 export * from './ui.ts';
 export * from './weekly-text.ts';
 export * from './ws.ts';

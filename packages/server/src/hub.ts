@@ -23,6 +23,7 @@ import {
   type DeviceProfile,
   type FirewallStatus,
   isPacketFormat,
+  isTyreCompound,
   normalizeDeviceProfile,
   normalizeDriverName,
   type ServerMessage,
@@ -558,6 +559,13 @@ export class WsHub {
         }
         this.runtime.setTrackHint(id, { force: msg.force === true });
         this.scheduleStatus();
+        return;
+      }
+      case 'setTyreCompound': {
+        const tyre = msg.compound;
+        if (tyre !== null && !isTyreCompound(tyre))
+          return this.#error(c, 'badMessage', 'Pneu inválido.');
+        this.runtime.setTyreCompound(tyre);
         return;
       }
       case 'setPacketFormat': {

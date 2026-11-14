@@ -1,0 +1,50 @@
+/* Estimated tyre wear on the tyre panel: a bar in each card and one line under the legend. */
+
+.tyre-wear {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  width: 100%;
+  color: var(--text-3);
+  font-size: 0.85em;
+}
+.tyre-card-1 .tyre-wear,
+.tyre-card-3 .tyre-wear {
+  flex-direction: row-reverse;
+}
+.tyre-wear-track {
+  flex: 1;
+  height: 0.45em;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--surface-3);
+}
+.tyre-wear-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--gain);
+  transform-origin: left center;
+  transition:
+    transform 400ms linear,
+    background var(--dur) var(--ease);
+}
+.tyre-card-1 .tyre-wear-fill,
+.tyre-card-3 .tyre-wear-fill {
+  transform-origin: right center;
+}
+.tyre-wear-fill[data-tone="warn"] {
+  background: var(--warn);
+}
+.tyre-wear-fill[data-tone="loss"] {
+  background: var(--loss);
+}
+.tyre-wear .num {
+  min-width: 3ch;
+  text-align: right;
+}
+.tyre-wear-info {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+  text-align: center;
+}

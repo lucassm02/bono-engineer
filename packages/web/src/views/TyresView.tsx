@@ -6,7 +6,9 @@ import { clamp, formatInt } from '../lib/format.ts';
 import { t as uiText } from '../lib/i18n.ts';
 import { surfaceLabel, wheelLabel } from '../lib/labels.ts';
 import { tyreTempBand, tyreTempColor } from '../lib/tyreColor.ts';
+import { compoundLabel, lapsLeftText, wearPct, wearTone } from '../lib/tyres.ts';
 import { useLiveRender } from '../live/raf.ts';
+import '../styles/tyre-wear.css';
 
 export type SlipState = 'ok' | 'spin' | 'lock';
 
@@ -95,6 +97,7 @@ export function TyresView() {
     const e = r.current;
     const { tempC, slip, suspensionM, surface } = f.tyres;
     const range = SUSPENSION_RANGE_M.max - SUSPENSION_RANGE_M.min;
+    const wear = f.tyreWear;
     for (const i of WHEELS) {
       const t = tempC[i];
       const color = tyreTempColor(t, TYRE_TEMP_SCALE);
@@ -115,8 +118,24 @@ export function TyresView() {
       const susp = clamp((suspensionM[i] - SUSPENSION_RANGE_M.min) / range, 0, 1);
       setStyle(e[`susp${i}`] as HTMLElement, 'transform', `scaleX(${susp.toFixed(3)})`);
       setText(e[`suspv${i}`], `${Math.round(suspensionM[i] * 1000)} mm`);
+      const worn = wear?.wear[i] ?? 0;
+      setStyle(
+        e[`wearfill${i}`] as HTMLElement,
+        'transform',
+        `scaleX(${Math.min(1, worn).toFixed(3)})`,
+      );
+      setAttr(e[`wearfill${i}`], 'data-tone', wearTone(worn));
+      setText(e[`wearv${i}`], wear ? wearPct(worn) : '');
       setText(e[`surf${i}`], surface ? surfaceLabel(surface[i]) : '');
       setAttr(e[`surf${i}`], 'data-kind', surface ? surface[i] : '');
+    }
+    if (wear) {
+      const left = lapsLeftText(wear);
+      const km = `${wear.distKm.toFixed(1)} km`;
+      setText(
+        e.wearinfo,
+        `${uiText('Desgaste estimado')} · ${compoundLabel(wear.compound)} · ${km}${left ? ` · ${left}` : ''}`,
+      );
     }
   });
 
@@ -138,6 +157,12 @@ export function TyresView() {
         </div>
         <span className="num" ref={set(`suspv${i}`)} />
       </div>
+      <div className="tyre-wear" title={uiText('Desgaste estimado do pneu')}>
+        <div className="tyre-wear-track">
+          <div className="tyre-wear-fill" ref={set(`wearfill${i}`)} data-tone="ok" />
+        </div>
+        <span className="num" ref={set(`wearv${i}`)} />
+      </div>
     </div>
   );
 
@@ -150,14 +175,14 @@ export function TyresView() {
       {card(1)}
       {card(2)}
       {card(3)}
-      <TempLegend />
+      <TempLegend wearRef={set('wearinfo')} />
       <TyrePace />
     </div>
   );
 }
 
 /** Gradient legend whose stops match the configured thresholds. */
-function TempLegend() {
+function TempLegend({ wearRef }: { wearRef: (el: Element | null) => void }) {
   const s = TYRE_TEMP_SCALE;
   const pos = (t: number) => ((t - s.cold) / (s.hot - s.cold)) * 100;
   const stops = [s.cold, s.idealMin, s.idealMax, s.hot];
@@ -182,6 +207,7 @@ function TempLegend() {
           </span>
         ))}
       </div>
+      <p className="tyre-wear-info" ref={wearRef} />
     </div>
   );
 }

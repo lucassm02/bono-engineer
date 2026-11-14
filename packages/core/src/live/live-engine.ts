@@ -75,6 +75,8 @@ import {
   type TrackBasis,
   type TrackHint,
   type TrackMismatchInfo,
+  type TyreCompound,
+  TyreWearTracker,
   wheelSlipRatios,
 } from '@gt7/shared';
 import { TraceBuilder } from '../trace/channels.ts';
@@ -481,6 +483,9 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   #trackBasis: TrackBasis = 'none';
   /** The driver's choice of track for today (memory only; spec 06). */
   #hint: TrackHint | null = null;
+  /** The tyres the driver said are on the car (pre-race screen); null = not said. */
+  #tyreCompound: TyreCompound | null = null;
+  #tyreWear = new TyreWearTracker();
   #hintTrack: Track | null = null;
   /** The driver insisted on the chosen track after a mismatch: laps are not re-identified. */
   #userLocked = false;
@@ -885,6 +890,23 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     this.#deltaKind = kind;
     this.#deltaLapId = kind === 'reference' ? (lapId ?? null) : null;
     this.#reloadReference();
+  }
+
+  /** The tyres the driver says are on the car; a different set starts the wear again. */
+  get tyreCompound(): TyreCompound | null {
+    return this.#tyreCompound;
+  }
+
+  setTyreCompound(compound: TyreCompound | null): void {
+    if (compound === this.#tyreCompound) return;
+    this.#tyreCompound = compound;
+    this.#tyreWear.reset();
+    const s = this.#session;
+    if (s && !this.#replayMode) {
+      s.tyreCompound = compound;
+      this.#ctx.saveSession({ ...s });
+      this.emit('sessionUpdated', { ...s });
+    }
   }
 
   /** Patches the active session (e.g. recordingFile) and persists it. */
@@ -1324,6 +1346,17 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
 
     if (streamReset) this.#gforce.reset();
     this.#g = this.#gforce.update(p, (dPk * this.#msPerPacket) / 1000);
+    if (this.#session && running && replay.kind === 'none' && !this.#replayMode) {
+      const dt = Math.min(0.5, (dPk * this.#msPerPacket) / 1000);
+      this.#tyreWear.add(this.#tyreCompound, {
+        distM: p.speedMps * dt,
+        speedMps: p.speedMps,
+        tempC: p.tyreTemp,
+        slip: wheelSlipRatios(p),
+        gLat: this.#g.lateral,
+        brake: pedalToUnit(p.brake),
+      });
+    }
 
     if (this.#pending) this.#tryFinalize(p);
     if (this.#session && replay.kind !== 'none') {
@@ -1453,6 +1486,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     this.#stint++;
     this.#pitOutPending = true;
     this.#fuelHistory = [];
+    this.#tyreWear.reset();
     this.#raceEvent('pit', sig.at, sig.lap, null, {
       exitAt: sig.exitAt,
       durationMs: sig.exitAt - sig.at,
@@ -1675,7 +1709,9 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       recordingFile: null,
       notes: null,
       trackTimeMs: 0,
+      tyreCompound: this.#replayMode ? null : this.#tyreCompound,
     };
+    this.#tyreWear.reset();
     this.#ephemeral = !this.#persist && !this.#replayMode;
     this.#session = s;
     this.#trackTimeMs = 0;
@@ -2783,6 +2819,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
         ? { stint: { number: this.#stint, inPits: this.#pit.inPits } }
         : {}),
       ...(this.#drill ? { drill: this.#drill.tracker.frame() } : {}),
+      tyreWear: this.#tyreWear.snapshot(this.#tyreCompound, this.trackInfo?.lengthM ?? null),
       link: this.#link ?? {
         rateHz: 0,
         lossPct: 0,

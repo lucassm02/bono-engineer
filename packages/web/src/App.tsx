@@ -15,6 +15,7 @@ import { LayoutEditor } from './components/LayoutEditor.tsx';
 import { LiveContextBar } from './components/LiveContextBar.tsx';
 import { EngineerHudButton, LiveEngineer } from './components/LiveEngineer.tsx';
 import { LiveMenuSheet, MenuButton } from './components/LiveMenu.tsx';
+import { PreRaceScreen } from './components/PreRaceScreen.tsx';
 import { StatusLayer } from './components/StatusLayer.tsx';
 import { useGestures } from './components/useGestures.ts';
 import { ViewPicker } from './components/ViewPicker.tsx';
@@ -84,6 +85,7 @@ function onKey(e: KeyboardEvent): void {
 export function App() {
   const rootRef = useRef<HTMLDivElement>(null);
   const locked = useUi((s) => s.profile.locked);
+  const preRace = useUi((s) => s.liveState === 'replay');
   useGestures(rootRef, onGesture);
 
   useEffect(() => {
@@ -93,8 +95,14 @@ export function App() {
   }, []);
 
   return (
-    <div className="app" ref={rootRef} data-locked={locked ? '1' : '0'}>
+    <div
+      className="app"
+      ref={rootRef}
+      data-locked={locked ? '1' : '0'}
+      data-prerace={preRace ? '1' : '0'}
+    >
       <Carousel />
+      <PreRaceScreen />
       <StatusLayer />
       <SourceBadge />
       <OverlayHeader />

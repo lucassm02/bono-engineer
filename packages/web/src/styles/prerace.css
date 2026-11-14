@@ -1,0 +1,147 @@
+/*
+ * Pre-race screen of the live panel (state 'replay'): replaces the live widgets, which only show
+ * the car that runs in the background of the game's menu. Quiet: small type, no big numbers.
+ */
+
+.prerace {
+  position: absolute;
+  inset: 0;
+  z-index: 13;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--safe-t) + var(--sp-7)) calc(var(--safe-r) + var(--sp-4))
+    calc(var(--safe-b) + var(--sp-7)) calc(var(--safe-l) + var(--sp-4));
+  overflow-y: auto;
+  background: var(--surface-0);
+  color: var(--text-2);
+}
+
+.pr-inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  width: min(460px, 100%);
+  margin: auto;
+}
+
+.pr-eyebrow {
+  margin: 0;
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.pr-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.pr-label {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+}
+
+.pr-chosen {
+  color: var(--text-2);
+}
+
+.pr-line {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.pr-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-lg);
+  color: var(--text);
+}
+
+.pr-note {
+  flex: none;
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+}
+
+.pr-link {
+  flex: none;
+  min-height: 28px;
+  padding: 0 var(--sp-2);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+.pr-link:hover {
+  color: var(--accent-strong);
+  text-decoration: underline;
+}
+
+.pr-chips {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.pr-chip {
+  min-height: 32px;
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+.pr-chip:hover {
+  border-color: var(--line-strong);
+  color: var(--text);
+}
+.pr-chip[data-on="1"] {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.pr-chip:focus-visible,
+.pr-link:focus-visible {
+  outline: 2px solid var(--accent-strong);
+  outline-offset: 2px;
+}
+
+.pr-hint {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+}
+
+@media (max-width: 600px) {
+  .prerace {
+    align-items: flex-start;
+  }
+}
+
+/* the views under the panel are not reachable: no arrows, no dots */
+.app[data-prerace="1"] .edge-arrow,
+.app[data-prerace="1"] .dots {
+  display: none;
+}

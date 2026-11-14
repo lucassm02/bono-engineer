@@ -5232,5 +5232,36 @@
   "Reiniciada: a corrida seguinte está em outra sessão": [
     "Restarted: the next attempt is in another session",
     "Reiniciada: el siguiente intento está en otra sesión"
-  ]
+  ],
+  "Conforto": ["Comfort", "Confort"],
+  "Esportivo": ["Sport", "Deportivo"],
+  "Competição": ["Racing", "Competición"],
+  "Intermediário": ["Intermediate", "Intermedio"],
+  "Chuva forte": ["Heavy wet", "Lluvia fuerte"],
+  "Duro": ["Hard", "Duro"],
+  "Macio": ["Soft", "Blando"],
+  "Pré-corrida": ["Pre-race", "Pre-carrera"],
+  "Tipo de pneu": ["Tyre type", "Tipo de neumático"],
+  "Dureza do pneu": ["Tyre hardness", "Dureza del neumático"],
+  "Reconheço a pista pelo carro que roda ao fundo.": [
+    "I recognise the track from the car running in the background.",
+    "Reconozco la pista por el coche que rueda al fondo."
+  ],
+  "Estimo o desgaste pela temperatura, pela carga e pelo tipo de pneu.": [
+    "I estimate the wear from temperature, load and tyre type.",
+    "Estimo el desgaste por la temperatura, la carga y el tipo de neumático."
+  ],
+  "Sem escolher, estimo o desgaste como se fosse Esportivo Médio.": [
+    "If you do not choose, I estimate the wear as if it were Sport Medium.",
+    "Si no eliges, estimo el desgaste como si fuera Deportivo Medio."
+  ],
+  "Desgaste estimado": ["Estimated wear", "Desgaste estimado"],
+  "Desgaste estimado do pneu": ["Estimated tyre wear", "Desgaste estimado del neumático"],
+  "no limite: hora de trocar": ["at the limit: time to change", "en el límite: hora de cambiar"],
+  "menos de 1 volta até o limite": [
+    "less than 1 lap to the limit",
+    "menos de 1 vuelta hasta el límite"
+  ],
+  "~{0} voltas até o limite": ["~{0} laps to the limit", "~{0} vueltas hasta el límite"],
+  "provável": ["probable", "probable"]
 }

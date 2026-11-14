@@ -207,6 +207,10 @@ export const MIGRATIONS: readonly string[] = [
   );
   CREATE INDEX IF NOT EXISTS session_events_session ON session_events(session_id, kind, at);
   `,
+  // v10 — the tyre compound the driver said was on the car (pre-race screen)
+  `
+  ALTER TABLE sessions ADD COLUMN tyre_compound TEXT;
+  `,
 ];
 
 export const SCHEMA_VERSION = MIGRATIONS.length;
