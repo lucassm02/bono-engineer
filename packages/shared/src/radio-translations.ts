@@ -34,6 +34,14 @@ const fixed: Record<string, Translation> = {
   ],
   'Pneus na faixa.': ['Tyres in range.', 'Temperatura de neumáticos en rango.'],
   'Pneus quentes.': ['Tyres are hot.', 'Neumáticos calientes.'],
+  'Limite estimado dos pneus em até duas voltas.': [
+    'Estimated tyre limit within two laps.',
+    'Límite estimado de los neumáticos en dos vueltas o menos.',
+  ],
+  'Pneus no limite estimado.': [
+    'Tyres at the estimated wear limit.',
+    'Neumáticos en el límite estimado de desgaste.',
+  ],
   'Nesse ritmo, falta combustível para terminar. Economize nesta volta.': [
     'At this pace, we’re short on fuel. Save fuel this lap.',
     'A este ritmo no alcanza el combustible. Ahorra en esta vuelta.',

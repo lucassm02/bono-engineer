@@ -7,8 +7,11 @@ import {
   TYRES_COLD,
   TYRES_HOT,
   TYRES_OK,
+  TYRES_WEAR_LIMIT,
+  TYRES_WEAR_SOON,
   tenthsSegment,
 } from './phrases.ts';
+import { tyresWearRule } from './rules.ts';
 import {
   DEFAULT_RADIO_PREFERENCES,
   normalizeRadioPreferences,
@@ -69,6 +72,59 @@ describe('preferências do rádio', () => {
     const prefs = { ...DEFAULT_RADIO_PREFERENCES, level: 'detailed' as const };
     expect(radioEngineConfig(prefs, { muted: true }).speechLevel).toBe('mute');
     expect(radioEngineConfig(prefs).speechLevel).toBe('detailed');
+  });
+});
+
+describe('desgaste estimado dos pneus no rádio', () => {
+  const wear = {
+    compound: 'racingMedium' as const,
+    setNumber: 1,
+    wear: [0.6, 0.65, 0.63, 0.6] as [number, number, number, number],
+    worst: 0.65,
+    multiplier: 5,
+    distKm: 10,
+    perLap: 0.11,
+    lapsLeft: 1.8,
+  };
+
+  it('waits for a straight and calls once per physical set, including after a pit visit', () => {
+    const h = harness({ mode: 'race' }, { rules: [tyresWearRule] });
+    h.sim.tyreWear = wear;
+    h.sim.brake = 0.6;
+    h.run(4000);
+    expect(h.said()).toEqual([]);
+    h.sim.brake = 0;
+    h.run(200);
+    expect(h.said()).toEqual([TYRES_WEAR_SOON]);
+    expect(h.spoken[0]?.decision).toMatchObject({
+      lap: 1,
+      evidence: { compound: 'racingMedium', wearMultiplier: 5, estimatedLapsLeft: 1.8 },
+    });
+    h.sim.pitTyreChange = { visitId: 'pit-1', compound: 'racingMedium' };
+    h.run(4000);
+    h.sim.pitTyreChange = undefined;
+    h.run(4000);
+    expect(h.said()).toEqual([TYRES_WEAR_SOON]);
+    h.sim.tyreWear = { ...wear, setNumber: 2, lapsLeft: 0 };
+    h.run(4000);
+    expect(h.said()).toEqual([TYRES_WEAR_SOON, TYRES_WEAR_LIMIT]);
+  });
+
+  it('waits for a confirmed compound and skips disabled wear or a warning already logged', () => {
+    const h = harness({ mode: 'race' }, { rules: [tyresWearRule] });
+    h.sim.tyreWear = { ...wear, multiplier: 0 };
+    h.run(4000);
+    h.sim.tyreWear = { ...wear, warningSent: true };
+    h.run(4000);
+    h.sim.tyreWear = { ...wear, compound: null };
+    h.run(4000);
+    h.sim.tyreWear = wear;
+    h.sim.pitTyreChange = { visitId: 'pit-2', compound: null };
+    h.run(4000);
+    expect(h.said()).toEqual([]);
+    h.sim.pitTyreChange = undefined;
+    h.run(4000);
+    expect(h.said()).toEqual([TYRES_WEAR_SOON]);
   });
 });
 

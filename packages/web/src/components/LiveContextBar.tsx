@@ -36,6 +36,7 @@ import {
 } from '../state/liveContext.ts';
 import { useTour } from '../state/tour.ts';
 import { useUi } from '../state/uiStore.ts';
+import { PitTyreChangePrompt } from './PitTyreChangePrompt.tsx';
 import { TrackPickerSheet } from './TrackPickerSheet.tsx';
 
 /** Hooks shared by the bar variants: is there something to show, and in which state. */
@@ -306,6 +307,7 @@ export function LiveContextBar({ variant = 'live' }: { variant?: 'live' | 'menu'
           aria-label={uiText('Contexto da sessão')}
         >
           <BarItems variant="live" />
+          <PitTyreChangePrompt />
         </div>
       )}
       {visible && ctx && <LearningGuide />}

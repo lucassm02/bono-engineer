@@ -52,6 +52,10 @@ export class StoreEngineContext implements LiveEngineContext {
     return this.store.reassignSessionTrack(sessionId, trackId);
   }
 
+  nameTrack(trackId: Id, n: { name: string; layout: string | null }): Track | null {
+    return this.store.updateTrack(trackId, { name: n.name, layout: n.layout, source: 'builtin' });
+  }
+
   getTrack(trackId: Id): Track | null {
     return this.store.getTrack(trackId);
   }

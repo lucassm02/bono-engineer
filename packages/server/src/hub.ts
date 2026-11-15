@@ -568,6 +568,13 @@ export class WsHub {
         this.runtime.setTyreCompound(tyre);
         return;
       }
+      case 'setWearMultiplier': {
+        if (typeof msg.multiplier !== 'number' || !Number.isFinite(msg.multiplier)) {
+          return this.#error(c, 'badMessage', 'Multiplicador inválido.');
+        }
+        this.runtime.setWearMultiplier(msg.multiplier);
+        return;
+      }
       case 'setPacketFormat': {
         if (!isPacketFormat(msg.format)) {
           return this.#error(c, 'badMessage', 'Formato de pacote inválido.');

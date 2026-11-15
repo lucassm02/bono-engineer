@@ -73,5 +73,6 @@ o `PitTracker` (core) confirma a visita quando o carro sai e grava o evento `pit
 agrupadas por stint na sessão, "Volta 3 · stint 2" e "No box" ao vivo, `stints` no `get_session_summary` do MCP, consumo de combustível
 reiniciado a cada stint. **Fora desta rodada:** comparar stints, juntar/separar à mão, a volta em curso na entrada no box.
 
-**Pendente (2026-11-14):** confirmar com gravação se a visita ao box troca o pneu (hoje o desgaste estimado zera a cada visita) e
-se dá para distinguir parada com troca de parada sem troca. Detalhes e plano de captura na spec 21 (adendo).
+**Pneus no box:** após uma visita detectada, o painel pergunta se o piloto manteve o jogo ou montou pneus novos. Uma troca confirmada
+inicia a estimativa do jogo escolhido na saída do box, inclusive se a resposta vier mais tarde. Uma visita com os mesmos pneus
+mantém a estimativa acumulada desse jogo. O aviso de desgaste do rádio é feito uma vez por jogo e aparece na linha do tempo da corrida.

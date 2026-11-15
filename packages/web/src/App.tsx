@@ -45,7 +45,11 @@ function onGesture(g: GestureOutput): void {
 }
 
 function onKey(e: KeyboardEvent): void {
-  if (e.target instanceof HTMLElement && e.target.closest('input, textarea, select')) return;
+  if (
+    e.target instanceof HTMLElement &&
+    e.target.closest('input, textarea, select, [role="dialog"]')
+  )
+    return;
   const s = useUi.getState();
   if (e.key === 'Escape') {
     if (s.layoutEditorOpen) closeLayoutEditor();

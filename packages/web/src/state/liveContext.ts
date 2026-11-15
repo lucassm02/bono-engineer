@@ -5,7 +5,13 @@
  * (see components/LiveContextBar.tsx); frames at 30 Hz only touch the store when something changed.
  */
 
-import type { LiveFrame, LiveTrackContext, TrackMismatchInfo, TyreCompound } from '@gt7/shared';
+import type {
+  LiveFrame,
+  LivePitTyreChange,
+  LiveTrackContext,
+  TrackMismatchInfo,
+  TyreCompound,
+} from '@gt7/shared';
 import { create } from 'zustand';
 import { api, request } from '../analysis/api.ts';
 import type { TrackOverview } from '../analysis/lib/history.ts';
@@ -47,6 +53,9 @@ export interface LiveContextState {
   mismatch: { info: TrackMismatchInfo; detectedIsNew: boolean } | null;
   /** The tyres the driver said are on the car (pre-race screen); null = not said. */
   tyre: TyreCompound | null;
+  /** The tyre wear rate of the game the driver said (×1 = normal). */
+  wearRate: number;
+  pitTyreChange: LivePitTyreChange | null;
 }
 
 export const useLiveContext = create<LiveContextState>()(() => ({
@@ -61,6 +70,8 @@ export const useLiveContext = create<LiveContextState>()(() => ({
   skippedSessionId: null,
   mismatch: null,
   tyre: null,
+  wearRate: 1,
+  pitTyreChange: null,
 }));
 
 // ---------------------------------------------------------------------------------------------
@@ -157,7 +168,18 @@ export function feedLiveContext(f: LiveFrame): void {
   const stopped = f.car.speedKmh < SAFE_SPEED_KMH;
   const sessionId = f.sessionId ?? null;
   const tyre = f.tyreWear?.compound ?? null;
-  const key = JSON.stringify([ctx, f.car.carCode, f.engineer?.status, stopped, sessionId, tyre]);
+  const wearRate = f.tyreWear?.multiplier ?? 1;
+  const pitTyreChange = f.pitTyreChange ?? null;
+  const key = JSON.stringify([
+    ctx,
+    f.car.carCode,
+    f.engineer?.status,
+    stopped,
+    sessionId,
+    tyre,
+    wearRate,
+    pitTyreChange?.visitId,
+  ]);
   if (key === lastKey) return;
   lastKey = key;
   const prev = useLiveContext.getState();
@@ -168,6 +190,8 @@ export function feedLiveContext(f: LiveFrame): void {
     stopped,
     sessionId,
     tyre,
+    wearRate,
+    pitTyreChange,
   };
   if (sessionId !== prev.sessionId) {
     if (sessionId && prev.skipPending) {
@@ -246,6 +270,19 @@ export async function chooseTyre(compound: TyreCompound | null): Promise<boolean
   }
 }
 
+/** Tells the server the tyre wear rate of the game. */
+export async function chooseWearRate(multiplier: number): Promise<boolean> {
+  useLiveContext.setState({ wearRate: multiplier });
+  if (send({ type: 'setWearMultiplier', multiplier })) return true;
+  try {
+    await request('PUT', '/api/session/tyre-wear-rate', { multiplier });
+    return true;
+  } catch (e) {
+    addNotice('error', (e as Error).message, 5000);
+    return false;
+  }
+}
+
 /** "Reconhecer sozinho": no choice for this session; nothing else is asked until it ends. */
 export function skipTrackPrompt(): void {
   const lc = useLiveContext.getState();
@@ -286,5 +323,6 @@ export function resetLiveContextFeed(): void {
     skipPending: false,
     skippedSessionId: null,
     mismatch: null,
+    pitTyreChange: null,
   });
 }

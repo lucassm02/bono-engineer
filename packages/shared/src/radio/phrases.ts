@@ -141,6 +141,8 @@ export const LIVE_CALL_PHRASES: readonly string[] = [
 export const TYRES_COLD = 'Pneus frios. Aqueça progressivamente.';
 export const TYRES_OK = 'Pneus na faixa.';
 export const TYRES_HOT = 'Pneus quentes.';
+export const TYRES_WEAR_SOON = 'Limite estimado dos pneus em até duas voltas.';
+export const TYRES_WEAR_LIMIT = 'Pneus no limite estimado.';
 export const FUEL_SHORT = 'Nesse ritmo, falta combustível para terminar. Economize nesta volta.';
 export const LIFT_THROTTLE = 'Alivia o acelerador.';
 export const GOOD_LAP = 'Boa volta.';
@@ -159,6 +161,8 @@ export const ALERT_PHRASES: readonly string[] = [
   TYRES_COLD,
   TYRES_OK,
   TYRES_HOT,
+  TYRES_WEAR_SOON,
+  TYRES_WEAR_LIMIT,
   FUEL_SHORT,
   LIFT_THROTTLE,
   GOOD_LAP,

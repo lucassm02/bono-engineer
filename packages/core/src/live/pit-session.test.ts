@@ -141,6 +141,64 @@ describe('a visit to the pits', () => {
     expect(run(true).some((l) => l.flags.includes('outLap'))).toBe(false);
   });
 
+  function reachedPitExit() {
+    const w = make();
+    const ps = traffic(2, 4);
+    const at = ps.findIndex((p) => p.lapCount === 3 && p.speedMps > 40) + 600;
+    w.engine.setTyreCompound('racingMedium');
+    w.engine.setWearMultiplier(50);
+    w.feed(ps.slice(0, at));
+    w.feed(visit(ps[at - 1]!));
+    w.feed(ps.slice(at, at + 1));
+    const frame = w.engine.snapshot()!;
+    expect(frame.pitTyreChange?.compound).toBe('racingMedium');
+    return {
+      ...w,
+      visitId: frame.pitTyreChange!.visitId,
+      afterPit: ps.slice(at + 1, at + 200),
+    };
+  }
+
+  it('keeps the current set and logs a wear warning only once for it', () => {
+    const w = reachedPitExit();
+    w.feed(w.afterPit);
+    const before = w.engine.snapshot()!.tyreWear!;
+    expect(before.distKm).toBeGreaterThan(3);
+    expect(w.engine.confirmPitTyres('stale-visit', 'racingSoft')).toBe(false);
+    expect(w.engine.confirmPitTyres(w.visitId, null)).toBe(true);
+    expect(w.engine.confirmPitTyres(w.visitId, 'racingSoft')).toBe(false);
+    const frame = w.engine.snapshot()!;
+    expect(frame.pitTyreChange).toBeUndefined();
+    expect(frame.tyreWear).toEqual(before);
+    const sessionId = w.engine.session!.id;
+    expect(w.engine.recordTyreWearWarning(sessionId, before.setNumber!)).toBe(true);
+    expect(w.engine.recordTyreWearWarning(sessionId, before.setNumber!)).toBe(true);
+    expect(w.engine.snapshot()!.tyreWear?.warningSent).toBe(true);
+    const warnings = w.ctx.sessionEvents.filter((event) => event.kind === 'tyreWearWarning');
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]?.data).toMatchObject({ compound: 'racingMedium', wearMultiplier: 50 });
+  });
+
+  it.each(['racingMedium', 'racingSoft'] as const)(
+    'counts new %s from pit exit even when the driver answers late',
+    (compound) => {
+      const immediate = reachedPitExit();
+      expect(immediate.engine.confirmPitTyres(immediate.visitId, compound)).toBe(true);
+      immediate.feed(immediate.afterPit);
+
+      const late = reachedPitExit();
+      late.feed(late.afterPit);
+      expect(late.engine.confirmPitTyres(late.visitId, compound)).toBe(true);
+      const frame = late.engine.snapshot()!;
+      expect(frame.pitTyreChange).toBeUndefined();
+      expect(frame.tyreWear).toEqual(immediate.engine.snapshot()!.tyreWear);
+      expect(frame.tyreWear!.distKm).toBeGreaterThan(0);
+      expect(frame.tyreWear!.distKm).toBeLessThan(0.3);
+      expect(frame.tyreWear!.setNumber).toBe(2);
+      expect(late.ctx.sessions.get(late.engine.session!.id)!.tyreCompound).toBe(compound);
+    },
+  );
+
   it('a menu in the box is not a visit', () => {
     const w = make();
     const ps = traffic(2, 3);

@@ -408,6 +408,7 @@ export class Gt7Store {
       startPosition: numOrNull(r.start_position),
       finishPosition: numOrNull(r.finish_position),
       tyreCompound: strOrNull(r.tyre_compound),
+      tyreWearMultiplier: numOrNull(r.tyre_wear_multiplier),
     };
   }
 
@@ -416,8 +417,8 @@ export class Gt7Store {
     this.db
       .prepare(
         `INSERT INTO sessions (id, track_id, car_code, started_at, ended_at, format, mode, recording_file, notes,
-          track_time_ms, kind, kind_source, race_total_laps, field_size, start_position, finish_position, tyre_compound)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          track_time_ms, kind, kind_source, race_total_laps, field_size, start_position, finish_position, tyre_compound, tyre_wear_multiplier)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(id) DO UPDATE SET track_id = excluded.track_id, car_code = excluded.car_code,
           started_at = excluded.started_at, ended_at = excluded.ended_at, format = excluded.format,
           mode = excluded.mode, recording_file = excluded.recording_file, notes = excluded.notes,
@@ -428,7 +429,8 @@ export class Gt7Store {
             THEN sessions.kind_source ELSE excluded.kind_source END,
           race_total_laps = excluded.race_total_laps, field_size = excluded.field_size,
           start_position = excluded.start_position, finish_position = excluded.finish_position,
-          tyre_compound = excluded.tyre_compound`,
+          tyre_compound = excluded.tyre_compound,
+          tyre_wear_multiplier = excluded.tyre_wear_multiplier`,
       )
       .run(
         s.id,
@@ -448,6 +450,7 @@ export class Gt7Store {
         s.startPosition ?? null,
         s.finishPosition ?? null,
         s.tyreCompound ?? null,
+        s.tyreWearMultiplier ?? null,
       );
   }
 

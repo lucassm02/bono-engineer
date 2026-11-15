@@ -190,6 +190,8 @@ function EngineerHud() {
     if (!speech) return;
     const started = playEngineerVoice(speech.utterance, false, undefined, () => {
       if (speech.cueId) journal(f, speech.cueId, speech.utterance, deviceId);
+      if (speech.decision.ruleId === 'tyresWear' && f.sessionId && f.tyreWear?.setNumber)
+        void api.tyreWearWarning(f.sessionId, f.tyreWear.setNumber).catch(() => {});
     });
     if (!started) radioEngine.playbackFailed();
     else if (speech.decision.ruleId === 'tasks') {

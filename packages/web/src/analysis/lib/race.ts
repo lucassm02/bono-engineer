@@ -1,7 +1,9 @@
 /** Pure helpers of the race result (spec 21): the headline, the position series and the timeline. */
 
-import type { Session, SessionEvent } from '@gt7/shared';
+import { isTyreCompound, type Session, type SessionEvent } from '@gt7/shared';
+import { formatFixed } from '../../lib/format.ts';
 import { t as uiText } from '../../lib/i18n.ts';
+import { compoundLabel } from '../../lib/tyres.ts';
 
 export interface PositionPoint {
   /** Epoch ms. */
@@ -71,7 +73,7 @@ export function positionSeries(events: readonly SessionEvent[]): PositionPoint[]
 export interface TimelineRow {
   id: string;
   lap: number;
-  kind: 'position' | 'cars' | 'impact' | 'finish' | 'restart';
+  kind: 'position' | 'cars' | 'impact' | 'finish' | 'restart' | 'tyreWearWarning';
   tone: 'gain' | 'loss' | 'neutral';
   text: string;
 }
@@ -113,6 +115,20 @@ export function timelineRows(events: readonly SessionEvent[]): TimelineRow[] {
         kind: 'impact',
         tone: 'loss',
         text: `${uiText('Impacto')}${where}${speed}`,
+      });
+    } else if (e.kind === 'tyreWearWarning' && typeof d.estimatedLapsLeft === 'number') {
+      const tyre = isTyreCompound(d.compound) ? compoundLabel(d.compound) : uiText('Pneus');
+      const multiplier = typeof d.wearMultiplier === 'number' ? ` ×${d.wearMultiplier}` : '';
+      const estimate =
+        d.estimatedLapsLeft === 0
+          ? uiText('Pneus no limite estimado.')
+          : uiText('~{0} voltas até o limite', formatFixed(d.estimatedLapsLeft));
+      rows.push({
+        id: e.id,
+        lap: e.lap,
+        kind: 'tyreWearWarning',
+        tone: 'neutral',
+        text: `${estimate} · ${tyre}${multiplier}`,
       });
     } else if (e.kind === 'restart') {
       rows.push({

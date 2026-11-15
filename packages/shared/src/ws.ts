@@ -374,6 +374,12 @@ export interface SetTyreCompoundMessage {
   compound: string | null;
 }
 
+/** The driver says the tyre wear rate of the game (×1 … ×20). */
+export interface SetWearMultiplierMessage {
+  type: 'setWearMultiplier';
+  multiplier: number;
+}
+
 export interface PingMessage {
   type: 'ping';
   t: number;
@@ -390,6 +396,7 @@ export type ClientMessage =
   | SetPacketFormatMessage
   | SetTrackHintMessage
   | SetTyreCompoundMessage
+  | SetWearMultiplierMessage
   | PingMessage;
 
 export type ServerMessageType = ServerMessage['type'];

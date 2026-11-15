@@ -211,6 +211,10 @@ export const MIGRATIONS: readonly string[] = [
   `
   ALTER TABLE sessions ADD COLUMN tyre_compound TEXT;
   `,
+  // v11 — the tyre wear rate (×1, ×2…) the driver said the game was set to
+  `
+  ALTER TABLE sessions ADD COLUMN tyre_wear_multiplier REAL;
+  `,
 ];
 
 export const SCHEMA_VERSION = MIGRATIONS.length;

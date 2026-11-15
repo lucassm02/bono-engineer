@@ -468,6 +468,21 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
     return this.engine.tyreCompound;
   }
 
+  confirmPitTyres(visitId: Id, compound: TyreCompound | null): boolean {
+    return this.engine.confirmPitTyres(visitId, compound);
+  }
+
+  recordTyreWearWarning(sessionId: Id, setNumber: number): boolean {
+    return this.engine.recordTyreWearWarning(sessionId, setNumber);
+  }
+
+  /** The tyre wear rate the driver says the game is set to. */
+  setWearMultiplier(multiplier: number): number {
+    this.engine.setWearMultiplier(multiplier);
+    this.#emitStatus();
+    return this.engine.wearMultiplier;
+  }
+
   #sessionCaptureBase(): SessionCaptureStatus {
     const info = this.engine.captureInfo;
     const s = info.session;

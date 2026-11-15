@@ -1,15 +1,16 @@
 /**
  * The pre-race screen of the game (state 'replay'): the console plays a lap with the chosen car
  * while the driver picks the setup. The car it shows is not being driven, so the live widgets
- * (gears, pedals, map) say nothing: this panel takes their place with the three things worth
+ * (gears, pedals, map) say nothing: this panel takes their place with the two things worth
  * confirming before the start: the track (it is already being recognised from the car in the
- * background; one tap changes it), the car and the tyres. The tyre is what the wear estimate
- * needs; the packet does not carry it. Quiet on purpose: small type, no frame-rate updates.
+ * background; one tap changes it) and the tyres, with the wear rate of the game. They are what
+ * the wear estimate needs; the packet carries none of them. (The car is read once driving.) Quiet on purpose: small type, no frame-rate updates.
  */
 
+import { MAX_WEAR_MULTIPLIER } from '@gt7/shared';
 import { useEffect } from 'react';
 import { t as uiText } from '../lib/i18n.ts';
-import { barTrackView, carText, trackLine } from '../lib/liveContext.ts';
+import { barTrackView, trackLine } from '../lib/liveContext.ts';
 import {
   compoundLabel,
   defaultOfGroup,
@@ -19,6 +20,7 @@ import {
 } from '../lib/tyres.ts';
 import {
   chooseTyre,
+  chooseWearRate,
   ensureSavedTracks,
   openTrackPicker,
   useLiveContext,
@@ -31,8 +33,8 @@ export function PreRaceScreen() {
   const liveState = useUi((s) => s.liveState);
   const active = liveState === 'replay';
   const ctx = useLiveContext((s) => s.ctx);
-  const carCode = useLiveContext((s) => s.carCode);
   const tyre = useLiveContext((s) => s.tyre);
+  const wearRate = useLiveContext((s) => s.wearRate);
   const savedCount = useSavedTracks((s) => s.tracks?.length ?? 0);
 
   useEffect(() => {
@@ -42,7 +44,6 @@ export function PreRaceScreen() {
   if (!active) return null;
 
   const track = barTrackView({ ctx, sessionOpen: false, hasSavedTracks: savedCount > 0 });
-  const car = carText(carCode);
   const group = groupOf(tyre);
   const trackKnown = !!ctx?.name;
 
@@ -81,15 +82,6 @@ export function PreRaceScreen() {
             <p className="pr-hint">{uiText('Reconheço a pista pelo carro que roda ao fundo.')}</p>
           )}
         </div>
-
-        {car && (
-          <div className="pr-block">
-            <span className="pr-label">{uiText('Carro')}</span>
-            <div className="pr-line">
-              <span className="pr-value">{car}</span>
-            </div>
-          </div>
-        )}
 
         <div className="pr-block">
           <span className="pr-label">
@@ -131,10 +123,28 @@ export function PreRaceScreen() {
               ))}
             </fieldset>
           )}
+          <label className="pr-rate" data-no-gesture>
+            <span className="pr-rate-label">{uiText('Desgaste do jogo')}</span>
+            <input
+              type="range"
+              className="pr-slider"
+              min={0}
+              max={MAX_WEAR_MULTIPLIER}
+              step={1}
+              value={wearRate}
+              data-no-gesture
+              aria-label={uiText('Multiplicador de desgaste dos pneus')}
+              aria-valuetext={wearRate === 0 ? uiText('Desgaste desativado') : `×${wearRate}`}
+              onChange={(e) => void chooseWearRate(Number(e.target.value))}
+            />
+            <span className="pr-rate-value num">{`×${wearRate}`}</span>
+          </label>
           <p className="pr-hint">
-            {tyre
-              ? uiText('Estimo o desgaste pela temperatura, pela carga e pelo tipo de pneu.')
-              : uiText('Sem escolher, estimo o desgaste como se fosse Esportivo Médio.')}
+            {wearRate === 0
+              ? uiText('Desgaste desativado')
+              : tyre
+                ? uiText('Estimo o desgaste pela temperatura, pela carga e pelo tipo de pneu.')
+                : uiText('Sem escolher, estimo o desgaste como se fosse Esportivo Médio.')}
           </p>
         </div>
       </div>

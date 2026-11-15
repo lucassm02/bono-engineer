@@ -68,6 +68,11 @@ export interface LiveEngineContext {
    * (spec 06: the track the driver chose did not match the laps). Returns how many laps changed.
    */
   reassignSessionTrack?(sessionId: Id, trackId: Id): number;
+  /**
+   * Gives an unknown track the official name and layout of the catalogue (the laps driven on it
+   * agree on one layout). Returns the updated track; optional, absent = tracks are not renamed.
+   */
+  nameTrack?(trackId: Id, name: { name: string; layout: string | null }): Track | null;
   /** The goal being chased on the track and car (spec 13); optional, absent = no goals. */
   getActiveGoal?(trackId: Id, carCode: number): Goal | null;
   /** Marks a goal as reached by a lap (once). Returns whether it changed. */
@@ -174,6 +179,14 @@ export class MemoryEngineContext implements LiveEngineContext {
 
   reassignSessionTrack(sessionId: Id, trackId: Id): number {
     return reassignInMemory(this.laps, this.sessions, sessionId, trackId);
+  }
+
+  nameTrack(trackId: Id, n: { name: string; layout: string | null }): Track | null {
+    const t = this.tracks.get(trackId);
+    if (!t) return null;
+    const named: Track = { ...t, name: n.name, layout: n.layout, source: 'builtin' };
+    this.tracks.set(trackId, named);
+    return named;
   }
 
   saveLap(lap: Lap, trace: LapTrace): void {

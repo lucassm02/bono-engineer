@@ -233,6 +233,17 @@ export function startDiscordRadio(
       try {
         play(stream);
         if (speech.decision.ruleId === 'tasks') reportTaskSpoken(speech.decision.evidence?.taskId);
+        const { sessionId, tyreWear } = msg.frame;
+        if (speech.decision.ruleId === 'tyresWear' && sessionId && tyreWear?.setNumber) {
+          void fetch(`${config.bonoHttpUrl}/api/session/tyre-wear-warning`, {
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json',
+              ...(config.bonoToken ? { 'x-gt7-token': config.bonoToken } : {}),
+            },
+            body: JSON.stringify({ sessionId, setNumber: tyreWear.setNumber }),
+          }).catch(() => {});
+        }
       } catch {
         playbackError();
       }

@@ -72,6 +72,28 @@ export function render(ctx) {
 
 ${motionSection(ctx, 'en')}
 
+<section class="sec" id="tyre-wear" aria-labelledby="h-tyre-wear">
+  <div class="wrap split">
+    <div class="split-head">
+      <h2 id="h-tyre-wear">Tyre wear calibrated in GT7</h2>
+      <p>GT7 shows wear on its HUD. The value is absent from the network telemetry, so Bono estimates wear for each wheel.</p>
+    </div>
+    <ul class="rows">
+      <li class="row">
+        <div><h3>Measured in races and replays on PS5</h3><p>We compared telemetry with photos of all four HUD bars. Distance, temperature, braking, lateral force and wheel slip informed the initial calibration of nine dry compounds and two wet compounds.</p></div>
+        <div class="read acc">11<small>calibrated compounds</small></div>
+      </li>
+      <li class="row">
+        <div><h3>A separate test at Interlagos</h3><p>On Sport Soft tyres at a ×10 wear rate, the HUD showed around 10% average wear. Bono estimated 11%. The difference can be larger for individual wheels.</p></div>
+        <div class="read acc">11%<small>estimated average · HUD ~10%</small></div>
+      </li>
+      <li class="row">
+        <div><h3>From the dashboard to the radio</h3><p>Choose your compound and set the game’s wear rate, from ×0 to ×50. In Race mode, the radio warns when the estimated limit is up to two laps away. On pit exit, confirm whether you kept your tyres or fitted a fresh set.</p></div>
+      </li>
+    </ul>
+  </div>
+</section>
+
 <section class="sec" id="what-it-does" aria-labelledby="h-does">
   <div class="wrap split">
     <div class="split-head">

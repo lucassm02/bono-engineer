@@ -19,7 +19,7 @@ import type {
   Wheels,
 } from './telemetry.ts';
 import type { LiveTrackContext } from './track-context.ts';
-import type { LiveTyreWear } from './tyre-wear.ts';
+import type { LiveTyreWear, TyreCompound } from './tyre-wear.ts';
 
 /**
  * High-level state shown to the user.
@@ -145,6 +145,12 @@ export interface EngineerRadioCall {
   text: string;
   distanceM: number;
   actionDistanceM: number;
+}
+
+/** The last completed pit visit, while its tyre choice is still open. */
+export interface LivePitTyreChange {
+  visitId: Id;
+  compound: TyreCompound | null;
 }
 
 export interface EngineerRadioLog {
@@ -422,6 +428,7 @@ export interface LiveFrame {
    * frame, the compound alone on the pre-race screen. (core, additive)
    */
   tyreWear?: LiveTyreWear;
+  pitTyreChange?: LivePitTyreChange;
   /**
    * Position among the cars of a practice or qualifying with traffic (it ranks the best laps of
    * the lobby); omitted in a race and when alone on the track. (core, additive)

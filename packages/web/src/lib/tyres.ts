@@ -31,8 +31,9 @@ export const TYRE_GROUPS: readonly TyreGroup[] = [
     label: () => uiText('Competição'),
   },
   { id: 'intermediate', compounds: ['intermediate'], label: () => uiText('Intermediário') },
-  { id: 'heavyWet', compounds: ['heavyWet'], label: () => uiText('Chuva forte') },
+  { id: 'heavyWet', compounds: ['heavyWet'], label: () => uiText('Chuva pesada') },
   { id: 'dirt', compounds: ['dirt'], label: () => uiText('Terra') },
+  { id: 'snow', compounds: ['snow'], label: () => uiText('Neve') },
 ];
 
 export function groupOf(c: TyreCompound | null | undefined): TyreGroup | null {

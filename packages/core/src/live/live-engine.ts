@@ -46,6 +46,7 @@ import {
   type Id,
   type IngestorState,
   type IngestorStats,
+  type KnownTrackMatch,
   type Lap,
   type LapCompletedEvent,
   type LapFlag,
@@ -62,7 +63,9 @@ import {
   type LiveTask,
   type LiveTrackContext,
   type LiveTrackInfo,
+  matchKnownTrack,
   type NextCornerHint,
+  normalizeWearMultiplier,
   pedalToUnit,
   type SectorSplit,
   type SectorStatus,
@@ -75,12 +78,14 @@ import {
   type TrackBasis,
   type TrackHint,
   type TrackMismatchInfo,
+  TYRE_COMPOUNDS,
   type TyreCompound,
   TyreWearTracker,
   wheelSlipRatios,
 } from '@gt7/shared';
 import { TraceBuilder } from '../trace/channels.ts';
 import { centerlinePolyline, lapPolyline, UNKNOWN_TRACK_PREFIX } from '../track/fingerprint.ts';
+import { TrackNameVoter } from '../track/name-vote.ts';
 import { ReplayPathTracker } from '../track/replay-path.ts';
 import { type CatalogGuess, catalogGuessAtStart } from '../track/start-guess.ts';
 import { newId } from '../util/ids.ts';
@@ -134,6 +139,9 @@ const FROZEN_MIN_MS = 1000;
 /** A frozen stream this long means the driver left the track: the session is closed. */
 const FROZEN_END_MS = 30_000;
 
+/** A lap whose first and last positions are this close (m) began at the finish line. */
+const LAP_CLOSE_M = 60;
+
 /** Replay detection: a car faster than this (m/s) with a changing position is "playing". */
 const REPLAY_MIN_SPEED_MPS = 2;
 /** The session of a finished race closes at the latest this long after the flag (ms). */
@@ -176,6 +184,8 @@ export interface EnginePacketInfo {
 
 export interface LiveEngineOptions {
   context?: LiveEngineContext;
+  /** Compares a lap with the shipped driving lines (default `matchKnownTrack`); for tests. */
+  knownMatcher?: (line: { x: ArrayLike<number>; z: ArrayLike<number> }) => KnownTrackMatch;
   /** Frame emission rate (default 30 Hz). */
   frameRateHz?: number;
   idFactory?: () => Id;
@@ -386,8 +396,12 @@ export function computeSectorTimes(
 export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   readonly context: LiveEngineContext;
   readonly options: Required<
-    Omit<LiveEngineOptions, 'context' | 'deltaReferenceLapId' | 'idFactory' | 'cornerHints'>
-  >;
+    Omit<
+      LiveEngineOptions,
+      'context' | 'deltaReferenceLapId' | 'idFactory' | 'cornerHints' | 'knownMatcher'
+    >
+  > &
+    Pick<LiveEngineOptions, 'knownMatcher'>;
   readonly #newId: () => Id;
   readonly #hints: CornerHintProvider;
 
@@ -486,6 +500,12 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   /** The tyres the driver said are on the car (pre-race screen); null = not said. */
   #tyreCompound: TyreCompound | null = null;
   #tyreWear = new TyreWearTracker();
+  #tyreSetNumber = 1;
+  #warnedTyreSet: number | null = null;
+  #pitTyres: { visitId: Id; newSets: Map<TyreCompound, TyreWearTracker> } | null = null;
+  #nameVoter = new TrackNameVoter();
+  /** The tyre wear rate the driver said the game is set to (×1 = normal). */
+  #wearMultiplier = 1;
   #hintTrack: Track | null = null;
   /** The driver insisted on the chosen track after a mismatch: laps are not re-identified. */
   #userLocked = false;
@@ -503,6 +523,8 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   #stint = 1;
   /** The car left the pits and no lap has closed since: that lap is an out lap if the game did not count it. */
   #pitOutPending = false;
+  /** Laps closed in the open session (the first one is often an out lap from the pits or the grid). */
+  #lapsFinalized = 0;
   /**
    * Time on the track with other cars around and no race (the free practice and the qualifying of
    * a Sport Mode lobby): the packet still carries a position and the number of cars, which then
@@ -566,6 +588,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       maxLateralM: opts.maxLateralM ?? 25,
       fuelAvgLaps: opts.fuelAvgLaps ?? 3,
       maxLapSamples: opts.maxLapSamples ?? 108_000,
+      ...(opts.knownMatcher ? { knownMatcher: opts.knownMatcher } : {}),
     };
     this.#newId = opts.idFactory ?? (() => newId());
     this.#hints = opts.cornerHints ?? new TraceCornerHintProvider();
@@ -899,11 +922,68 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
 
   setTyreCompound(compound: TyreCompound | null): void {
     if (compound === this.#tyreCompound) return;
+    this.#replaceTyreSet(compound, new TyreWearTracker());
+  }
+
+  /** Applies a tyre choice for the latest pit visit, once, even if several devices show it. */
+  confirmPitTyres(visitId: Id, compound: TyreCompound | null): boolean {
+    const pending = this.#pitTyres;
+    if (!pending || pending.visitId !== visitId || !this.#session) return false;
+    if (compound === null) {
+      this.#pitTyres = null;
+    } else {
+      const tracker = pending.newSets.get(compound);
+      if (!tracker) return false;
+      this.#replaceTyreSet(compound, tracker);
+    }
+    return true;
+  }
+
+  /** Records an audible wear warning once, even across a reload or a change of audio device. */
+  recordTyreWearWarning(sessionId: Id, setNumber: number): boolean {
+    if (this.#session?.id !== sessionId || this.#tyreSetNumber !== setNumber || this.#pitTyres)
+      return false;
+    if (this.#warnedTyreSet === setNumber) return true;
+    const frame = this.snapshot();
+    const wear = frame?.tyreWear;
+    if (!frame || !wear?.compound || wear.multiplier === 0 || wear.lapsLeft === null) return false;
+    this.#raceEvent('tyreWearWarning', frame.t, frame.lap.lap, frame.distanceM, {
+      tyreSet: setNumber,
+      compound: wear.compound,
+      wearMultiplier: wear.multiplier,
+      worstWearPct: Math.round(wear.worst * 100),
+      estimatedLapsLeft: Math.round(wear.lapsLeft * 10) / 10,
+    });
+    this.#warnedTyreSet = setNumber;
+    return true;
+  }
+
+  #replaceTyreSet(compound: TyreCompound | null, tracker: TyreWearTracker): void {
+    const session = !this.#replayMode && this.#session;
+    const changed = session && session.tyreCompound !== compound;
+    if (changed) this.#ctx.saveSession({ ...session, tyreCompound: compound });
     this.#tyreCompound = compound;
-    this.#tyreWear.reset();
+    this.#tyreWear = tracker;
+    this.#tyreSetNumber++;
+    this.#pitTyres = null;
+    if (changed) {
+      session.tyreCompound = compound;
+      this.emit('sessionUpdated', { ...session });
+    }
+  }
+
+  get wearMultiplier(): number {
+    return this.#wearMultiplier;
+  }
+
+  /** The wear rate of the game; applies from now on, the wear so far is kept. */
+  setWearMultiplier(multiplier: number): void {
+    const m = normalizeWearMultiplier(multiplier);
+    if (m === this.#wearMultiplier) return;
+    this.#wearMultiplier = m;
     const s = this.#session;
     if (s && !this.#replayMode) {
-      s.tyreCompound = compound;
+      s.tyreWearMultiplier = m;
       this.#ctx.saveSession({ ...s });
       this.emit('sessionUpdated', { ...s });
     }
@@ -1140,6 +1220,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     this.#sessionBestLapMs = null;
     this.#sessionBestSectors = [];
     this.#pit.reset();
+    this.#pitTyres = null;
     this.#stint = 1;
     this.#pitOutPending = false;
     this.#trafficMs = 0;
@@ -1346,17 +1427,6 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
 
     if (streamReset) this.#gforce.reset();
     this.#g = this.#gforce.update(p, (dPk * this.#msPerPacket) / 1000);
-    if (this.#session && running && replay.kind === 'none' && !this.#replayMode) {
-      const dt = Math.min(0.5, (dPk * this.#msPerPacket) / 1000);
-      this.#tyreWear.add(this.#tyreCompound, {
-        distM: p.speedMps * dt,
-        speedMps: p.speedMps,
-        tempC: p.tyreTemp,
-        slip: wheelSlipRatios(p),
-        gLat: this.#g.lateral,
-        brake: pedalToUnit(p.brake),
-      });
-    }
 
     if (this.#pending) this.#tryFinalize(p);
     if (this.#session && replay.kind !== 'none') {
@@ -1370,6 +1440,22 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     }
     this.#raceStep(p, receivedAtMs, dPk, onTrack, f, replay.kind !== 'none');
     this.#pitStep(p, receivedAtMs, f, replay.kind !== 'none');
+    if (this.#session && running && replay.kind === 'none' && !this.#replayMode) {
+      const dt = Math.min(0.5, (dPk * this.#msPerPacket) / 1000);
+      const step = {
+        distM: p.speedMps * dt,
+        speedMps: p.speedMps,
+        tempC: p.tyreTemp,
+        slip: wheelSlipRatios(p),
+        gLat: this.#g.lateral,
+        brake: pedalToUnit(p.brake),
+        wearRate: this.#wearMultiplier,
+      };
+      this.#tyreWear.add(this.#tyreCompound, step);
+      if (this.#pitTyres) {
+        for (const [compound, tracker] of this.#pitTyres.newSets) tracker.add(compound, step);
+      }
+    }
     this.#trafficStep(p, dPk, onTrack && !paused && replay.kind === 'none');
 
     if (this.listenerCount('packet') > 0) {
@@ -1458,7 +1544,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
 
   /**
    * A visit to the pits ends the stint: the event is dated at the arrival in the box and carries the
-   * departure; the consumption of the next stint starts afresh (refuelled, new tyres).
+   * departure. Start the next fuel sample and the possible fresh tyre sets at the exit.
    */
   #pitStep(
     p: TelemetryPacket,
@@ -1486,11 +1572,17 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     this.#stint++;
     this.#pitOutPending = true;
     this.#fuelHistory = [];
-    this.#tyreWear.reset();
-    this.#raceEvent('pit', sig.at, sig.lap, null, {
+    const visitId = this.#raceEvent('pit', sig.at, sig.lap, null, {
       exitAt: sig.exitAt,
       durationMs: sig.exitAt - sig.at,
     });
+    if (visitId) {
+      // Keep accumulating the mounted set and each possible replacement until the driver answers.
+      this.#pitTyres = {
+        visitId,
+        newSets: new Map(TYRE_COMPOUNDS.map((compound) => [compound, new TyreWearTracker()])),
+      };
+    }
   }
 
   #raceStep(
@@ -1653,12 +1745,12 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     lap: number,
     distanceM: number | null,
     data: SessionEvent['data'],
-  ): void {
+  ): Id | null {
     const s = this.#session;
-    if (!s) return;
-    this.#ctx.saveSessionEvents?.([
-      { id: this.#newId(), sessionId: s.id, at, kind, lap, distanceM, data },
-    ]);
+    if (!s) return null;
+    const id = this.#newId();
+    this.#ctx.saveSessionEvents?.([{ id, sessionId: s.id, at, kind, lap, distanceM, data }]);
+    return id;
   }
 
   #composeState(): ConnectionState {
@@ -1710,8 +1802,12 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       notes: null,
       trackTimeMs: 0,
       tyreCompound: this.#replayMode ? null : this.#tyreCompound,
+      tyreWearMultiplier: this.#replayMode ? null : this.#wearMultiplier,
     };
     this.#tyreWear.reset();
+    this.#tyreSetNumber = 1;
+    this.#warnedTyreSet = null;
+    this.#lapsFinalized = 0;
     this.#ephemeral = !this.#persist && !this.#replayMode;
     this.#session = s;
     this.#trackTimeMs = 0;
@@ -2215,6 +2311,8 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     // The first lap after a visit to the pits is an out lap. The game says so itself: a lap that
     // beats its best lap (or the first of the session) leaves `bestLapMs` as it was, so the lap
     // does not count (measured: 90.831 s against a best of 91.321 s, left out by the game).
+    const firstOfSession = this.#lapsFinalized === 0;
+    this.#lapsFinalized++;
     if (this.#pitOutPending) {
       this.#pitOutPending = false;
       if (
@@ -2257,8 +2355,22 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     const zs = trace.channels.z;
 
     // ---- track identification ----
-    const complete = !flags.has('discontinuity') && trace.length > 600;
-    if (!complete && this.#trackConfidence !== 'confirmed') this.#invalidLap = 'discontinuity';
+    // A lap that began at the finish line ends where it began. One that began on the grid or at the
+    // pit exit (a few hundred metres from the line) does not: its trace cannot teach the track, the
+    // line would start in the wrong place and every later lap would jump (measured: the same circuit
+    // became three "unknown tracks" and every lap after the first was invalid). It is neither used
+    // to learn the track nor counted against the learning guide.
+    const atLine =
+      xs.length > 1 &&
+      Math.hypot(xs[0]! - xs[xs.length - 1]!, zs[0]! - zs[zs.length - 1]!) <= LAP_CLOSE_M;
+    const complete = !flags.has('discontinuity') && trace.length > 600 && atLine;
+    // The same lap is not a lap to compare either: it is shorter than the circuit (measured: 3225 m
+    // against 3560 m, a 1:31.167 "best" that the game itself did not count) and as a reference its
+    // distances would start in the wrong place. The first lap of a race counts as an out lap too.
+    if (firstOfSession && !atLine && trace.length > 600) flags.add('outLap');
+    if (!complete && atLine && this.#trackConfidence !== 'confirmed') {
+      this.#invalidLap = 'discontinuity';
+    }
     let mismatch: TrackMismatchInfo | null = null;
     let learnedNow = false;
     if (
@@ -2384,6 +2496,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     }
 
     this.#ctx.saveLap(lapRow, trace);
+    if (track && valid && atLine && !replay) this.#nameUnknownTrack(track, xs, zs);
     const goalReached = this.#checkGoal(lapRow, personal);
 
     // ---- session bookkeeping ----
@@ -2474,6 +2587,31 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     }
     const count = (sectorBoundaries(this.#track)?.length ?? 2) + 1;
     this.#records = this.#ctx.getTrackRecords(this.#track.id, this.#carCode(), count);
+  }
+
+  /**
+   * After enough consistent laps on a track the app only knows as "Pista desconhecida N", names it
+   * from the catalogue (see `TrackNameVoter`). The driver may not have stayed on the pre-race
+   * screen long enough for the path to name it; this is the same answer, a few laps later.
+   */
+  #nameUnknownTrack(track: Track, xs: ArrayLike<number>, zs: ArrayLike<number>): void {
+    if (
+      !this.#ctx.nameTrack ||
+      track.source !== 'auto' ||
+      !track.name.startsWith(UNKNOWN_TRACK_PREFIX)
+    ) {
+      return;
+    }
+    const match = (this.options.knownMatcher ?? matchKnownTrack)({ x: xs, z: zs });
+    const layout = this.#nameVoter.vote(track.id, match);
+    if (!layout) return;
+    const named = this.#ctx.nameTrack(track.id, {
+      name: layout.venue,
+      layout: layout.layoutLabel ?? null,
+    });
+    if (named && this.#track?.id === named.id) {
+      this.#setActiveTrack(named, this.#trackConfidence, this.#trackBasis);
+    }
   }
 
   #setActiveTrack(track: Track, confidence: LiveTrackInfo['confidence'], basis: TrackBasis): void {
@@ -2819,7 +2957,18 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
         ? { stint: { number: this.#stint, inPits: this.#pit.inPits } }
         : {}),
       ...(this.#drill ? { drill: this.#drill.tracker.frame() } : {}),
-      tyreWear: this.#tyreWear.snapshot(this.#tyreCompound, this.trackInfo?.lengthM ?? null),
+      tyreWear: {
+        ...this.#tyreWear.snapshot(
+          this.#tyreCompound,
+          this.trackInfo?.lengthM ?? null,
+          this.#wearMultiplier,
+        ),
+        setNumber: this.#tyreSetNumber,
+        warningSent: this.#warnedTyreSet === this.#tyreSetNumber,
+      },
+      ...(this.#pitTyres && {
+        pitTyreChange: { visitId: this.#pitTyres.visitId, compound: this.#tyreCompound },
+      }),
       link: this.#link ?? {
         rateHz: 0,
         lossPct: 0,

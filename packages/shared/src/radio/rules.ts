@@ -7,7 +7,7 @@
 
 import type { LiveCornerPass } from '../live.ts';
 import { engineerCall, isBrakeCue, REACTION_MS } from './cues.ts';
-import { fuelProjection } from './fuel.ts';
+import { fuelProjection, raceLapsLeft } from './fuel.ts';
 import {
   cornerSegment,
   FUEL_LAPS,
@@ -20,6 +20,8 @@ import {
   TYRES_COLD,
   TYRES_HOT,
   TYRES_OK,
+  TYRES_WEAR_LIMIT,
+  TYRES_WEAR_SOON,
 } from './phrases.ts';
 import type { RadioCandidate, RadioRule, RadioRuleContext } from './types.ts';
 import { isTyreScaleUsable, tyreTempsLabel } from './tyres.ts';
@@ -40,6 +42,8 @@ export const TYRE_HOT_PERSIST_MS = 20000;
 export const TYRE_HOT_HYSTERESIS_C = 8;
 export const TYRE_HOT_CLEAR_MS = 10000;
 export const TYRE_HOT_INTERVAL_MS = 180000;
+const TYRE_WEAR_WARNING_LAPS = 2;
+const TYRE_WEAR_CONFIRM_MS = 3000;
 /** Fuel margin (L) for the "not enough to finish" hysteresis. */
 export const FUEL_MARGIN_L = 0.5;
 export const FUEL_CONFIRM_MS = 3000;
@@ -57,6 +61,73 @@ const round1 = (n: number) => Math.round(n * 10) / 10;
 function tyreRangeTrusted(ctx: RadioRuleContext): boolean {
   return ctx.config.tyreScaleValidated && isTyreScaleUsable(ctx.config.tyreScale);
 }
+
+interface WearWarningState {
+  set: number | null;
+  since: number | null;
+  deliveredSet: number | null;
+}
+
+/** One warning per mounted set, based on the estimated time until the wear threshold. */
+export const tyresWearRule: RadioRule<WearWarningState> = {
+  id: 'tyresWear',
+  priority: 'strategy',
+  modes: ['race'],
+  carAlert: true,
+  init: () => ({ set: null, since: null, deliveredSet: null }),
+  evaluate(ctx, state) {
+    const { frame, t } = ctx;
+    const wear = frame.tyreWear;
+    const set = wear?.setNumber ?? frame.stint?.number ?? 1;
+    if (state.set !== set) {
+      state.set = set;
+      state.since = null;
+    }
+    if (state.deliveredSet === set || wear?.warningSent) return [];
+    const remaining = raceLapsLeft(frame.lap, frame.lapFraction);
+    const left = wear?.lapsLeft;
+    if (
+      !wear?.compound ||
+      wear.multiplier <= 0 ||
+      typeof left !== 'number' ||
+      !Number.isFinite(left) ||
+      left > TYRE_WEAR_WARNING_LAPS ||
+      (remaining !== null && remaining <= left) ||
+      frame.pitTyreChange ||
+      frame.stint?.inPits ||
+      frame.lap.finished ||
+      frame.race?.state === 'finished' ||
+      frame.car.speedKmh < TYRE_MIN_SPEED_KMH
+    ) {
+      state.since = null;
+      return [];
+    }
+    state.since ??= t;
+    if (t - state.since < TYRE_WEAR_CONFIRM_MS) return [];
+    const phrase = left === 0 ? TYRES_WEAR_LIMIT : TYRES_WEAR_SOON;
+    return [
+      {
+        key: String(set),
+        utterance: phrase,
+        label: phrase,
+        evidence: {
+          compound: wear.compound,
+          wearMultiplier: wear.multiplier,
+          tyreSet: set,
+          worstWearPct: Math.round(wear.worst * 100),
+          estimatedLapsLeft: round1(left),
+        },
+        needsFreeWindow: true,
+      },
+    ];
+  },
+  delivered(_candidate, state) {
+    state.deliveredSet = state.set;
+  },
+  interrupt(state) {
+    state.since = null;
+  },
+};
 
 // ---- Pneus frios / na faixa -------------------------------------------------------------------
 

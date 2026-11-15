@@ -145,3 +145,32 @@
 .app[data-prerace="1"] .dots {
   display: none;
 }
+
+/* Wear rate of the game: from disabled to the maximum. */
+.pr-rate {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: var(--tap);
+}
+.pr-rate-label {
+  flex: none;
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+.pr-slider {
+  flex: 1;
+  min-width: 0;
+  height: var(--tap);
+  margin: 0;
+  background: transparent;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.pr-rate-value {
+  flex: none;
+  min-width: 3ch;
+  text-align: right;
+  font-size: var(--fs-md);
+  color: var(--text);
+}

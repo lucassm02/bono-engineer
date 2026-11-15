@@ -56,6 +56,8 @@ export class RadioSim {
   throttle = 1;
   lateralG = 0;
   temps: Wheels = [80, 80, 80, 80];
+  tyreWear?: LiveFrame['tyreWear'];
+  pitTyreChange?: LiveFrame['pitTyreChange'];
   fuel = {
     level: 50,
     capacity: 100,
@@ -270,6 +272,8 @@ export class RadioSim {
       ...(this.passes.length ? { cornerPasses: this.passes.slice(-2) } : {}),
       ...(this.drill ? { drill: this.drill } : {}),
       ...(this.tasks.length ? { tasks: this.tasks } : {}),
+      ...(this.tyreWear ? { tyreWear: this.tyreWear } : {}),
+      ...(this.pitTyreChange ? { pitTyreChange: this.pitTyreChange } : {}),
       link: { rateHz: 60, lossPct: 0, lost: 0, received: this.seq, lastPacketAt: this.t },
     };
   }

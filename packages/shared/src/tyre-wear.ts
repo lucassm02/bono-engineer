@@ -4,10 +4,9 @@
  * load on each wheel (lateral g, braking, slip). The compound is not in the packet either: the driver
  * says it on the pre-race screen.
  *
- * The life of each compound (km until it is used up at a normal pace) is an ESTIMATE, not a measured
- * value: it only sets the scale and is meant to be calibrated against the real console. The shape of
- * the model (hot tyres wear faster, a sliding tyre wears faster, a hard compound lasts longer) is
- * what the numbers are for. Pure and deterministic (isomorphic).
+ * Compound life is expressed in equivalent kilometres at ×1. The dry and wet estimates are
+ * calibrated to the mean wear of the four tyres in GT7 HUD photos. Off-road compounds use initial estimates.
+ * Pure and deterministic (isomorphic).
  */
 
 import type { Wheels } from './telemetry.ts';
@@ -25,11 +24,12 @@ export const TYRE_COMPOUNDS = [
   'intermediate',
   'heavyWet',
   'dirt',
+  'snow',
 ] as const;
 
 export type TyreCompound = (typeof TYRE_COMPOUNDS)[number];
 
-export type TyreFamily = 'comfort' | 'sport' | 'racing' | 'wet' | 'dirt';
+export type TyreFamily = 'comfort' | 'sport' | 'racing' | 'wet' | 'dirt' | 'snow';
 
 export interface CompoundInfo {
   id: TyreCompound;
@@ -40,19 +40,25 @@ export interface CompoundInfo {
   idealC: readonly [min: number, max: number];
 }
 
+// Fit lifeKm as mean equivalent distance across the four tyres / mean fraction worn on the HUD.
+// Comfort and Sport: Interlagos in a 911 GT3 (997) at ×25, plus a Comfort Hard run at ×50.
+// Racing Hard, Medium and Soft: Daytona (×5), Road Atlanta (×5) and SUGO (×4).
+// Wet compounds: one run each at Tsukuba at ×50 under light rain and heavy rain, respectively.
 const INFO: Record<TyreCompound, CompoundInfo> = {
-  comfortHard: { id: 'comfortHard', family: 'comfort', lifeKm: 260, idealC: [60, 85] },
-  comfortMedium: { id: 'comfortMedium', family: 'comfort', lifeKm: 200, idealC: [60, 85] },
-  comfortSoft: { id: 'comfortSoft', family: 'comfort', lifeKm: 150, idealC: [60, 85] },
-  sportHard: { id: 'sportHard', family: 'sport', lifeKm: 180, idealC: [70, 95] },
-  sportMedium: { id: 'sportMedium', family: 'sport', lifeKm: 130, idealC: [70, 95] },
-  sportSoft: { id: 'sportSoft', family: 'sport', lifeKm: 90, idealC: [70, 95] },
-  racingHard: { id: 'racingHard', family: 'racing', lifeKm: 110, idealC: [80, 105] },
-  racingMedium: { id: 'racingMedium', family: 'racing', lifeKm: 70, idealC: [80, 105] },
-  racingSoft: { id: 'racingSoft', family: 'racing', lifeKm: 45, idealC: [80, 105] },
-  intermediate: { id: 'intermediate', family: 'wet', lifeKm: 80, idealC: [50, 80] },
-  heavyWet: { id: 'heavyWet', family: 'wet', lifeKm: 90, idealC: [45, 75] },
+  comfortHard: { id: 'comfortHard', family: 'comfort', lifeKm: 4_950, idealC: [60, 85] },
+  comfortMedium: { id: 'comfortMedium', family: 'comfort', lifeKm: 1_540, idealC: [60, 85] },
+  comfortSoft: { id: 'comfortSoft', family: 'comfort', lifeKm: 1_040, idealC: [60, 85] },
+  sportHard: { id: 'sportHard', family: 'sport', lifeKm: 1_710, idealC: [70, 95] },
+  sportMedium: { id: 'sportMedium', family: 'sport', lifeKm: 1_050, idealC: [70, 95] },
+  sportSoft: { id: 'sportSoft', family: 'sport', lifeKm: 750, idealC: [70, 95] },
+  racingHard: { id: 'racingHard', family: 'racing', lifeKm: 660, idealC: [80, 105] },
+  racingMedium: { id: 'racingMedium', family: 'racing', lifeKm: 450, idealC: [80, 105] },
+  racingSoft: { id: 'racingSoft', family: 'racing', lifeKm: 230, idealC: [80, 105] },
+  intermediate: { id: 'intermediate', family: 'wet', lifeKm: 465, idealC: [50, 80] },
+  heavyWet: { id: 'heavyWet', family: 'wet', lifeKm: 3_200, idealC: [45, 75] },
   dirt: { id: 'dirt', family: 'dirt', lifeKm: 160, idealC: [55, 90] },
+  // Start with the off-road estimates until a snow run supplies a calibration.
+  snow: { id: 'snow', family: 'snow', lifeKm: 160, idealC: [55, 90] },
 };
 
 /** Assumed when the driver did not say which tyres are on. */
@@ -64,6 +70,15 @@ export function isTyreCompound(v: unknown): v is TyreCompound {
 
 export function compoundInfo(c: TyreCompound | null | undefined): CompoundInfo {
   return INFO[c ?? DEFAULT_COMPOUND];
+}
+
+/** Highest wear multiplier supported by the Bono's tyre wear control. */
+export const MAX_WEAR_MULTIPLIER = 50;
+
+/** A usable wear multiplier: 0 disables wear, 1 is normal. */
+export function normalizeWearMultiplier(v: unknown): number {
+  const n = typeof v === 'number' && Number.isFinite(v) ? Math.round(v) : 1;
+  return Math.min(MAX_WEAR_MULTIPLIER, Math.max(0, n));
 }
 
 /** Share of the tyre used up at which the model says it is time to change (the rest is the cliff). */
@@ -118,16 +133,24 @@ export interface TyreWearStep {
   slip: Wheels;
   gLat: number;
   brake: number;
+  /** The game's wear rate setting (×0 = off, ×1 = normal); 1 when absent. */
+  wearRate?: number;
 }
 
 /** What the live panel shows. */
 export interface LiveTyreWear {
   /** What the driver said is on the car; null = not said (a generic sport medium is assumed). */
   compound: TyreCompound | null;
+  /** Number of the fitted set within the driving session, when reported by the engine. */
+  setNumber?: number;
+  /** The radio already warned about this set in the current session. */
+  warningSent?: boolean;
   /** Estimated wear of each tyre: 0 new … 1 used up. */
   wear: Wheels;
   /** Worst tyre. */
   worst: number;
+  /** The wear rate setting the estimate was made with (×0 = off, ×1 = normal). */
+  multiplier: number;
   /** Km driven on this set. */
   distKm: number;
   /** Wear per lap of the worst tyre at the pace so far; null while there is too little to say. */
@@ -139,11 +162,13 @@ export interface LiveTyreWear {
 export class TyreWearTracker {
   #wear: Wheels = [0, 0, 0, 0];
   #distM = 0;
+  #distWithWearM = 0;
 
   /** New tyres. */
   reset(): void {
     this.#wear = [0, 0, 0, 0];
     this.#distM = 0;
+    this.#distWithWearM = 0;
   }
 
   get distKm(): number {
@@ -153,25 +178,28 @@ export class TyreWearTracker {
   /** Adds one step of driving. */
   add(compound: TyreCompound | null, s: TyreWearStep): void {
     if (!(s.distM > 0) || s.speedMps < MIN_SPEED_MPS) return;
+    this.#distM += s.distM;
+    const rate = normalizeWearMultiplier(s.wearRate);
+    if (rate === 0) return;
+
     const info = compoundInfo(compound);
     const load = wheelLoadFactors({ gLat: s.gLat, brake: s.brake, slip: s.slip });
     const km = s.distM / 1000;
     for (let w = 0; w < 4; w++) {
       const temp = tempWearFactor(s.tempC[w] ?? Number.NaN, info.idealC);
-      this.#wear[w] = Math.min(
-        1,
-        this.#wear[w]! + (km / info.lifeKm) * temp * (load[w]! / NOMINAL_LOAD),
-      );
+      const equivalentKm = km * rate * temp * (load[w]! / NOMINAL_LOAD);
+      this.#wear[w] = Math.min(1, this.#wear[w]! + equivalentKm / info.lifeKm);
     }
-    this.#distM += s.distM;
+    this.#distWithWearM += s.distM;
   }
 
   /** The state for the frame; `lapLengthM` is the length of the lap when known. */
-  snapshot(compound: TyreCompound | null, lapLengthM: number | null): LiveTyreWear {
+  snapshot(compound: TyreCompound | null, lapLengthM: number | null, multiplier = 1): LiveTyreWear {
     const worst = Math.max(...this.#wear);
-    const km = this.#distM / 1000;
+    const rate = normalizeWearMultiplier(multiplier);
+    const km = this.#distWithWearM / 1000;
     let perLap: number | null = null;
-    if (km >= MIN_RATE_KM && lapLengthM && lapLengthM > 0 && worst > 0) {
+    if (rate > 0 && km >= MIN_RATE_KM && lapLengthM && lapLengthM > 0 && worst > 0) {
       perLap = (worst / km) * (lapLengthM / 1000);
     }
     const lapsLeft = perLap && perLap > 0 ? Math.max(0, (WEAR_LIMIT - worst) / perLap) : null;
@@ -179,7 +207,8 @@ export class TyreWearTracker {
       compound,
       wear: [...this.#wear] as Wheels,
       worst,
-      distKm: km,
+      multiplier: rate,
+      distKm: this.distKm,
       perLap,
       lapsLeft,
     };

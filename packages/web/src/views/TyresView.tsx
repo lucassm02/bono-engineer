@@ -130,11 +130,17 @@ export function TyresView() {
       setAttr(e[`surf${i}`], 'data-kind', surface ? surface[i] : '');
     }
     if (wear) {
-      const left = lapsLeftText(wear);
+      const left = f.pitTyreChange ? null : lapsLeftText(wear);
       const km = `${wear.distKm.toFixed(1)} km`;
+      const label =
+        wear.multiplier === 0
+          ? uiText('Desgaste desativado')
+          : f.pitTyreChange
+            ? uiText('Confirmar pneus do box')
+            : uiText('Desgaste estimado');
       setText(
         e.wearinfo,
-        `${uiText('Desgaste estimado')} · ${compoundLabel(wear.compound)} · ${km}${left ? ` · ${left}` : ''}`,
+        `${label} · ${compoundLabel(wear.compound)} · ${km}${left ? ` · ${left}` : ''}`,
       );
     }
   });

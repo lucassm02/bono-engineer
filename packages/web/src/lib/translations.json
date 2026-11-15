@@ -5237,7 +5237,24 @@
   "Esportivo": ["Sport", "Deportivo"],
   "Competição": ["Racing", "Competición"],
   "Intermediário": ["Intermediate", "Intermedio"],
-  "Chuva forte": ["Heavy wet", "Lluvia fuerte"],
+  "Chuva pesada": ["Heavy wet", "Lluvia intensa"],
+  "Confirmar pneus do box": ["Confirm pit tyres", "Confirmar neumáticos de boxes"],
+  "Você trocou os pneus no box?": [
+    "Did you change tyres in the pits?",
+    "¿Cambiaste los neumáticos en boxes?"
+  ],
+  "Mantive os pneus": ["Kept the tyres", "Mantuve los neumáticos"],
+  "Pneus no limite estimado.": [
+    "Tyres at the estimated wear limit.",
+    "Neumáticos en el límite estimado de desgaste."
+  ],
+  "Confirmar troca": ["Confirm tyre change", "Confirmar cambio de neumáticos"],
+  "Composto dos pneus novos": ["New tyre compound", "Compuesto de los neumáticos nuevos"],
+  "Selecione o composto": ["Select compound", "Selecciona el compuesto"],
+  "Falha ao salvar a decisão. Tente novamente.": [
+    "Could not save the decision. Try again.",
+    "No se pudo guardar la decisión. Inténtalo de nuevo."
+  ],
   "Duro": ["Hard", "Duro"],
   "Macio": ["Soft", "Blando"],
   "Pré-corrida": ["Pre-race", "Pre-carrera"],
@@ -5255,6 +5272,7 @@
     "If you do not choose, I estimate the wear as if it were Sport Medium.",
     "Si no eliges, estimo el desgaste como si fuera Deportivo Medio."
   ],
+  "Desgaste desativado": ["Tyre wear off", "Desgaste desactivado"],
   "Desgaste estimado": ["Estimated wear", "Desgaste estimado"],
   "Desgaste estimado do pneu": ["Estimated tyre wear", "Desgaste estimado del neumático"],
   "no limite: hora de trocar": ["at the limit: time to change", "en el límite: hora de cambiar"],
@@ -5263,5 +5281,19 @@
     "menos de 1 vuelta hasta el límite"
   ],
   "~{0} voltas até o limite": ["~{0} laps to the limit", "~{0} vueltas hasta el límite"],
-  "provável": ["probable", "probable"]
+  "provável": ["probable", "probable"],
+  "Desgaste do jogo": ["Game wear rate", "Desgaste del juego"],
+  "Multiplicador de desgaste dos pneus": [
+    "Tyre wear multiplier",
+    "Multiplicador de desgaste de los neumáticos"
+  ],
+  "Pista: reconhecimento automático": [
+    "Track: automatic recognition",
+    "Pista: reconocimiento automático"
+  ],
+  "Reconheço a pista sozinho assim que você entra. Se preferir, escolha a pista à mão.": [
+    "I recognise the track by myself as soon as you enter. If you prefer, choose the track by hand.",
+    "Reconozco la pista yo solo en cuanto entras. Si prefieres, elige la pista a mano."
+  ],
+  "Escolher a pista": ["Choose the track", "Elegir la pista"]
 }

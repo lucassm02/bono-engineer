@@ -88,6 +88,28 @@ export function render(ctx) {
 
 ${motionSection(ctx, 'pt-BR')}
 
+<section class="sec" id="tyre-wear" aria-labelledby="h-tyre-wear">
+  <div class="wrap split">
+    <div class="split-head">
+      <h2 id="h-tyre-wear">Desgaste de pneus calibrado no GT7</h2>
+      <p>O GT7 exibe o desgaste no HUD. Como esse valor fica fora da telemetria de rede, o Bono estima o desgaste de cada roda.</p>
+    </div>
+    <ul class="rows">
+      <li class="row">
+        <div><h3>Medido em corridas e replays no PS5</h3><p>Cruzamos a telemetria com fotos das quatro barras do HUD. A distância, a temperatura, a frenagem, a força lateral e o escorregamento das rodas deram a primeira calibração de nove compostos de pista seca e dois de chuva.</p></div>
+        <div class="read acc">11<small>compostos calibrados</small></div>
+      </li>
+      <li class="row">
+        <div><h3>O controle em Interlagos</h3><p>Em um teste separado com Esportivo Macio e taxa ×10, o HUD ficou perto de 10% de desgaste médio. O Bono estimou 11%. A diferença pode ser maior em uma roda específica.</p></div>
+        <div class="read acc">11%<small>média estimada · HUD ~10%</small></div>
+      </li>
+      <li class="row">
+        <div><h3>Do painel ao rádio</h3><p>Informe o composto e a taxa do jogo, de ×0 a ×50. No modo Corrida, o rádio avisa quando estima que faltam até duas voltas para o limite. Ao sair do box, confirme se manteve os pneus ou colocou um jogo novo.</p></div>
+      </li>
+    </ul>
+  </div>
+</section>
+
 <section class="sec" id="what-it-does" aria-labelledby="h-features">
   <div class="wrap split">
     <div class="split-head">

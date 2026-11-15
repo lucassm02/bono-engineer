@@ -323,7 +323,7 @@ const PT: HelpContent = {
       title: 'Escolher a pista antes de sair',
       summary: 'Com pistas já salvas, o engenheiro fala desde a volta 1.',
       steps: [
-        'No menu do jogo, o Bono mostra o cartão “Qual pista hoje?”. Escolha uma das recentes ou busque outra.',
+        'Por padrão o Bono reconhece a pista sozinho. No menu do jogo, o cartão de pista deixa você escolher à mão (“Escolher a pista”), uma das recentes ou outra.',
         'Esqueceu? Toque na faixa de contexto, no topo do Ao vivo, com o carro parado.',
         'Ao fechar a primeira volta, o Bono confere. Se a pista não bate, avisa quando você parar.',
       ],

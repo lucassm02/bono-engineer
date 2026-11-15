@@ -44,12 +44,12 @@ describe('tyre compound and wear', () => {
 
   it('the choice made before the session is saved with it and shown in every frame', () => {
     const w = make();
-    w.engine.setTyreCompound('racingSoft');
+    w.engine.setTyreCompound('snow');
     w.feed(laps(1).slice(0, 3000));
-    expect(w.engine.session!.tyreCompound).toBe('racingSoft');
-    expect(w.frames.at(-1)!.tyreWear?.compound).toBe('racingSoft');
+    expect(w.engine.session!.tyreCompound).toBe('snow');
+    expect(w.frames.at(-1)!.tyreWear?.compound).toBe('snow');
     // it was saved, not just kept in memory
-    expect([...w.ctx.sessions.values()][0]!.tyreCompound).toBe('racingSoft');
+    expect([...w.ctx.sessions.values()][0]!.tyreCompound).toBe('snow');
   });
 
   it('a soft compound wears faster than a hard one over the same laps', () => {
@@ -78,6 +78,39 @@ describe('tyre compound and wear', () => {
     w.engine.setTyreCompound('sportSoft');
     w.feed(laps(1).slice(3030, 3060));
     expect(w.frames.at(-1)!.tyreWear!.distKm).toBeGreaterThan(before);
+  });
+
+  it('the wear rate of the game scales the wear, is saved with the session and keeps the wear so far', () => {
+    const normal = make();
+    normal.feed(laps(1).slice(0, 3000));
+    const fast = make();
+    fast.engine.setWearMultiplier(50);
+    fast.feed(laps(1).slice(0, 3000));
+    expect(fast.frames.at(-1)!.tyreWear!.multiplier).toBe(50);
+    expect(fast.engine.session!.tyreWearMultiplier).toBe(50);
+    expect(fast.frames.at(-1)!.tyreWear!.worst).toBeCloseTo(
+      normal.frames.at(-1)!.tyreWear!.worst * 50,
+      4,
+    );
+    // changing it mid-session applies from then on and does not erase the wear
+    const before = fast.frames.at(-1)!.tyreWear!.worst;
+    fast.engine.setWearMultiplier(1);
+    fast.feed(laps(1).slice(3000, 3300));
+    const after = fast.frames.at(-1)!.tyreWear!;
+    expect(after.multiplier).toBe(1);
+    expect(after.worst).toBeGreaterThan(before);
+    const wearAtDisable = fast.engine.snapshot()!.tyreWear!.wear;
+    fast.engine.setWearMultiplier(0);
+    fast.feed(laps(1).slice(3300, 3600));
+    expect(fast.engine.session!.tyreWearMultiplier).toBe(0);
+    expect(fast.frames.at(-1)!.tyreWear).toMatchObject({
+      multiplier: 0,
+      wear: wearAtDisable,
+      perLap: null,
+      lapsLeft: null,
+    });
+    expect(fast.engine.setWearMultiplier(500)).toBeUndefined();
+    expect(fast.engine.wearMultiplier).toBe(50);
   });
 
   it('a new session has new tyres', () => {

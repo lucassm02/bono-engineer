@@ -118,6 +118,8 @@ export interface Session {
   finishPosition?: number | null;
   /** Tyre compound the driver said was on the car (TyreCompound); null/absent = not said. */
   tyreCompound?: string | null;
+  /** The game's tyre wear rate (×1 = normal) the driver said was set; null/absent = not said. */
+  tyreWearMultiplier?: number | null;
 }
 
 /** Something that happened during a race, stored with its session (spec 21). */
@@ -129,7 +131,9 @@ export type SessionEventKind =
   | 'finish'
   | 'restart'
   /** A visit to the pits (spec 09): `at` is the arrival, `data.exitAt` the departure. */
-  | 'pit';
+  | 'pit'
+  /** The radio warned about the estimated wear limit of the fitted set. */
+  | 'tyreWearWarning';
 
 export interface SessionEvent {
   id: Id;

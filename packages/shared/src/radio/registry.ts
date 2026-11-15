@@ -24,6 +24,7 @@ import {
   learnReferenceRule,
   tyresHotRule,
   tyresWarmUpRule,
+  tyresWearRule,
 } from './rules.ts';
 import type { RadioEngineConfig } from './settings.ts';
 import { taskRule } from './task-rule.ts';
@@ -40,6 +41,7 @@ export type AnyRadioRule = RadioRule<any>;
 
 export const RADIO_RULES: readonly AnyRadioRule[] = [
   fuelRule,
+  tyresWearRule,
   tyresHotRule,
   tyresWarmUpRule,
   cornerCuesRule,

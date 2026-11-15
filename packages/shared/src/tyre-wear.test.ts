@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   compoundInfo,
   isTyreCompound,
+  MAX_WEAR_MULTIPLIER,
+  normalizeWearMultiplier,
   TYRE_COMPOUNDS,
   type TyreWearStep,
   TyreWearTracker,
@@ -28,8 +30,9 @@ function drive(compound: Parameters<TyreWearTracker['add']>[0], n: number, s = s
 
 describe('compounds', () => {
   it('knows its ids and a harder compound lasts longer inside a family', () => {
-    expect(TYRE_COMPOUNDS).toHaveLength(12);
+    expect(TYRE_COMPOUNDS).toHaveLength(13);
     expect(isTyreCompound('racingSoft')).toBe(true);
+    expect(isTyreCompound('snow')).toBe(true);
     expect(isTyreCompound('slick')).toBe(false);
     expect(isTyreCompound(null)).toBe(false);
     for (const f of ['comfort', 'sport', 'racing'] as const) {
@@ -117,8 +120,42 @@ describe('TyreWearTracker', () => {
     expect(drive('sportMedium', 80).snapshot('sportMedium', null).lapsLeft).toBeNull();
   });
 
+  it('the wear rate multiplies the wear and is reported', () => {
+    const one = drive('sportMedium', 50).snapshot('sportMedium', null, 1);
+    const t = new TyreWearTracker();
+    for (let i = 0; i < 50; i++) t.add('sportMedium', step({ wearRate: 4 }));
+    const four = t.snapshot('sportMedium', null, 4);
+    expect(four.worst).toBeCloseTo(one.worst * 4, 6);
+    expect(four.multiplier).toBe(4);
+    expect(one.multiplier).toBe(1);
+  });
+
+  it('normalises the wear rate to a whole number from 0 to the maximum', () => {
+    expect(normalizeWearMultiplier(3)).toBe(3);
+    expect(normalizeWearMultiplier(2.6)).toBe(3);
+    expect(normalizeWearMultiplier(0)).toBe(0);
+    expect(normalizeWearMultiplier(-5)).toBe(0);
+    expect(normalizeWearMultiplier(999)).toBe(MAX_WEAR_MULTIPLIER);
+    expect(normalizeWearMultiplier('x')).toBe(1);
+    expect(normalizeWearMultiplier(Number.NaN)).toBe(1);
+  });
+
+  it('keeps existing wear and pauses the projection while wear is disabled', () => {
+    const t = drive('sportMedium', 50);
+    const before = t.snapshot('sportMedium', 4000);
+    for (let i = 0; i < 50; i++) t.add('sportMedium', step({ wearRate: 0 }));
+    expect(t.snapshot('sportMedium', 4000, 0)).toMatchObject({
+      multiplier: 0,
+      distKm: 10,
+      wear: before.wear,
+      perLap: null,
+      lapsLeft: null,
+    });
+    expect(t.snapshot('sportMedium', 4000).perLap).toBe(before.perLap);
+  });
+
   it('never goes past 1 and starts again on reset', () => {
-    const t = drive('racingSoft', 2000);
+    const t = drive('racingSoft', 200, step({ wearRate: 25 }));
     expect(t.snapshot('racingSoft', null).worst).toBe(1);
     t.reset();
     expect(t.snapshot('racingSoft', null)).toMatchObject({ worst: 0, distKm: 0 });
