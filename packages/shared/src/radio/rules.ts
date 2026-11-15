@@ -6,6 +6,8 @@
  */
 
 import type { LiveCornerPass } from '../live.ts';
+import { pitPlan } from '../pit-plan.ts';
+import type { TyreWearWarningStage } from '../tyre-wear.ts';
 import { engineerCall, isBrakeCue, REACTION_MS } from './cues.ts';
 import { fuelProjection, raceLapsLeft } from './fuel.ts';
 import {
@@ -16,11 +18,15 @@ import {
   gearSegment,
   lapDeltaUtterance,
   MAX_CORNER,
+  PIT_NEXT_LAP,
+  PIT_THIS_LAP,
   type RadioUtterance,
   TYRES_COLD,
   TYRES_HOT,
   TYRES_OK,
   TYRES_WEAR_LIMIT,
+  TYRES_WEAR_PIT,
+  TYRES_WEAR_PREPARE,
   TYRES_WEAR_SOON,
 } from './phrases.ts';
 import type { RadioCandidate, RadioRule, RadioRuleContext } from './types.ts';
@@ -43,6 +49,7 @@ export const TYRE_HOT_HYSTERESIS_C = 8;
 export const TYRE_HOT_CLEAR_MS = 10000;
 export const TYRE_HOT_INTERVAL_MS = 180000;
 const TYRE_WEAR_WARNING_LAPS = 2;
+const TYRE_WEAR_PREPARE_LAPS = 4;
 const TYRE_WEAR_CONFIRM_MS = 3000;
 /** Fuel margin (L) for the "not enough to finish" hysteresis. */
 export const FUEL_MARGIN_L = 0.5;
@@ -65,25 +72,25 @@ function tyreRangeTrusted(ctx: RadioRuleContext): boolean {
 interface WearWarningState {
   set: number | null;
   since: number | null;
-  deliveredSet: number | null;
+  pendingStage: TyreWearWarningStage | null;
+  deliveredStage: TyreWearWarningStage | null;
 }
 
-/** One warning per mounted set, based on the estimated time until the wear threshold. */
+/** Give an early heads-up, then revisit the decision as the wear threshold approaches. */
 export const tyresWearRule: RadioRule<WearWarningState> = {
   id: 'tyresWear',
   priority: 'strategy',
   modes: ['race'],
   carAlert: true,
-  init: () => ({ set: null, since: null, deliveredSet: null }),
+  init: () => ({ set: null, since: null, pendingStage: null, deliveredStage: null }),
   evaluate(ctx, state) {
     const { frame, t } = ctx;
     const wear = frame.tyreWear;
     const set = wear?.setNumber ?? frame.stint?.number ?? 1;
     if (state.set !== set) {
-      state.set = set;
-      state.since = null;
+      Object.assign(state, tyresWearRule.init(), { set });
     }
-    if (state.deliveredSet === set || wear?.warningSent) return [];
+    if (state.deliveredStage === 'pit' || wear?.warningSent) return [];
     const remaining = raceLapsLeft(frame.lap, frame.lapFraction);
     const left = wear?.lapsLeft;
     if (
@@ -91,7 +98,7 @@ export const tyresWearRule: RadioRule<WearWarningState> = {
       wear.multiplier <= 0 ||
       typeof left !== 'number' ||
       !Number.isFinite(left) ||
-      left > TYRE_WEAR_WARNING_LAPS ||
+      left > TYRE_WEAR_PREPARE_LAPS ||
       (remaining !== null && remaining <= left) ||
       frame.pitTyreChange ||
       frame.stint?.inPits ||
@@ -102,18 +109,39 @@ export const tyresWearRule: RadioRule<WearWarningState> = {
       state.since = null;
       return [];
     }
+    const stage = left <= TYRE_WEAR_WARNING_LAPS ? 'pit' : 'prepare';
+    if (
+      stage === 'prepare' &&
+      (remaining === null || state.deliveredStage || wear.preparationSent)
+    ) {
+      state.since = null;
+      return [];
+    }
+    if (stage !== state.pendingStage) {
+      state.pendingStage = stage;
+      state.since = null;
+    }
     state.since ??= t;
     if (t - state.since < TYRE_WEAR_CONFIRM_MS) return [];
-    const phrase = left === 0 ? TYRES_WEAR_LIMIT : TYRES_WEAR_SOON;
+    const phrase =
+      stage === 'prepare'
+        ? TYRES_WEAR_PREPARE
+        : left === 0
+          ? TYRES_WEAR_LIMIT
+          : remaining === null
+            ? TYRES_WEAR_SOON
+            : TYRES_WEAR_PIT;
+    const utterance = left === 0 && remaining !== null ? [phrase, PIT_THIS_LAP] : phrase;
     return [
       {
-        key: String(set),
-        utterance: phrase,
+        key: `${set}:${stage}`,
+        utterance,
         label: phrase,
         evidence: {
           compound: wear.compound,
           wearMultiplier: wear.multiplier,
           tyreSet: set,
+          stage,
           worstWearPct: Math.round(wear.worst * 100),
           estimatedLapsLeft: round1(left),
         },
@@ -122,7 +150,7 @@ export const tyresWearRule: RadioRule<WearWarningState> = {
     ];
   },
   delivered(_candidate, state) {
-    state.deliveredSet = state.set;
+    state.deliveredStage = state.pendingStage;
   },
   interrupt(state) {
     state.since = null;
@@ -317,6 +345,8 @@ interface FuelState {
   short: boolean;
   shortSince: number | null;
   saidShort: boolean;
+  lastPitCall: 'next' | 'this' | 'critical' | null;
+  stint: number | null;
   /** Lowest autonomy band already announced (whole laps), null = none yet. */
   band: number | null;
   pendingBand: number | null;
@@ -338,12 +368,27 @@ export const fuelRule: RadioRule<FuelState> = {
     short: false,
     shortSince: null,
     saidShort: false,
+    lastPitCall: null,
+    stint: null,
     band: null,
     pendingBand: null,
     bandSince: null,
   }),
   evaluate(ctx, s) {
-    const { frame, t } = ctx;
+    const { frame, t, config } = ctx;
+    if (config.mode === 'race') {
+      const stint = frame.stint?.number ?? 1;
+      if (stint !== s.stint) Object.assign(s, fuelRule.init(), { stint });
+      if (
+        frame.stint?.inPits ||
+        frame.pitTyreChange ||
+        frame.lap.finished ||
+        frame.race?.state === 'finished'
+      ) {
+        fuelRule.interrupt?.(s);
+        return [];
+      }
+    }
     const p = fuelProjection(frame.fuel, frame.lap, frame.lapFraction);
     if (p.perLap === null) return [];
     const evidence = {
@@ -359,10 +404,51 @@ export const fuelRule: RadioRule<FuelState> = {
       if (s.short ? margin > FUEL_MARGIN_L : margin < -FUEL_MARGIN_L) {
         s.short = !s.short;
         s.shortSince = s.short ? t : null;
-        if (!s.short) s.saidShort = false;
+        if (!s.short) {
+          s.saidShort = false;
+          s.lastPitCall = null;
+        }
       }
-      if (!s.short || s.saidShort || s.shortSince === null) return [];
+      if (!s.short) return [];
+      s.shortSince ??= t;
       if (t - s.shortSince < FUEL_CONFIRM_MS) return [];
+      if (config.mode === 'race' && p.lapsOfFuel !== null && frame.lap.lap >= 1) {
+        const plan = pitPlan({
+          level: p.level,
+          perLap: p.perLap,
+          lapsLeft: p.raceLapsLeft,
+          refuelTo: p.capacity,
+          currentLap: frame.lap.lap,
+        });
+        const lapsToStop = plan.kind === 'stop' ? plan.pitByLap - frame.lap.lap : Infinity;
+        const critical = p.lapsOfFuel < 1;
+        if (critical || lapsToStop <= 1) {
+          const call = critical ? 'critical' : lapsToStop === 0 ? 'this' : 'next';
+          const rank = { next: 0, this: 1, critical: 2 } as const;
+          if (s.lastPitCall !== null && rank[call] <= rank[s.lastPitCall]) return [];
+          const band = Math.floor(p.lapsOfFuel) as FuelLapsLeft;
+          const pitCall = call === 'next' ? PIT_NEXT_LAP : PIT_THIS_LAP;
+          const autonomy = FUEL_LAPS[band];
+          const utterance =
+            plan.kind === 'stop' ? (autonomy ? [autonomy, pitCall] : pitCall) : autonomy;
+          if (!utterance) return [];
+          return [
+            {
+              key: `pit-${call}`,
+              utterance,
+              label: Array.isArray(utterance) ? utterance.join(' ') : utterance,
+              evidence: {
+                ...evidence,
+                ...(plan.kind === 'stop' ? { pitByLap: plan.pitByLap, addL: plan.addL } : {}),
+              },
+              priority: critical ? 'critical' : 'strategy',
+              urgent: critical,
+              needsFreeWindow: !critical,
+            },
+          ];
+        }
+      }
+      if (s.saidShort) return [];
       const save = p.savePerLap === null ? '' : ` · economize ${p.savePerLap.toFixed(2)} L/volta`;
       return [
         {
@@ -400,13 +486,17 @@ export const fuelRule: RadioRule<FuelState> = {
         label: `Autonomia: ${p.lapsOfFuel.toFixed(1)} volta${p.lapsOfFuel >= 2 ? 's' : ''}`,
         evidence,
         priority: band === 0 ? 'critical' : 'strategy',
+        urgent: band === 0,
         needsFreeWindow: band > 0,
       },
     ];
   },
   delivered(candidate, s) {
     if (candidate.key === 'short') s.saidShort = true;
-    else {
+    else if (candidate.key.startsWith('pit-')) {
+      s.saidShort = true;
+      s.lastPitCall = candidate.key.slice(4) as FuelState['lastPitCall'];
+    } else {
       s.band = Number(candidate.key.slice('laps-'.length));
       s.pendingBand = null;
       s.bandSince = null;
@@ -456,9 +546,17 @@ function lapResult(closing: NonNullable<LapResultState['closing']>, lapMs: numbe
       label: `Volta ${formatLapMs(lapMs)} · inválida`,
       evidence,
       panelOnly: true,
+      postLine: true,
     };
   if (closing.bestBefore === null)
-    return { key, utterance: [], label: `Volta ${formatLapMs(lapMs)}`, evidence, panelOnly: true };
+    return {
+      key,
+      utterance: [],
+      label: `Volta ${formatLapMs(lapMs)}`,
+      evidence,
+      panelOnly: true,
+      postLine: true,
+    };
   const gainMs = closing.bestBefore - lapMs;
   const sign = gainMs > 0 ? '−' : '+';
   return {

@@ -17,6 +17,7 @@ import {
 } from './coaching.ts';
 import { drillRule } from './drill.ts';
 import { goalRule } from './goal.ts';
+import { raceFeedbackRule } from './race-feedback.ts';
 import {
   cornerCuesRule,
   fuelRule,
@@ -53,6 +54,7 @@ export const RADIO_RULES: readonly AnyRadioRule[] = [
   goalRule,
   drillRule,
   taskRule,
+  raceFeedbackRule,
   lapSummaryRule,
   consistencyRule,
 ];
@@ -78,15 +80,15 @@ export function phaseBlock(
   priority: RadioPriority,
   config: Readonly<RadioEngineConfig>,
   phase: RadioPhase,
+  ruleId: string,
 ): string | null {
   if (priority === 'critical') return null;
   if (phase === 'unknown') return 'fase desconhecida';
-  if (
-    config.mode === 'qualifying' &&
-    phase === 'timedLap' &&
-    !candidate.postLine &&
-    !candidate.approved
-  )
-    return 'volta rápida';
+  if (config.mode === 'qualifying' && !candidate.postLine && !candidate.approved)
+    return phase === 'timedLap'
+      ? 'volta rápida'
+      : phase === 'outLap' && (ruleId === 'tyresWarmUp' || ruleId === 'tyresHot')
+        ? null
+        : 'fora da preparação';
   return null;
 }

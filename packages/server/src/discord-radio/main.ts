@@ -10,9 +10,11 @@ import {
   VoiceConnectionStatus,
 } from '@discordjs/voice';
 import {
+  ENGINEER_PACES,
   type HelloMessage,
   RADIO_STALE_MS,
   RadioEngine,
+  radioEngineConfig,
   type ServerMessage,
   WS_PROTOCOL_VERSION,
 } from '@gt7/shared';
@@ -38,7 +40,7 @@ import { fetchTaskPack } from './task-pack.ts';
 const TASK_PACK_RETRY_MS = 15_000;
 
 export function startDiscordRadio(
-  config: ReturnType<typeof discordConfig>,
+  config: ReturnType<typeof discordConfig> & { requireSharedSettings?: boolean },
   test: boolean,
   report: (message: string, error?: boolean) => void,
   radioDir?: string,
@@ -58,6 +60,7 @@ export function startDiscordRadio(
   let retry: NodeJS.Timeout | undefined;
   let closing = false;
   let selected = false;
+  let audible = !config.requireSharedSettings && config.volume > 0;
   let lastFrameAt = 0;
   let warnedBono = false;
   let beeps = 0;
@@ -214,13 +217,30 @@ export function startDiscordRadio(
         const next = msg.status.engineerAudioDeviceId === DISCORD_DEVICE_ID;
         if (selected && !next) stopRadio('outra saída selecionada');
         selected = next;
+        const preferences = msg.status.engineerRadio;
+        if (preferences) {
+          const nextAudible = preferences.enabled && !preferences.muted && preferences.volume > 0;
+          if (audible && !nextAudible) stopRadio('rádio desligado ou mudo');
+          audible = nextAudible;
+          engine.configure(
+            radioEngineConfig(preferences, {
+              muted: preferences.muted,
+              anticipationMs: preferences.anticipationMs,
+            }),
+          );
+          audio?.configurePlayback(preferences.volume, ENGINEER_PACES[preferences.pace]);
+        }
       }
-      if (msg.type !== 'frame' || !selected || !ready() || config.volume === 0) return;
+      if (msg.type !== 'frame' || !selected || !audible || !ready()) return;
       lastFrameAt = Date.now();
+      const drill = msg.frame.drill;
       const result = engine.step(msg.frame, {
         audio: 'ready',
         sampleAgeMs: Math.max(0, lastFrameAt - msg.frame.t),
         outputLatencyMs: config.delayMs,
+        ...(drill && engine.config.mode === 'training'
+          ? { drill: true, focusCornerIds: [drill.cornerId], assistCornerIds: [drill.cornerId] }
+          : {}),
       });
       if (result.stop) player.stop(true);
       const speech = result.speak;
@@ -241,7 +261,11 @@ export function startDiscordRadio(
               'content-type': 'application/json',
               ...(config.bonoToken ? { 'x-gt7-token': config.bonoToken } : {}),
             },
-            body: JSON.stringify({ sessionId, setNumber: tyreWear.setNumber }),
+            body: JSON.stringify({
+              sessionId,
+              setNumber: tyreWear.setNumber,
+              stage: speech.decision.evidence?.stage,
+            }),
           }).catch(() => {});
         }
       } catch {

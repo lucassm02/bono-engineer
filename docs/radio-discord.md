@@ -59,8 +59,8 @@ token e o canal estão salvos; o atraso medido não é requisito.
 Em outro aparelho (um tablet pela rede), escolha **Discord · PS5** em **Aparelho que toca o
 rádio**. O Bono para Windows precisa estar aberto com o rádio do Discord ativado.
 
-A saída do Discord inicia em **Treino → Aprender pista**. O percentual de freio pode ser
-ativado em **Ajuste fino**.
+O Discord segue o modo, o nível de fala, as tarefas, o volume e o estado de áudio escolhidos em
+**Configurações → Engenheiro**. O ajuste de atraso fica em **Rádio no Discord → Ajuste fino**.
 
 O agendador projeta a distância no início da fala com a velocidade recente suavizada
 e o atraso calibrado. Ele verifica o tempo até o fim do clipe antes de liberar a chamada.

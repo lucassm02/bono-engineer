@@ -21,6 +21,7 @@ import {
   deltaBetween,
   diagnoseCorner,
   type PreparedLap,
+  timeAtDistance,
   valueAtDistance,
 } from '@gt7/analysis';
 import type {
@@ -137,7 +138,11 @@ function fromFinding(f: CornerFinding): Ranked | null {
       confidence: 'medium',
       costMs: Math.round(cost),
       message: f.message ?? f.kind,
-      evidence: { value: round(f.value, 2), subject: f.subjectValue ?? null, reference: f.referenceValue ?? null },
+      evidence: {
+        value: round(f.value, 2),
+        subject: f.subjectValue ?? null,
+        reference: f.referenceValue ?? null,
+      },
       ...(kind === 'gear' && f.referenceValue ? { gear: f.referenceValue } : {}),
     },
   };
@@ -165,7 +170,7 @@ export interface CornerPassReviewOptions {
 
 /**
  * Reviews `cornerId` on `pass` (the current lap up to ~80 m after the corner exit) against
- * `reference`. Without a reference only the driving event is judged.
+ * `reference`. The corner time and driving event are also available without a reference.
  */
 export function reviewCornerPass(
   pass: PreparedLap,
@@ -180,13 +185,22 @@ export function reviewCornerPass(
   const win = cornerWindows(sorted, pass.lengthM)[k]!;
   const corner = win.corner;
   const event = opts.model
-    ? eventCall(radioEventForPass(detectCornerPassEvents(pass, sorted, cornerId, { model: opts.model })))
+    ? eventCall(
+        radioEventForPass(detectCornerPassEvents(pass, sorted, cornerId, { model: opts.model })),
+      )
     : null;
   const a = computeCornerMetrics(pass, win);
+  const zoneTimeMs =
+    pass.s[0]! <= corner.entryM && pass.s[pass.n - 1]! >= corner.exitM
+      ? Math.round(
+          (timeAtDistance(pass, corner.exitM) - timeAtDistance(pass, corner.entryM)) * 1000,
+        )
+      : 0;
   const base: CornerPassReview = {
     cornerId,
     referenceIsReplay: reference?.isReplay ?? false,
     timeLostMs: null,
+    ...(zoneTimeMs > 0 ? { zoneTimeMs } : {}),
     brakePointM: a.brakePointM === null ? null : round(a.brakePointM, 1),
     referenceBrakePointM: null,
     gearAtApex: a.gearAtApex > 0 ? a.gearAtApex : null,

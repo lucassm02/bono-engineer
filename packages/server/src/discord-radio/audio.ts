@@ -42,7 +42,7 @@ export function radioAudio(voice: string, volume: number, radioDir?: string) {
   // The engineer-task pack (spec 20): downloaded by the Bono server, loaded after the start.
   let tasks: SamplePack | null = null;
   const gapFrames = Math.round((manifest.sequenceGapMs * OUTPUT_RATE) / 1000);
-  const ratio = OUTPUT_RATE / manifest.sampleRate;
+  let ratio = OUTPUT_RATE / manifest.sampleRate;
 
   /** The clips of the utterance when ONE pack has all of them (the bundled pack first). */
   function segmentsIn(source: SamplePack, keys: readonly string[]): Clip[] | null {
@@ -74,6 +74,10 @@ export function radioAudio(voice: string, volume: number, radioDir?: string) {
   }
 
   return {
+    configurePlayback(nextVolume: number, pace: number): void {
+      volume = nextVolume;
+      ratio = OUTPUT_RATE / (manifest.sampleRate * pace);
+    },
     /** Gives (or, with null, takes away) the downloaded task pack. Throws on a bad WAV. */
     setTaskPack(
       wavFile: Buffer | null,

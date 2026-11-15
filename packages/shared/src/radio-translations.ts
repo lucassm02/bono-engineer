@@ -22,6 +22,33 @@ const fixed: Record<string, Translation> = {
     'Radio check. Brake hard at two hundred. Third gear at turn four. Two tenths faster.',
     'Prueba de radio. Frena fuerte a doscientos. Tercera marcha en la curva cuatro. Mejoraste dos décimas.',
   ],
+  'Rádio pronto.': ['Radio ready.', 'Radio lista.'],
+  'Box nesta volta.': ['Box this lap.', 'Entra en boxes esta vuelta.'],
+  'Box na próxima volta.': ['Box next lap.', 'Entra en boxes en la próxima vuelta.'],
+  'Pneus perto do limite em cerca de quatro voltas. Prepare a parada.': [
+    'Tyres near the limit in about four laps. Prepare to pit.',
+    'Neumáticos cerca del límite en unas cuatro vueltas. Prepara la parada.',
+  ],
+  'Pneus no limite em até duas voltas. Sugiro box.': [
+    'Tyres at the limit within two laps. Consider boxing.',
+    'Neumáticos al límite en dos vueltas o menos. Sugiero entrar en boxes.',
+  ],
+  'Seu ritmo caiu. Concentração.': [
+    'Your pace has dropped. Stay focused.',
+    'Tu ritmo ha bajado. Concéntrate.',
+  ],
+  'Seu ritmo melhorou. Boa.': [
+    'Your pace has improved. Good work.',
+    'Tu ritmo ha mejorado. Bien hecho.',
+  ],
+  'você vem perdendo tempo. Foco na próxima passagem.': [
+    'you’ve been losing time. Focus on the next pass.',
+    'estás perdiendo tiempo. Concéntrate en la próxima pasada.',
+  ],
+  'mais calma na próxima passagem.': [
+    'take it easy on the next pass.',
+    'tómatela con más calma en la próxima pasada.',
+  ],
   'Solta o freio.': ['Release the brake.', 'Suelta el freno.'],
   'Vai soltando o freio.': ['Ease off the brake.', 'Ve soltando el freno.'],
   'Deixa rolar.': ['Let it roll.', 'Deja rodar el coche.'],

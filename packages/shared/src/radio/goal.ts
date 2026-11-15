@@ -59,7 +59,7 @@ export function goalLapResult(
 export const goalRule: RadioRule<GoalState> = {
   id: 'goal',
   priority: 'feedback',
-  modes: ['training', 'qualifying'],
+  modes: ['training'],
   requires: ['lapTiming'],
   init: () => ({ closing: null, result: null, expiresT: 0 }),
   evaluate(ctx, s) {

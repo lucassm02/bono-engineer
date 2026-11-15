@@ -14,6 +14,7 @@ import { live } from '../live/liveStore.ts';
 import { MockSession } from '../live/mock.ts';
 import { trackGeometry } from '../live/trackGeometry.ts';
 import { goToView, showLapPopup } from '../state/actions.ts';
+import { syncEngineerRadio } from '../state/engineer.ts';
 import { completeEngineerJournal, flushEngineerJournal } from '../state/engineerJournal.ts';
 import { completeEngineerTrainingLap } from '../state/engineerTraining.ts';
 import { noteTrackMismatch } from '../state/liveContext.ts';
@@ -72,6 +73,7 @@ function handleServerMessage(msg: ServerMessage): void {
       break;
     case 'status':
       useUi.setState({ serverStatus: msg.status });
+      if (useUi.getState().source === 'server') syncEngineerRadio(msg.status.engineerRadio);
       // Without frames the status is the only source of the console state.
       if (!live.frame) useUi.setState({ liveState: msg.status.connection });
       break;

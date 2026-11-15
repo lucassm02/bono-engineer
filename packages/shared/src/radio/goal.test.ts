@@ -28,10 +28,10 @@ describe('goalLapResult', () => {
 });
 
 describe('goalRule', () => {
-  it('is a feedback rule for Treino and Classificação, with a bounded age', () => {
+  it('is a feedback rule for Treino with a bounded age', () => {
     expect(goalRule.id).toBe('goal');
     expect(goalRule.priority).toBe('feedback');
-    expect(goalRule.modes).toEqual(['training', 'qualifying']);
+    expect(goalRule.modes).toEqual(['training']);
     expect(GOAL_RESULT_MAX_AGE_MS).toBeGreaterThan(0);
   });
 });

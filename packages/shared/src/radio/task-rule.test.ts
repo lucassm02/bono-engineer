@@ -95,7 +95,10 @@ describe('taskRule', () => {
   });
 
   it('also speaks on the timed lap of Classificação, because the driver approved it', () => {
-    const h = timedHarness({ mode: 'qualifying' });
+    const h = timedHarness({
+      mode: 'qualifying',
+      tasks: { enabled: true, modes: ['qualifying'], maxPerLap: 2 },
+    });
     h.sim.tasks = [task('a', [1500])];
     h.run(30_000);
     expect(h.spoken.length).toBeGreaterThanOrEqual(1);

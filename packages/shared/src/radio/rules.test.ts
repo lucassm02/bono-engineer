@@ -3,11 +3,15 @@ import {
   FUEL_LAPS,
   FUEL_SHORT,
   IMPROVED,
+  PIT_NEXT_LAP,
+  PIT_THIS_LAP,
   SAME_TIME,
   TYRES_COLD,
   TYRES_HOT,
   TYRES_OK,
   TYRES_WEAR_LIMIT,
+  TYRES_WEAR_PIT,
+  TYRES_WEAR_PREPARE,
   TYRES_WEAR_SOON,
   tenthsSegment,
 } from './phrases.ts';
@@ -30,7 +34,7 @@ describe('preferências do rádio', () => {
       praise: false,
       consistencyTargetMs: null,
       tasksEnabled: true,
-      taskModes: ['training', 'qualifying'],
+      taskModes: ['training'],
       taskMaxPerLap: 2,
     });
   });
@@ -59,7 +63,7 @@ describe('preferências do rádio', () => {
       praise: true,
       consistencyTargetMs: 95_000,
       tasksEnabled: true,
-      taskModes: ['training', 'qualifying'],
+      taskModes: ['training'],
       taskMaxPerLap: 2,
     });
     expect(normalizeRadioPreferences({ consistencyTargetMs: 5 }).consistencyTargetMs).toBeNull();
@@ -125,6 +129,24 @@ describe('desgaste estimado dos pneus no rádio', () => {
     h.sim.pitTyreChange = undefined;
     h.run(4000);
     expect(h.said()).toEqual([TYRES_WEAR_SOON]);
+  });
+
+  it('prepares the stop and then suggests it once, when the tyres will not reach the flag', () => {
+    const h = harness({ mode: 'race' }, { rules: [tyresWearRule] });
+    h.sim.totalLaps = 9;
+    h.sim.lap = 2;
+    h.sim.tyreWear = { ...wear, lapsLeft: 3.9 };
+    h.run(4000);
+    h.sim.tyreWear = { ...wear, lapsLeft: 1.9, preparationSent: true };
+    h.run(9000);
+    expect(h.said()).toEqual([TYRES_WEAR_PREPARE, TYRES_WEAR_PIT]);
+
+    const finish = harness({ mode: 'race' }, { rules: [tyresWearRule] });
+    finish.sim.totalLaps = 5;
+    finish.sim.lap = 4;
+    finish.sim.tyreWear = { ...wear, lapsLeft: 3.9 };
+    finish.run(4000);
+    expect(finish.said()).toEqual([]);
   });
 });
 
@@ -237,6 +259,26 @@ describe('pneus quentes', () => {
 });
 
 describe('combustível', () => {
+  it('calls the fuel window with a known race length and escalates only when the action changes', () => {
+    const h = harness({ mode: 'race' });
+    h.sim.totalLaps = 10;
+    h.sim.lap = 5;
+    h.sim.fuel.perLapAvg = 3;
+    h.sim.fuel.level = 6.3;
+    h.run(5000);
+    expect(h.said()).toEqual([[FUEL_LAPS[2], PIT_NEXT_LAP]]);
+    h.sim.fuel.level = 4;
+    h.run(6000);
+    h.sim.fuel.level = 2;
+    h.run(8000);
+    expect(h.said()).toEqual([
+      [FUEL_LAPS[2], PIT_NEXT_LAP],
+      [FUEL_LAPS[1], PIT_THIS_LAP],
+      [FUEL_LAPS[0], PIT_THIS_LAP],
+    ]);
+    expect(h.spoken.at(-1)?.decision.priority).toBe('critical');
+  });
+
   it('with the race length: warns once when the projection goes short', () => {
     const h = harness({ mode: 'race' });
     h.sim.totalLaps = 10;

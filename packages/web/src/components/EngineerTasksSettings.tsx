@@ -115,7 +115,7 @@ export function EngineerTasksSettings() {
             id="task-modes"
             title={uiText('Falar tarefas em')}
             description={uiText(
-              'Os modos em que as tarefas são faladas. Na corrida fica desligado.',
+              'Escolha em quais modos as tarefas aprovadas podem ser faladas. O padrão é Treino.',
             )}
             wide
           >

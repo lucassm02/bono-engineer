@@ -52,6 +52,7 @@ import {
   type TrackHint,
   type TrackMismatchInfo,
   type TyreCompound,
+  type TyreWearWarningStage,
 } from '@gt7/shared';
 import { AnalysisService } from '../analysis-service/analysis-service.ts';
 import { AnalysisCornerHintProvider } from '../analysis-service/corner-hints.ts';
@@ -76,6 +77,7 @@ export const CORE_VERSION = '0.1.0';
 /** Keys of the persisted runtime settings (settings table). */
 export const SETTINGS_KEYS = {
   engineerAudioDeviceId: 'engineerAudioDeviceId',
+  engineerRadio: 'engineerRadio',
   consoleIp: 'consoleIp',
   consoleIpSource: 'consoleIpSource',
   liveFormat: 'liveFormat',
@@ -472,8 +474,8 @@ export class Gt7Runtime extends EventEmitter<Gt7RuntimeEvents> {
     return this.engine.confirmPitTyres(visitId, compound);
   }
 
-  recordTyreWearWarning(sessionId: Id, setNumber: number): boolean {
-    return this.engine.recordTyreWearWarning(sessionId, setNumber);
+  recordTyreWearWarning(sessionId: Id, setNumber: number, stage?: TyreWearWarningStage): boolean {
+    return this.engine.recordTyreWearWarning(sessionId, setNumber, stage);
   }
 
   /** The tyre wear rate the driver says the game is set to. */

@@ -115,7 +115,7 @@ function EngineerHud() {
       (!run.sessionId || run.sessionId === f.sessionId);
     const engineer = f.engineer;
     // a corner drill (spec 18) makes the engineer talk only about that corner
-    const drilling = f.drill !== undefined;
+    const drilling = trainingEnabled && f.drill !== undefined;
     const focusCornerIds = drilling
       ? [f.drill!.cornerId]
       : inTraining
@@ -190,8 +190,14 @@ function EngineerHud() {
     if (!speech) return;
     const started = playEngineerVoice(speech.utterance, false, undefined, () => {
       if (speech.cueId) journal(f, speech.cueId, speech.utterance, deviceId);
-      if (speech.decision.ruleId === 'tyresWear' && f.sessionId && f.tyreWear?.setNumber)
-        void api.tyreWearWarning(f.sessionId, f.tyreWear.setNumber).catch(() => {});
+      const stage = speech.decision.evidence?.stage;
+      if (
+        speech.decision.ruleId === 'tyresWear' &&
+        f.sessionId &&
+        f.tyreWear?.setNumber &&
+        (stage === 'prepare' || stage === 'pit')
+      )
+        void api.tyreWearWarning(f.sessionId, f.tyreWear.setNumber, stage).catch(() => {});
     });
     if (!started) radioEngine.playbackFailed();
     else if (speech.decision.ruleId === 'tasks') {

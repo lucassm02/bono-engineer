@@ -1,4 +1,11 @@
-import { type Language, normalizeRadioPreferences, type RadioPreferences } from '@gt7/shared';
+import {
+  ENGINEER_PACES,
+  type EngineerPace,
+  type EngineerRadioSettings,
+  type Language,
+  normalizeRadioControls,
+  type RadioControls,
+} from '@gt7/shared';
 import { create } from 'zustand';
 import {
   pickRadioPack,
@@ -16,47 +23,31 @@ import { getLanguage, subscribeLanguage, t } from '../lib/i18n.ts';
 import { RADIO_HELLO, RADIO_PREVIEW_KEY, type RadioUtterance } from '../lib/radioPhrases.ts';
 import { defaultRadioVoice, migrateRadioVoice, radioVoice } from '../lib/radioVoices.ts';
 import { loadJson, saveJson } from '../lib/storage.ts';
+import { send } from '../net/transport.ts';
 import { offerHint } from './tourHints.ts';
 import { addNotice, useUi } from './uiStore.ts';
 
 const KEY = 'gt7.engineer.muted';
 const HUD_KEY = 'gt7.engineer.hudVisible';
 const VOICE_KEY = 'gt7.engineer.voice';
-const RADIO_KEY = 'gt7.engineer.controls';
+const LEGACY_RADIO_KEY = 'gt7.engineer.controls';
+const RADIO_KEY = 'gt7.engineer.controls.v2';
 const ENABLED_KEY = 'gt7.engineer.enabled';
 
 /** Saved `gt7.engineer.enabled` → on/off. Nothing saved (or anything but `true`) = off, as before. */
 export function migrateEngineerEnabled(saved: unknown): boolean {
   return saved === true;
 }
-/**
- * Radio controls saved under `gt7.engineer.controls`: audio (volume, anticipation) plus the radio
- * preferences (mode, Essencial/Detalhado, Treino profile, summary, praise). Mudo is the separate
- * `gt7.engineer.muted` switch. The old `detail` field migrates in normalizeRadioPreferences.
- */
-export interface RadioControls extends RadioPreferences {
-  volume: number;
-  anticipationMs: number;
-}
-
-/** Saved controls → current model (unknown fields dropped, old `detail` migrated). */
-export function migrateRadioControls(saved: unknown): RadioControls {
-  const s = (saved && typeof saved === 'object' ? saved : {}) as Partial<Record<string, unknown>>;
-  return {
-    volume: typeof s.volume === 'number' ? Math.min(1, Math.max(0, s.volume)) : 1,
-    anticipationMs:
-      typeof s.anticipationMs === 'number' ? Math.min(700, Math.max(0, s.anticipationMs)) : 0,
-    ...normalizeRadioPreferences(saved),
-  };
-}
+export { ENGINEER_PACES, type EngineerPace, type RadioControls };
+export const migrateRadioControls = normalizeRadioControls;
 
 const savedControls = loadJson<unknown>(RADIO_KEY);
-const initialControls = migrateRadioControls(savedControls);
-if (savedControls && JSON.stringify(savedControls) !== JSON.stringify(initialControls))
-  saveJson(RADIO_KEY, initialControls);
-/** Playback rate of the neural clips per pace (pitch follows the rate). */
-export const ENGINEER_PACES = { calm: 0.94, normal: 1, fast: 1.08 } as const;
-export type EngineerPace = keyof typeof ENGINEER_PACES;
+const legacyControls = savedControls ? null : loadJson<unknown>(LEGACY_RADIO_KEY);
+const initialControls = normalizeRadioControls(savedControls ?? legacyControls);
+// The previous default was stored even for drivers who had never edited the mode list.
+if (legacyControls && initialControls.taskModes.join(',') === 'training,qualifying')
+  initialControls.taskModes = ['training'];
+if (legacyControls) saveJson(RADIO_KEY, initialControls);
 
 /** Saved `gt7.engineer.voice` → current voice ID and pace (see migrateRadioVoice). */
 export function migrateVoicePrefs(saved: unknown): { voiceUri: string; pace: EngineerPace } {
@@ -101,6 +92,59 @@ export const useEngineer = create(() => ({
 
 let previewRequest = 0;
 let preparedVoice: string | null = null;
+let radioEdits: Partial<EngineerRadioSettings> = {};
+
+function publishRadioEdit(change: Partial<EngineerRadioSettings>): void {
+  radioEdits = { ...radioEdits, ...change };
+  const ui = useUi.getState();
+  if (ui.source === 'server' && ui.serverStatus?.engineerRadio !== undefined) {
+    syncEngineerRadio(ui.serverStatus.engineerRadio, false);
+  }
+}
+
+/** Initialize once from the previous local choices, or receive another device's changes. */
+export function syncEngineerRadio(
+  saved: EngineerRadioSettings | null | undefined,
+  receive = true,
+): void {
+  if (saved === undefined) return;
+  const hasEdits = Object.keys(radioEdits).length > 0;
+  const { controls, enabled, muted, pace, voiceUri } = useEngineer.getState();
+  if (!saved) {
+    if (hasEdits || savedControls || legacyControls || enabled || globalThis.window?.bonoDiscord) {
+      if (
+        send({
+          type: 'setEngineerRadio',
+          settings: radioEdits,
+          initial: { ...controls, enabled, muted, pace },
+        })
+      )
+        radioEdits = {};
+    }
+    return;
+  }
+  if (receive) {
+    const next = { ...saved, ...radioEdits };
+    const incoming = normalizeRadioControls(next);
+    const changed = JSON.stringify(incoming) !== JSON.stringify(controls);
+    if (changed) {
+      setRadioClipVolume(incoming.volume);
+      saveJson(RADIO_KEY, incoming);
+    }
+    if (enabled !== next.enabled) saveJson(ENABLED_KEY, next.enabled);
+    if (muted !== next.muted) saveJson(KEY, next.muted);
+    if (pace !== next.pace) saveJson(voiceKey(getLanguage()), { voiceUri, pace: next.pace });
+    if (!next.enabled || next.muted || incoming.volume === 0) stopEngineerVoice();
+    if (changed || enabled !== next.enabled || muted !== next.muted || pace !== next.pace)
+      useEngineer.setState({
+        controls: changed ? incoming : controls,
+        enabled: next.enabled,
+        muted: next.muted,
+        pace: next.pace,
+      });
+  }
+  if (hasEdits && send({ type: 'setEngineerRadio', settings: radioEdits })) radioEdits = {};
+}
 
 /**
  * Exact playback time (ms) of an utterance with the pack that would play it now, or null when
@@ -122,6 +166,7 @@ export function setRadioControls(change: Partial<RadioControls>): void {
   setRadioClipVolume(controls.volume);
   useEngineer.setState({ controls });
   saveJson(RADIO_KEY, controls);
+  publishRadioEdit(change);
 }
 
 /** Decode the chosen pack; when it fails, prepare the default pack for the fallback. */
@@ -166,6 +211,7 @@ export function setEngineerVoice(voiceUri: string, pace: EngineerPace): void {
   stopEngineerPreview();
   useEngineer.setState({ voiceUri: voice, pace, voiceError: false, voiceFallback: false });
   saveJson(voiceKey(language), { voiceUri: voice, pace });
+  publishRadioEdit({ pace });
   syncDiscordVoice();
   const { enabled, muted } = useEngineer.getState();
   if (enabled && !muted) testEngineerVoice(false);
@@ -243,6 +289,7 @@ function prepareEngineerVoice(utterance: RadioUtterance | null): void {
 export function setEngineerEnabled(enabled: boolean, playVoice = true): void {
   useEngineer.setState({ enabled });
   saveJson(ENABLED_KEY, enabled);
+  publishRadioEdit({ enabled });
   if (enabled && playVoice && !useEngineer.getState().muted) testEngineerVoice(false);
   if (!enabled) {
     stopEngineerVoice();
@@ -259,6 +306,7 @@ export function toggleEngineerHud(): void {
 export function setEngineerMuted(muted: boolean, playVoice = true): void {
   useEngineer.setState({ muted });
   saveJson(KEY, muted);
+  publishRadioEdit({ muted });
   if (muted) {
     stopEngineerVoice();
     stopEngineerPreview();

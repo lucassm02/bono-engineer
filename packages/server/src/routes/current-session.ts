@@ -62,7 +62,7 @@ export function currentSessionRoutes(app: FastifyInstance, ctx: RouteContext): v
   });
 
   app.post('/session/tyre-wear-warning', async (req) => {
-    const { sessionId, setNumber } = bodyObject(req.body);
+    const { sessionId, setNumber, stage = 'pit' } = bodyObject(req.body);
     if (
       typeof sessionId !== 'string' ||
       !isSafeId(sessionId) ||
@@ -71,7 +71,8 @@ export function currentSessionRoutes(app: FastifyInstance, ctx: RouteContext): v
       setNumber < 1
     )
       throw badRequest('Identificação do jogo de pneus inválida.');
-    if (!runtime.recordTyreWearWarning(sessionId, setNumber))
+    if (stage !== 'prepare' && stage !== 'pit') throw badRequest('Etapa de aviso inválida.');
+    if (!runtime.recordTyreWearWarning(sessionId, setNumber, stage))
       throw conflict('Esse jogo de pneus deixou de estar ativo.');
     return { ok: true };
   });

@@ -274,7 +274,7 @@ export class DesktopDiscord {
     const generation = this.#generation;
     this.#publish('Conectando ao Discord…', false, test);
     this.#stop = startDiscordRadio(
-      { ...config, bonoUrl: endpoint },
+      { ...config, bonoUrl: endpoint, requireSharedSettings: true },
       test,
       (message, error) => {
         if (generation === this.#generation) this.#publish(message, error, test);

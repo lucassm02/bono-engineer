@@ -144,6 +144,15 @@ export const TYRES_HOT = 'Pneus quentes.';
 export const TYRES_WEAR_SOON = 'Limite estimado dos pneus em até duas voltas.';
 export const TYRES_WEAR_LIMIT = 'Pneus no limite estimado.';
 export const FUEL_SHORT = 'Nesse ritmo, falta combustível para terminar. Economize nesta volta.';
+export const PIT_THIS_LAP = 'Box nesta volta.';
+export const PIT_NEXT_LAP = 'Box na próxima volta.';
+export const TYRES_WEAR_PREPARE =
+  'Pneus perto do limite em cerca de quatro voltas. Prepare a parada.';
+export const TYRES_WEAR_PIT = 'Pneus no limite em até duas voltas. Sugiro box.';
+export const PACE_SLOWER = 'Seu ritmo caiu. Concentração.';
+export const PACE_FASTER = 'Seu ritmo melhorou. Boa.';
+export const RACE_CORNER_FOCUS = 'você vem perdendo tempo. Foco na próxima passagem.';
+export const RACE_CORNER_CAUTION = 'mais calma na próxima passagem.';
 export const LIFT_THROTTLE = 'Alivia o acelerador.';
 export const GOOD_LAP = 'Boa volta.';
 export const SAME_TIME = 'Mesmo tempo.';
@@ -164,6 +173,14 @@ export const ALERT_PHRASES: readonly string[] = [
   TYRES_WEAR_SOON,
   TYRES_WEAR_LIMIT,
   FUEL_SHORT,
+  PIT_THIS_LAP,
+  PIT_NEXT_LAP,
+  TYRES_WEAR_PREPARE,
+  TYRES_WEAR_PIT,
+  PACE_SLOWER,
+  PACE_FASTER,
+  RACE_CORNER_FOCUS,
+  RACE_CORNER_CAUTION,
   LIFT_THROTTLE,
   GOOD_LAP,
   SAME_TIME,
@@ -321,7 +338,7 @@ export const RADIO_PREVIEW_TEXT =
   'Rádio na escuta. Freada forte em duzentos. Terceira marcha na tê quatro. Melhorou dois décimos.';
 
 /** Short call played when the radio is enabled. */
-export const RADIO_HELLO = brakePhrase('brakeHard', 200);
+export const RADIO_HELLO = 'Rádio pronto.';
 
 export const RADIO_PHRASES: readonly string[] = [
   ...LIVE_CALL_PHRASES,
@@ -333,6 +350,7 @@ export const RADIO_PHRASES: readonly string[] = [
 export const RADIO_CATALOG: readonly RadioEntry[] = (() => {
   const entries: RadioEntry[] = [
     { text: RADIO_PREVIEW_KEY, say: RADIO_PREVIEW_TEXT },
+    { text: RADIO_HELLO },
     ...RADIO_PHRASES.map((text) => ({ text })),
     ...SEGMENTS,
   ];

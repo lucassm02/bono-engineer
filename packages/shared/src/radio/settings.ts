@@ -1,8 +1,8 @@
 /**
  * Radio engineer preferences (spec do engenheiro de rádio, "Modos e configurações").
  *
- * Mode, reference and speech level are separate choices. Volume, voice, pace and the device that
- * plays the radio live in the web layer and are not touched here.
+ * Mode, reference and speech level are separate choices. The live radio outputs share the
+ * controls, enable/mute state and playback pace.
  */
 
 export const RADIO_MODES = ['training', 'qualifying', 'race'] as const;
@@ -38,7 +38,7 @@ export interface RadioPreferences {
   consistencyTargetMs: number | null;
   /** Engineer tasks the driver approved (spec 20): the engineer says them at their place on the lap. */
   tasksEnabled: boolean;
-  /** Modes where the tasks are said (Corrida is off by default). */
+  /** Modes where the tasks are said (Treino by default). */
   taskModes: RadioMode[];
   /** At most this many tasks per lap (1–4). */
   taskMaxPerLap: number;
@@ -56,7 +56,7 @@ export const DEFAULT_RADIO_PREFERENCES: Readonly<RadioPreferences> = {
   praise: false,
   consistencyTargetMs: null,
   tasksEnabled: true,
-  taskModes: ['training', 'qualifying'],
+  taskModes: ['training'],
   taskMaxPerLap: 2,
 };
 
@@ -99,6 +99,45 @@ export function normalizeRadioPreferences(saved: unknown): RadioPreferences {
             Math.max(TASK_MAX_PER_LAP_RANGE[0], Math.round(s.taskMaxPerLap)),
           )
         : d.taskMaxPerLap,
+  };
+}
+
+export interface RadioControls extends RadioPreferences {
+  volume: number;
+  anticipationMs: number;
+}
+
+export const ENGINEER_PACES = { calm: 0.94, normal: 1, fast: 1.08 } as const;
+export type EngineerPace = keyof typeof ENGINEER_PACES;
+
+export interface EngineerRadioSettings extends RadioControls {
+  enabled: boolean;
+  muted: boolean;
+  pace: EngineerPace;
+}
+
+export function normalizeRadioControls(saved: unknown): RadioControls {
+  const s = (saved && typeof saved === 'object' ? saved : {}) as Record<string, unknown>;
+  return {
+    volume:
+      typeof s.volume === 'number' && Number.isFinite(s.volume)
+        ? Math.min(1, Math.max(0, s.volume))
+        : 1,
+    anticipationMs:
+      typeof s.anticipationMs === 'number' && Number.isFinite(s.anticipationMs)
+        ? Math.min(700, Math.max(0, s.anticipationMs))
+        : 0,
+    ...normalizeRadioPreferences(saved),
+  };
+}
+
+export function normalizeEngineerRadioSettings(saved: unknown): EngineerRadioSettings {
+  const s = (saved && typeof saved === 'object' ? saved : {}) as Record<string, unknown>;
+  return {
+    ...normalizeRadioControls(s),
+    enabled: s.enabled === true,
+    muted: s.muted === true,
+    pace: s.pace === 'calm' || s.pace === 'fast' ? s.pace : 'normal',
   };
 }
 

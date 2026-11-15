@@ -245,11 +245,6 @@ function SettingsForm({ bridge }: { bridge: DesktopDiscordBridge }) {
                 </div>
                 <div className="cfg-list">
                   <ToggleRow
-                    title={uiText('Falar o percentual de freio em Aprender pista')}
-                    checked={data.settings.brakePercent}
-                    onChange={(next) => edit({ brakePercent: next })}
-                  />
-                  <ToggleRow
                     title={uiText('Ligar ao abrir o Bono')}
                     description={uiText('Ativa o rádio do Discord sempre que o aplicativo abrir.')}
                     checked={data.settings.enabled}

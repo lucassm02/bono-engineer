@@ -69,8 +69,8 @@ describe('the engine during a corner drill', () => {
     referenceBrakeM: null,
   });
 
-  it('speaks the pass result in Corrida too, because the drill is a mode of its own', () => {
-    const h = radioHarness({ mode: 'race' });
+  it('speaks the pass result while drilling in Treino', () => {
+    const h = radioHarness({ mode: 'training' });
     h.sim.corners = [2800]; // the next corner is far: the radio has a free window
     h.sim.drill = drillOf([pass(1, 3600)]);
     h.run(2000, { drill: true });
@@ -80,6 +80,13 @@ describe('the engine during a corner drill', () => {
     expect(h.said().map((u) => utteranceKeys(u))).toEqual([
       [cornerSegment(7), IMPROVED, tenthsAmount(2)],
     ]);
+  });
+
+  it('keeps drill coaching out of Corrida even with a drill active', () => {
+    const h = radioHarness({ mode: 'race' });
+    h.sim.drill = drillOf([pass(1, 3600), pass(2, 3380)]);
+    h.run(3000, { drill: true });
+    expect(h.said()).toEqual([]);
   });
 
   it('stays silent about the drill when it is not on', () => {

@@ -20,15 +20,16 @@ estão na [spec de vozes neurais](neural-voices-spec.md). O coach conversacional
 | Modo | Antes da curva ou da volta | Durante | Depois |
 |---|---|---|---|
 | **Treino** | Conforme o perfil abaixo | Conforme o perfil abaixo | Correção, resumo ou silêncio conforme o perfil |
-| **Classificação** | Na volta de preparação, avisar sobre pneus frios quando confirmado | Silêncio durante a volta rápida por padrão, salvo alertas críticos | Resultado curto na primeira janela livre, como “Melhorou dois décimos” |
-| **Corrida** | Condição do próprio carro quando exigir ação | Pneus, autonomia e estratégia quando mudarem uma decisão | Análise de pilotagem disponível na revisão |
+| **Classificação** | Temperatura dos pneus na preparação | Alertas críticos e tarefas aprovadas, se habilitadas nesse modo | Resultado curto na primeira janela livre, como “Melhorou dois décimos” |
+| **Corrida** | Condição do próprio carro quando exigir ação | Autonomia, janela de box e desgaste estimado dos pneus | Mudança sustentada de ritmo ou lembrete breve de uma curva com perda recorrente |
 
 Modo, referência e nível de fala são escolhas separadas. **Essencial** é o padrão.
 **Detalhado** libera mais orientação elegível com as mesmas regras de prioridade e janela.
 **Mudo** silencia o áudio e mantém o painel. Preservar volume, voz, ritmo e seleção do aparelho
 que toca o rádio. Permitir configurar a frequência do resumo e o reforço positivo separadamente.
-O piloto seleciona o modo. Quando a fase dentro do modo for desconhecida, usar o comportamento
-mais silencioso até haver dados suficientes para distingui-la.
+O piloto seleciona o modo no app. As saídas do app e do Discord usam a configuração de rádio
+gravada pelo servidor. Tarefas aprovadas falam em Treino por padrão. Quando a fase for desconhecida,
+o rádio fica reservado a alertas críticos.
 
 ### Perfis de Treino
 
@@ -93,6 +94,14 @@ alta, depois que o carro endireitar, com no máximo uma chamada por passagem pel
 | **Perda de tração na saída** | Escorregamento longitudinal sob aceleração e, quando disponível, intervenção do controle de tração | Reservar “saiu de traseira” para quando houver também evidência de deslizamento lateral |
 
 ## Alertas do carro e de corrida
+
+- **Ritmo e curva em Corrida.** Comparar duas voltas válidas do mesmo stint com a mediana das
+  três anteriores. Um lembrete de curva pede duas passagens com perda relevante ou o mesmo
+  evento de alta confiança. Priorizar a estratégia e deixar pelo menos duas voltas entre
+  chamadas de ritmo e curva.
+- **Janela de box.** A autonomia e o consumo projetado determinam a volta de parada. Se a corrida
+  for mais longa que a vida estimada dos pneus, avisar da preparação em cerca de quatro voltas
+  e sugerir a parada quando a estimativa cair para duas.
 
 - **Pneus frios:** após sair dos boxes ou iniciar a sessão, usar temperatura por roda e faixa
   validada para a condição disponível. Avisar uma vez se o frio persistir: “Pneus frios.

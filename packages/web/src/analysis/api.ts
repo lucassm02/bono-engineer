@@ -326,8 +326,12 @@ export const api = {
     request<EngineerTask>('PATCH', `/api/tasks/${enc(id)}`, body),
   deleteTask: (id: string) => request<{ ok: true }>('DELETE', `/api/tasks/${enc(id)}`),
   taskSpoken: (id: string) => request<{ ok: true }>('POST', `/api/tasks/${enc(id)}/spoken`),
-  tyreWearWarning: (sessionId: string, setNumber: number) =>
-    request<{ ok: true }>('POST', '/api/session/tyre-wear-warning', { sessionId, setNumber }),
+  tyreWearWarning: (sessionId: string, setNumber: number, stage: 'prepare' | 'pit') =>
+    request<{ ok: true }>('POST', '/api/session/tyre-wear-warning', {
+      sessionId,
+      setNumber,
+      stage,
+    }),
   taskMisses: () => get<TaskMiss[]>('/api/tasks/misses'),
   clearTaskMisses: () => request<{ ok: true }>('DELETE', '/api/tasks/misses'),
   taskVoice: (voice: string) => get<ApiTaskVoice>(`/api/tasks/voice${qs({ voice })}`),

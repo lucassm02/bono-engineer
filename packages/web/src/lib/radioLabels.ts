@@ -26,7 +26,7 @@ export const RADIO_MODE_HINTS: Record<RadioMode, string> = {
   },
   get race() {
     return uiText(
-      'Só o que muda uma decisão: pneus, combustível e condição do carro. Não precisa de referência.',
+      'Alertas de pneus e combustível, estratégia de box e mudanças de ritmo ou perda recorrente em curva.',
     );
   },
 };

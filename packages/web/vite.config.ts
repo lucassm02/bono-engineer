@@ -47,7 +47,7 @@ export default defineConfig({
         // Only the default radio voice (also the fallback) is precached; the other packs are
         // cached when first used. Pack names carry a content hash (npm run radio:voices).
         globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}', 'radio/alex-*.wav'],
-        maximumFileSizeToCacheInBytes: 12 * 1024 * 1024,
+        maximumFileSizeToCacheInBytes: 16 * 1024 * 1024,
         navigateFallback: '/index.html',
         // Live data must never come from the cache.
         navigateFallbackDenylist: [/^\/ws/, /^\/api/, /^\/mcp/],

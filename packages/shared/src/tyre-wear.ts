@@ -138,13 +138,17 @@ export interface TyreWearStep {
 }
 
 /** What the live panel shows. */
+export type TyreWearWarningStage = 'prepare' | 'pit';
+
 export interface LiveTyreWear {
   /** What the driver said is on the car; null = not said (a generic sport medium is assumed). */
   compound: TyreCompound | null;
   /** Number of the fitted set within the driving session, when reported by the engine. */
   setNumber?: number;
-  /** The radio already warned about this set in the current session. */
+  /** The radio already gave the final wear warning for this set. */
   warningSent?: boolean;
+  /** The advance warning for this set was already played. */
+  preparationSent?: boolean;
   /** Estimated wear of each tyre: 0 new … 1 used up. */
   wear: Wheels;
   /** Worst tyre. */

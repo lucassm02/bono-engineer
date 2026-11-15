@@ -21,11 +21,13 @@ import {
   type DeltaReferenceKind,
   type DeviceInfo,
   type DeviceProfile,
+  type EngineerRadioSettings,
   type FirewallStatus,
   isPacketFormat,
   isTyreCompound,
   normalizeDeviceProfile,
   normalizeDriverName,
+  normalizeEngineerRadioSettings,
   type ServerMessage,
   type ServerStatus,
   type TrackMismatchInfo,
@@ -210,6 +212,10 @@ export class WsHub {
     const s = this.runtime.getStatus();
     s.engineerAudioDeviceId = this.runtime.store.getSetting<string | null>(
       SETTINGS_KEYS.engineerAudioDeviceId,
+      null,
+    );
+    s.engineerRadio = this.runtime.store.getSetting<EngineerRadioSettings | null>(
+      SETTINGS_KEYS.engineerRadio,
       null,
     );
     const fw = this.options.firewall?.();
@@ -464,6 +470,22 @@ export class WsHub {
       return this.#error(c, 'helloRequired', 'Envie "hello" antes de outras mensagens.');
     }
     switch (msg.type) {
+      case 'setEngineerRadio': {
+        if (!msg.settings || typeof msg.settings !== 'object' || Array.isArray(msg.settings)) {
+          return this.#error(c, 'badMessage', 'Configuração de rádio inválida.');
+        }
+        const saved = this.runtime.store.getSetting<EngineerRadioSettings>(
+          SETTINGS_KEYS.engineerRadio,
+        );
+        if (!saved || Object.keys(msg.settings).length > 0) {
+          this.runtime.store.setSetting(
+            SETTINGS_KEYS.engineerRadio,
+            normalizeEngineerRadioSettings({ ...(saved ?? msg.initial), ...msg.settings }),
+          );
+        }
+        this.scheduleStatus();
+        return;
+      }
       case 'setDeviceProfile': {
         if (typeof msg.profile !== 'object' || msg.profile === null) {
           return this.#error(c, 'badMessage', 'Perfil do dispositivo inválido.');

@@ -2399,9 +2399,9 @@
     "Large delta for viewing from a distance",
     "Delta grande para ver a distancia"
   ],
-  "Só o que muda uma decisão: pneus, combustível e condição do carro. Não precisa de referência.": [
-    "Actionable alerts for tyres, fuel and the car. Works without a reference lap.",
-    "Avisos de neumáticos, combustible y estado del coche. Funciona sin vuelta de referencia."
+  "Alertas de pneus e combustível, estratégia de box e mudanças de ritmo ou perda recorrente em curva.": [
+    "Tyre and fuel alerts, pit strategy, pace changes and recurring time loss in corners.",
+    "Avisos de neumáticos y combustible, estrategia de boxes, cambios de ritmo y pérdida repetida de tiempo en curvas."
   ],
   "Só os que eu já usei": ["Only cars I’ve driven", "Solo los que he usado"],
   "Só voltas válidas podem ser referência": [
@@ -5100,9 +5100,9 @@
     "El ingeniero dice, en su punto de la vuelta, las instrucciones que aprobaste. En silencio sin ellas."
   ],
   "Falar tarefas em": ["Say tasks in", "Decir tareas en"],
-  "Os modos em que as tarefas são faladas. Na corrida fica desligado.": [
-    "The modes where tasks are said. Off in Race.",
-    "Los modos donde se dicen las tareas. En carrera está desactivado."
+  "Escolha em quais modos as tarefas aprovadas podem ser faladas. O padrão é Treino.": [
+    "Choose where approved tasks can be heard. Practice is the default.",
+    "Elige en qué modos se pueden escuchar las tareas aprobadas. Por defecto, en Entrenamiento."
   ],
   "Tarefas por volta": ["Tasks per lap", "Tareas por vuelta"],
   "Voz das tarefas": ["Tasks voice", "Voz de las tareas"],

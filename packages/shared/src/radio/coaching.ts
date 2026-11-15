@@ -403,7 +403,11 @@ interface LapBook {
   } | null;
 }
 
-const newBook = (): LapBook => ({ passes: new Map(), closing: null, summaryRequested: false });
+export const newBook = (): LapBook => ({
+  passes: new Map(),
+  closing: null,
+  summaryRequested: false,
+});
 
 /** Wait for the lap time when the driver asks just after crossing the line. */
 function takeSummaryRequest(ctx: RadioRuleContext, book: LapBook): boolean {
@@ -415,7 +419,7 @@ function takeSummaryRequest(ctx: RadioRuleContext, book: LapBook): boolean {
 }
 
 /** Collects the passes by lap and returns the lap closed in this step, once its time is known. */
-function closeLaps(ctx: RadioRuleContext, book: LapBook): ClosedLap | null {
+export function closeLaps(ctx: RadioRuleContext, book: LapBook): ClosedLap | null {
   for (const pass of ctx.passes) {
     let lap = book.passes.get(pass.lapStartedAt);
     if (!lap) {

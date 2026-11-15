@@ -4,7 +4,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { CompletedLap } from '@gt7/core';
 import { Gt7Runtime } from '@gt7/core';
-import { type LapCompletedEvent, type LiveFrame, WS_PROTOCOL_VERSION } from '@gt7/shared';
+import {
+  type LapCompletedEvent,
+  type LiveFrame,
+  normalizeEngineerRadioSettings,
+  WS_PROTOCOL_VERSION,
+} from '@gt7/shared';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { type HubSocket, WsHub } from './hub.ts';
 
@@ -53,6 +58,45 @@ describe('WsHub', () => {
 
   const hello = (s: FakeSocket, deviceId: string) =>
     s.receive({ type: 'hello', protocolVersion: WS_PROTOCOL_VERSION, deviceId });
+
+  it('shares the effective radio settings with the bot and merges concurrent dashboard edits', async () => {
+    const desktop = new FakeSocket();
+    const phone = new FakeSocket();
+    const discord = new FakeSocket();
+    for (const socket of [desktop, phone, discord]) hub.attach(socket);
+    hello(desktop, 'desktop');
+    hello(phone, 'phone');
+    hello(discord, 'bono-discord-radio');
+
+    desktop.receive({
+      type: 'setEngineerRadio',
+      initial: normalizeEngineerRadioSettings({ mode: 'race', enabled: true, volume: 0.65 }),
+      settings: {},
+    });
+    phone.receive({
+      type: 'setEngineerRadio',
+      initial: normalizeEngineerRadioSettings({ mode: 'training' }),
+      settings: { muted: true },
+    });
+    desktop.receive({ type: 'setEngineerRadio', settings: { pace: 'calm', anticipationMs: 140 } });
+
+    await expect
+      .poll(() => {
+        const latest = discord.sent
+          .map((msg) => JSON.parse(msg))
+          .findLast((msg) => msg.type === 'status');
+        return latest?.status.engineerRadio;
+      })
+      .toMatchObject({
+        mode: 'race',
+        enabled: true,
+        muted: true,
+        volume: 0.65,
+        pace: 'calm',
+        anticipationMs: 140,
+        taskModes: ['training'],
+      });
+  });
 
   it('drops frames for slow clients without queueing, and kills stuck ones', () => {
     const fast = new FakeSocket();

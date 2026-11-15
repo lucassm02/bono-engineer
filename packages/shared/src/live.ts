@@ -227,6 +227,8 @@ export interface LiveCornerPass {
   atM: number;
   /** Zone time vs the reference (+ = slower, ms), null without a comparable reference. */
   timeLostMs: number | null;
+  /** Time between this corner's entry and exit, usable without an external reference. */
+  zoneTimeMs?: number;
   /** Why the pass cannot be compared with the reference (review only), when it cannot. */
   incomparable?: string;
   brakePointM: number | null;

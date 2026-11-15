@@ -9,6 +9,7 @@
 import type { DeltaReferenceKind, Id, Lap, Session, SessionKind } from './domain.ts';
 import type { ConnectionState, LapCompletedEvent, LiveFrame } from './live.ts';
 import type { SessionKindDefault } from './race.ts';
+import type { EngineerRadioSettings } from './radio/settings.ts';
 import type { Stint } from './stints.ts';
 import type { IngestorStats, PacketFormat } from './telemetry.ts';
 import type { LiveTrackContext, TrackMismatchInfo } from './track-context.ts';
@@ -178,6 +179,8 @@ export interface ServerStatus {
    */
   sessionCapture?: SessionCaptureStatus;
   engineerAudioDeviceId?: Id | null;
+  /** Shared radio settings. Null until the first dashboard initializes them. */
+  engineerRadio?: EngineerRadioSettings | null;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -386,6 +389,11 @@ export interface PingMessage {
 }
 
 export type ClientMessage =
+  | {
+      type: 'setEngineerRadio';
+      settings: Partial<EngineerRadioSettings>;
+      initial?: EngineerRadioSettings;
+    }
   | HelloMessage
   | SetDeviceProfileMessage
   | SetDeltaReferenceMessage

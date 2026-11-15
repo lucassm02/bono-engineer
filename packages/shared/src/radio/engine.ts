@@ -127,8 +127,7 @@ export class RadioEngine {
   }
 
   /**
-   * The configuration the rules see. During a corner drill the engineer works as in Treino with
-   * the corner calls on, whatever the driver's mode is: the drill is a mode of its own.
+   * An active drill in Treino uses the learning profile for its corner.
    */
   get #cfg(): RadioEngineConfig {
     return this.#drilling
@@ -296,7 +295,7 @@ export class RadioEngine {
       engineer?.status === 'ready'
         ? engineer.cues.filter((cue) => !focus || (cue.cornerId && focus.has(cue.cornerId)))
         : [];
-    this.#drilling = env.drill === true;
+    this.#drilling = env.drill === true && this.#config.mode === 'training';
     const config = this.#cfg;
     const audio = env.audio === 'ready' && config.speechLevel !== 'mute';
     const ctx: RadioRuleContext = {
@@ -502,7 +501,7 @@ export class RadioEngine {
   #block(item: Evaluated, frame: LiveFrame, phase: RadioPhase, t: number): string | null {
     const { rule, candidate, priority } = item;
     const config = this.#cfg;
-    const phaseReason = phaseBlock(candidate, priority, config, phase);
+    const phaseReason = phaseBlock(candidate, priority, config, phase, rule.id);
     if (phaseReason) return phaseReason;
     if (candidate.cornerId) {
       const calls = this.#cornerCalls.get(this.#cornerPass(frame, candidate.cornerId)) ?? 0;

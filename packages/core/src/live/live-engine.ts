@@ -81,6 +81,7 @@ import {
   TYRE_COMPOUNDS,
   type TyreCompound,
   TyreWearTracker,
+  type TyreWearWarningStage,
   wheelSlipRatios,
 } from '@gt7/shared';
 import { TraceBuilder } from '../trace/channels.ts';
@@ -502,6 +503,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   #tyreWear = new TyreWearTracker();
   #tyreSetNumber = 1;
   #warnedTyreSet: number | null = null;
+  #preparedTyreSet: number | null = null;
   #pitTyres: { visitId: Id; newSets: Map<TyreCompound, TyreWearTracker> } | null = null;
   #nameVoter = new TrackNameVoter();
   /** The tyre wear rate the driver said the game is set to (×1 = normal). */
@@ -939,11 +941,16 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     return true;
   }
 
-  /** Records an audible wear warning once, even across a reload or a change of audio device. */
-  recordTyreWearWarning(sessionId: Id, setNumber: number): boolean {
+  /** Records each audible stage at most once across audio devices. */
+  recordTyreWearWarning(
+    sessionId: Id,
+    setNumber: number,
+    stage: TyreWearWarningStage = 'pit',
+  ): boolean {
     if (this.#session?.id !== sessionId || this.#tyreSetNumber !== setNumber || this.#pitTyres)
       return false;
     if (this.#warnedTyreSet === setNumber) return true;
+    if (stage === 'prepare' && this.#preparedTyreSet === setNumber) return true;
     const frame = this.snapshot();
     const wear = frame?.tyreWear;
     if (!frame || !wear?.compound || wear.multiplier === 0 || wear.lapsLeft === null) return false;
@@ -953,8 +960,10 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       wearMultiplier: wear.multiplier,
       worstWearPct: Math.round(wear.worst * 100),
       estimatedLapsLeft: Math.round(wear.lapsLeft * 10) / 10,
+      stage,
     });
-    this.#warnedTyreSet = setNumber;
+    if (stage === 'prepare') this.#preparedTyreSet = setNumber;
+    else this.#warnedTyreSet = setNumber;
     return true;
   }
 
@@ -1807,6 +1816,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     this.#tyreWear.reset();
     this.#tyreSetNumber = 1;
     this.#warnedTyreSet = null;
+    this.#preparedTyreSet = null;
     this.#lapsFinalized = 0;
     this.#ephemeral = !this.#persist && !this.#replayMode;
     this.#session = s;
@@ -2965,6 +2975,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
         ),
         setNumber: this.#tyreSetNumber,
         warningSent: this.#warnedTyreSet === this.#tyreSetNumber,
+        preparationSent: this.#preparedTyreSet === this.#tyreSetNumber,
       },
       ...(this.#pitTyres && {
         pitTyreChange: { visitId: this.#pitTyres.visitId, compound: this.#tyreCompound },
