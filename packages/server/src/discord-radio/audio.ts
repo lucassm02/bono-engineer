@@ -1,11 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
-import { type RadioUtterance, utteranceKeys } from '@gt7/shared/radio-phrases';
+import { RADIO_ATTACK_MS, type RadioUtterance, utteranceKeys } from '@gt7/shared/radio-phrases';
 import manifest from '../../../web/src/lib/radio-manifest.json' with { type: 'json' };
 
 const voices: Record<string, { file: string; clips: Record<string, number[]> }> = manifest.voices;
 const OUTPUT_RATE = 48_000;
+const ATTACK_FRAMES = (RADIO_ATTACK_MS * OUTPUT_RATE) / 1000;
 const WAV_HEADER_BYTES = 44;
 const FRAME_BYTES = 4; // Stereo signed 16-bit PCM.
 type Clip = { start: number; length: number };
@@ -105,7 +106,8 @@ export function radioAudio(voice: string, volume: number, radioDir?: string) {
           const index = Math.floor(pos);
           const left = source.data.readInt16LE((start + index) * 2);
           const right = source.data.readInt16LE((start + Math.min(index + 1, length - 1)) * 2);
-          const value = Math.round((left + (right - left) * (pos - index)) * volume);
+          const attack = Math.min(1, out / FRAME_BYTES / ATTACK_FRAMES);
+          const value = Math.round((left + (right - left) * (pos - index)) * volume * attack);
           pcm.writeInt16LE(value, out);
           pcm.writeInt16LE(value, out + 2);
           out += FRAME_BYTES;

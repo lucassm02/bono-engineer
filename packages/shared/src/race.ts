@@ -12,6 +12,10 @@ import type { Id, Session, SessionEvent, SessionKind } from './domain.ts';
 /** The race in progress (or just finished) as shown by the live panel. */
 export interface LiveRace {
   state: 'racing' | 'finished';
+  /** Epoch ms of this attempt, including a restart on the same grid. */
+  startedAt?: number;
+  /** Same confirmed result that is saved with the race. */
+  result?: { at: number; position: number | null; gainedOnFinalLap?: number };
   /** Laps of the race, held after the flag (the game resets its own to 0). */
   totalLaps: number;
   /** Position held for at least 2 s (side by side it flips every second); null while unknown. */

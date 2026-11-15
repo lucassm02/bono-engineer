@@ -25,7 +25,11 @@ export const UNKNOWN_LAYOUT_WINDOW_MS = 2500;
 export const WINDOW_MARGIN_MS = 600;
 
 /** Why the engine cannot evaluate this frame at all, or null when it can. */
-export function suspensionReason(frame: LiveFrame, sampleAgeMs: number): string | null {
+export function suspensionReason(
+  frame: LiveFrame,
+  sampleAgeMs: number,
+  allowResult = false,
+): string | null {
   if (sampleAgeMs > RADIO_STALE_MS) return 'amostra velha';
   switch (frame.state) {
     case 'onTrack':
@@ -35,6 +39,7 @@ export function suspensionReason(frame: LiveFrame, sampleAgeMs: number): string 
     case 'replay':
       return 'replay';
     case 'menu':
+      if (allowResult) break;
       return 'fora da pista';
     default:
       return 'sem sinal';

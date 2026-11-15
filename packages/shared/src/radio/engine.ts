@@ -21,6 +21,12 @@ import {
   WINDOW_MARGIN_MS,
 } from './context.ts';
 import type { RadioUtterance } from './phrases.ts';
+import {
+  raceGridHeld,
+  racePresenceRule,
+  raceQuietStraight,
+  raceStartInProgress,
+} from './race-presence.ts';
 import { type AnyRadioRule, phaseBlock, priorityRank, RADIO_RULES, ruleRuns } from './registry.ts';
 import {
   DEFAULT_RADIO_PREFERENCES,
@@ -217,7 +223,10 @@ export class RadioEngine {
     });
 
     // 1. Validate the inputs.
-    const suspension = suspensionReason(frame, env.sampleAgeMs ?? 0);
+    const race = this.#config.mode === 'race' ? frame.race : undefined;
+    const finished = race?.state === 'finished';
+    const allowResult = finished && !!race.result && !frame.flags?.loadingOrProcessing;
+    const suspension = suspensionReason(frame, env.sampleAgeMs ?? 0, allowResult);
     if (suspension) {
       const stop = this.suspend(suspension, frame);
       return result('unknown', null, stop);
@@ -324,16 +333,27 @@ export class RadioEngine {
     this.#summaryRequested = false;
 
     const active = this.#active;
-    if (active && (t >= active.endT || (active.deadlineT !== undefined && t >= active.deadlineT))) {
+    const unsafeGreeting =
+      active?.decision.ruleId === racePresenceRule.id &&
+      ((active.decision.key === 'grid' && !raceGridHeld(frame)) ||
+        (active.decision.key === 'unmappedStraight' && !raceQuietStraight(frame)));
+    if (
+      active &&
+      (unsafeGreeting ||
+        t >= active.endT ||
+        (active.deadlineT !== undefined && t >= active.deadlineT))
+    ) {
       if (t < active.endT) stop = true; // still talking past the useful point: cut it
       this.#active = null;
     }
 
     // 2. Each eligible rule confirms its condition.
     const evaluated: Evaluated[] = [];
+    const starting = race?.startedAt !== undefined && raceStartInProgress(frame);
     this.#rules.forEach((rule, index) => {
       if (this.#drilling && !rule.drill && !rule.carAlert) return;
       if (!ruleRuns(rule, config)) return;
+      if (finished && !rule.afterRace) return;
       const missing = rule.requires?.find((channel) => !channels.has(channel));
       if (missing) {
         if (this.#suppressed.get(rule.id) !== missing && !QUIET_CHANNELS.has(missing)) {
@@ -346,11 +366,14 @@ export class RadioEngine {
       this.#suppressed.delete(rule.id);
       const state = this.#state(rule);
       for (const candidate of rule.evaluate(ctx, state)) {
+        const priority = candidate.priority ?? rule.priority;
+        if (starting && !rule.afterRace && priority !== 'critical' && priority !== 'strategy')
+          continue;
         evaluated.push({
           rule,
           index,
           candidate,
-          priority: candidate.priority ?? rule.priority,
+          priority,
           id: `${rule.id}:${candidate.key}`,
         });
       }
@@ -480,9 +503,9 @@ export class RadioEngine {
     if (session !== null) sticky.session = session;
     if (track !== null) sticky.track = track;
     const c = this.#config;
-    const key = [frame.car.carCode, c.mode, c.mode === 'training' ? c.trainingProfile : '-'].join(
-      '|',
-    );
+    const scope =
+      c.mode === 'training' ? c.trainingProfile : c.mode === 'race' ? frame.race?.startedAt : '-';
+    const key = [frame.car.carCode, c.mode, scope].join('|');
     const changed = swapped || key !== this.#context;
     this.#context = key;
     return changed;
@@ -550,7 +573,7 @@ export class RadioEngine {
       if (this.#cornerCalls.size > 64)
         this.#cornerCalls.delete(this.#cornerCalls.keys().next().value!);
     }
-    rule.delivered?.(candidate, this.#state(rule), ctx);
+    rule.delivered?.(candidate, this.#state(rule), ctx, outcome);
     const current = this.#note;
     // The panel keeps the most important message of the moment.
     if (

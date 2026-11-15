@@ -387,6 +387,7 @@ export interface ClosedLap {
   startedAt: number;
   lap: number;
   lapMs: number;
+  sectorsMs: readonly number[];
   valid: boolean;
   passes: ReadonlyMap<string, LiveCornerPass>;
 }
@@ -400,6 +401,7 @@ interface LapBook {
     lap: number;
     valid: boolean;
     lastBefore: number | null;
+    splits: readonly (number | null)[];
   } | null;
 }
 
@@ -437,6 +439,7 @@ export function closeLaps(ctx: RadioRuleContext, book: LapBook): ClosedLap | nul
       lap: previous.lap.lap,
       valid: previous.lap.currentLapValid === true,
       lastBefore: previous.lap.lastLapMs,
+      splits: previous.sectors.slice(0, -1).map((sector) => sector.timeMs),
     };
   const c = book.closing;
   if (!c) return null;
@@ -444,10 +447,17 @@ export function closeLaps(ctx: RadioRuleContext, book: LapBook): ClosedLap | nul
   if (!(last !== null && last !== c.lastBefore) && t - c.at < LAP_TIME_WAIT_MS) return null;
   book.closing = null;
   if (last === null) return null;
+  const completed = c.splits.filter((ms): ms is number => ms !== null && ms > 0);
+  const finalSector = last - completed.reduce((sum, ms) => sum + ms, 0);
+  const sectorsMs =
+    completed.length > 0 && completed.length === c.splits.length && finalSector > 0
+      ? [...completed, finalSector]
+      : [];
   return {
     startedAt: c.startedAt,
     lap: c.lap,
     lapMs: last,
+    sectorsMs,
     valid: c.valid,
     passes: book.passes.get(c.startedAt) ?? new Map(),
   };

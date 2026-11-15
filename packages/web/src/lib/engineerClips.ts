@@ -4,6 +4,7 @@
  */
 
 import { TASK_VOICE_MANIFEST } from '@gt7/shared';
+import { RADIO_ATTACK_MS } from '@gt7/shared/radio-phrases';
 import manifest from './radio-manifest.json';
 import { type RadioUtterance, utteranceKeys } from './radioPhrases.ts';
 import { defaultRadioVoice, radioVoice } from './radioVoices.ts';
@@ -114,7 +115,7 @@ let output: GainNode | undefined;
 const buffers = new Map<string, Promise<AudioBuffer>>();
 const decoded = new Map<string, AudioBuffer>();
 const failed = new Set<string>();
-let playing: { sources: AudioBufferSourceNode[]; preview: boolean } | null = null;
+let playing: { sources: AudioBufferSourceNode[]; attack: GainNode; preview: boolean } | null = null;
 
 export function radioPackStatus(pack: RadioPack): RadioPackStatus {
   if (decoded.has(pack.file)) return 'ready';
@@ -157,7 +158,7 @@ export async function prepareRadioPack(pack: RadioPack): Promise<void> {
 
 export function stopRadioClip(preview: boolean): void {
   if (playing?.preview !== preview) return;
-  const { sources } = playing;
+  const { sources, attack } = playing;
   playing = null;
   for (const source of sources) {
     source.onended = null;
@@ -168,6 +169,7 @@ export function stopRadioClip(preview: boolean): void {
     }
     source.disconnect();
   }
+  attack.disconnect();
 }
 
 /**
@@ -194,23 +196,28 @@ export function playRadioUtterance(
   const keys = utteranceKeys(utterance);
   const sources: AudioBufferSourceNode[] = [];
   let at = ctx.currentTime;
+  const attack = ctx.createGain();
+  attack.connect(output);
+  attack.gain.setValueAtTime(0, at);
+  attack.gain.linearRampToValueAtTime(1, at + RADIO_ATTACK_MS / 1000);
   keys.forEach((key, index) => {
     const [start, length] = pack.clips[key]!;
     const source = ctx.createBufferSource();
     source.buffer = buffer;
     source.playbackRate.value = rate;
-    source.connect(output!);
+    source.connect(attack);
     const seconds = length! / pack.sampleRate;
     source.start(at, start! / pack.sampleRate, seconds);
     at += seconds / rate + (index < keys.length - 1 ? RADIO_GAP_MS / 1000 : 0);
     sources.push(source);
   });
-  playing = { sources, preview };
+  playing = { sources, attack, preview };
   const last = sources[sources.length - 1]!;
   last.onended = () => {
     if (playing?.sources !== sources) return;
     playing = null;
     for (const source of sources) source.disconnect();
+    attack.disconnect();
     done?.();
   };
   return true;

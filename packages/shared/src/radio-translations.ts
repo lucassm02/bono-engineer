@@ -1,5 +1,6 @@
 import type { Language } from './language.ts';
 import {
+  attentionCornerSegment,
   BRAKE_MARKS,
   type BRAKE_WORDS,
   brakePhrase,
@@ -7,6 +8,7 @@ import {
   detailedBrakeUtterance,
   fromCornerSegment,
   gearSegment,
+  positionSegment,
   RADIO_CATALOG,
   type RadioEntry,
   type RadioUtterance,
@@ -41,10 +43,17 @@ const fixed: Record<string, Translation> = {
     'Your pace has improved. Good work.',
     'Tu ritmo ha mejorado. Bien hecho.',
   ],
-  'você vem perdendo tempo. Foco na próxima passagem.': [
-    'you’ve been losing time. Focus on the next pass.',
-    'estás perdiendo tiempo. Concéntrate en la próxima pasada.',
+  'Boa, o ritmo voltou.': ['Nice, the pace is back.', 'Bien, recuperaste el ritmo.'],
+  'Ritmo estável. Mantém.': ['Pace is steady. Keep it up.', 'Ritmo constante. Mantenlo.'],
+  'Tô no rádio. Boa corrida.': [
+    'I’m on the radio. Have a good race.',
+    'Estoy en la radio. Buena carrera.',
   ],
+  'Última volta.': ['Final lap.', 'Última vuelta.'],
+  'Bandeirada.': ['Chequered flag.', 'Bandera a cuadros.'],
+  'Boa corrida.': ['Good race.', 'Buena carrera.'],
+  'Boa recuperação no fim.': ['Nice recovery at the end.', 'Buena remontada al final.'],
+  'a gente tá perdendo tempo ali.': ['we’re losing time there.', 'estamos perdiendo tiempo ahí.'],
   'mais calma na próxima passagem.': [
     'take it easy on the next pass.',
     'tómatela con más calma en la próxima pasada.',
@@ -248,6 +257,8 @@ for (let percent = 10; percent <= 100; percent += 10) {
 for (let corner = 1; corner <= 20; corner++) {
   const [en, es] = numberWords[corner]!;
   translations[cornerSegment(corner)] = [`At turn ${en}`, `En la curva ${es}`];
+  translations[attentionCornerSegment(corner)] = [`Watch turn ${en}`, `Atención en la curva ${es}`];
+  translations[positionSegment(corner)] = [`Pee ${en}.`, `Pe ${es}.`];
   translations[fromCornerSegment(corner)] = [`from turn ${en}`, `de la curva ${es}`];
   translations[toCornerSegment(corner)] = [`to turn ${en}.`, `a la curva ${es}.`];
 }

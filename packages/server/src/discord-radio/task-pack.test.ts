@@ -98,8 +98,10 @@ describe('task voice of the Discord radio', () => {
     const pcm = await buffer(audio.stream(sentence)!);
     expect(pcm.length / 192).toBe(audio.durationMs(sentence));
     expect(audio.durationMs(sentence)).toBeGreaterThan(200);
-    // the pieces come from the task pack, scaled by the volume
-    expect(pcm.readInt16LE(0)).toBe(1000);
+    // The same voice envelope applies to downloaded instructions at 48 kHz stereo.
+    expect(pcm.readInt16LE(0)).toBe(0);
+    expect(pcm.readInt16LE(840 * 4)).toBe(500);
+    expect(pcm.readInt16LE(1680 * 4)).toBe(1000);
 
     audio.setTaskPack(null);
     expect(audio.stream(sentence)).toBeNull();

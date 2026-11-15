@@ -179,6 +179,7 @@ describe('RaceTracker rules', () => {
     );
     expect(end).toHaveLength(1);
     expect(end[0]).toMatchObject({ type: 'finish', position: 3, cars: 16, totalLaps: 5 });
+    expect(t.live?.result).toEqual({ at: T0 + 69_000, position: 3 });
     expect((end[0] as { flagAt: number }).flagAt).toBe(T0 + 60_000);
   });
 
@@ -193,6 +194,7 @@ describe('RaceTracker rules', () => {
       input({ at: T0 + 15_000, totalLaps: 0, lapCount: 5, position: 2, cars: 14 }),
     );
     expect(out[0]).toMatchObject({ type: 'finish', position: 5, cars: 15 });
+    expect(t.live?.result).toEqual({ at: T0 + 15_000, position: 5 });
   });
 
   it('a restart (lap counter back to 0, same totalLaps) begins a new attempt', () => {

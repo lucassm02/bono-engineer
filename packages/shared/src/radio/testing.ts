@@ -47,12 +47,15 @@ export class RadioSim {
   lapStartT = this.t;
   lastLapMs: number | null = null;
   bestLapMs: number | null = null;
+  sectors: LiveFrame['sectors'] = [];
+  race?: LiveFrame['race'];
   /** Lap time recorded at the next line crossing (default: elapsed time). */
   nextLapMs: number | null = null;
   /** Validity of the lap that starts at the next crossing (default: unchanged). */
   nextLapValid: boolean | undefined = undefined;
   speedKmh = 200;
   brake = 0;
+  handBrake = false;
   throttle = 1;
   lateralG = 0;
   temps: Wheels = [80, 80, 80, 80];
@@ -228,7 +231,7 @@ export class RadioSim {
         inGear: true,
         hasTurbo: false,
         revLimiterAlert: false,
-        handBrake: false,
+        handBrake: this.handBrake,
         lights: false,
         highBeam: false,
         lowBeam: false,
@@ -249,7 +252,7 @@ export class RadioSim {
         ...(this.lapValid === undefined ? {} : { currentLapValid: this.lapValid }),
         startedAt: this.lapStartT,
       },
-      sectors: [],
+      sectors: this.sectors,
       distanceM: this.dist,
       lapFraction: this.dist / this.lengthM,
       track: this.trackId
@@ -274,6 +277,7 @@ export class RadioSim {
       ...(this.tasks.length ? { tasks: this.tasks } : {}),
       ...(this.tyreWear ? { tyreWear: this.tyreWear } : {}),
       ...(this.pitTyreChange ? { pitTyreChange: this.pitTyreChange } : {}),
+      ...(this.race ? { race: this.race } : {}),
       link: { rateHz: 60, lossPct: 0, lost: 0, received: this.seq, lastPacketAt: this.t },
     };
   }

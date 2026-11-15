@@ -150,6 +150,8 @@ export interface SessionCaptureStatus {
 
 /** Server/link status snapshot. */
 export interface ServerStatus {
+  /** The configured Discord bot is connected to voice and can play audio. */
+  discordRadioReady?: boolean;
   /**
    * High-level driving state (disconnected/menu/onTrack…). NOT the console link: for that see
    * {@link ServerStatus.consoleConnection}.
@@ -389,6 +391,7 @@ export interface PingMessage {
 }
 
 export type ClientMessage =
+  | { type: 'discordRadioReady'; ready: boolean }
   | {
       type: 'setEngineerRadio';
       settings: Partial<EngineerRadioSettings>;

@@ -2317,6 +2317,18 @@
   ],
   "Sem servidor": ["Server offline", "Servidor desconectado"],
   "Sem sinal": ["No signal", "Sin señal"],
+  "Sem telemetria": ["No telemetry", "Sin telemetría"],
+  "Rádio ativo": ["Radio active", "Radio activa"],
+  "Rádio ativo · Discord": ["Radio active · Discord", "Radio activa · Discord"],
+  "Aguardando canal do Discord": [
+    "Waiting for the Discord voice channel",
+    "Esperando el canal de voz de Discord"
+  ],
+  "Rádio mudo": ["Radio muted", "Radio silenciada"],
+  "Áudio em outro aparelho": ["Audio on another device", "Audio en otro dispositivo"],
+  "Rádio indisponível": ["Radio unavailable", "Radio no disponible"],
+  "Preparando áudio do rádio": ["Preparing radio audio", "Preparando el audio de la radio"],
+  "Toque para ativar o áudio": ["Tap to enable audio", "Toca para activar el audio"],
   "sem traçado": ["layout unavailable", "sin trazado"],
   "Sem traçado ainda: dirija uma volta para desenhar o mapa": [
     "No layout yet. Drive a lap to build the map.",

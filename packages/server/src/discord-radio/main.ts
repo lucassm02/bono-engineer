@@ -10,6 +10,7 @@ import {
   VoiceConnectionStatus,
 } from '@discordjs/voice';
 import {
+  type ClientMessage,
   ENGINEER_PACES,
   type HelloMessage,
   RADIO_STALE_MS,
@@ -70,7 +71,19 @@ export function startDiscordRadio(
     engine.suspend(reason);
     player.stop(true);
   };
-  const ready = () => voice?.state.status === VoiceConnectionStatus.Ready;
+  const ready = () =>
+    voice?.state.status === VoiceConnectionStatus.Ready &&
+    !channel?.guild.members.me?.voice.serverMute;
+  const publishVoiceStatus = () => {
+    if (!test && socket?.readyState === WebSocket.OPEN) {
+      socket.send(
+        JSON.stringify({
+          type: 'discordRadioReady',
+          ready: ready(),
+        } satisfies ClientMessage),
+      );
+    }
+  };
   const play = (stream: Readable) => {
     player.play(createAudioResource(stream, { inputType: StreamType.Raw }));
   };
@@ -112,7 +125,10 @@ export function startDiscordRadio(
     try {
       do {
         syncAgain = false;
-        if (channel && !closing) joinOrLeave(channel, await occupants(channel));
+        if (channel && !closing) {
+          const people = await occupants(channel);
+          if (!closing) joinOrLeave(channel, people);
+        }
       } while (syncAgain && !closing);
     } finally {
       syncing = false;
@@ -147,6 +163,7 @@ export function startDiscordRadio(
     });
     voice.on('error', () => stopRadio('erro na conexão de voz'));
     voice.on('stateChange', (before, after) => {
+      publishVoiceStatus();
       if (after.status === VoiceConnectionStatus.Ready) {
         if (test) nextBeepAt = Date.now() + 1500;
         report('Rádio conectado ao Discord.');
@@ -203,6 +220,7 @@ export function startDiscordRadio(
         deviceName: 'Discord · PS5',
       };
       connection.send(JSON.stringify(hello));
+      publishVoiceStatus();
     });
     connection.addEventListener('message', ({ data }) => {
       if (closing || typeof data !== 'string') return;
@@ -318,6 +336,10 @@ export function startDiscordRadio(
   player.on('error', playbackError);
   client.on('error', () => report('Erro na conexão do bot.', true));
   client.on(Events.VoiceStateUpdate, (before, after) => {
+    if (after.id === client.user?.id && before.serverMute !== after.serverMute) {
+      publishVoiceStatus();
+      if (after.serverMute) stopRadio('bot silenciado no Discord');
+    }
     // Qualquer pessoa entrando ou saindo do canal configurado reavalia se o bot deve estar nele.
     if (channel && (before.channelId === channel.id || after.channelId === channel.id))
       void syncVoice();

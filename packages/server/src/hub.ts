@@ -21,6 +21,7 @@ import {
   type DeltaReferenceKind,
   type DeviceInfo,
   type DeviceProfile,
+  DISCORD_RADIO_DEVICE_ID,
   type EngineerRadioSettings,
   type FirewallStatus,
   isPacketFormat,
@@ -74,6 +75,7 @@ interface Client {
   socket: HubSocket;
   info: ClientInfo;
   deviceId: string | null;
+  discordRadioReady: boolean;
   currentView: ViewId | null;
   connectedAt: number;
   alive: boolean;
@@ -218,6 +220,7 @@ export class WsHub {
       SETTINGS_KEYS.engineerRadio,
       null,
     );
+    s.discordRadioReady = [...this.#clients].some((c) => c.discordRadioReady);
     const fw = this.options.firewall?.();
     return fw ? { ...s, firewall: fw } : s;
   }
@@ -250,6 +253,7 @@ export class WsHub {
       socket,
       info,
       deviceId: null,
+      discordRadioReady: false,
       currentView: null,
       connectedAt: Date.now(),
       alive: true,
@@ -470,6 +474,16 @@ export class WsHub {
       return this.#error(c, 'helloRequired', 'Envie "hello" antes de outras mensagens.');
     }
     switch (msg.type) {
+      case 'discordRadioReady':
+        if (
+          deviceId === DISCORD_RADIO_DEVICE_ID &&
+          typeof msg.ready === 'boolean' &&
+          c.discordRadioReady !== msg.ready
+        ) {
+          c.discordRadioReady = msg.ready;
+          this.scheduleStatus();
+        }
+        return;
       case 'setEngineerRadio': {
         if (!msg.settings || typeof msg.settings !== 'object' || Array.isArray(msg.settings)) {
           return this.#error(c, 'badMessage', 'Configuração de rádio inválida.');
@@ -643,6 +657,7 @@ export class WsHub {
       profile = normalizeDeviceProfile(profile, deviceId);
     }
     const reHello = c.deviceId !== null;
+    if (c.deviceId !== deviceId) c.discordRadioReady = false;
     c.deviceId = deviceId;
     const prev = this.#devices.get(deviceId);
     this.#devices.set(deviceId, {

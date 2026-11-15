@@ -66,16 +66,25 @@ describe('rádio em replay de sessão', () => {
     }
   });
 
-  it('Corrida: cold tyres on the out lap, then the fuel projection, without a reference', () => {
+  it('Corrida: cold tyres, radio greeting and fuel projection without a reference', () => {
     const log = replay(race, 'race');
-    expect(spoken(log)).toEqual(['tyresWarmUp:cold', 'fuel:short']);
+    expect(spoken(log)).toEqual([
+      'tyresWarmUp:cold',
+      'racePresence:unmappedStraight',
+      'fuel:short',
+    ]);
+    expect(log.find((d) => d.ruleId === 'racePresence' && d.outcome === 'spoken')?.lap).toBe(1);
     const fuel = log.find((d) => d.ruleId === 'fuel' && d.outcome === 'spoken')!;
     expect(fuel.utterance).toBe(FUEL_SHORT);
     expect(fuel.evidence).toMatchObject({
       perLapL: expect.any(Number),
       raceLapsLeft: expect.any(Number),
     });
-    expect(log.find((d) => d.ruleId === 'tyresWarmUp')).toMatchObject({ phase: 'outLap', lap: 0 });
+    const coldTyres = log.find((d) => d.ruleId === 'tyresWarmUp' && d.outcome === 'spoken')!;
+    expect(coldTyres).toMatchObject({ phase: 'timedLap', lap: 1 });
+    expect(
+      race.find((frame) => frame.seq === coldTyres.frameSeq)?.lap.currentLapMs,
+    ).toBeGreaterThanOrEqual(12_000);
   });
 
   it('Classificação: silent on the flying laps, the result after the line', () => {

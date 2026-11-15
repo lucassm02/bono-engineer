@@ -1,4 +1,5 @@
 import {
+  DISCORD_RADIO_DEVICE_ID,
   type EngineerStatusView,
   engineerDisplay,
   engineerStatusView,
@@ -16,6 +17,7 @@ import { live } from '../live/liveStore.ts';
 import { useLiveRender } from '../live/raf.ts';
 import { toggleMenu } from '../state/actions.ts';
 import {
+  engineerAudioReady,
   playEngineerVoice,
   stopEngineerPreview,
   stopEngineerVoice,
@@ -80,16 +82,21 @@ function EngineerHud() {
   const [display, setDisplay] = useState<Display>(null);
   const [note, setNote] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [localAudioReady, setLocalAudioReady] = useState(engineerAudioReady);
   const visible = useEngineer((s) => s.hudVisible);
   const muted = useEngineer((s) => s.muted);
   const controls = useEngineer((s) => s.controls);
   const deviceId = useUi((s) => s.profile.deviceId);
   const audioDevice = useUi((s) => s.serverStatus?.engineerAudioDeviceId);
   const audioHere = !audioDevice || audioDevice === deviceId;
+  const audioDiscord = audioDevice === DISCORD_RADIO_DEVICE_ID;
+  const discordReady = useUi((s) => s.serverStatus?.discordRadioReady === true);
   const training = useEngineerTraining((s) => s.run);
   const voiceError = useEngineer((s) => s.voiceError);
   const voiceLoading = useEngineer((s) => s.voiceLoading);
   const trainingEnabled = controls.mode === 'training';
+  const racing = controls.mode === 'race';
+  const silent = muted || controls.volume === 0;
   const cornerCalls = trainingEnabled && controls.trainingProfile === 'learnTrack';
   const canRequestSummary =
     trainingEnabled && controls.trainingProfile !== 'free' && controls.summary === 'onDemand';
@@ -99,6 +106,7 @@ function EngineerHud() {
     setView(next);
     setDisplay(null);
     setPending(false);
+    setNote(null);
   }, []);
 
   useLiveRender((f, now) => {
@@ -126,15 +134,13 @@ function EngineerHud() {
           ? run.corners.map((corner) => corner.id)
           : []
         : null;
+    const ready = engineerAudioReady();
+    setLocalAudioReady(ready);
     const env: RadioStepEnv = {
       audio:
-        muted ||
-        !audioHere ||
-        controls.volume === 0 ||
-        voiceError ||
-        typeof AudioContext === 'undefined'
+        silent || !audioHere || voiceError || typeof AudioContext === 'undefined'
           ? 'off'
-          : voiceLoading || ui.menuOpen || ui.onboarding === 'active'
+          : !ready || voiceLoading || ui.menuOpen || ui.onboarding === 'active'
             ? 'wait'
             : 'ready',
       sampleAgeMs: now - live.receivedAt,
@@ -218,6 +224,7 @@ function EngineerHud() {
       }
     };
     const timer = setInterval(() => {
+      setLocalAudioReady(engineerAudioReady());
       if (!live.frame || performance.now() - live.receivedAt > STALE_MS) suspend('sem sinal');
     }, 125);
     document.addEventListener('visibilitychange', visibility);
@@ -233,10 +240,30 @@ function EngineerHud() {
   if (!visible) return null;
 
   const mode = RADIO_MODE_LABELS[controls.mode];
+  const audioStatus = silent
+    ? 'Rádio mudo'
+    : audioDiscord
+      ? discordReady
+        ? 'Rádio ativo · Discord'
+        : 'Aguardando canal do Discord'
+      : !audioHere
+        ? 'Áudio em outro aparelho'
+        : voiceError || typeof AudioContext === 'undefined'
+          ? 'Rádio indisponível'
+          : voiceLoading
+            ? 'Preparando áudio do rádio'
+            : localAudioReady
+              ? 'Rádio ativo'
+              : 'Toque para ativar o áudio';
   const brakePercent = display?.label.match(/^Freio · (\d+)%$/)?.[1];
+  const noSignal = view.key === 'noSignal';
   const callLabel = brakePercent
     ? uiText('Freio · {0}%', brakePercent)
-    : uiText(display?.label ?? note ?? view.text);
+    : uiText(
+        noSignal
+          ? 'Sem telemetria'
+          : (display?.label ?? note ?? (racing ? audioStatus : view.text)),
+      );
   return (
     <aside
       className="engineer-hud"
@@ -244,15 +271,7 @@ function EngineerHud() {
       aria-label={uiText('Engenheiro ao vivo')}
     >
       <div className="engineer-hud-heading">
-        <span className="engineer-hud-mode">
-          {!audioHere
-            ? uiText('{0} · áudio em outro aparelho', mode)
-            : muted || controls.volume === 0
-              ? uiText('{0} · sem som', mode)
-              : voiceError
-                ? uiText('{0} · áudio indisponível', mode)
-                : uiText('Engenheiro · {0}', mode)}
-        </span>
+        <span className="engineer-hud-mode">{uiText('Engenheiro · {0}', mode)}</span>
         <button
           type="button"
           data-no-gesture
@@ -268,9 +287,10 @@ function EngineerHud() {
         <strong>{callLabel}</strong>
         {display?.meters != null && <b className="engineer-hud-distance">{display.meters} m</b>}
       </div>
+      {(!racing || noSignal || note) && <small>{uiText(audioStatus)}</small>}
       {display && note && <small>{uiText(note)}</small>}
-      {!display && view.detail && <small>{uiText(view.detail)}</small>}
-      {!display && view.action === 'recordReplay' && (
+      {!racing && !display && view.detail && <small>{uiText(view.detail)}</small>}
+      {!racing && !display && view.action === 'recordReplay' && (
         <a
           className="ui-btn engineer-hud-settings"
           data-variant="secondary"
@@ -281,7 +301,7 @@ function EngineerHud() {
           {uiText('Gravar volta de replay')}
         </a>
       )}
-      {!display && view.action === 'pickReference' && (
+      {!racing && !display && view.action === 'pickReference' && (
         <button
           type="button"
           data-no-gesture

@@ -244,12 +244,18 @@ export function stopEngineerPreview(): void {
 export function testEngineerVoice(sample = true): void {
   stopEngineerVoice();
   stopEngineerPreview();
-  prepareEngineerVoice(sample ? RADIO_PREVIEW_KEY : RADIO_HELLO);
+  const inRaceMode = useEngineer.getState().controls.mode === 'race';
+  prepareEngineerVoice(sample ? RADIO_PREVIEW_KEY : inRaceMode ? null : RADIO_HELLO);
+}
+
+export function engineerAudioReady(): boolean {
+  const { voiceUri } = useEngineer.getState();
+  return preparedVoice === voiceUri && radioAudioRunning();
 }
 
 /** A saved On switch can prepare the voice silently at the next browser interaction. */
 export function prepareSavedEngineerAudio(): void {
-  const { enabled, muted, voiceLoading, voiceUri } = useEngineer.getState();
+  const { enabled, muted, voiceLoading } = useEngineer.getState();
   const { profile, serverStatus } = useUi.getState();
   const outputDevice = serverStatus?.engineerAudioDeviceId;
   if (
@@ -258,7 +264,7 @@ export function prepareSavedEngineerAudio(): void {
     voiceLoading ||
     (outputDevice && outputDevice !== profile.deviceId) ||
     typeof AudioContext === 'undefined' ||
-    (preparedVoice === voiceUri && radioAudioRunning())
+    engineerAudioReady()
   )
     return;
   prepareEngineerVoice(null);

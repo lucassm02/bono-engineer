@@ -95,10 +95,20 @@ alta, depois que o carro endireitar, com no máximo uma chamada por passagem pel
 
 ## Alertas do carro e de corrida
 
+- **Presença.** Confirmar o rádio uma vez por tentativa, com áudio disponível. Usar a janela
+  inicial do grid parado ou uma reta livre depois do trecho inicial da prova. A indicação no
+  painel acompanha a saída selecionada, a conexão de voz do Discord e o sinal de telemetria.
 - **Ritmo e curva em Corrida.** Comparar duas voltas válidas do mesmo stint com a mediana das
-  três anteriores. Um lembrete de curva pede duas passagens com perda relevante ou o mesmo
-  evento de alta confiança. Priorizar a estratégia e deixar pelo menos duas voltas entre
-  chamadas de ritmo e curva.
+  três anteriores. Em provas de até seis voltas, comparar duas voltas válidas consecutivas quando
+  pelo menos dois setores confirmarem a mudança. Um lembrete de curva pede duas passagens com
+  perda relevante ou o mesmo evento de alta confiança. Priorizar a estratégia e deixar pelo menos
+  duas voltas entre chamadas de ritmo e curva.
+- **Ritmo estável.** Em provas de oito voltas ou mais, uma confirmação após a metade da prova
+  exige três voltas limpas consecutivas no mesmo stint e pelo menos 45 segundos sem falas.
+- **Última volta.** Em uma corrida identificada, avisar uma vez na primeira janela segura da última
+  volta. Dar espaço às chamadas recentes para evitar recados seguidos.
+- **Bandeirada.** Falar quando o resultado for confirmado. Usar a posição final disponível e
+  reconhecer a recuperação quando houver ganho de posição desde o início da última volta.
 - **Janela de box.** A autonomia e o consumo projetado determinam a volta de parada. Se a corrida
   for mais longa que a vida estimada dos pneus, avisar da preparação em cerca de quatro voltas
   e sugerir a parada quando a estimativa cair para duas.

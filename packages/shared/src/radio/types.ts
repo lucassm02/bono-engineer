@@ -132,6 +132,8 @@ export interface RadioRule<S = unknown> {
   priority: RadioPriority;
   /** Modes where the rule runs. */
   modes: readonly RadioMode[];
+  /** May speak after the flag, including the fresh results screen. */
+  afterRace?: boolean;
   /** Treino profiles where the rule runs (omitted = every profile). */
   profiles?: readonly TrainingProfile[];
   /** Car alert: allowed by Livre and by Corrida. */
@@ -146,7 +148,12 @@ export interface RadioRule<S = unknown> {
   init(): S;
   evaluate(ctx: RadioRuleContext, state: S): readonly RadioCandidate[];
   /** The candidate was spoken or shown on the panel. */
-  delivered?(candidate: RadioCandidate, state: S, ctx: RadioRuleContext): void;
+  delivered?(
+    candidate: RadioCandidate,
+    state: S,
+    ctx: RadioRuleContext,
+    outcome?: RadioOutcome,
+  ): void;
   /** Pause, signal loss or discontinuity: drop timing windows, keep what was already said. */
   interrupt?(state: S): void;
 }

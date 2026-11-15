@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import type { CompletedLap } from '@gt7/core';
 import { Gt7Runtime } from '@gt7/core';
 import {
+  DISCORD_RADIO_DEVICE_ID,
   type LapCompletedEvent,
   type LiveFrame,
   normalizeEngineerRadioSettings,
@@ -58,6 +59,24 @@ describe('WsHub', () => {
 
   const hello = (s: FakeSocket, deviceId: string) =>
     s.receive({ type: 'hello', protocolVersion: WS_PROTOCOL_VERSION, deviceId });
+
+  it('reports Discord voice readiness until the voice or bot disconnects', () => {
+    const dashboard = new FakeSocket();
+    const discord = new FakeSocket();
+    hub.attach(dashboard);
+    hub.attach(discord);
+    hello(dashboard, 'dashboard');
+    hello(discord, DISCORD_RADIO_DEVICE_ID);
+    dashboard.receive({ type: 'discordRadioReady', ready: true });
+    expect(hub.status().discordRadioReady).toBe(false);
+    discord.receive({ type: 'discordRadioReady', ready: true });
+    expect(hub.status().discordRadioReady).toBe(true);
+    discord.receive({ type: 'discordRadioReady', ready: false });
+    expect(hub.status().discordRadioReady).toBe(false);
+    discord.receive({ type: 'discordRadioReady', ready: true });
+    discord.close();
+    expect(hub.status().discordRadioReady).toBe(false);
+  });
 
   it('shares the effective radio settings with the bot and merges concurrent dashboard edits', async () => {
     const desktop = new FakeSocket();

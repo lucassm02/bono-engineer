@@ -151,7 +151,14 @@ export const TYRES_WEAR_PREPARE =
 export const TYRES_WEAR_PIT = 'Pneus no limite em até duas voltas. Sugiro box.';
 export const PACE_SLOWER = 'Seu ritmo caiu. Concentração.';
 export const PACE_FASTER = 'Seu ritmo melhorou. Boa.';
-export const RACE_CORNER_FOCUS = 'você vem perdendo tempo. Foco na próxima passagem.';
+export const PACE_RECOVERED = 'Boa, o ritmo voltou.';
+export const PACE_STABLE = 'Ritmo estável. Mantém.';
+export const RACE_HELLO = 'Tô no rádio. Boa corrida.';
+export const RACE_FINAL_LAP = 'Última volta.';
+export const RACE_FLAG = 'Bandeirada.';
+export const RACE_WELL_DONE = 'Boa corrida.';
+export const RACE_FINISH_RECOVERY = 'Boa recuperação no fim.';
+export const RACE_CORNER_FOCUS = 'a gente tá perdendo tempo ali.';
 export const RACE_CORNER_CAUTION = 'mais calma na próxima passagem.';
 export const LIFT_THROTTLE = 'Alivia o acelerador.';
 export const GOOD_LAP = 'Boa volta.';
@@ -179,6 +186,13 @@ export const ALERT_PHRASES: readonly string[] = [
   TYRES_WEAR_PIT,
   PACE_SLOWER,
   PACE_FASTER,
+  PACE_RECOVERED,
+  PACE_STABLE,
+  RACE_HELLO,
+  RACE_FINAL_LAP,
+  RACE_FLAG,
+  RACE_WELL_DONE,
+  RACE_FINISH_RECOVERY,
   RACE_CORNER_FOCUS,
   RACE_CORNER_CAUTION,
   LIFT_THROTTLE,
@@ -198,6 +212,9 @@ const GEARS = ['primeira', 'segunda', 'terceira', 'quarta', 'quinta', 'sexta', '
 
 /** "Na T4" → spoken "Na tê quatro". Corners 1–MAX_CORNER. */
 export const cornerSegment = (corner: number) => `Na T${corner}`;
+export const attentionCornerSegment = (corner: number) => `Atenção na T${corner}`;
+export const MAX_RADIO_POSITION = 20;
+export const positionSegment = (position: number) => `P${position}.`;
 /** "Terceira marcha." Gears 1–8. */
 export const gearSegment = (gear: number) => {
   const word = GEARS[gear - 1];
@@ -305,6 +322,14 @@ export const SEGMENTS: readonly RadioEntry[] = [
     say: `Na tê ${ptNumber(i + 1)}`,
   })),
   ...Array.from({ length: MAX_CORNER }, (_, i) => ({
+    text: attentionCornerSegment(i + 1),
+    say: `Atenção na tê ${ptNumber(i + 1)}`,
+  })),
+  ...Array.from({ length: MAX_RADIO_POSITION }, (_, i) => ({
+    text: positionSegment(i + 1),
+    say: `Pê ${ptNumber(i + 1)}.`,
+  })),
+  ...Array.from({ length: MAX_CORNER }, (_, i) => ({
     text: fromCornerSegment(i + 1),
     say: `da tê ${ptNumber(i + 1)}`,
   })),
@@ -339,6 +364,7 @@ export const RADIO_PREVIEW_TEXT =
 
 /** Short call played when the radio is enabled. */
 export const RADIO_HELLO = 'Rádio pronto.';
+export const RADIO_ATTACK_MS = 35;
 
 export const RADIO_PHRASES: readonly string[] = [
   ...LIVE_CALL_PHRASES,

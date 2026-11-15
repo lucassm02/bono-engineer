@@ -7,6 +7,19 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.9.2] - 2026-11-15
+
+### Added
+
+- **Race radio check-in.** Bono greets the driver once per race attempt when audio is ready. It uses a short window on the stationary grid or waits for a clear straight after the opening phase.
+- **Final lap and race result.** Bono calls the final lap once, then announces the confirmed finishing position when available. It acknowledges positions gained on the final lap.
+- **Radio status on the live dashboard.** See when local audio is ready, when the Discord bot is in the voice channel, and when telemetry is missing.
+
+### Changed
+
+- **Pace calls.** Bono can detect supported pace changes in short races by comparing clean laps and their sector times. It acknowledges recovered pace and can call steady pace once in a long race. Repeated losses in the same corner get a brief reminder.
+- **Softer radio audio.** Calls fade in briefly on the dashboard and on Discord. Non-urgent calls wait through the opening phase.
+
 ## [0.9.1] - 2026-11-15
 
 ### Added
@@ -286,7 +299,8 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Added replay reference capture, distance-aligned lap comparisons, synchronized telemetry charts, consistency and progress analysis, and data exports.
 - Added the driving guide, an Anthropic-powered AI debrief, and MCP tools for telemetry, laps, sessions, tracks, comparisons, and PNG charts.
 
-[Unreleased]: https://github.com/lucassm02/bono-engineer/compare/v0.9.1...main
+[Unreleased]: https://github.com/lucassm02/bono-engineer/compare/v0.9.2...main
+[0.9.2]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.9.2
 [0.9.1]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.9.1
 [0.9.0]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.9.0
 [0.8.2]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.8.2
