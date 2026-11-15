@@ -80,14 +80,14 @@ ${motionSection(ctx, 'en')}
     </div>
     <ul class="rows">
       <li class="row">
-        <div><h3>Live</h3><p>Delta against your best lap or a top-driver replay, gear, revs, tyres, fuel and track map. Eleven screens, on the PC or on a tablet on the same network.</p></div>
+        <div><h3>Live</h3><p>Delta, gear, revs, tyres, fuel and the map across eleven screens. Open replay telemetry from pre-race to watch pedal inputs and estimated wear without recording a lap.</p></div>
         <div class="read gain">−0.033<small>live delta, in seconds</small></div>
       </li>
       <li class="row">
         <div><h3>Track recognition before the race</h3><p>When GT7 shows your car moving in the background on the pre-race screen, Bono uses that path to identify the circuit. The Live dashboard shows a probable match before your first lap.</p></div>
       </li>
       <li class="row">
-        <div><h3>Race radio</h3><p>Short calls before the corner, like “light braking in 100 metres”. It plays on the PC or, through Discord, on your PS5 headset.</p></div>
+        <div><h3>Race radio</h3><p>Corner coaching in practice. Pace, tyres, fuel and pit calls in a race. The PC and Discord on your PS5 headset follow the same mode.</p></div>
         <div class="read acc">100 m<small>warning before the brake point</small></div>
       </li>
       <li class="row">

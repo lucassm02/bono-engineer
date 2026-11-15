@@ -5258,6 +5258,9 @@
   "Duro": ["Hard", "Duro"],
   "Macio": ["Soft", "Blando"],
   "Pré-corrida": ["Pre-race", "Pre-carrera"],
+  "Ver telemetria do replay": ["View replay telemetry", "Ver telemetría de la repetición"],
+  "Voltar à pré-corrida": ["Back to pre-race", "Volver a la pre-carrera"],
+  "Desgaste estimado no replay": ["Estimated wear in replay", "Desgaste estimado en la repetición"],
   "Tipo de pneu": ["Tyre type", "Tipo de neumático"],
   "Dureza do pneu": ["Tyre hardness", "Dureza del neumático"],
   "Reconheço a pista pelo carro que roda ao fundo.": [

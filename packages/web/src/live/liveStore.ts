@@ -39,7 +39,11 @@ class LiveStore {
     derived.push(frame);
     // Mirror low-frequency fields only when they change.
     if (!prev || prev.state !== frame.state || prev.format !== frame.format) {
-      useUi.setState({ liveState: frame.state, frameFormat: frame.format });
+      useUi.setState({
+        liveState: frame.state,
+        frameFormat: frame.format,
+        ...(frame.state !== 'replay' ? { showReplayTelemetry: false } : {}),
+      });
     }
   }
 
@@ -48,7 +52,7 @@ class LiveStore {
     this.version++;
     this.history.clear();
     derived.clear();
-    useUi.setState({ liveState: null, frameFormat: null });
+    useUi.setState({ liveState: null, showReplayTelemetry: false, frameFormat: null });
   }
 }
 

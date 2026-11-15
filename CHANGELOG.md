@@ -7,6 +7,21 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-11-15
+
+### Added
+
+- **Live telemetry for GT7 replays.** Select **View replay telemetry** from pre-race to watch speed, throttle, brake and the other dashboard inputs. **Back to pre-race** brings the track and tyre controls back. Viewing is read-only, and the tyre screen shows a temporary estimate from the replay using your selected compound and wear rate.
+- **Race radio calls.** Bono reports sustained pace changes and repeated time loss in a corner. It pairs fuel autonomy with the pit window and gives a heads-up before the estimated tyre limit. Urgent alerts and pit decisions take priority.
+
+### Fixed
+
+- **Shared radio configuration.** The Windows app and Discord use the same mode, speech level and task settings. Enabling the radio plays a neutral confirmation. Corner-drill coaching stays in Practice.
+
+### Changed
+
+- **Qualifying and tasks.** The default radio calls in Qualifying cover tyre preparation, critical alerts and the result after the line. Approved tasks default to Practice and can be enabled per mode.
+
 ## [0.9.0] - 2026-11-14
 
 ### Added
@@ -271,7 +286,8 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Added replay reference capture, distance-aligned lap comparisons, synchronized telemetry charts, consistency and progress analysis, and data exports.
 - Added the driving guide, an Anthropic-powered AI debrief, and MCP tools for telemetry, laps, sessions, tracks, comparisons, and PNG charts.
 
-[Unreleased]: https://github.com/lucassm02/bono-engineer/compare/v0.9.0...main
+[Unreleased]: https://github.com/lucassm02/bono-engineer/compare/v0.9.1...main
+[0.9.1]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.9.1
 [0.9.0]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.9.0
 [0.8.2]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.8.2
 [0.8.1]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.8.1

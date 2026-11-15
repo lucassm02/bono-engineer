@@ -50,6 +50,12 @@ function onKey(e: KeyboardEvent): void {
     e.target.closest('input, textarea, select, [role="dialog"]')
   )
     return;
+  if (
+    (e.key === 'Enter' || e.key === ' ') &&
+    e.target instanceof HTMLElement &&
+    e.target.closest('button, a[href]')
+  )
+    return;
   const s = useUi.getState();
   if (e.key === 'Escape') {
     if (s.layoutEditorOpen) closeLayoutEditor();
@@ -89,7 +95,7 @@ function onKey(e: KeyboardEvent): void {
 export function App() {
   const rootRef = useRef<HTMLDivElement>(null);
   const locked = useUi((s) => s.profile.locked);
-  const preRace = useUi((s) => s.liveState === 'replay');
+  const preRace = useUi((s) => s.liveState === 'replay' && !s.showReplayTelemetry);
   useGestures(rootRef, onGesture);
 
   useEffect(() => {
@@ -106,7 +112,7 @@ export function App() {
       data-prerace={preRace ? '1' : '0'}
     >
       <Carousel />
-      <PreRaceScreen />
+      {preRace && <PreRaceScreen />}
       <StatusLayer />
       <SourceBadge />
       <OverlayHeader />

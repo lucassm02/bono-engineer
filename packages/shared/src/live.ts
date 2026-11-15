@@ -430,6 +430,8 @@ export interface LiveFrame {
    * frame, the compound alone on the pre-race screen. (core, additive)
    */
   tyreWear?: LiveTyreWear;
+  /** Temporary wear estimate from passive replay packets, independent of the driver's tyre set. */
+  replayTyreWear?: LiveTyreWear;
   pitTyreChange?: LivePitTyreChange;
   /**
    * Position among the cars of a practice or qualifying with traffic (it ranks the best laps of

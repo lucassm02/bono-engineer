@@ -1,6 +1,5 @@
 /*
- * Pre-race screen of the live panel (state 'replay'): replaces the live widgets, which only show
- * the car that runs in the background of the game's menu. Quiet: small type, no big numbers.
+ * Pre-race controls shown before the driver opens replay telemetry.
  */
 
 .prerace {
@@ -23,6 +22,14 @@
   gap: var(--sp-5);
   width: min(460px, 100%);
   margin: auto;
+}
+
+.pr-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
 }
 
 .pr-eyebrow {

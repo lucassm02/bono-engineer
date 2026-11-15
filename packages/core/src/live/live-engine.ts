@@ -43,6 +43,7 @@ import {
   type EngineerCue,
   GOAL_CELEBRATION_MS,
   type Goal,
+  getTrackLayout,
   type Id,
   type IngestorState,
   type IngestorStats,
@@ -80,6 +81,7 @@ import {
   type TrackMismatchInfo,
   TYRE_COMPOUNDS,
   type TyreCompound,
+  type TyreWearStep,
   TyreWearTracker,
   type TyreWearWarningStage,
   wheelSlipRatios,
@@ -160,6 +162,8 @@ const TRAFFIC_MIN_SPEED_MPS = 8;
 const REPLAY_STALL_PACKETS = 4;
 /** A stalled/slow replay still counts as a replay for this long after it last played (ms). */
 const REPLAY_GRACE_MS = 3000;
+const REPLAY_WEAR_MAX_GAP_MS = 500;
+const REPLAY_WEAR_MIN_JUMP_M = 20;
 
 /** What the replay detector made of a packet. */
 export type ReplayKind = 'playing' | 'stalled' | 'none';
@@ -501,6 +505,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
   /** The tyres the driver said are on the car (pre-race screen); null = not said. */
   #tyreCompound: TyreCompound | null = null;
   #tyreWear = new TyreWearTracker();
+  #replayTyreWear = new TyreWearTracker();
   #tyreSetNumber = 1;
   #warnedTyreSet: number | null = null;
   #preparedTyreSet: number | null = null;
@@ -973,6 +978,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     if (changed) this.#ctx.saveSession({ ...session, tyreCompound: compound });
     this.#tyreCompound = compound;
     this.#tyreWear = tracker;
+    this.#replayTyreWear.reset();
     this.#tyreSetNumber++;
     this.#pitTyres = null;
     if (changed) {
@@ -990,6 +996,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     const m = normalizeWearMultiplier(multiplier);
     if (m === this.#wearMultiplier) return;
     this.#wearMultiplier = m;
+    this.#replayTyreWear.reset();
     const s = this.#session;
     if (s && !this.#replayMode) {
       s.tyreWearMultiplier = m;
@@ -1311,6 +1318,45 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     return { kind: 'none', same };
   }
 
+  #tyreWearStep(p: TelemetryPacket, distM: number): TyreWearStep {
+    return {
+      distM,
+      speedMps: p.speedMps,
+      tempC: p.tyreTemp,
+      slip: wheelSlipRatios(p),
+      gLat: this.#g.lateral,
+      brake: pedalToUnit(p.brake),
+      wearRate: this.#wearMultiplier,
+    };
+  }
+
+  #sampleReplayTyreWear(p: TelemetryPacket, continues: boolean, dtMs: number): void {
+    const before = this.#lastPacket;
+    if (
+      !continues ||
+      this.#replayMode ||
+      this.#replayKind === 'none' ||
+      !before ||
+      before.carCode !== p.carCode
+    ) {
+      this.#replayTyreWear.reset();
+      return;
+    }
+    if (this.#replayKind !== 'playing' || dtMs <= 0 || dtMs > REPLAY_WEAR_MAX_GAP_MS) return;
+    const movedM = Math.hypot(
+      p.position.x - before.position.x,
+      p.position.y - before.position.y,
+      p.position.z - before.position.z,
+    );
+    const distM = ((before.speedMps + p.speedMps) * dtMs) / 2000;
+    if (movedM > Math.max(REPLAY_WEAR_MIN_JUMP_M, distM * 2.5)) {
+      // A seek, a restart or a change of scene starts a fresh estimate.
+      this.#replayTyreWear.reset();
+    } else if (movedM > 0 && Number.isFinite(distM)) {
+      this.#replayTyreWear.add(this.#tyreCompound, this.#tyreWearStep(p, distM));
+    }
+  }
+
   /** Forgets the active track (not on a known one any more); no-op without one. */
   #clearActiveTrack(): void {
     this.#trackBasis = 'none';
@@ -1369,6 +1415,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       p.carCode !== 0 &&
       (p.position.x !== 0 || p.position.y !== 0 || p.position.z !== 0);
     const replay = this.#classifyReplay(p, carData, dPk, receivedAtMs);
+    const wasReplay = this.#replayKind !== 'none';
     this.#replayKind = replay.kind;
     if (replay.kind === 'none') this.#replayPath.reset();
     else if (replay.kind === 'playing' && !this.#replayMode) {
@@ -1436,6 +1483,13 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
 
     if (streamReset) this.#gforce.reset();
     this.#g = this.#gforce.update(p, (dPk * this.#msPerPacket) / 1000);
+    if (wasReplay || replay.kind !== 'none') {
+      this.#sampleReplayTyreWear(
+        p,
+        wasReplay && !streamReset && recvGap > 0 && recvGap <= REPLAY_WEAR_MAX_GAP_MS,
+        dPk * this.#msPerPacket,
+      );
+    }
 
     if (this.#pending) this.#tryFinalize(p);
     if (this.#session && replay.kind !== 'none') {
@@ -1451,15 +1505,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
     this.#pitStep(p, receivedAtMs, f, replay.kind !== 'none');
     if (this.#session && running && replay.kind === 'none' && !this.#replayMode) {
       const dt = Math.min(0.5, (dPk * this.#msPerPacket) / 1000);
-      const step = {
-        distM: p.speedMps * dt,
-        speedMps: p.speedMps,
-        tempC: p.tyreTemp,
-        slip: wheelSlipRatios(p),
-        gLat: this.#g.lateral,
-        brake: pedalToUnit(p.brake),
-        wearRate: this.#wearMultiplier,
-      };
+      const step = this.#tyreWearStep(p, p.speedMps * dt);
       this.#tyreWear.add(this.#tyreCompound, step);
       if (this.#pitTyres) {
         for (const [compound, tracker] of this.#pitTyres.newSets) tracker.add(compound, step);
@@ -2977,6 +3023,14 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
         warningSent: this.#warnedTyreSet === this.#tyreSetNumber,
         preparationSent: this.#preparedTyreSet === this.#tyreSetNumber,
       },
+      ...(state === 'replay' &&
+        !this.#replayMode && {
+          replayTyreWear: this.#replayTyreWear.snapshot(
+            this.#tyreCompound,
+            getTrackLayout(this.#replayPath.guess?.layoutId)?.lengthM ?? null,
+            this.#wearMultiplier,
+          ),
+        }),
       ...(this.#pitTyres && {
         pitTyreChange: { visitId: this.#pitTyres.visitId, compound: this.#tyreCompound },
       }),

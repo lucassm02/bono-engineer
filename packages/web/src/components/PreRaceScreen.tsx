@@ -1,10 +1,6 @@
 /**
- * The pre-race screen of the game (state 'replay'): the console plays a lap with the chosen car
- * while the driver picks the setup. The car it shows is not being driven, so the live widgets
- * (gears, pedals, map) say nothing: this panel takes their place with the two things worth
- * confirming before the start: the track (it is already being recognised from the car in the
- * background; one tap changes it) and the tyres, with the wear rate of the game. They are what
- * the wear estimate needs; the packet carries none of them. (The car is read once driving.) Quiet on purpose: small type, no frame-rate updates.
+ * The game uses the same signal for replays and the background lap in the pre-race menu.
+ * Default to the track and tyre controls, with an action to see the replay telemetry.
  */
 
 import { MAX_WEAR_MULTIPLIER } from '@gt7/shared';
@@ -27,21 +23,18 @@ import {
   useSavedTracks,
 } from '../state/liveContext.ts';
 import { useUi } from '../state/uiStore.ts';
+import { Icon } from './ui/Icon.tsx';
 import '../styles/prerace.css';
 
 export function PreRaceScreen() {
-  const liveState = useUi((s) => s.liveState);
-  const active = liveState === 'replay';
   const ctx = useLiveContext((s) => s.ctx);
   const tyre = useLiveContext((s) => s.tyre);
   const wearRate = useLiveContext((s) => s.wearRate);
   const savedCount = useSavedTracks((s) => s.tracks?.length ?? 0);
 
   useEffect(() => {
-    if (active) void ensureSavedTracks();
-  }, [active]);
-
-  if (!active) return null;
+    void ensureSavedTracks();
+  }, []);
 
   const track = barTrackView({ ctx, sessionOpen: false, hasSavedTracks: savedCount > 0 });
   const group = groupOf(tyre);
@@ -50,7 +43,19 @@ export function PreRaceScreen() {
   return (
     <section className="prerace" data-no-gesture aria-label={uiText('Pré-corrida')}>
       <div className="pr-inner">
-        <p className="pr-eyebrow">{uiText('Pré-corrida')}</p>
+        <div className="pr-head">
+          <p className="pr-eyebrow">{uiText('Pré-corrida')}</p>
+          <button
+            type="button"
+            className="ui-btn"
+            data-variant="secondary"
+            data-size="sm"
+            onClick={() => useUi.setState({ showReplayTelemetry: true })}
+          >
+            <Icon name="play" size={15} />
+            {uiText('Ver telemetria do replay')}
+          </button>
+        </div>
 
         <div className="pr-block">
           <span className="pr-label">{uiText('Pista')}</span>

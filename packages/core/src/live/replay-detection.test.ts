@@ -56,6 +56,35 @@ describe('replay detection', () => {
     expect(moving.length).toBeGreaterThan(1000);
     expect(moving[10]!.position.x).not.toBe(0);
     expect(moving.some((f) => f.car.throttle > 0.5)).toBe(true);
+    expect(moving.some((f) => f.car.brake > 0.5)).toBe(true);
+  });
+
+  it('estimates tyre wear in memory, skips stalled packets and starts over after a seek', () => {
+    const { engine, ctx, feed } = make();
+    engine.setTyreCompound('racingMedium');
+    engine.setWearMultiplier(5);
+    const packets = replay(10, 1).packets;
+    feed(packets.slice(0, 1000));
+
+    const wear = engine.snapshot()!.replayTyreWear!;
+    expect(wear).toMatchObject({ compound: 'racingMedium', multiplier: 5 });
+    expect(wear.distKm).toBeGreaterThan(0);
+    expect(wear.worst).toBeGreaterThan(0);
+    expect(engine.snapshot()!.tyreWear?.distKm).toBe(0);
+
+    const last = packets[999]!;
+    feed(Array.from({ length: 45 }, (_, i) => ({ ...last, packetId: last.packetId + i + 1 })));
+    expect(engine.snapshot()!.replayTyreWear).toEqual(wear);
+    feed([
+      {
+        ...last,
+        packetId: last.packetId + 46,
+        position: { ...last.position, x: last.position.x + 150 },
+      },
+    ]);
+    expect(engine.snapshot()!.replayTyreWear).toMatchObject({ distKm: 0, worst: 0 });
+    expect(ctx.sessions.size).toBe(0);
+    expect(ctx.laps.size).toBe(0);
   });
 
   it('the frame of a real PS5 replay (measured) is classified as replay', () => {
@@ -140,14 +169,18 @@ describe('replay detection', () => {
     expect(session).not.toBeNull();
     const lapsBefore = ctx.laps.size;
     const timeBefore = engine.captureInfo.trackTimeMs;
+    const driverTyres = engine.snapshot()!.tyreWear;
     feed(replay(8, 2).packets);
     expect(engine.state).toBe('replay');
     expect(engine.session?.id).toBe(session.id); // still the same open session
     expect(ctx.laps.size).toBe(lapsBefore); // nothing of the replay is a driver lap
     expect(engine.captureInfo.trackTimeMs).toBe(timeBefore); // the replay adds no track time
+    expect(engine.snapshot()!.replayTyreWear?.distKm).toBeGreaterThan(0);
+    expect(engine.snapshot()!.tyreWear).toEqual(driverTyres);
     // back on the track: a normal state again
     feed(live.packets.slice(cut, cut + 300));
     expect(engine.state).toBe('onTrack');
+    expect(engine.snapshot()!.replayTyreWear).toBeUndefined();
   });
 
   it('the packet event reports replay packets to followers', () => {

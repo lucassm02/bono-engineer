@@ -8,6 +8,7 @@ import { surfaceLabel, wheelLabel } from '../lib/labels.ts';
 import { tyreTempBand, tyreTempColor } from '../lib/tyreColor.ts';
 import { compoundLabel, lapsLeftText, wearPct, wearTone } from '../lib/tyres.ts';
 import { useLiveRender } from '../live/raf.ts';
+import { useUi } from '../state/uiStore.ts';
 import '../styles/tyre-wear.css';
 
 export type SlipState = 'ok' | 'spin' | 'lock';
@@ -88,6 +89,7 @@ function CarDrawing({ tyreRef }: { tyreRef: (i: number) => (el: SVGRectElement |
 }
 
 export function TyresView() {
+  const replay = useUi((s) => s.liveState === 'replay');
   const r = useRef<Record<string, Element | null>>({});
   const set = (k: string) => (el: Element | null) => {
     r.current[k] = el;
@@ -97,7 +99,8 @@ export function TyresView() {
     const e = r.current;
     const { tempC, slip, suspensionM, surface } = f.tyres;
     const range = SUSPENSION_RANGE_M.max - SUSPENSION_RANGE_M.min;
-    const wear = f.tyreWear;
+    const inReplay = f.state === 'replay';
+    const wear = inReplay ? f.replayTyreWear : f.tyreWear;
     for (const i of WHEELS) {
       const t = tempC[i];
       const color = tyreTempColor(t, TYRE_TEMP_SCALE);
@@ -130,19 +133,22 @@ export function TyresView() {
       setAttr(e[`surf${i}`], 'data-kind', surface ? surface[i] : '');
     }
     if (wear) {
-      const left = f.pitTyreChange ? null : lapsLeftText(wear);
+      const changingTyres = !inReplay && !!f.pitTyreChange;
+      const left = changingTyres ? null : lapsLeftText(wear);
       const km = `${wear.distKm.toFixed(1)} km`;
       const label =
         wear.multiplier === 0
           ? uiText('Desgaste desativado')
-          : f.pitTyreChange
+          : changingTyres
             ? uiText('Confirmar pneus do box')
-            : uiText('Desgaste estimado');
+            : inReplay
+              ? uiText('Desgaste estimado no replay')
+              : uiText('Desgaste estimado');
       setText(
         e.wearinfo,
         `${label} · ${compoundLabel(wear.compound)} · ${km}${left ? ` · ${left}` : ''}`,
       );
-    }
+    } else setText(e.wearinfo, '');
   });
 
   const card = (i: (typeof WHEELS)[number]) => (
@@ -182,7 +188,7 @@ export function TyresView() {
       {card(2)}
       {card(3)}
       <TempLegend wearRef={set('wearinfo')} />
-      <TyrePace />
+      {!replay && <TyrePace />}
     </div>
   );
 }

@@ -96,14 +96,14 @@ ${motionSection(ctx, 'pt-BR')}
     </div>
     <ul class="rows">
       <li class="row">
-        <div><h3>Ao vivo</h3><p>Delta contra a sua melhor volta ou contra um replay do top, marcha, rotação, pneus, combustível e mapa. São 11 telas, no PC ou num tablet na mesma rede.</p></div>
+        <div><h3>Ao vivo</h3><p>Delta, marcha, rotação, pneus, combustível e mapa em 11 telas. Na pré-corrida, abra a telemetria do replay para ver os pedais e o desgaste estimado sem gravar a volta.</p></div>
         <div class="read gain">−0,033<small>delta ao vivo, em segundos</small></div>
       </li>
       <li class="row">
         <div><h3>Reconhecimento de pista antes da largada</h3><p>Quando o GT7 mostra seu carro andando no fundo da tela pré-corrida, o Bono usa esse trajeto para identificar o circuito. O nome aparece como provável no painel ao vivo, antes da sua primeira volta.</p></div>
       </li>
       <li class="row">
-        <div><h3>Rádio do engenheiro</h3><p>Chamadas curtas antes da curva, como “freada leve em 100 metros”, em português, inglês ou espanhol. Toca no PC ou, pelo Discord, no headset do PS5.</p></div>
+        <div><h3>Rádio do engenheiro</h3><p>Orientações de curva no treino. Em corrida, avisos de ritmo, pneus, combustível e box. O PC e o Discord no headset do PS5 seguem o mesmo modo.</p></div>
         <div class="read acc">100 m<small>de aviso antes da freada</small></div>
       </li>
       <li class="row">
