@@ -21,16 +21,13 @@ import {
   WINDOW_MARGIN_MS,
 } from './context.ts';
 import type { RadioUtterance } from './phrases.ts';
-import {
-  raceGridHeld,
-  racePresenceRule,
-  raceQuietStraight,
-  raceStartInProgress,
-} from './race-presence.ts';
+import { raceStartInProgress } from './race-presence.ts';
 import { type AnyRadioRule, phaseBlock, priorityRank, RADIO_RULES, ruleRuns } from './registry.ts';
 import {
   DEFAULT_RADIO_PREFERENCES,
+  effectiveRadioMode,
   type RadioEngineConfig,
+  type RadioMode,
   radioEngineConfig,
 } from './settings.ts';
 import type {
@@ -96,6 +93,8 @@ export class RadioEngine {
   readonly #rules: readonly AnyRadioRule[];
   readonly #logLimit: number;
   #config: RadioEngineConfig;
+  #mode: RadioMode;
+  #raceAttempt: number | undefined;
   /** A corner drill is running (env.drill): only the drill rules and car alerts speak. */
   #drilling = false;
   #log: RadioDecision[] = [];
@@ -126,6 +125,7 @@ export class RadioEngine {
     this.#rules = options.rules ?? RADIO_RULES;
     this.#logLimit = options.logLimit ?? 500;
     this.#config = options.config ?? radioEngineConfig(DEFAULT_RADIO_PREFERENCES);
+    this.#mode = this.#config.mode;
   }
 
   get config(): Readonly<RadioEngineConfig> {
@@ -136,9 +136,8 @@ export class RadioEngine {
    * An active drill in Treino uses the learning profile for its corner.
    */
   get #cfg(): RadioEngineConfig {
-    return this.#drilling
-      ? { ...this.#config, mode: 'training', trainingProfile: 'learnTrack' }
-      : this.#config;
+    if (this.#drilling) return { ...this.#config, mode: 'training', trainingProfile: 'learnTrack' };
+    return this.#mode === this.#config.mode ? this.#config : { ...this.#config, mode: this.#mode };
   }
 
   /** Decisions so far, oldest first (bounded by `logLimit`). */
@@ -192,6 +191,7 @@ export class RadioEngine {
     this.#active = null;
     this.#previous = null;
     this.#context = null;
+    this.#raceAttempt = undefined;
     this.#sticky = { session: null, track: null };
     this.#timedLapSeen = false;
     this.#suspended = null;
@@ -223,9 +223,12 @@ export class RadioEngine {
     });
 
     // 1. Validate the inputs.
-    const race = this.#config.mode === 'race' ? frame.race : undefined;
+    this.#mode = effectiveRadioMode(this.#config, !!frame.race);
+    this.#drilling = env.drill === true && this.#mode === 'training';
+    const race = this.#mode === 'race' ? frame.race : undefined;
     const finished = race?.state === 'finished';
-    const allowResult = finished && !!race.result && !frame.flags?.loadingOrProcessing;
+    const allowResult =
+      finished && !!(race.chequered ?? race.result) && !frame.flags?.loadingOrProcessing;
     const suspension = suspensionReason(frame, env.sampleAgeMs ?? 0, allowResult);
     if (suspension) {
       const stop = this.suspend(suspension, frame);
@@ -240,7 +243,10 @@ export class RadioEngine {
     const fresh = this.#context === null;
     if (this.#contextChanged(frame)) {
       if (!fresh) stop = this.#interrupt('mudança de contexto', frame) || stop;
-      this.#states.clear();
+      const attempt = frame.race?.startedAt;
+      if (attempt !== undefined && attempt === this.#raceAttempt) {
+        for (const rule of this.#rules) if (!rule.perRace) this.#states.delete(rule.id);
+      } else this.#states.clear();
       this.#suppressed.clear();
       this.#lastDelivery.clear();
       this.#cornerCalls.clear();
@@ -250,12 +256,16 @@ export class RadioEngine {
       this.#envBlock = env.blockId ?? null;
       this.#trainingBlock = this.#newBlock(this.#envBlock);
     }
+    this.#raceAttempt = frame.race?.startedAt;
     const gap = discontinuity(frame, this.#previous);
     if (gap) {
       stop = this.#interrupt(gap, frame) || stop;
       this.#approachSpeedKmh = frame.car.speedKmh;
-      this.#previous = frame;
-      return result(phaseOf(frame, this.#timedLapSeen), null, stop);
+      this.#previous = null;
+      if (!finished) {
+        this.#previous = frame;
+        return result(phaseOf(frame, this.#timedLapSeen), null, stop);
+      }
     }
 
     const previous = this.#previous;
@@ -304,7 +314,6 @@ export class RadioEngine {
       engineer?.status === 'ready'
         ? engineer.cues.filter((cue) => !focus || (cue.cornerId && focus.has(cue.cornerId)))
         : [];
-    this.#drilling = env.drill === true && this.#config.mode === 'training';
     const config = this.#cfg;
     const audio = env.audio === 'ready' && config.speechLevel !== 'mute';
     const ctx: RadioRuleContext = {
@@ -333,13 +342,10 @@ export class RadioEngine {
     this.#summaryRequested = false;
 
     const active = this.#active;
-    const unsafeGreeting =
-      active?.decision.ruleId === racePresenceRule.id &&
-      ((active.decision.key === 'grid' && !raceGridHeld(frame)) ||
-        (active.decision.key === 'unmappedStraight' && !raceQuietStraight(frame)));
+    const justFinished = finished && previous?.race?.state !== 'finished';
     if (
       active &&
-      (unsafeGreeting ||
+      (justFinished ||
         t >= active.endT ||
         (active.deadlineT !== undefined && t >= active.deadlineT))
     ) {
@@ -502,10 +508,13 @@ export class RadioEngine {
       (track !== null && sticky.track !== null && track !== sticky.track);
     if (session !== null) sticky.session = session;
     if (track !== null) sticky.track = track;
-    const c = this.#config;
     const scope =
-      c.mode === 'training' ? c.trainingProfile : c.mode === 'race' ? frame.race?.startedAt : '-';
-    const key = [frame.car.carCode, c.mode, scope].join('|');
+      this.#mode === 'training'
+        ? this.#config.trainingProfile
+        : this.#mode === 'race'
+          ? frame.race?.startedAt
+          : '-';
+    const key = [frame.car.carCode, this.#mode, scope].join('|');
     const changed = swapped || key !== this.#context;
     this.#context = key;
     return changed;

@@ -23,6 +23,7 @@ import {
   setEngineerVoice,
   setRadioControls,
   testEngineerVoice,
+  useEffectiveRadioMode,
   useEngineer,
 } from '../state/engineer.ts';
 import { useUi } from '../state/uiStore.ts';
@@ -60,6 +61,8 @@ const PACES: readonly { id: EngineerPace; label: string }[] = [
 export function EngineerControls() {
   const enabled = useEngineer((s) => s.enabled);
   const controls = useEngineer((s) => s.controls);
+  const mode = useEffectiveRadioMode();
+  const training = mode === 'training';
   const muted = useEngineer((s) => s.muted);
   const voiceUri = useEngineer((s) => s.voiceUri);
   const pace = useEngineer((s) => s.pace);
@@ -136,12 +139,21 @@ export function EngineerControls() {
           </h3>
         </div>
         <div className="bn-fields">
+          <ToggleRow
+            title={uiText('Detectar modo automaticamente')}
+            description={uiText(
+              'Usa Corrida quando detecta uma prova e Treino nas outras sessões.',
+            )}
+            checked={controls.autoMode}
+            onChange={(autoMode) => setRadioControls({ autoMode })}
+          />
           <div className="bn-grid-2">
             <label className="ui-field">
               <span className="ui-label">{uiText('Modo')}</span>
               <select
                 className="ui-select"
-                value={controls.mode}
+                value={mode}
+                disabled={controls.autoMode}
                 onChange={(event) =>
                   setRadioControls({
                     mode: pickOption(RADIO_MODES, event.currentTarget.value, controls.mode),
@@ -155,7 +167,7 @@ export function EngineerControls() {
                 ))}
               </select>
             </label>
-            {controls.mode === 'training' && (
+            {training && (
               <label className="ui-field">
                 <span className="ui-label">{uiText('Perfil do treino')}</span>
                 <select
@@ -180,9 +192,17 @@ export function EngineerControls() {
               </label>
             )}
           </div>
-          <p className="ui-help engineer-controls-hint">{RADIO_MODE_HINTS[controls.mode]}</p>
+          <p className="ui-help engineer-controls-hint">{RADIO_MODE_HINTS[mode]}</p>
+          <ToggleRow
+            title={uiText('Incentivo após perder posição')}
+            description={uiText(
+              'Até duas falas por corrida quando você perde posição após um erro detectado.',
+            )}
+            checked={controls.raceEncouragement}
+            onChange={(raceEncouragement) => setRadioControls({ raceEncouragement })}
+          />
 
-          {controls.mode === 'training' && controls.trainingProfile === 'learnTrack' && (
+          {training && controls.trainingProfile === 'learnTrack' && (
             <label className="ui-field">
               <span className="ui-label">{uiText('Instruções de freada')}</span>
               <select
@@ -200,7 +220,7 @@ export function EngineerControls() {
             </label>
           )}
 
-          {controls.mode === 'training' && consistency && (
+          {training && consistency && (
             <label className="ui-field">
               <span className="ui-label">{uiText('Meta por volta, em segundos')}</span>
               <input
@@ -250,7 +270,7 @@ export function EngineerControls() {
                 <option value={700}>{uiText('Bem antes (+0,7 s)')}</option>
               </select>
             </label>
-            {controls.mode === 'training' && controls.trainingProfile !== 'free' && (
+            {training && controls.trainingProfile !== 'free' && (
               <label className="ui-field">
                 <span className="ui-label">{uiText('Resumo do treino')}</span>
                 <select
@@ -272,7 +292,7 @@ export function EngineerControls() {
             )}
           </div>
 
-          {controls.mode === 'training' && controls.trainingProfile !== 'free' && !consistency && (
+          {training && controls.trainingProfile !== 'free' && !consistency && (
             <ToggleRow
               title={uiText('Reforço positivo')}
               description={uiText('O engenheiro também avisa quando você acerta a curva.')}

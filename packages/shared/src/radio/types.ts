@@ -134,6 +134,8 @@ export interface RadioRule<S = unknown> {
   modes: readonly RadioMode[];
   /** May speak after the flag, including the fresh results screen. */
   afterRace?: boolean;
+  /** Preserve delivery limits during context changes within the same race attempt. */
+  perRace?: boolean;
   /** Treino profiles where the rule runs (omitted = every profile). */
   profiles?: readonly TrainingProfile[];
   /** Car alert: allowed by Livre and by Corrida. */

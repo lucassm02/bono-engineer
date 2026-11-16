@@ -66,14 +66,12 @@ describe('rádio em replay de sessão', () => {
     }
   });
 
-  it('Corrida: cold tyres, radio greeting and fuel projection without a reference', () => {
+  it('Corrida: early radio greeting, cold tyres and fuel projection without a reference', () => {
     const log = replay(race, 'race');
-    expect(spoken(log)).toEqual([
-      'tyresWarmUp:cold',
-      'racePresence:unmappedStraight',
-      'fuel:short',
-    ]);
-    expect(log.find((d) => d.ruleId === 'racePresence' && d.outcome === 'spoken')?.lap).toBe(1);
+    expect(spoken(log)).toEqual(['racePresence:start', 'tyresWarmUp:cold', 'fuel:short']);
+    const greeting = log.find((d) => d.ruleId === 'racePresence' && d.outcome === 'spoken')!;
+    expect(greeting.lap).toBe(0);
+    expect(greeting.t - T0).toBeLessThan(2_500);
     const fuel = log.find((d) => d.ruleId === 'fuel' && d.outcome === 'spoken')!;
     expect(fuel.utterance).toBe(FUEL_SHORT);
     expect(fuel.evidence).toMatchObject({
@@ -93,6 +91,24 @@ describe('rádio em replay de sessão', () => {
     expect(results.length).toBeGreaterThan(0);
     for (const d of log.filter((d) => d.outcome === 'spoken' && d.phase === 'timedLap'))
       expect(d.ruleId === 'lapResult' || d.priority === 'critical').toBe(true);
+  });
+
+  it('Corrida: speaks on the packet that detects the flag before the official result', () => {
+    const race = frames(
+      SESSION.packets.map((packet) => ({
+        ...packet,
+        totalLaps: 2,
+        preRacePosition: 5,
+        numCarsPreRace: 12,
+      })),
+    );
+    const flag = race.find((frame) => frame.race?.chequered)!;
+    expect(flag.race?.result).toBeUndefined();
+    expect(flag.race?.chequered?.position).toBe(5);
+    const call = replay(race, 'race').find(
+      (decision) => decision.ruleId === 'racePresence' && decision.key === 'result',
+    );
+    expect(call).toMatchObject({ t: flag.t, frameSeq: flag.seq, evidence: { position: 5 } });
   });
 
   it('time trial without consumption (fuel stays full): fuel rules stay silent', () => {

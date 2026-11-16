@@ -140,11 +140,12 @@ export class RaceTracker {
   /** When the last loading screen flicker was seen: the grid slot is read after it. */
   #loadAt = Number.NEGATIVE_INFINITY;
   /** When the lap counter passed the laps of the race. */
-  #flagAt = 0;
+  #chequered: LiveRace['chequered'];
   /** The result of the race was fixed (the `finish` signal went out). */
   #result: LiveRace['result'];
   #finalLapPosition: number | null = null;
   #prevTotal: number | null = null;
+  #previousOnTrack = false;
   #lobby: { position: number | null; cars: number | null } = { position: null, cars: null };
   #startedAt = 0;
   #startPosition: number | null = null;
@@ -196,6 +197,7 @@ export class RaceTracker {
     return {
       state: this.#state,
       startedAt: this.#startedAt,
+      ...(this.#chequered ? { chequered: this.#chequered } : {}),
       ...(this.#result ? { result: this.#result } : {}),
       totalLaps: this.#totalLaps,
       position,
@@ -204,6 +206,7 @@ export class RaceTracker {
       gained:
         this.#startPosition !== null && position !== null ? this.#startPosition - position : null,
       impacts: this.#impacts,
+      ...(Number.isFinite(this.#lastImpactAt) ? { lastImpactAt: this.#lastImpactAt } : {}),
       lastChange: this.#lastChange,
     };
   }
@@ -213,10 +216,11 @@ export class RaceTracker {
     this.#state = 'idle';
     this.#totalLaps = 0;
     this.#prevTotal = null;
+    this.#previousOnTrack = false;
     this.#lobby = { position: null, cars: null };
     this.#startPosition = null;
     this.#startPositionSet = false;
-    this.#flagAt = 0;
+    this.#chequered = undefined;
     this.#result = undefined;
     this.#finalLapPosition = null;
     this.#pos = null;
@@ -236,8 +240,10 @@ export class RaceTracker {
   update(i: RaceInput): RaceSignal[] {
     const out: RaceSignal[] = [];
     const prevTotal = this.#prevTotal;
+    const wasOnTrack = this.#previousOnTrack;
     if (i.loading) this.#loadAt = i.at;
     this.#prevTotal = i.totalLaps;
+    this.#previousOnTrack = i.onTrack;
 
     if (this.#state === 'idle') {
       if (i.onTrack && i.position > 0 && i.cars > 0) {
@@ -247,7 +253,7 @@ export class RaceTracker {
       // interleaved with the menu: totalLaps flips between -1 and N), never a race that begins
       if (
         i.totalLaps > 0 &&
-        (prevTotal === null || prevTotal <= 0) &&
+        (prevTotal === null || prevTotal <= 0 || (!wasOnTrack && i.lapCount <= 1)) &&
         i.onTrack &&
         i.lapCount <= i.totalLaps
       ) {
@@ -257,13 +263,14 @@ export class RaceTracker {
       return out;
     }
 
-    if (this.#state === 'finished') {
+    const chequered = this.#chequered;
+    if (chequered) {
       if (!this.#result) {
         // the position still moves while the others finish; the result is what the game shows when
         // the results begin (online: totalLaps back to 0; against the AI: the car leaves the track)
         const zeroed = i.totalLaps <= 0 && (prevTotal ?? 0) > 0;
-        if (zeroed || !i.onTrack || i.at - this.#flagAt >= FINISH_SETTLE_MAX_MS) {
-          out.push(this.#finish(i.at, this.#pos));
+        if (zeroed || !i.onTrack || i.at - chequered.at >= FINISH_SETTLE_MAX_MS) {
+          out.push(this.#finish(i.at, this.#pos, chequered.at));
         } else if (i.totalLaps === this.#totalLaps && i.position > 0) {
           // still the race stream (the results screen sends lap 0, totalLaps 0 and a grid slot)
           this.#pos = i.position;
@@ -333,13 +340,14 @@ export class RaceTracker {
     // totalLaps at that moment; in a race against the AI it keeps N until the results screen.
     if (i.lapCount > this.#totalLaps && (i.totalLaps <= 0 || i.totalLaps === this.#totalLaps)) {
       this.#state = 'finished';
-      this.#flagAt = i.at;
       this.#offSince = null;
       this.#pending = null;
       if (i.onTrack && i.position > 0) this.#pos = i.position;
+      const position = i.totalLaps <= 0 ? (this.#stablePos ?? this.#pos) : this.#pos;
+      this.#chequered = this.#finishPosition(i.at, position);
       if (i.totalLaps <= 0) {
         // the game zeroed totalLaps with the flag: the result is already what it shows
-        out.push(this.#finish(i.at, this.#stablePos ?? this.#pos));
+        out.push(this.#finish(i.at, position, i.at));
       }
       this.#remember(i);
       return out;
@@ -351,19 +359,23 @@ export class RaceTracker {
     return out;
   }
 
-  #finish(at: number, position: number | null): RaceSignal {
-    this.#result = {
+  #finishPosition(at: number, position: number | null): NonNullable<LiveRace['result']> {
+    return {
       at,
       position,
       ...(position !== null && this.#finalLapPosition !== null
         ? { gainedOnFinalLap: this.#finalLapPosition - position }
         : {}),
     };
+  }
+
+  #finish(at: number, position: number | null, flagAt: number): RaceSignal {
+    this.#result = this.#finishPosition(at, position);
     return {
       type: 'finish',
       at,
       position,
-      flagAt: this.#flagAt,
+      flagAt,
       cars: this.#cars,
       totalLaps: this.#totalLaps,
     };
@@ -374,7 +386,7 @@ export class RaceTracker {
     this.#totalLaps = i.totalLaps;
     this.#lapMax = Math.max(0, i.lapCount);
     this.#startedAt = i.at;
-    this.#flagAt = 0;
+    this.#chequered = undefined;
     this.#result = undefined;
     this.#finalLapPosition = null;
     this.#startPosition = null;

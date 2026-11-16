@@ -12,6 +12,7 @@ import {
 import {
   type ClientMessage,
   ENGINEER_PACES,
+  effectiveRadioMode,
   type HelloMessage,
   RADIO_STALE_MS,
   RadioEngine,
@@ -256,7 +257,7 @@ export function startDiscordRadio(
         audio: 'ready',
         sampleAgeMs: Math.max(0, lastFrameAt - msg.frame.t),
         outputLatencyMs: config.delayMs,
-        ...(drill && engine.config.mode === 'training'
+        ...(drill && effectiveRadioMode(engine.config, !!msg.frame.race) === 'training'
           ? { drill: true, focusCornerIds: [drill.cornerId], assistCornerIds: [drill.cornerId] }
           : {}),
       });

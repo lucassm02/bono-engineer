@@ -33,6 +33,7 @@ import {
   setEngineerVoice,
   setRadioControls,
   testEngineerVoice,
+  useEffectiveRadioMode,
   useEngineer,
 } from '../state/engineer.ts';
 import { useUi } from '../state/uiStore.ts';
@@ -134,6 +135,7 @@ function Note({ tone, children }: { tone: 'info' | 'warn' | 'loss'; children: Re
 export function EngineerSettingsPanel({ openMore }: { openMore?: boolean }) {
   const enabled = useEngineer((s) => s.enabled);
   const controls = useEngineer((s) => s.controls);
+  const mode = useEffectiveRadioMode();
   const muted = useEngineer((s) => s.muted);
   const voiceUri = useEngineer((s) => s.voiceUri);
   const pace = useEngineer((s) => s.pace);
@@ -152,7 +154,7 @@ export function EngineerSettingsPanel({ openMore }: { openMore?: boolean }) {
     serverStatus?.devices.filter(
       (device) => device.deviceId !== deviceId && device.deviceId !== DISCORD_RADIO_DEVICE_ID,
     ) ?? [];
-  const training = controls.mode === 'training';
+  const training = mode === 'training';
   const consistency = controls.trainingProfile === 'consistency';
   const summaries = consistency
     ? SUMMARY_FREQUENCIES.filter((frequency) => frequency !== 'lap')
@@ -208,17 +210,27 @@ export function EngineerSettingsPanel({ openMore }: { openMore?: boolean }) {
           </CfgRow>
           <RadioVoiceStatus />
 
+          <CfgToggle
+            id="auto-mode"
+            title={uiText('Detectar modo automaticamente')}
+            description={uiText(
+              'Usa Corrida quando detecta uma prova e Treino nas outras sessões.',
+            )}
+            checked={controls.autoMode}
+            onChange={() => setRadioControls({ autoMode: !controls.autoMode })}
+          />
           <CfgRow
             id="mode"
             title={uiText('Modo do engenheiro')}
-            description={RADIO_MODE_HINTS[controls.mode]}
+            description={RADIO_MODE_HINTS[mode]}
             wide
           >
             <div className="cfg-pair">
               <select
                 className="ui-select cfg-select"
                 aria-label={uiText('Modo')}
-                value={controls.mode}
+                value={mode}
+                disabled={controls.autoMode}
                 onChange={(event) =>
                   setRadioControls({
                     mode: pickOption(RADIO_MODES, event.currentTarget.value, controls.mode),
@@ -255,6 +267,15 @@ export function EngineerSettingsPanel({ openMore }: { openMore?: boolean }) {
               )}
             </div>
           </CfgRow>
+          <CfgToggle
+            id="race-encouragement"
+            title={uiText('Incentivo após perder posição')}
+            description={uiText(
+              'Até duas falas por corrida quando você perde posição após um erro detectado.',
+            )}
+            checked={controls.raceEncouragement}
+            onChange={() => setRadioControls({ raceEncouragement: !controls.raceEncouragement })}
+          />
 
           {training && controls.trainingProfile === 'learnTrack' && (
             <CfgRow

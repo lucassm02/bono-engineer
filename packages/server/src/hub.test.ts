@@ -95,9 +95,12 @@ describe('WsHub', () => {
     phone.receive({
       type: 'setEngineerRadio',
       initial: normalizeEngineerRadioSettings({ mode: 'training' }),
-      settings: { muted: true },
+      settings: { muted: true, autoMode: true },
     });
-    desktop.receive({ type: 'setEngineerRadio', settings: { pace: 'calm', anticipationMs: 140 } });
+    desktop.receive({
+      type: 'setEngineerRadio',
+      settings: { pace: 'calm', anticipationMs: 140, raceEncouragement: true },
+    });
 
     await expect
       .poll(() => {
@@ -108,6 +111,8 @@ describe('WsHub', () => {
       })
       .toMatchObject({
         mode: 'race',
+        autoMode: true,
+        raceEncouragement: true,
         enabled: true,
         muted: true,
         volume: 0.65,

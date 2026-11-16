@@ -2268,6 +2268,7 @@ export class LiveEngine extends EventEmitter<LiveEngineEvents> {
       id: `${lap.startedAt}|${corner.id}`,
       lap: lap.number,
       lapStartedAt: lap.startedAt,
+      reviewedAt: this.#lastReceivedAt ?? undefined,
       referenceLapId: compatible?.lapId ?? null,
       atM: Math.round(lap.dist * 10) / 10,
     };

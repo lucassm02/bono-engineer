@@ -14,6 +14,8 @@ import { currentRadioConfig, radioEngine } from './radio.ts';
 describe('configuração do rádio', () => {
   it('migrates the saved controls: keeps volume and anticipation, maps the old detail', () => {
     expect(migrateRadioControls({ volume: 0.4, anticipationMs: 350, detail: 'full' })).toEqual({
+      autoMode: false,
+      raceEncouragement: false,
       volume: 0.4,
       anticipationMs: 350,
       mode: 'training',

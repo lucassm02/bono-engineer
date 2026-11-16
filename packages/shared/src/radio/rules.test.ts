@@ -27,6 +27,8 @@ describe('preferências do rádio', () => {
   it('defaults to Treino · Essencial · Aprender pista, summary on demand and praise off', () => {
     expect(normalizeRadioPreferences(null)).toEqual({
       mode: 'training',
+      autoMode: false,
+      raceEncouragement: false,
       level: 'essential',
       trainingProfile: 'learnTrack',
       learningBrakePercent: false,
@@ -56,6 +58,8 @@ describe('preferências do rádio', () => {
       }),
     ).toEqual({
       mode: 'race',
+      autoMode: false,
+      raceEncouragement: false,
       level: 'essential',
       trainingProfile: 'free',
       learningBrakePercent: true,

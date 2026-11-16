@@ -158,6 +158,7 @@ export const RACE_FINAL_LAP = 'Última volta.';
 export const RACE_FLAG = 'Bandeirada.';
 export const RACE_WELL_DONE = 'Boa corrida.';
 export const RACE_FINISH_RECOVERY = 'Boa recuperação no fim.';
+export const RACE_POSITION_RECOVERY = 'Foco. Dá pra recuperar essa posição.';
 export const RACE_CORNER_FOCUS = 'a gente tá perdendo tempo ali.';
 export const RACE_CORNER_CAUTION = 'mais calma na próxima passagem.';
 export const LIFT_THROTTLE = 'Alivia o acelerador.';
@@ -193,6 +194,7 @@ export const ALERT_PHRASES: readonly string[] = [
   RACE_FLAG,
   RACE_WELL_DONE,
   RACE_FINISH_RECOVERY,
+  RACE_POSITION_RECOVERY,
   RACE_CORNER_FOCUS,
   RACE_CORNER_CAUTION,
   LIFT_THROTTLE,

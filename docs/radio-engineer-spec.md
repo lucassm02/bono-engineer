@@ -17,6 +17,9 @@ estão na [spec de vozes neurais](neural-voices-spec.md). O coach conversacional
 
 ## Modos e configurações
 
+**Detectar modo automaticamente** é opcional e vem desligado. Quando ligado, o rádio usa Corrida
+nas provas detectadas e Treino nas outras sessões. Ao desativar, recupera o último modo manual.
+
 | Modo | Antes da curva ou da volta | Durante | Depois |
 |---|---|---|---|
 | **Treino** | Conforme o perfil abaixo | Conforme o perfil abaixo | Correção, resumo ou silêncio conforme o perfil |
@@ -95,9 +98,9 @@ alta, depois que o carro endireitar, com no máximo uma chamada por passagem pel
 
 ## Alertas do carro e de corrida
 
-- **Presença.** Confirmar o rádio uma vez por tentativa, com áudio disponível. Usar a janela
-  inicial do grid parado ou uma reta livre depois do trecho inicial da prova. A indicação no
-  painel acompanha a saída selecionada, a conexão de voz do Discord e o sinal de telemetria.
+- **Presença.** Confirmar o rádio uma vez por tentativa nas primeiras amostras do grid ou da
+  largada lançada, com áudio disponível. A passagem pela linha de largada é a última oportunidade.
+  A indicação no painel acompanha a saída, a conexão de voz do Discord e o sinal de telemetria.
 - **Ritmo e curva em Corrida.** Comparar duas voltas válidas do mesmo stint com a mediana das
   três anteriores. Em provas de até seis voltas, comparar duas voltas válidas consecutivas quando
   pelo menos dois setores confirmarem a mudança. Um lembrete de curva pede duas passagens com
@@ -107,8 +110,12 @@ alta, depois que o carro endireitar, com no máximo uma chamada por passagem pel
   exige três voltas limpas consecutivas no mesmo stint e pelo menos 45 segundos sem falas.
 - **Última volta.** Em uma corrida identificada, avisar uma vez na primeira janela segura da última
   volta. Dar espaço às chamadas recentes para evitar recados seguidos.
-- **Bandeirada.** Falar quando o resultado for confirmado. Usar a posição final disponível e
-  reconhecer a recuperação quando houver ganho de posição desde o início da última volta.
+- **Bandeirada.** Começar a fala ao detectar o cruzamento da linha de chegada e usar a posição
+  disponível naquele instante. O resultado oficial continua a ser registrado quando o jogo
+  estabiliza a classificação.
+- **Incentivo após perder posição.** Opção desligada por padrão. Quando uma perda de posição
+  confirmada coincide com um erro detectado ou impacto, aguardar uma janela livre para a fala.
+  Fazer no máximo duas chamadas por tentativa, com pelo menos um minuto entre elas.
 - **Janela de box.** A autonomia e o consumo projetado determinam a volta de parada. Se a corrida
   for mais longa que a vida estimada dos pneus, avisar da preparação em cerca de quatro voltas
   e sugerir a parada quando a estimativa cair para duas.

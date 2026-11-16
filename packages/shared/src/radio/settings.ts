@@ -25,6 +25,8 @@ export type SummaryFrequency = (typeof SUMMARY_FREQUENCIES)[number];
 
 export interface RadioPreferences {
   mode: RadioMode;
+  autoMode: boolean;
+  raceEncouragement: boolean;
   level: RadioLevel;
   trainingProfile: TrainingProfile;
   learningBrakePercent: boolean;
@@ -49,6 +51,8 @@ export const TASK_MAX_PER_LAP_RANGE = [1, 4] as const;
 
 export const DEFAULT_RADIO_PREFERENCES: Readonly<RadioPreferences> = {
   mode: 'training',
+  autoMode: false,
+  raceEncouragement: false,
   level: 'essential',
   trainingProfile: 'learnTrack',
   learningBrakePercent: false,
@@ -77,6 +81,8 @@ export function normalizeRadioPreferences(saved: unknown): RadioPreferences {
   const d = DEFAULT_RADIO_PREFERENCES;
   return {
     mode: pick(RADIO_MODES, s.mode, d.mode),
+    autoMode: s.autoMode === true,
+    raceEncouragement: s.raceEncouragement === true,
     level: pick(RADIO_LEVELS, s.level, legacy ?? d.level),
     trainingProfile: pick(TRAINING_PROFILES, s.trainingProfile, d.trainingProfile),
     learningBrakePercent: s.learningBrakePercent === true,
@@ -152,6 +158,8 @@ export interface RadioTyreScale {
 /** Everything the decision engine needs besides the frames. Same config + frames → same log. */
 export interface RadioEngineConfig {
   mode: RadioMode;
+  autoMode: boolean;
+  raceEncouragement: boolean;
   speechLevel: RadioSpeechLevel;
   trainingProfile: TrainingProfile;
   learningBrakePercent: boolean;
@@ -189,6 +197,8 @@ export function radioEngineConfig(
 ): RadioEngineConfig {
   return {
     mode: prefs.mode,
+    autoMode: prefs.autoMode,
+    raceEncouragement: prefs.raceEncouragement,
     speechLevel: extra.muted ? 'mute' : prefs.level,
     trainingProfile: prefs.trainingProfile,
     learningBrakePercent: prefs.learningBrakePercent,
@@ -205,4 +215,13 @@ export function radioEngineConfig(
       maxPerLap: prefs.taskMaxPerLap,
     },
   };
+}
+
+/** Keep the manual choice for when automatic detection is switched off. */
+export function effectiveRadioMode(
+  settings: Pick<RadioPreferences, 'mode' | 'autoMode'>,
+  raceDetected: boolean,
+): RadioMode {
+  if (!settings.autoMode) return settings.mode;
+  return raceDetected ? 'race' : 'training';
 }

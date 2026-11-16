@@ -3378,6 +3378,19 @@
     "Quién te habla. Usa «Probar voz» para oírla."
   ],
   "Modo do engenheiro": ["Engineer mode", "Modo del ingeniero"],
+  "Detectar modo automaticamente": ["Detect mode automatically", "Detectar modo automáticamente"],
+  "Usa Corrida quando detecta uma prova e Treino nas outras sessões.": [
+    "Uses Race when a race is detected and Practice for other sessions.",
+    "Usa Carrera cuando detecta una carrera y Entrenamiento en las otras sesiones."
+  ],
+  "Incentivo após perder posição": [
+    "Encouragement after losing a position",
+    "Ánimo al perder una posición"
+  ],
+  "Até duas falas por corrida quando você perde posição após um erro detectado.": [
+    "Up to two calls per race when you lose a position after a detected mistake.",
+    "Hasta dos avisos por carrera cuando pierdes una posición tras un error detectado."
+  ],
   "Treino, classificação ou corrida; no treino, aprender pista ou ganhar tempo.": [
     "Practice, qualifying or race; in practice, learn the track or gain time.",
     "Entrenamiento, clasificación o carrera; en entrenamiento, aprender el circuito o ganar tiempo."

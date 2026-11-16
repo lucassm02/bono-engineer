@@ -1,6 +1,7 @@
 import {
   DISCORD_RADIO_DEVICE_ID,
   type EngineerStatusView,
+  effectiveRadioMode,
   engineerDisplay,
   engineerStatusView,
   type LiveFrame,
@@ -22,6 +23,7 @@ import {
   stopEngineerPreview,
   stopEngineerVoice,
   toggleEngineerHud,
+  useEffectiveRadioMode,
   useEngineer,
 } from '../state/engineer.ts';
 import { recordEngineerCall } from '../state/engineerJournal.ts';
@@ -94,10 +96,10 @@ function EngineerHud() {
   const training = useEngineerTraining((s) => s.run);
   const voiceError = useEngineer((s) => s.voiceError);
   const voiceLoading = useEngineer((s) => s.voiceLoading);
-  const trainingEnabled = controls.mode === 'training';
-  const racing = controls.mode === 'race';
+  const radioMode = useEffectiveRadioMode();
+  const trainingEnabled = radioMode === 'training';
+  const racing = radioMode === 'race';
   const silent = muted || controls.volume === 0;
-  const cornerCalls = trainingEnabled && controls.trainingProfile === 'learnTrack';
   const canRequestSummary =
     trainingEnabled && controls.trainingProfile !== 'free' && controls.summary === 'onDemand';
 
@@ -115,6 +117,8 @@ function EngineerHud() {
       return;
     }
     const ui = useUi.getState();
+    const trainingEnabled = effectiveRadioMode(controls, !!f.race) === 'training';
+    const cornerCalls = trainingEnabled && controls.trainingProfile === 'learnTrack';
     const run = useEngineerTraining.getState().run;
     const inTraining =
       trainingEnabled &&
@@ -239,7 +243,7 @@ function EngineerHud() {
   // Hide only the overlay. This component still receives frames and plays the radio.
   if (!visible) return null;
 
-  const mode = RADIO_MODE_LABELS[controls.mode];
+  const mode = RADIO_MODE_LABELS[radioMode];
   const audioStatus = silent
     ? 'Rádio mudo'
     : audioDiscord

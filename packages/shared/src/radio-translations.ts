@@ -53,6 +53,10 @@ const fixed: Record<string, Translation> = {
   'Bandeirada.': ['Chequered flag.', 'Bandera a cuadros.'],
   'Boa corrida.': ['Good race.', 'Buena carrera.'],
   'Boa recuperação no fim.': ['Nice recovery at the end.', 'Buena remontada al final.'],
+  'Foco. Dá pra recuperar essa posição.': [
+    'Stay focused. We can get that place back.',
+    'Concéntrate. Podemos recuperar esa posición.',
+  ],
   'a gente tá perdendo tempo ali.': ['we’re losing time there.', 'estamos perdiendo tiempo ahí.'],
   'mais calma na próxima passagem.': [
     'take it easy on the next pass.',

@@ -38,9 +38,16 @@ class LiveStore {
     }
     derived.push(frame);
     // Mirror low-frequency fields only when they change.
-    if (!prev || prev.state !== frame.state || prev.format !== frame.format) {
+    const liveRaceDetected = !!frame.race;
+    if (
+      !prev ||
+      prev.state !== frame.state ||
+      prev.format !== frame.format ||
+      !!prev.race !== liveRaceDetected
+    ) {
       useUi.setState({
         liveState: frame.state,
+        liveRaceDetected,
         frameFormat: frame.format,
         ...(frame.state !== 'replay' ? { showReplayTelemetry: false } : {}),
       });
@@ -52,7 +59,12 @@ class LiveStore {
     this.version++;
     this.history.clear();
     derived.clear();
-    useUi.setState({ liveState: null, showReplayTelemetry: false, frameFormat: null });
+    useUi.setState({
+      liveState: null,
+      liveRaceDetected: false,
+      showReplayTelemetry: false,
+      frameFormat: null,
+    });
   }
 }
 

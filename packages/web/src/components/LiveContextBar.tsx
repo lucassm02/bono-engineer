@@ -24,7 +24,7 @@ import {
 } from '../lib/liveContext.ts';
 import { live } from '../live/liveStore.ts';
 import { useLiveRender } from '../live/raf.ts';
-import { useEngineer } from '../state/engineer.ts';
+import { useEffectiveRadioMode, useEngineer } from '../state/engineer.ts';
 import {
   chooseTrack,
   dismissMismatch,
@@ -185,7 +185,7 @@ function BarItems({ variant }: { variant: 'live' | 'menu' }) {
 function LearningGuide() {
   const ctx = useLiveContext((s) => s.ctx);
   const enabled = useEngineer((s) => s.enabled);
-  const mode = useEngineer((s) => s.controls.mode);
+  const mode = useEffectiveRadioMode();
   const guide = learningGuideText(ctx?.learning, ctx?.corners ?? null);
   if (!guide) return null;
   const reduced = guideVisibility({ engineerOn: enabled, mode }) === 'reduced';

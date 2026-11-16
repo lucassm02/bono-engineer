@@ -134,6 +134,14 @@ function input(patch: Partial<RaceInput>): RaceInput {
 }
 
 describe('RaceTracker rules', () => {
+  it('detects the grid when the race length arrived before the car was on track', () => {
+    const t = new RaceTracker();
+    expect(t.update(input({ totalLaps: 4, onTrack: false }))).toEqual([]);
+    const start = t.update(input({ at: T0 + 50, totalLaps: 4, position: 3, cars: 10 }));
+    expect(start[0]).toMatchObject({ type: 'start', at: T0 + 50, midRace: false });
+    expect(t.live?.startedAt).toBe(T0 + 50);
+  });
+
   it('never opens a race from a grid-looking packet without totalLaps', () => {
     const t = new RaceTracker();
     for (let i = 0; i < 100; i++) {
@@ -169,6 +177,7 @@ describe('RaceTracker rules', () => {
     expect(flag).toEqual([]); // nothing is final yet
     expect(t.latched).toBe(true);
     expect(t.displayLap(6)).toBe(5);
+    expect(t.live?.chequered).toEqual({ at: T0 + 60_000, position: 2 });
     // the others cross the line: the position moves
     t.update(
       input({ at: T0 + 62_000, totalLaps: 5, lapCount: 6, position: 3, cars: 16, speedMps: 45 }),
@@ -180,6 +189,7 @@ describe('RaceTracker rules', () => {
     expect(end).toHaveLength(1);
     expect(end[0]).toMatchObject({ type: 'finish', position: 3, cars: 16, totalLaps: 5 });
     expect(t.live?.result).toEqual({ at: T0 + 69_000, position: 3 });
+    expect(t.live?.chequered).toEqual({ at: T0 + 60_000, position: 2 });
     expect((end[0] as { flagAt: number }).flagAt).toBe(T0 + 60_000);
   });
 

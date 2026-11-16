@@ -2,6 +2,7 @@ import {
   ENGINEER_PACES,
   type EngineerPace,
   type EngineerRadioSettings,
+  effectiveRadioMode,
   type Language,
   normalizeRadioControls,
   type RadioControls,
@@ -93,6 +94,12 @@ export const useEngineer = create(() => ({
 let previewRequest = 0;
 let preparedVoice: string | null = null;
 let radioEdits: Partial<EngineerRadioSettings> = {};
+
+export function useEffectiveRadioMode() {
+  const controls = useEngineer((s) => s.controls);
+  const raceDetected = useUi((s) => s.liveRaceDetected);
+  return effectiveRadioMode(controls, raceDetected);
+}
 
 function publishRadioEdit(change: Partial<EngineerRadioSettings>): void {
   radioEdits = { ...radioEdits, ...change };
@@ -244,7 +251,9 @@ export function stopEngineerPreview(): void {
 export function testEngineerVoice(sample = true): void {
   stopEngineerVoice();
   stopEngineerPreview();
-  const inRaceMode = useEngineer.getState().controls.mode === 'race';
+  const inRaceMode =
+    effectiveRadioMode(useEngineer.getState().controls, useUi.getState().liveRaceDetected) ===
+    'race';
   prepareEngineerVoice(sample ? RADIO_PREVIEW_KEY : inRaceMode ? null : RADIO_HELLO);
 }
 

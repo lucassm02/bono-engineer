@@ -44,6 +44,7 @@ export interface UiState {
 
   /** State of the latest frame (null = no frame yet / stale). */
   liveState: ConnectionState | null;
+  liveRaceDetected: boolean;
   /** Shows the replay data in the dashboard instead of the pre-race controls. */
   showReplayTelemetry: boolean;
   frameFormat: PacketFormat | null;
@@ -94,6 +95,7 @@ export const useUi = create<UiState>()(() => ({
   latencyMs: null,
   session: null,
   liveState: null,
+  liveRaceDetected: false,
   showReplayTelemetry: false,
   frameFormat: null,
   profile: profile0,

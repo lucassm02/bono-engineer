@@ -9,13 +9,21 @@
 
 import type { Id, Session, SessionEvent, SessionKind } from './domain.ts';
 
+interface RaceFinishPosition {
+  at: number;
+  position: number | null;
+  gainedOnFinalLap?: number;
+}
+
 /** The race in progress (or just finished) as shown by the live panel. */
 export interface LiveRace {
   state: 'racing' | 'finished';
   /** Epoch ms of this attempt, including a restart on the same grid. */
   startedAt?: number;
+  /** Position when the car crossed the finish line, before the official result settles. */
+  chequered?: RaceFinishPosition;
   /** Same confirmed result that is saved with the race. */
-  result?: { at: number; position: number | null; gainedOnFinalLap?: number };
+  result?: RaceFinishPosition;
   /** Laps of the race, held after the flag (the game resets its own to 0). */
   totalLaps: number;
   /** Position held for at least 2 s (side by side it flips every second); null while unknown. */
@@ -28,6 +36,8 @@ export interface LiveRace {
   gained: number | null;
   /** Impacts detected so far. */
   impacts: number;
+  /** Timestamp of the last confirmed abrupt loss of speed. */
+  lastImpactAt?: number;
   /** The last stable change of position, for the arrow of the panel. */
   lastChange: { from: number; to: number; at: number } | null;
 }

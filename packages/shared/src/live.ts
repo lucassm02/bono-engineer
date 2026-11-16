@@ -220,6 +220,8 @@ export interface LiveCornerPass {
   cornerId: string;
   lap: number;
   lapStartedAt: number;
+  /** Packet time of the review, which is published shortly after corner exit. */
+  reviewedAt?: number;
   /** Reference the pass was compared with (null = none compatible). */
   referenceLapId: Id | null;
   referenceIsReplay: boolean;

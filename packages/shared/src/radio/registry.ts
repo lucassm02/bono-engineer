@@ -17,6 +17,7 @@ import {
 } from './coaching.ts';
 import { drillRule } from './drill.ts';
 import { goalRule } from './goal.ts';
+import { raceEncouragementRule } from './race-encouragement.ts';
 import { raceFeedbackRule, raceFinalLapRule } from './race-feedback.ts';
 import { racePresenceRule } from './race-presence.ts';
 import {
@@ -58,6 +59,7 @@ export const RADIO_RULES: readonly AnyRadioRule[] = [
   raceFeedbackRule,
   raceFinalLapRule,
   racePresenceRule,
+  raceEncouragementRule,
   lapSummaryRule,
   consistencyRule,
 ];
