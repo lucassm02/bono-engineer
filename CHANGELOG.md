@@ -7,6 +7,17 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.9.3] - 2026-11-16
+
+### Added
+
+- **Automatic radio mode.** Turn it on to use Race for detected races and Practice for other sessions. Turn it off to restore your last manual choice.
+- **Encouragement after losing a position.** An optional call follows a confirmed position loss near a detected mistake. Bono waits for a clear radio window and speaks at most twice per race, at least a minute apart. Both radio options are off by default and apply to the app and Discord.
+
+### Fixed
+
+- **Start and finish calls.** The greeting is limited to the start. The chequered-flag call starts at the finish line and uses the position available at the crossing. The official result is saved when the game confirms it.
+
 ## [0.9.2] - 2026-11-15
 
 ### Added
@@ -299,7 +310,8 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Added replay reference capture, distance-aligned lap comparisons, synchronized telemetry charts, consistency and progress analysis, and data exports.
 - Added the driving guide, an Anthropic-powered AI debrief, and MCP tools for telemetry, laps, sessions, tracks, comparisons, and PNG charts.
 
-[Unreleased]: https://github.com/lucassm02/bono-engineer/compare/v0.9.2...main
+[Unreleased]: https://github.com/lucassm02/bono-engineer/compare/v0.9.3...main
+[0.9.3]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.9.3
 [0.9.2]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.9.2
 [0.9.1]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.9.1
 [0.9.0]: https://github.com/lucassm02/bono-engineer/releases/tag/v0.9.0

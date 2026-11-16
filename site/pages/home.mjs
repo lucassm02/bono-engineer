@@ -103,7 +103,7 @@ ${motionSection(ctx, 'pt-BR')}
         <div><h3>Reconhecimento de pista antes da largada</h3><p>Quando o GT7 mostra seu carro andando no fundo da tela pré-corrida, o Bono usa esse trajeto para identificar o circuito. O nome aparece como provável no painel ao vivo, antes da sua primeira volta.</p></div>
       </li>
       <li class="row">
-        <div><h3>Rádio do engenheiro</h3><p>Orientações de curva no treino. Em corrida, o Bono confirma que está no rádio, avisa sobre ritmo, pneus, combustível e box e anuncia a posição final. O painel indica quando o áudio está pronto no PC ou no Discord.</p></div>
+        <div><h3>Rádio do engenheiro</h3><p>Orientações de curva no treino. Em corrida, o Bono confirma o rádio na largada, avisa sobre ritmo, pneus, combustível e box e anuncia a posição na bandeirada. A detecção automática entre Treino e Corrida e o incentivo após perder posição são opcionais.</p></div>
         <div class="read acc">100 m<small>de aviso antes da freada</small></div>
       </li>
       <li class="row">

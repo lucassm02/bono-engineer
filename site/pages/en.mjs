@@ -87,7 +87,7 @@ ${motionSection(ctx, 'en')}
         <div><h3>Track recognition before the race</h3><p>When GT7 shows your car moving in the background on the pre-race screen, Bono uses that path to identify the circuit. The Live dashboard shows a probable match before your first lap.</p></div>
       </li>
       <li class="row">
-        <div><h3>Race radio</h3><p>Corner coaching in practice. In a race, Bono checks in, calls pace, tyres, fuel and pit stops, and announces the finishing position. The dashboard shows when PC or Discord audio is ready.</p></div>
+        <div><h3>Race radio</h3><p>Corner coaching in practice. In a race, Bono checks in at the start, calls pace, tyres, fuel and pit stops, and announces your position at the flag. Automatic switching between Practice and Race and encouragement after losing a position are optional.</p></div>
         <div class="read acc">100 m<small>warning before the brake point</small></div>
       </li>
       <li class="row">
